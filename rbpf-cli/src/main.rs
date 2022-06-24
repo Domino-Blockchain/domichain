@@ -7,16 +7,16 @@ use {
         ThisInstructionMeter,
     },
     domichain_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
-    domichain_rbpf::{
+    domichain_sdk::{
+        account::AccountSharedData, bpf_loader, instruction::AccountMeta, pubkey::Pubkey,
+        transaction_context::TransactionContext,
+    },
+    solana_rbpf::{
         assembler::assemble,
         elf::Executable,
         static_analysis::Analysis,
         verifier::RequisiteVerifier,
         vm::{Config, DynamicAnalysis, VerifiedExecutable},
-    },
-    domichain_sdk::{
-        account::AccountSharedData, bpf_loader, instruction::AccountMeta, pubkey::Pubkey,
-        transaction_context::TransactionContext,
     },
     std::{
         fmt::{Debug, Formatter},

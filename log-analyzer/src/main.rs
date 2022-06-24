@@ -194,11 +194,11 @@ fn analyze_logs(matches: &ArgMatches) {
 }
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let matches = Command::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .subcommand(
             Command::new("iftop")
                 .about("Process iftop log file")

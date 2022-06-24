@@ -10,7 +10,7 @@ macro_rules! to_builtin {
 fn genesis_builtins(bpf_jit: bool) -> Vec<Builtin> {
     // Currently JIT is not supported on the BPF VM:
     // !x86_64: https://github.com/qmonnet/rbpf/issues/48
-    // Windows: https://github.com/domichain-labs/rbpf/issues/217
+    // Windows: https://github.com/solana-labs/rbpf/issues/217
     #[cfg(any(not(target_arch = "x86_64"), target_family = "windows"))]
     let bpf_jit = {
         if bpf_jit {

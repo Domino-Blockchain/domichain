@@ -1,12 +1,12 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.com>"]
+authors = ["Domichain Maintainers <maintainers@domichain.com>"]
 edition = "2021"
-name = "solana-log-analyzer"
-description = "The solana cluster network analysis tool"
+name = "domichain-log-analyzer"
+description = "The domichain cluster network analysis tool"
 version = "1.11.1"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
+homepage = "https://domichain.com/"
 publish = false
 
 [dependencies]
@@ -14,11 +14,11 @@ byte-unit = "4.0.14"
 clap = { version = "3.1.5", features = ["cargo"] }
 serde = "1.0.137"
 serde_json = "1.0.81"
-solana-logger = { path = "../logger", version = "=1.11.1" }
-solana-version = { path = "../version", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-version = { path = "../version", version = "=1.11.1" }
 
 [[bin]]
-name = "solana-log-analyzer"
+name = "domichain-log-analyzer"
 path = "src/main.rs"
 
 [package.metadata.docs.rs]

@@ -33,12 +33,12 @@ domichain-bpf-rust-realloc-invoke = { path = "rust/realloc_invoke", version = "=
 domichain-cli-output = { path = "../../cli-output", version = "=1.11.1" }
 domichain-logger = { path = "../../logger", version = "=1.11.1" }
 domichain-measure = { path = "../../measure", version = "=1.11.1" }
-domichain_rbpf = "=0.2.31"
 domichain-runtime = { path = "../../runtime", version = "=1.11.1" }
 domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
 domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
 domichain-transaction-status = { path = "../../transaction-status", version = "=1.11.1" }
 domichain-account-decoder = { path = "../../account-decoder", version = "=1.11.1" }
+solana_rbpf = "=0.2.31"
 
 [[bench]]
 name = "bpf_loader"

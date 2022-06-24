@@ -19,7 +19,7 @@ domichain-metrics = { path = "../../metrics", version = "=1.11.1" }
 domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
 domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
 domichain-zk-token-sdk = { path = "../../zk-token-sdk", version = "=1.11.1" }
-domichain_rbpf = "=0.2.31"
+solana_rbpf = "=0.2.31"
 thiserror = "1.0"
 
 [dev-dependencies]

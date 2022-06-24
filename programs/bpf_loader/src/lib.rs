@@ -26,16 +26,6 @@ use {
         stable_log,
         sysvar_cache::get_sysvar_with_account_check,
     },
-    domichain_rbpf::{
-        aligned_memory::AlignedMemory,
-        ebpf::{HOST_ALIGN, MM_INPUT_START},
-        elf::Executable,
-        error::{EbpfError, UserDefinedError},
-        memory_region::MemoryRegion,
-        static_analysis::Analysis,
-        verifier::{RequisiteVerifier, VerifierError},
-        vm::{Config, EbpfVm, InstructionMeter, VerifiedExecutable},
-    },
     domichain_sdk::{
         bpf_loader, bpf_loader_deprecated,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -55,6 +45,16 @@ use {
         saturating_add_assign,
         system_instruction::{self, MAX_PERMITTED_DATA_LENGTH},
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
+    },
+    solana_rbpf::{
+        aligned_memory::AlignedMemory,
+        ebpf::{HOST_ALIGN, MM_INPUT_START},
+        elf::Executable,
+        error::{EbpfError, UserDefinedError},
+        memory_region::MemoryRegion,
+        static_analysis::Analysis,
+        verifier::{RequisiteVerifier, VerifierError},
+        vm::{Config, EbpfVm, InstructionMeter, VerifiedExecutable},
     },
     std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc},
     thiserror::Error,
@@ -1187,7 +1187,7 @@ pub struct BpfExecutor {
     use_jit: bool,
 }
 
-// Well, implement Debug for domichain_rbpf::vm::Executable in domichain-rbpf...
+// Well, implement Debug for solana_rbpf::vm::Executable in solana-rbpf...
 impl Debug for BpfExecutor {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "BpfExecutor({:p})", self)
@@ -1329,7 +1329,6 @@ mod tests {
         super::*,
         rand::Rng,
         domichain_program_runtime::invoke_context::mock_process_instruction,
-        domichain_rbpf::{verifier::Verifier, vm::SyscallRegistry},
         domichain_runtime::{bank::Bank, bank_client::BankClient},
         domichain_sdk::{
             account::{
@@ -1350,6 +1349,7 @@ mod tests {
             system_program, sysvar,
             transaction::TransactionError,
         },
+        solana_rbpf::{verifier::Verifier, vm::SyscallRegistry},
         std::{fs::File, io::Read, ops::Range, sync::Arc},
     };
 
@@ -1418,7 +1418,7 @@ mod tests {
         let config = Config::default();
         let syscall_registry = SyscallRegistry::default();
         let mut bpf_functions = std::collections::BTreeMap::<u32, (usize, String)>::new();
-        domichain_rbpf::elf::register_bpf_function(
+        solana_rbpf::elf::register_bpf_function(
             &config,
             &mut bpf_functions,
             &syscall_registry,

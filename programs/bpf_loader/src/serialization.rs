@@ -2,7 +2,6 @@
 
 use {
     byteorder::{ByteOrder, LittleEndian, WriteBytesExt},
-    domichain_rbpf::{aligned_memory::AlignedMemory, ebpf::HOST_ALIGN},
     domichain_sdk::{
         bpf_loader_deprecated,
         entrypoint::{BPF_ALIGN_OF_U128, MAX_PERMITTED_DATA_INCREASE},
@@ -11,6 +10,7 @@ use {
         system_instruction::MAX_PERMITTED_DATA_LENGTH,
         transaction_context::{InstructionContext, TransactionContext},
     },
+    solana_rbpf::{aligned_memory::AlignedMemory, ebpf::HOST_ALIGN},
     std::{io::prelude::*, mem::size_of},
 };
 

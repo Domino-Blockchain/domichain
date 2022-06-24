@@ -116,7 +116,7 @@
 //! example from the `domichain-program` codebase that logs a message via a
 //! syscall when run on-chain, and via a library call when offchain:
 //!
-//! [rbpf]: https://github.com/domichain-labs/rbpf
+//! [rbpf]: https://github.com/solana-labs/rbpf
 //! [eBPF]: https://ebpf.io/
 //! [cc]: https://doc.rust-lang.org/reference/conditional-compilation.html
 //!

@@ -7,15 +7,6 @@ use {
         stable_log,
         timings::ExecuteTimings,
     },
-    domichain_rbpf::{
-        aligned_memory::AlignedMemory,
-        ebpf,
-        error::EbpfError,
-        memory_region::{AccessType, MemoryMapping},
-        question_mark,
-        verifier::RequisiteVerifier,
-        vm::{EbpfVm, SyscallObject, SyscallRegistry},
-    },
     domichain_sdk::{
         account::WritableAccount,
         account_info::AccountInfo,
@@ -44,6 +35,15 @@ use {
         },
         sysvar::{Sysvar, SysvarId},
         transaction_context::InstructionAccount,
+    },
+    solana_rbpf::{
+        aligned_memory::AlignedMemory,
+        ebpf,
+        error::EbpfError,
+        memory_region::{AccessType, MemoryMapping},
+        question_mark,
+        verifier::RequisiteVerifier,
+        vm::{EbpfVm, SyscallObject, SyscallRegistry},
     },
     std::{
         alloc::Layout,
@@ -3646,9 +3646,6 @@ mod tests {
     use {
         super::*,
         domichain_program_runtime::{invoke_context::InvokeContext, sysvar_cache::SysvarCache},
-        domichain_rbpf::{
-            ebpf::HOST_ALIGN, memory_region::MemoryRegion, user_error::UserError, vm::Config,
-        },
         domichain_sdk::{
             account::AccountSharedData,
             bpf_loader,
@@ -3657,6 +3654,9 @@ mod tests {
             program::check_type_assumptions,
             sysvar::{clock::Clock, epoch_schedule::EpochSchedule, rent::Rent},
             transaction_context::TransactionContext,
+        },
+        solana_rbpf::{
+            ebpf::HOST_ALIGN, memory_region::MemoryRegion, user_error::UserError, vm::Config,
         },
         std::{borrow::Cow, str::FromStr},
     };

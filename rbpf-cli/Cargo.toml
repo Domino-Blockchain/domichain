@@ -17,4 +17,4 @@ domichain-bpf-loader-program = { path = "../programs/bpf_loader", version = "=1.
 domichain-logger = { path = "../logger", version = "=1.11.1" }
 domichain-program-runtime = { path = "../program-runtime", version = "=1.11.1" }
 domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain_rbpf = "=0.2.31"
+solana_rbpf = "=0.2.31"

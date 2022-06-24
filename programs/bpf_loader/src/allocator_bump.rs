@@ -2,7 +2,7 @@
 
 use {
     domichain_program_runtime::invoke_context::{Alloc, AllocErr},
-    domichain_rbpf::aligned_memory::AlignedMemory,
+    solana_rbpf::aligned_memory::AlignedMemory,
     std::alloc::Layout,
 };
 

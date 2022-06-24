@@ -13,11 +13,6 @@ use {
     },
     domichain_measure::measure::Measure,
     domichain_program_runtime::invoke_context::with_mock_invoke_context,
-    domichain_rbpf::{
-        elf::Executable,
-        verifier::RequisiteVerifier,
-        vm::{Config, InstructionMeter, SyscallRegistry, VerifiedExecutable},
-    },
     domichain_runtime::{
         bank::Bank,
         bank_client::BankClient,
@@ -32,6 +27,11 @@ use {
         message::Message,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
+    },
+    solana_rbpf::{
+        elf::Executable,
+        verifier::RequisiteVerifier,
+        vm::{Config, InstructionMeter, SyscallRegistry, VerifiedExecutable},
     },
     std::{env, fs::File, io::Read, mem, path::PathBuf, sync::Arc},
     test::Bencher,

@@ -26,11 +26,6 @@ use {
         tpu_client::{TpuClient, TpuClientConfig},
     },
     domichain_program_runtime::invoke_context::InvokeContext,
-    domichain_rbpf::{
-        elf::Executable,
-        verifier::RequisiteVerifier,
-        vm::{Config, VerifiedExecutable},
-    },
     domichain_remote_wallet::remote_wallet::RemoteWalletManager,
     domichain_sdk::{
         account::Account,
@@ -48,6 +43,11 @@ use {
         system_program,
         transaction::{Transaction, TransactionError},
         transaction_context::TransactionContext,
+    },
+    solana_rbpf::{
+        elf::Executable,
+        verifier::RequisiteVerifier,
+        vm::{Config, VerifiedExecutable},
     },
     std::{
         fs::File,
