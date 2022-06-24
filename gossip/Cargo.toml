@@ -1,13 +1,13 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 edition = "2021"
-name = "solana-gossip"
+name = "domichain-gossip"
 description = "Blockchain, Rebuilt for Scale"
 version = "1.11.1"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-gossip"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-gossip"
 
 [dependencies]
 bincode = "1.3.3"
@@ -27,24 +27,24 @@ rayon = "1.5.3"
 serde = "1.0.137"
 serde_bytes = "0.11"
 serde_derive = "1.0.103"
-solana-bloom = { path = "../bloom", version = "=1.11.1" }
-solana-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
-solana-client = { path = "../client", version = "=1.11.1" }
-solana-entry = { path = "../entry", version = "=1.11.1" }
-solana-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-solana-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-solana-ledger = { path = "../ledger", version = "=1.11.1" }
-solana-logger = { path = "../logger", version = "=1.11.1" }
-solana-measure = { path = "../measure", version = "=1.11.1" }
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
-solana-net-utils = { path = "../net-utils", version = "=1.11.1" }
-solana-perf = { path = "../perf", version = "=1.11.1" }
-solana-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-streamer = { path = "../streamer", version = "=1.11.1" }
-solana-version = { path = "../version", version = "=1.11.1" }
-solana-vote-program = { path = "../programs/vote", version = "=1.11.1" }
+domichain-bloom = { path = "../bloom", version = "=1.11.1" }
+domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
+domichain-client = { path = "../client", version = "=1.11.1" }
+domichain-entry = { path = "../entry", version = "=1.11.1" }
+domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
+domichain-ledger = { path = "../ledger", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-measure = { path = "../measure", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-net-utils = { path = "../net-utils", version = "=1.11.1" }
+domichain-perf = { path = "../perf", version = "=1.11.1" }
+domichain-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-streamer = { path = "../streamer", version = "=1.11.1" }
+domichain-version = { path = "../version", version = "=1.11.1" }
+domichain-vote-program = { path = "../programs/vote", version = "=1.11.1" }
 thiserror = "1.0"
 
 [dev-dependencies]
@@ -65,7 +65,7 @@ name = "crds_gossip_pull"
 name = "crds_shards"
 
 [[bin]]
-name = "solana-gossip"
+name = "domichain-gossip"
 path = "src/main.rs"
 
 [package.metadata.docs.rs]

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://solana.com">
+  <a href="https://domichain.com">
     <img alt="Domichain" src="https://i.imgur.com/IKyzQ6T.png" width="250" />
   </a>
 </p>
@@ -16,10 +16,10 @@ The plugin should produce a `cdylib` dynamic library, which must expose a `C`
 function `_create_plugin()` that instantiates the implementation of the
 interface.
 
-The https://github.com/solana-labs/solana-accountsdb-plugin-postgres repository
+The https://github.com/domichain-labs/domichain-accountsdb-plugin-postgres repository
 provides an example of how to create a plugin which saves the accounts data into
 an external PostgreSQL databases.
 
-More information about Domichain is available in the [Domichain documentation](https://docs.solana.com/).
+More information about Domichain is available in the [Domichain documentation](https://docs.domichain.com/).
 
 Still have questions?  Ask us on [Discord](https://discordapp.com/invite/pquxPsq)

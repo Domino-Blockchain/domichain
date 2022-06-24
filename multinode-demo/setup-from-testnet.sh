@@ -11,8 +11,8 @@ mkdir -p "$SOLANA_CONFIG_DIR"/latest-testnet-snapshot
 (
   cd "$SOLANA_CONFIG_DIR"/latest-testnet-snapshot || exit 1
   set -x
-  wget http://api.testnet.solana.com/genesis.tar.bz2
-  wget --trust-server-names http://testnet.solana.com/snapshot.tar.bz2
+  wget http://api.testnet.domichain.com/genesis.tar.bz2
+  wget --trust-server-names http://testnet.domichain.com/snapshot.tar.bz2
 )
 
 snapshot=$(ls "$SOLANA_CONFIG_DIR"/latest-testnet-snapshot/snapshot-[0-9]*-*.tar.zst)
@@ -36,19 +36,19 @@ mkdir -p "$SOLANA_CONFIG_DIR"/bootstrap-validator
 if [[ -r $FAUCET_KEYPAIR ]]; then
   cp -f "$FAUCET_KEYPAIR" "$SOLANA_CONFIG_DIR"/faucet.json
 else
-  $solana_keygen new --no-passphrase -fso "$SOLANA_CONFIG_DIR"/faucet.json
+  $domichain_keygen new --no-passphrase -fso "$SOLANA_CONFIG_DIR"/faucet.json
 fi
 
 if [[ -f $BOOTSTRAP_VALIDATOR_IDENTITY_KEYPAIR ]]; then
   cp -f "$BOOTSTRAP_VALIDATOR_IDENTITY_KEYPAIR" "$SOLANA_CONFIG_DIR"/bootstrap-validator/identity.json
 else
-  $solana_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/identity.json
+  $domichain_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/identity.json
 fi
 
-$solana_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/vote-account.json
-$solana_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/stake-account.json
+$domichain_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/vote-account.json
+$domichain_keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/bootstrap-validator/stake-account.json
 
-$solana_ledger_tool create-snapshot \
+$domichain_ledger_tool create-snapshot \
   --ledger "$SOLANA_CONFIG_DIR"/latest-testnet-snapshot \
   --faucet-pubkey "$SOLANA_CONFIG_DIR"/faucet.json \
   --faucet-lamports 500000000000000000 \
@@ -58,7 +58,7 @@ $solana_ledger_tool create-snapshot \
   --hashes-per-tick sleep \
   "$snapshot_slot" "$SOLANA_CONFIG_DIR"/bootstrap-validator
 
-$solana_ledger_tool modify-genesis \
+$domichain_ledger_tool modify-genesis \
   --ledger "$SOLANA_CONFIG_DIR"/latest-testnet-snapshot \
   --hashes-per-tick sleep \
   "$SOLANA_CONFIG_DIR"/bootstrap-validator

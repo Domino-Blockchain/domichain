@@ -70,7 +70,7 @@ There are three release channels that map to branches as follows:
 1. Determine the new branch name.  The name should be "v" + the first 2 version fields
    from Cargo.toml.  For example, a Cargo.toml with version = "0.9.0" implies
    the next branch name is "v0.9".
-1. Create the new branch and push this branch to the `solana` repository:
+1. Create the new branch and push this branch to the `domichain` repository:
     ```
     git checkout -b <branchname>
     git push -u origin <branchname>
@@ -100,7 +100,7 @@ Alternatively use the Github UI.
 
 ### Create the Release Tag on GitHub
 
-1. Go to [GitHub Releases](https://github.com/solana-labs/solana/releases) for tagging a release.
+1. Go to [GitHub Releases](https://github.com/domichain-labs/domichain/releases) for tagging a release.
 1. Click "Draft new release".  The release tag must exactly match the `version`
    field in `/Cargo.toml` prefixed by `v`.
    1.  If the Cargo.toml version field is **0.12.3**, then the release tag must be **v0.12.3**
@@ -108,7 +108,7 @@ Alternatively use the Github UI.
    1.  If you want to release v0.12.0, the target branch must be v0.12
 1. Fill the release notes.
    1.  If this is the first release on the branch (e.g. v0.13.**0**), paste in [this
-   template](https://raw.githubusercontent.com/solana-labs/solana/master/.github/RELEASE_TEMPLATE.md).  Engineering Lead can provide summary contents for release notes if needed.
+   template](https://raw.githubusercontent.com/domichain-labs/domichain/master/.github/RELEASE_TEMPLATE.md).  Engineering Lead can provide summary contents for release notes if needed.
    1. If this is a patch release, review all the commits since the previous release on this branch and add details as needed.
 1. Click "Save Draft", then confirm the release notes look good and the tag name and branch are correct.
 1. Ensure all desired commits (usually backports) are landed on the branch by now.
@@ -119,25 +119,25 @@ Alternatively use the Github UI.
 
 ### Update release branch with the next patch version
 
-[This action](https://github.com/solana-labs/solana/blob/master/.github/workflows/increment-cargo-version-on-release.yml) ensures that publishing a release will trigger the creation of a PR to update the Cargo.toml files on **release branch** to the next semantic version (e.g. 0.9.0 -> 0.9.1). Ensure that the created PR makes it through CI and gets submitted.
+[This action](https://github.com/domichain-labs/domichain/blob/master/.github/workflows/increment-cargo-version-on-release.yml) ensures that publishing a release will trigger the creation of a PR to update the Cargo.toml files on **release branch** to the next semantic version (e.g. 0.9.0 -> 0.9.1). Ensure that the created PR makes it through CI and gets submitted.
 
 ### Prepare for the next release
-1.  Go to [GitHub Releases](https://github.com/solana-labs/solana/releases) and create a new draft release for `X.Y.Z+1` with empty release notes.  This allows people to incrementally add new release notes until it's time for the next release
+1.  Go to [GitHub Releases](https://github.com/domichain-labs/domichain/releases) and create a new draft release for `X.Y.Z+1` with empty release notes.  This allows people to incrementally add new release notes until it's time for the next release
     1. Also, point the branch field to the same branch and mark the relese as **"This is a pre-release"**.
-1.  Go to the [Github Milestones](https://github.com/solana-labs/solana/milestones).  Create a new milestone for the `X.Y.Z+1`, move over
+1.  Go to the [Github Milestones](https://github.com/domichain-labs/domichain/milestones).  Create a new milestone for the `X.Y.Z+1`, move over
 unresolved issues still in the `X.Y.Z` milestone, then close the `X.Y.Z` milestone.
 
 ### Verify release automation success
-Go to [Domichain Releases](https://github.com/solana-labs/solana/releases) and click on the latest release that you just published.
+Go to [Domichain Releases](https://github.com/domichain-labs/domichain/releases) and click on the latest release that you just published.
 Verify that all of the build artifacts are present, then the uncheck **"This is a pre-release"** for the release.
 
 Build artifacts can take up to 60 minutes after creating the tag before
 appearing.  To check for progress:
-* The `solana-secondary` Buildkite pipeline handles creating the Linux and macOS release artifacts and updated crates.  Look for a job under the tag name of the release: https://buildkite.com/solana-labs/solana-secondary.
-* The Windows release artifacts are produced by GitHub Actions.  Look for a job under the tag name of the release: https://github.com/solana-labs/solana/actions.
+* The `domichain-secondary` Buildkite pipeline handles creating the Linux and macOS release artifacts and updated crates.  Look for a job under the tag name of the release: https://buildkite.com/domichain-labs/domichain-secondary.
+* The Windows release artifacts are produced by GitHub Actions.  Look for a job under the tag name of the release: https://github.com/domichain-labs/domichain/actions.
 
-[Crates.io](https://crates.io/crates/solana) should have an updated Domichain version.  This can take 2-3 hours, and sometimes fails in the `solana-secondary` job.
+[Crates.io](https://crates.io/crates/domichain) should have an updated Domichain version.  This can take 2-3 hours, and sometimes fails in the `domichain-secondary` job.
 If this happens and the error is non-fatal, click "Retry" on the "publish crate" job
 
-### Update software on testnet.solana.com
-See the documentation at https://github.com/solana-labs/cluster-ops/. devnet.solana.com and mainnet-beta.solana.com run stable releases that have been tested on testnet. Do not update devnet or mainnet-beta with a beta release.
+### Update software on testnet.domichain.com
+See the documentation at https://github.com/domichain-labs/cluster-ops/. devnet.domichain.com and mainnet-beta.domichain.com run stable releases that have been tested on testnet. Do not update devnet or mainnet-beta with a beta release.

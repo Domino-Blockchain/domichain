@@ -6,14 +6,14 @@ use {
         result::{Error, Result},
     },
     crossbeam_channel::{unbounded, RecvTimeoutError},
-    solana_metrics::{inc_new_counter_debug, inc_new_counter_info},
-    solana_perf::{packet::PacketBatchRecycler, recycler::Recycler},
-    solana_poh::poh_recorder::PohRecorder,
-    solana_sdk::{
+    domichain_metrics::{inc_new_counter_debug, inc_new_counter_info},
+    domichain_perf::{packet::PacketBatchRecycler, recycler::Recycler},
+    domichain_poh::poh_recorder::PohRecorder,
+    domichain_sdk::{
         clock::DEFAULT_TICKS_PER_SLOT,
         packet::{Packet, PacketFlags},
     },
-    solana_streamer::streamer::{
+    domichain_streamer::streamer::{
         self, PacketBatchReceiver, PacketBatchSender, StreamerReceiveStats,
     },
     std::{
@@ -208,7 +208,7 @@ impl FetchStage {
         let poh_recorder = poh_recorder.clone();
 
         let fwd_thread_hdl = Builder::new()
-            .name("solana-fetch-stage-fwd-rcvr".to_string())
+            .name("domichain-fetch-stage-fwd-rcvr".to_string())
             .spawn(move || loop {
                 if let Err(e) =
                     Self::handle_forwarded_packets(&forward_receiver, &sender, &poh_recorder)
@@ -226,7 +226,7 @@ impl FetchStage {
 
         let exit = exit.clone();
         let metrics_thread_hdl = Builder::new()
-            .name("solana-fetch-stage-metrics".to_string())
+            .name("domichain-fetch-stage-metrics".to_string())
             .spawn(move || loop {
                 sleep(Duration::from_secs(1));
 

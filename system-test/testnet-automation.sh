@@ -105,8 +105,8 @@ function launch_testnet() {
 
   execution_step "Fetch reusable testnet keypairs"
   if [[ ! -d "${REPO_ROOT}"/net/keypairs ]]; then
-#     git clone https://github.com/solana-labs/testnet-keypairs.git "${REPO_ROOT}"/net/keypairs
-    git clone git@github.com:solana-labs/testnet-keypairs.git "${REPO_ROOT}"/net/keypairs
+#     git clone https://github.com/domichain-labs/testnet-keypairs.git "${REPO_ROOT}"/net/keypairs
+    git clone git@github.com:domichain-labs/testnet-keypairs.git "${REPO_ROOT}"/net/keypairs
     # If we have provider-specific keys (CoLo*, GCE*, etc) use them instead of generic val*
     if [[ -d "${REPO_ROOT}"/net/keypairs/"${CLOUD_PROVIDER}" ]]; then
       cp "${REPO_ROOT}"/net/keypairs/"${CLOUD_PROVIDER}"/* "${REPO_ROOT}"/net/keypairs/
@@ -121,7 +121,7 @@ function launch_testnet() {
   execution_step "Starting bootstrap node and ${NUMBER_OF_VALIDATOR_NODES} validator nodes"
 
   declare -g version_args
-  get_net_launch_software_version_launch_args "$CHANNEL" "solana-release" version_args
+  get_net_launch_software_version_launch_args "$CHANNEL" "domichain-release" version_args
 
   declare maybeWarpSlot
   if [[ -n "$WARP_SLOT" ]]; then
@@ -249,7 +249,7 @@ STEP=
 execution_step "Initialize Environment"
 
 [[ -n $TESTNET_TAG ]] || TESTNET_TAG=${CLOUD_PROVIDER}-testnet-automation
-[[ -n $INFLUX_HOST ]] || INFLUX_HOST=https://internal-metrics.solana.com:8086
+[[ -n $INFLUX_HOST ]] || INFLUX_HOST=https://internal-metrics.domichain.com:8086
 [[ -n $BOOTSTRAP_VALIDATOR_MAX_STAKE_THRESHOLD ]] || BOOTSTRAP_VALIDATOR_MAX_STAKE_THRESHOLD=66
 [[ -n $SKIP_PERF_RESULTS ]] || SKIP_PERF_RESULTS=false
 

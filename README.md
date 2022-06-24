@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://solana.com">
+  <a href="https://domichain.com">
     <img alt="Domichain" src="https://i.imgur.com/IKyzQ6T.png" width="250" />
   </a>
 </p>
 
-[![Domichain crate](https://img.shields.io/crates/v/solana-core.svg)](https://crates.io/crates/solana-core)
-[![Domichain documentation](https://docs.rs/solana-core/badge.svg)](https://docs.rs/solana-core)
-[![Build status](https://badge.buildkite.com/8cc350de251d61483db98bdfc895b9ea0ac8ffa4a32ee850ed.svg?branch=master)](https://buildkite.com/solana-labs/solana/builds?branch=master)
-[![codecov](https://codecov.io/gh/solana-labs/solana/branch/master/graph/badge.svg)](https://codecov.io/gh/solana-labs/solana)
+[![Domichain crate](https://img.shields.io/crates/v/domichain-core.svg)](https://crates.io/crates/domichain-core)
+[![Domichain documentation](https://docs.rs/domichain-core/badge.svg)](https://docs.rs/domichain-core)
+[![Build status](https://badge.buildkite.com/8cc350de251d61483db98bdfc895b9ea0ac8ffa4a32ee850ed.svg?branch=master)](https://buildkite.com/domichain-labs/domichain/builds?branch=master)
+[![codecov](https://codecov.io/gh/domichain-labs/domichain/branch/master/graph/badge.svg)](https://codecov.io/gh/domichain-labs/domichain)
 
 # Building
 
@@ -41,8 +41,8 @@ $ sudo apt-get install libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang c
 ## **2. Download the source code.**
 
 ```bash
-$ git clone https://github.com/solana-labs/solana.git
-$ cd solana
+$ git clone https://github.com/domichain-labs/domichain.git
+$ cd domichain
 ```
 
 ## **3. Build.**
@@ -60,11 +60,11 @@ $ cargo test
 ```
 
 ### Starting a local testnet
-Start your own testnet locally, instructions are in the [online docs](https://docs.solana.com/cluster/bench-tps).
+Start your own testnet locally, instructions are in the [online docs](https://docs.domichain.com/cluster/bench-tps).
 
 ### Accessing the remote development cluster
 * `devnet` - stable public cluster for development accessible via
-devnet.solana.com. Runs 24/7. Learn more about the [public clusters](https://docs.solana.com/clusters)
+devnet.domichain.com. Runs 24/7. Learn more about the [public clusters](https://docs.domichain.com/clusters)
 
 # Benchmarking
 

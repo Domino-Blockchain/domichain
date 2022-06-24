@@ -2,17 +2,17 @@ use {
     bincode::{deserialize, serialize},
     crossbeam_channel::{unbounded, Receiver, Sender},
     futures::{future, prelude::stream::StreamExt},
-    solana_banks_interface::{
+    domichain_banks_interface::{
         Banks, BanksRequest, BanksResponse, BanksTransactionResultWithSimulation,
         TransactionConfirmationStatus, TransactionSimulationDetails, TransactionStatus,
     },
-    solana_client::connection_cache::ConnectionCache,
-    solana_runtime::{
+    domichain_client::connection_cache::ConnectionCache,
+    domichain_runtime::{
         bank::{Bank, TransactionSimulationResult},
         bank_forks::BankForks,
         commitment::BlockCommitmentCache,
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::Account,
         clock::Slot,
         commitment_config::CommitmentLevel,
@@ -24,7 +24,7 @@ use {
         signature::Signature,
         transaction::{self, SanitizedTransaction, Transaction},
     },
-    solana_send_transaction_service::{
+    domichain_send_transaction_service::{
         send_transaction_service::{SendTransactionService, TransactionInfo},
         tpu_info::NullTpuInfo,
     },
@@ -105,7 +105,7 @@ impl BanksServer {
         }
         let server_bank_forks = bank_forks.clone();
         Builder::new()
-            .name("solana-bank-forks-client".to_string())
+            .name("domichain-bank-forks-client".to_string())
             .spawn(move || Self::run(server_bank_forks, transaction_receiver))
             .unwrap();
         Self::new(

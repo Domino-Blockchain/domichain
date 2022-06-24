@@ -7,8 +7,8 @@ use {
     },
     indexmap::map::{Entry, IndexMap},
     rand::{thread_rng, Rng},
-    solana_measure::measure::Measure,
-    solana_sdk::{quic::QUIC_PORT_OFFSET, timing::AtomicInterval},
+    domichain_measure::measure::Measure,
+    domichain_sdk::{quic::QUIC_PORT_OFFSET, timing::AtomicInterval},
     std::{
         net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket},
         sync::{
@@ -229,7 +229,7 @@ impl UseQUIC {
             Ok(UseQUIC::Yes)
         } else {
             let socket =
-                solana_net_utils::bind_with_any_port(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)))?;
+                domichain_net_utils::bind_with_any_port(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)))?;
             Ok(UseQUIC::No(Arc::new(socket)))
         }
     }
@@ -551,7 +551,7 @@ mod tests {
 
     #[test]
     fn test_connection_cache() {
-        solana_logger::setup();
+        domichain_logger::setup();
         // Allow the test to run deterministically
         // with the same pseudorandom sequence between runs
         // and on different platforms - the cryptographic security

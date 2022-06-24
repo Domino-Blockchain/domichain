@@ -1,7 +1,7 @@
 #![feature(test)]
 #![allow(clippy::integer_arithmetic)]
 
-extern crate solana_core;
+extern crate domichain_core;
 extern crate test;
 
 use {
@@ -11,16 +11,16 @@ use {
         distributions::{Distribution, Uniform},
         thread_rng, Rng,
     },
-    solana_core::{
+    domichain_core::{
         sigverify::TransactionSigVerifier,
         sigverify_stage::{SigVerifier, SigVerifyStage},
     },
-    solana_measure::measure::Measure,
-    solana_perf::{
+    domichain_measure::measure::Measure,
+    domichain_perf::{
         packet::{to_packet_batches, PacketBatch},
         test_tx::test_tx,
     },
-    solana_sdk::{
+    domichain_sdk::{
         hash::Hash,
         signature::{Keypair, Signer},
         system_transaction,
@@ -31,7 +31,7 @@ use {
 };
 
 fn run_bench_packet_discard(num_ips: usize, bencher: &mut Bencher) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let len = 30 * 1000;
     let chunk_size = 1024;
     let tx = test_tx();
@@ -145,7 +145,7 @@ fn gen_batches(use_same_tx: bool) -> Vec<PacketBatch> {
 
 #[bench]
 fn bench_sigverify_stage(bencher: &mut Bencher) {
-    solana_logger::setup();
+    domichain_logger::setup();
     trace!("start");
     let (packet_s, packet_r) = unbounded();
     let (verified_s, verified_r) = unbounded();

@@ -1,10 +1,10 @@
 [package]
-name = "solana-cargo-test-sbf"
+name = "domichain-cargo-test-sbf"
 version = "1.11.1"
 description = "Execute all unit and integration tests after building with the Domichain SBF SDK"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+homepage = "https://domichain.com/"
 license = "Apache-2.0"
 edition = "2021"
 publish = false

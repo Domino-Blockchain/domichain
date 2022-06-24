@@ -16,10 +16,10 @@ import {
   ParsedInstruction,
   Secp256k1Program,
   Ed25519Program,
-} from "@solana/web3.js";
+} from "@domichain/web3.js";
 import { Cluster } from "providers/cluster";
 import { SerumMarketRegistry } from "serumMarketRegistry";
-import { TokenInfoMap } from "@solana/spl-token-registry";
+import { TokenInfoMap } from "@domichain/spl-token-registry";
 
 export enum PROGRAM_NAMES {
   // native built-ins

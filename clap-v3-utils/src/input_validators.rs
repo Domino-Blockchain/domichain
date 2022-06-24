@@ -1,7 +1,7 @@
 use {
     crate::keypair::{parse_signer_source, SignerSourceKind, ASK_KEYWORD},
     chrono::DateTime,
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Epoch, Slot},
         hash::Hash,
         pubkey::{Pubkey, MAX_SEED_LEN},
@@ -207,9 +207,9 @@ where
 
 pub fn normalize_to_url_if_moniker<T: AsRef<str>>(url_or_moniker: T) -> String {
     match url_or_moniker.as_ref() {
-        "m" | "mainnet-beta" => "https://api.mainnet-beta.solana.com",
-        "t" | "testnet" => "https://api.testnet.solana.com",
-        "d" | "devnet" => "https://api.devnet.solana.com",
+        "m" | "mainnet-beta" => "https://api.mainnet-beta.domichain.com",
+        "t" | "testnet" => "https://api.testnet.domichain.com",
+        "d" | "devnet" => "https://api.devnet.domichain.com",
         "l" | "localhost" => "http://localhost:8899",
         url => url,
     }
@@ -373,7 +373,7 @@ where
             value, err
         )
     })?;
-    if solana_perf::thread::is_renice_allowed(adjustment) {
+    if domichain_perf::thread::is_renice_allowed(adjustment) {
         Ok(())
     } else {
         Err(String::from(

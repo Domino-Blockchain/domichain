@@ -6,7 +6,7 @@ When writing or interacting with Domichain programs, there are common questions 
 challenges that often come up. Below are resources to help answer these
 questions.
 
-If not addressed here, ask on [StackOverflow](https://stackoverflow.com/questions/tagged/solana) with the `solana` tag or check out the Domichain [#developer-support](https://discord.gg/RxeGBH)
+If not addressed here, ask on [StackOverflow](https://stackoverflow.com/questions/tagged/domichain) with the `domichain` tag or check out the Domichain [#developer-support](https://discord.gg/RxeGBH)
 
 ## `CallDepth` error
 
@@ -54,7 +54,7 @@ padding between fields. If the program implements the Rust `Pack` trait then try
 packing and unpacking the instruction type `T` to determine the exact encoding
 the program expects:
 
-https://github.com/solana-labs/solana/blob/v1.4/sdk/program/src/program_pack.rs
+https://github.com/domichain-labs/domichain/blob/v1.4/sdk/program/src/program_pack.rs
 
 ## MissingRequiredSignature
 

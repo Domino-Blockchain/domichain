@@ -9,7 +9,7 @@ use {
     },
     crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender},
     histogram::Histogram,
-    solana_sdk::{packet::Packet, timing::timestamp},
+    domichain_sdk::{packet::Packet, timing::timestamp},
     std::{
         cmp::Reverse,
         collections::HashMap,
@@ -165,7 +165,7 @@ pub fn receiver(
     let res = socket.set_read_timeout(Some(Duration::new(1, 0)));
     assert!(res.is_ok(), "streamer::receiver set_read_timeout error");
     Builder::new()
-        .name("solana-receiver".to_string())
+        .name("domichain-receiver".to_string())
         .spawn(move || {
             let _ = recv_loop(
                 &socket,
@@ -369,7 +369,7 @@ pub fn responder(
     stats_reporter_sender: Option<Sender<Box<dyn FnOnce() + Send>>>,
 ) -> JoinHandle<()> {
     Builder::new()
-        .name(format!("solana-responder-{}", name))
+        .name(format!("domichain-responder-{}", name))
         .spawn(move || {
             let mut errors = 0;
             let mut last_error = None;
@@ -417,7 +417,7 @@ mod test {
             streamer::{receiver, responder},
         },
         crossbeam_channel::unbounded,
-        solana_perf::recycler::Recycler,
+        domichain_perf::recycler::Recycler,
         std::{
             io,
             io::Write,

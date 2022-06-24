@@ -1,6 +1,6 @@
 use {
     crate::{vote_instruction, vote_state::Vote},
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         hash::Hash,
         signature::{Keypair, Signer},

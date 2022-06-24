@@ -11,7 +11,7 @@ use {
         program_utils::limited_deserialize,
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
-        solana_program::{system_instruction::SystemInstruction, system_program},
+        domichain_program::{system_instruction::SystemInstruction, system_program},
         sysvar::instructions::{BorrowedAccountMeta, BorrowedInstruction},
     },
     std::convert::TryFrom,

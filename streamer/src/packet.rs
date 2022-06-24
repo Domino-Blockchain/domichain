@@ -4,14 +4,14 @@ use {
         recvmmsg::{recv_mmsg, NUM_RCVMMSGS},
         socket::SocketAddrSpace,
     },
-    solana_metrics::inc_new_counter_debug,
+    domichain_metrics::inc_new_counter_debug,
     std::{io::Result, net::UdpSocket, time::Instant},
 };
 pub use {
-    solana_perf::packet::{
+    domichain_perf::packet::{
         to_packet_batches, PacketBatch, PacketBatchRecycler, NUM_PACKETS, PACKETS_PER_BATCH,
     },
-    solana_sdk::packet::{Meta, Packet, PACKET_DATA_SIZE},
+    domichain_sdk::packet::{Meta, Packet, PACKET_DATA_SIZE},
 };
 
 pub fn recv_from(batch: &mut PacketBatch, socket: &UdpSocket, max_wait_ms: u64) -> Result<usize> {
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     pub fn packet_send_recv() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let recv_socket = UdpSocket::bind("127.0.0.1:0").expect("bind");
         let addr = recv_socket.local_addr().unwrap();
         let send_socket = UdpSocket::bind("127.0.0.1:0").expect("bind");
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_packet_resize() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let recv_socket = UdpSocket::bind("127.0.0.1:0").expect("bind");
         let addr = recv_socket.local_addr().unwrap();
         let send_socket = UdpSocket::bind("127.0.0.1:0").expect("bind");

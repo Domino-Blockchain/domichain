@@ -119,9 +119,9 @@ account's address or owner, it's impossible to be sure whether it's a real and
 valid sysvar account merely by successful deserialization of the account's data.
 
 Accordingly, the Domichain SDK [checks the sysvar account's validity during
-deserialization](https://github.com/solana-labs/solana/blob/a95675a7ce1651f7b59443eb146b356bc4b3f374/sdk/program/src/sysvar/mod.rs#L65).
+deserialization](https://github.com/domichain-labs/domichain/blob/a95675a7ce1651f7b59443eb146b356bc4b3f374/sdk/program/src/sysvar/mod.rs#L65).
 An alternative and safer way to read a sysvar is via the sysvar's [`get()`
-function](https://github.com/solana-labs/solana/blob/64bfc14a75671e4ec3fe969ded01a599645080eb/sdk/program/src/sysvar/mod.rs#L73)
+function](https://github.com/domichain-labs/domichain/blob/64bfc14a75671e4ec3fe969ded01a599645080eb/sdk/program/src/sysvar/mod.rs#L73)
 which doesn't require these checks.
 
 If the program always modifies the account in question, the address/owner check
@@ -158,10 +158,10 @@ balance of 105,290,880 lamports (=~ 0.105 SOL) to be rent-exempt:
 105,290,880 = 19.055441478439427 (fee rate) * (128 + 15_000)(account size including metadata) * ((365.25/2) * 2)(epochs in 2 years)
 ```
 
-Rent can also be estimated via the [`solana rent` CLI subcommand](cli/usage.md#solana-rent)
+Rent can also be estimated via the [`domichain rent` CLI subcommand](cli/usage.md#domichain-rent)
 
 ```text
-$ solana rent 15000
+$ domichain rent 15000
 Rent per byte-year: 0.00000348 SOL
 Rent per epoch: 0.000288276 SOL
 Rent-exempt minimum: 0.10529088 SOL

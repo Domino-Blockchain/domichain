@@ -1,21 +1,21 @@
 #![allow(clippy::integer_arithmetic)]
 #![allow(clippy::redundant_closure)]
 use {
-    solana_cli::{
+    domichain_cli::{
         check_balance,
         cli::{process_command, request_and_confirm_airdrop, CliCommand, CliConfig},
         spend_utils::SpendAmount,
         stake::StakeAuthorizationIndexed,
         test_utils::check_ready,
     },
-    solana_cli_output::{parse_sign_only_reply_string, OutputFormat},
-    solana_client::{
+    domichain_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    domichain_client::{
         blockhash_query::{self, BlockhashQuery},
         nonce_utils,
         rpc_client::RpcClient,
     },
-    solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_sdk::{
         account_utils::StateMut,
         commitment_config::CommitmentConfig,
         fee::FeeStructure,
@@ -28,8 +28,8 @@ use {
             state::{Lockup, StakeAuthorize, StakeState},
         },
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
 };
 
 #[test]
@@ -135,7 +135,7 @@ fn test_stake_delegation_force() {
 
 #[test]
 fn test_seed_stake_delegation_and_deactivation() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -227,7 +227,7 @@ fn test_seed_stake_delegation_and_deactivation() {
 
 #[test]
 fn test_stake_delegation_and_deactivation() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -315,7 +315,7 @@ fn test_stake_delegation_and_deactivation() {
 
 #[test]
 fn test_offline_stake_delegation_and_deactivation() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -469,7 +469,7 @@ fn test_offline_stake_delegation_and_deactivation() {
 
 #[test]
 fn test_nonced_stake_delegation_and_deactivation() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -593,7 +593,7 @@ fn test_nonced_stake_delegation_and_deactivation() {
 
 #[test]
 fn test_stake_authorize() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -912,7 +912,7 @@ fn test_stake_authorize() {
 
 #[test]
 fn test_stake_authorize_with_fee_payer() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let fee_one_sig = FeeStructure::default().get_max_fee(1, 0);
     let fee_two_sig = FeeStructure::default().get_max_fee(2, 0);
 
@@ -1089,7 +1089,7 @@ fn test_stake_authorize_with_fee_payer() {
 
 #[test]
 fn test_stake_split() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -1238,7 +1238,7 @@ fn test_stake_split() {
 
 #[test]
 fn test_stake_set_lockup() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -1518,7 +1518,7 @@ fn test_stake_set_lockup() {
 
 #[test]
 fn test_offline_nonced_create_stake_account_and_withdraw() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -1754,7 +1754,7 @@ fn test_offline_nonced_create_stake_account_and_withdraw() {
 
 #[test]
 fn test_stake_checked_instructions() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();

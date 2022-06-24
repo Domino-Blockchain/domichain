@@ -72,11 +72,11 @@ Major releases:
 
 ### Rust Crates
 
-- [`solana-sdk`](https://docs.rs/solana-sdk/) - Rust SDK for creating transactions and parsing account state
-- [`solana-program`](https://docs.rs/solana-program/) - Rust SDK for writing programs
-- [`solana-client`](https://docs.rs/solana-client/) - Rust client for connecting to RPC API
-- [`solana-cli-config`](https://docs.rs/solana-cli-config/) - Rust client for managing Domichain CLI config files
-- [`solana-geyser-plugin-interface`](https://docs.rs/solana-geyser-plugin-interface/) - Rust interface for developing Domichain Geyser plugins.
+- [`domichain-sdk`](https://docs.rs/domichain-sdk/) - Rust SDK for creating transactions and parsing account state
+- [`domichain-program`](https://docs.rs/domichain-program/) - Rust SDK for writing programs
+- [`domichain-client`](https://docs.rs/domichain-client/) - Rust client for connecting to RPC API
+- [`domichain-cli-config`](https://docs.rs/domichain-cli-config/) - Rust client for managing Domichain CLI config files
+- [`domichain-geyser-plugin-interface`](https://docs.rs/domichain-geyser-plugin-interface/) - Rust interface for developing Domichain Geyser plugins.
 
 Patch releases:
 

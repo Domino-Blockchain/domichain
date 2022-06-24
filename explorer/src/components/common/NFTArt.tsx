@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Stream } from "@cloudflare/stream-react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@domichain/web3.js";
 import {
   programs,
   MetadataJson,
@@ -8,7 +8,7 @@ import {
   MetadataJsonFile,
 } from "@metaplex/js";
 import ContentLoader from "react-content-loader";
-import ErrorLogo from "img/logos-solana/dark-solana-logo.svg";
+import ErrorLogo from "img/logos-domichain/dark-domichain-logo.svg";
 import { getLast } from "utils";
 
 const MAX_TIME_LOADING_IMAGE = 5000; /* 5 seconds */

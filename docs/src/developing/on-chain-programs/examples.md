@@ -19,16 +19,16 @@ The project comprises of:
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/solana-labs/example-helloworld.git
+$ git clone https://github.com/domichain-labs/example-helloworld.git
 $ cd example-helloworld
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/solana-labs/example-helloworld/blob/master/README.md).
+[README](https://github.com/domichain-labs/example-helloworld/blob/master/README.md).
 
 ## Break
 
-[Break](https://break.solana.com/) is a React app that gives users a visceral
+[Break](https://break.domichain.com/) is a React app that gives users a visceral
 feeling for just how fast and high-performance the Domichain network really is. Can
 you _break_ the Domichain blockchain? During a 15 second play-though, each click of
 a button or keystroke sends a new transaction to the cluster. Smash the keyboard
@@ -41,19 +41,19 @@ Mainnet Beta, users pay to play 0.08 SOL per game. The session account can be
 funded by a local keystore wallet or by scanning a QR code from Trust Wallet to
 transfer the tokens.
 
-[Click here to play Break](https://break.solana.com/)
+[Click here to play Break](https://break.domichain.com/)
 
 ### Build and Run
 
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/solana-labs/break.git
+$ git clone https://github.com/domichain-labs/break.git
 $ cd break
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/solana-labs/break/blob/master/README.md).
+[README](https://github.com/domichain-labs/break/blob/master/README.md).
 
 ## Language Specific
 

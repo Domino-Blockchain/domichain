@@ -2,19 +2,19 @@ use {
     clap::{crate_version, Arg, Command},
     serde::{Deserialize, Serialize},
     serde_json::Result,
-    solana_bpf_loader_program::{
+    domichain_bpf_loader_program::{
         create_vm, serialization::serialize_parameters, syscalls::register_syscalls, BpfError,
         ThisInstructionMeter,
     },
-    solana_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
-    solana_rbpf::{
+    domichain_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
+    domichain_rbpf::{
         assembler::assemble,
         elf::Executable,
         static_analysis::Analysis,
         verifier::RequisiteVerifier,
         vm::{Config, DynamicAnalysis, VerifiedExecutable},
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::AccountSharedData, bpf_loader, instruction::AccountMeta, pubkey::Pubkey,
         transaction_context::TransactionContext,
     },
@@ -52,10 +52,10 @@ fn load_accounts(path: &Path) -> Result<Input> {
 }
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let matches = Command::new("Domichain BPF CLI")
         .version(crate_version!())
-        .author("Domichain Maintainers <maintainers@solana.foundation>")
+        .author("Domichain Maintainers <maintainers@domichain.foundation>")
         .about(
             r##"CLI to test and analyze eBPF programs.
 
@@ -172,7 +172,7 @@ native machine code before execting it in the virtual machine.",
     let mut transaction_accounts = vec![
         (
             loader_id,
-            AccountSharedData::new(0, 0, &solana_sdk::native_loader::id()),
+            AccountSharedData::new(0, 0, &domichain_sdk::native_loader::id()),
         ),
         (
             Pubkey::new_unique(),

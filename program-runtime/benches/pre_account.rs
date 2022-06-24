@@ -4,14 +4,14 @@ extern crate test;
 
 use {
     log::*,
-    solana_program_runtime::{pre_account::PreAccount, timings::ExecuteDetailsTimings},
-    solana_sdk::{account::AccountSharedData, pubkey, rent::Rent},
+    domichain_program_runtime::{pre_account::PreAccount, timings::ExecuteDetailsTimings},
+    domichain_sdk::{account::AccountSharedData, pubkey, rent::Rent},
     test::Bencher,
 };
 
 #[bench]
 fn bench_verify_account_changes_data(bencher: &mut Bencher) {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let owner = pubkey::new_rand();
     let non_owner = pubkey::new_rand();

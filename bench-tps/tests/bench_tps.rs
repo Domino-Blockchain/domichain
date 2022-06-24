@@ -1,36 +1,36 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     serial_test::serial,
-    solana_bench_tps::{
+    domichain_bench_tps::{
         bench::{do_bench_tps, generate_and_fund_keypairs},
         cli::Config,
     },
-    solana_client::{
+    domichain_client::{
         connection_cache::ConnectionCache,
         rpc_client::RpcClient,
         thin_client::ThinClient,
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    solana_core::validator::ValidatorConfig,
-    solana_faucet::faucet::run_local_faucet,
-    solana_local_cluster::{
+    domichain_core::validator::ValidatorConfig,
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_local_cluster::{
         local_cluster::{ClusterConfig, LocalCluster},
         validator_configs::make_identical_validator_configs,
     },
-    solana_rpc::rpc::JsonRpcConfig,
-    solana_sdk::{
+    domichain_rpc::rpc::JsonRpcConfig,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         signature::{Keypair, Signer},
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
     std::{sync::Arc, time::Duration},
 };
 
 fn test_bench_tps_local_cluster(config: Config) {
     let native_instruction_processors = vec![];
 
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let faucet_keypair = Keypair::new();
     let faucet_pubkey = faucet_keypair.pubkey();
@@ -83,7 +83,7 @@ fn test_bench_tps_local_cluster(config: Config) {
 }
 
 fn test_bench_tps_test_validator(config: Config) {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -129,7 +129,7 @@ fn test_bench_tps_test_validator(config: Config) {
 
 #[test]
 #[serial]
-fn test_bench_tps_local_cluster_solana() {
+fn test_bench_tps_local_cluster_domichain() {
     test_bench_tps_local_cluster(Config {
         tx_count: 100,
         duration: Duration::from_secs(10),

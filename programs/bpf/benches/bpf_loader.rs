@@ -3,28 +3,28 @@
 
 extern crate test;
 #[macro_use]
-extern crate solana_bpf_loader_program;
+extern crate domichain_bpf_loader_program;
 
 use {
     byteorder::{ByteOrder, LittleEndian, WriteBytesExt},
-    solana_bpf_loader_program::{
+    domichain_bpf_loader_program::{
         create_vm, serialization::serialize_parameters, syscalls::register_syscalls, BpfError,
         ThisInstructionMeter,
     },
-    solana_measure::measure::Measure,
-    solana_program_runtime::invoke_context::with_mock_invoke_context,
-    solana_rbpf::{
+    domichain_measure::measure::Measure,
+    domichain_program_runtime::invoke_context::with_mock_invoke_context,
+    domichain_rbpf::{
         elf::Executable,
         verifier::RequisiteVerifier,
         vm::{Config, InstructionMeter, SyscallRegistry, VerifiedExecutable},
     },
-    solana_runtime::{
+    domichain_runtime::{
         bank::Bank,
         bank_client::BankClient,
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         loader_utils::load_program,
     },
-    solana_sdk::{
+    domichain_sdk::{
         bpf_loader,
         client::SyncClient,
         entrypoint::SUCCESS,
@@ -185,7 +185,7 @@ fn bench_program_execute_noop(bencher: &mut Bencher) {
         ..
     } = create_genesis_config(50);
     let mut bank = Bank::new_for_benches(&genesis_config);
-    let (name, id, entrypoint) = solana_bpf_loader_program!();
+    let (name, id, entrypoint) = domichain_bpf_loader_program!();
     bank.add_builtin(&name, &id, entrypoint);
     let bank = Arc::new(bank);
     let bank_client = BankClient::new_shared(&bank);

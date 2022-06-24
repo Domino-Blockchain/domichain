@@ -1,25 +1,25 @@
 [package]
-name = "solana-stake-accounts"
+name = "domichain-stake-accounts"
 description = "Blockchain, Rebuilt for Scale"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 edition = "2021"
 version = "1.11.1"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-stake-accounts"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-stake-accounts"
 
 [dependencies]
 clap = "2.33.1"
-solana-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
-solana-cli-config = { path = "../cli-config", version = "=1.11.1" }
-solana-client = { path = "../client", version = "=1.11.1" }
-solana-remote-wallet = { path = "../remote-wallet", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-stake-program = { path = "../programs/stake", version = "=1.11.1" }
+domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
+domichain-cli-config = { path = "../cli-config", version = "=1.11.1" }
+domichain-client = { path = "../client", version = "=1.11.1" }
+domichain-remote-wallet = { path = "../remote-wallet", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-stake-program = { path = "../programs/stake", version = "=1.11.1" }
 
 [dev-dependencies]
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

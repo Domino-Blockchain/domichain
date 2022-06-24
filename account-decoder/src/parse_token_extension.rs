@@ -2,7 +2,7 @@ use {
     crate::parse_token::UiAccountState,
     spl_token_2022::{
         extension::{self, BaseState, ExtensionType, StateWithExtensions},
-        solana_program::pubkey::Pubkey,
+        domichain_program::pubkey::Pubkey,
     },
 };
 

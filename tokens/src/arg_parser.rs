@@ -6,14 +6,14 @@ use {
     clap::{
         crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand,
     },
-    solana_clap_utils::{
+    domichain_clap_utils::{
         input_parsers::{pubkey_of_signer, value_of},
         input_validators::{is_amount, is_valid_pubkey, is_valid_signer},
         keypair::{pubkey_from_path, signer_from_path},
     },
-    solana_cli_config::CONFIG_FILE,
-    solana_remote_wallet::remote_wallet::maybe_wallet_manager,
-    solana_sdk::native_token::sol_to_lamports,
+    domichain_cli_config::CONFIG_FILE,
+    domichain_remote_wallet::remote_wallet::maybe_wallet_manager,
+    domichain_sdk::native_token::sol_to_lamports,
     std::{error::Error, ffi::OsString, process::exit},
 };
 
@@ -25,7 +25,7 @@ where
     let default_config_file = CONFIG_FILE.as_ref().unwrap();
     App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("config_file")
                 .long("config")
@@ -40,7 +40,7 @@ where
                 .global(true)
                 .takes_value(true)
                 .value_name("URL")
-                .help("RPC entrypoint address. i.e. http://api.devnet.solana.com"),
+                .help("RPC entrypoint address. i.e. http://api.devnet.domichain.com"),
         )
         .subcommand(
             SubCommand::with_name("distribute-tokens")

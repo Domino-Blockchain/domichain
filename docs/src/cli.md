@@ -16,7 +16,7 @@ secure access to your Domichain accounts.
 
 To get started using the Domichain Command Line (CLI) tools:
 
-- [Install the Domichain Tools](cli/install-solana-cli-tools.md)
+- [Install the Domichain Tools](cli/install-domichain-cli-tools.md)
 - [Choose a Cluster](cli/choose-a-cluster.md)
 - [Create a Wallet](wallet-guide/cli.md)
 - [Check out our CLI conventions](cli/conventions.md)

@@ -4,8 +4,8 @@
 /// When its capacity limit is reached, it prunes old and less-used programs
 /// to make room for new ones.
 use {
-    log::*, solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT,
-    solana_sdk::pubkey::Pubkey, std::collections::HashMap,
+    log::*, domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT,
+    domichain_sdk::pubkey::Pubkey, std::collections::HashMap,
 };
 
 // prune is rather expensive op, free up bulk space in each operation
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_execute_cost_table_prune_simple_table() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let capacity: usize = 3;
         let mut testee = ExecuteCostTable::new(capacity);
 
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_execute_cost_table_prune_weighted_table() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let capacity: usize = 3;
         let mut testee = ExecuteCostTable::new(capacity);
 
@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn test_execute_cost_table_upsert_within_capacity() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut testee = ExecuteCostTable::default();
 
         let key1 = Pubkey::new_unique();
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn test_execute_cost_table_upsert_exceeds_capacity() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let capacity: usize = 2;
         let mut testee = ExecuteCostTable::new(capacity);
 

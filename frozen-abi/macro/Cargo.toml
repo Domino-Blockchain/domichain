@@ -1,11 +1,11 @@
 [package]
-name = "solana-frozen-abi-macro"
+name = "domichain-frozen-abi-macro"
 version = "1.11.1"
 description = "Domichain Frozen ABI Macro"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-frozen-abi-macro"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-frozen-abi-macro"
 license = "Apache-2.0"
 edition = "2021"
 

@@ -1,4 +1,4 @@
-//! The solana-program-test provides a BanksClient-based test framework BPF programs
+//! The domichain-program-test provides a BanksClient-based test framework BPF programs
 #![allow(clippy::integer_arithmetic)]
 
 // Export tokio for test clients
@@ -7,20 +7,20 @@ use {
     async_trait::async_trait,
     chrono_humanize::{Accuracy, HumanTime, Tense},
     log::*,
-    solana_banks_client::start_client,
-    solana_banks_server::banks_server::start_local_server,
-    solana_program_runtime::{
+    domichain_banks_client::start_client,
+    domichain_banks_server::banks_server::start_local_server,
+    domichain_program_runtime::{
         compute_budget::ComputeBudget, ic_msg, invoke_context::ProcessInstructionWithContext,
         stable_log, timings::ExecuteTimings,
     },
-    solana_runtime::{
+    domichain_runtime::{
         bank::Bank,
         bank_forks::BankForks,
         builtins::Builtin,
         commitment::BlockCommitmentCache,
         genesis_utils::{create_genesis_config_with_leader_ex, GenesisConfigInfo},
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
         account_info::AccountInfo,
         clock::Slot,
@@ -38,7 +38,7 @@ use {
         signature::{Keypair, Signer},
         sysvar::{Sysvar, SysvarId},
     },
-    solana_vote_program::vote_state::{VoteState, VoteStateVersions},
+    domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
     std::{
         cell::RefCell,
         collections::HashSet,
@@ -57,16 +57,16 @@ use {
     thiserror::Error,
     tokio::task::JoinHandle,
 };
-// Export types so test clients can limit their solana crate dependencies
+// Export types so test clients can limit their domichain crate dependencies
 pub use {
-    solana_banks_client::{BanksClient, BanksClientError},
-    solana_program_runtime::invoke_context::InvokeContext,
+    domichain_banks_client::{BanksClient, BanksClientError},
+    domichain_program_runtime::invoke_context::InvokeContext,
 };
 
 pub mod programs;
 
 #[macro_use]
-extern crate solana_bpf_loader_program;
+extern crate domichain_bpf_loader_program;
 
 /// Errors from the program test environment
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -92,7 +92,7 @@ fn get_invoke_context<'a, 'b>() -> &'a mut InvokeContext<'b> {
 }
 
 pub fn builtin_process_instruction(
-    process_instruction: solana_sdk::entrypoint::ProcessInstruction,
+    process_instruction: domichain_sdk::entrypoint::ProcessInstruction,
     _first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
 ) -> Result<(), InstructionError> {
@@ -189,14 +189,14 @@ pub fn builtin_process_instruction(
     Ok(())
 }
 
-/// Converts a `solana-program`-style entrypoint into the runtime's entrypoint style, for
+/// Converts a `domichain-program`-style entrypoint into the runtime's entrypoint style, for
 /// use with `ProgramTest::add_program`
 #[macro_export]
 macro_rules! processor {
     ($process_instruction:expr) => {
         Some(
             |first_instruction_account: usize,
-             invoke_context: &mut solana_program_test::InvokeContext| {
+             invoke_context: &mut domichain_program_test::InvokeContext| {
                 $crate::builtin_process_instruction(
                     $process_instruction,
                     first_instruction_account,
@@ -233,7 +233,7 @@ fn get_sysvar<T: Default + Sysvar + Sized + serde::de::DeserializeOwned + Clone>
 }
 
 struct SyscallStubs {}
-impl solana_sdk::program_stubs::SyscallStubs for SyscallStubs {
+impl domichain_sdk::program_stubs::SyscallStubs for SyscallStubs {
     fn sol_log(&self, message: &str) {
         let invoke_context = get_invoke_context();
         ic_msg!(invoke_context, "Program log: {}", message);
@@ -445,11 +445,11 @@ impl Default for ProgramTest {
     /// * the current working directory
     ///
     fn default() -> Self {
-        solana_logger::setup_with_default(
-            "solana_rbpf::vm=debug,\
-             solana_runtime::message_processor=debug,\
-             solana_runtime::system_instruction_processor=trace,\
-             solana_program_test=info",
+        domichain_logger::setup_with_default(
+            "domichain_rbpf::vm=debug,\
+             domichain_runtime::message_processor=debug,\
+             domichain_runtime::system_instruction_processor=trace,\
+             domichain_program_test=info",
         );
         let prefer_bpf =
             std::env::var("BPF_OUT_DIR").is_ok() || std::env::var("SBF_OUT_DIR").is_ok();
@@ -597,7 +597,7 @@ impl ProgramTest {
                 Account {
                     lamports: Rent::default().minimum_balance(data.len()).min(1),
                     data,
-                    owner: solana_sdk::bpf_loader::id(),
+                    owner: domichain_sdk::bpf_loader::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -710,7 +710,7 @@ impl ProgramTest {
             static ONCE: Once = Once::new();
 
             ONCE.call_once(|| {
-                solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
+                domichain_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
             });
         }
 
@@ -772,13 +772,13 @@ impl ProgramTest {
                 bank.add_builtin(&$b.0, &$b.1, $b.2)
             };
         }
-        add_builtin!(solana_bpf_loader_deprecated_program!());
+        add_builtin!(domichain_bpf_loader_deprecated_program!());
         if self.use_bpf_jit {
-            add_builtin!(solana_bpf_loader_program_with_jit!());
-            add_builtin!(solana_bpf_loader_upgradeable_program_with_jit!());
+            add_builtin!(domichain_bpf_loader_program_with_jit!());
+            add_builtin!(domichain_bpf_loader_upgradeable_program_with_jit!());
         } else {
-            add_builtin!(solana_bpf_loader_program!());
-            add_builtin!(solana_bpf_loader_upgradeable_program!());
+            add_builtin!(domichain_bpf_loader_program!());
+            add_builtin!(domichain_bpf_loader_upgradeable_program!());
         }
 
         // Add commonly-used SPL programs as a convenience to the user
@@ -1109,7 +1109,7 @@ impl ProgramTestContext {
         };
         bank_forks.set_root(
             pre_warp_slot,
-            &solana_runtime::accounts_background_service::AbsRequestSender::default(),
+            &domichain_runtime::accounts_background_service::AbsRequestSender::default(),
             Some(pre_warp_slot),
         );
 

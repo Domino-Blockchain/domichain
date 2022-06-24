@@ -21,14 +21,14 @@ Create new accounts, allocate account data, assign accounts to owning programs,
 transfer lamports from System Program owned accounts and pay transaction fees.
 
 - Program id: `11111111111111111111111111111111`
-- Instructions: [SystemInstruction](https://docs.rs/solana-program/VERSION_FOR_DOCS_RS/solana_program/system_instruction/enum.SystemInstruction.html)
+- Instructions: [SystemInstruction](https://docs.rs/domichain-program/VERSION_FOR_DOCS_RS/domichain_program/system_instruction/enum.SystemInstruction.html)
 
 ## Config Program
 
 Add configuration data to the chain and the list of public keys that are permitted to modify it
 
 - Program id: `Config1111111111111111111111111111111111111`
-- Instructions: [config_instruction](https://docs.rs/solana-config-program/VERSION_FOR_DOCS_RS/solana_config_program/config_instruction/index.html)
+- Instructions: [config_instruction](https://docs.rs/domichain-config-program/VERSION_FOR_DOCS_RS/domichain_config_program/config_instruction/index.html)
 
 Unlike the other programs, the Config program does not define any individual
 instructions. It has just one implicit instruction, a "store" instruction. Its
@@ -41,21 +41,21 @@ Create and manage accounts representing stake and rewards for delegations to
 validators.
 
 - Program id: `Stake11111111111111111111111111111111111111`
-- Instructions: [StakeInstruction](https://docs.rs/solana-sdk/VERSION_FOR_DOCS_RS/solana_sdk/stake/instruction/enum.StakeInstruction.html)
+- Instructions: [StakeInstruction](https://docs.rs/domichain-sdk/VERSION_FOR_DOCS_RS/domichain_sdk/stake/instruction/enum.StakeInstruction.html)
 
 ## Vote Program
 
 Create and manage accounts that track validator voting state and rewards.
 
 - Program id: `Vote111111111111111111111111111111111111111`
-- Instructions: [VoteInstruction](https://docs.rs/solana-vote-program/VERSION_FOR_DOCS_RS/solana_vote_program/vote_instruction/enum.VoteInstruction.html)
+- Instructions: [VoteInstruction](https://docs.rs/domichain-vote-program/VERSION_FOR_DOCS_RS/domichain_vote_program/vote_instruction/enum.VoteInstruction.html)
 
 ## BPF Loader
 
 Deploys, upgrades, and executes programs on the chain.
 
 - Program id: `BPFLoaderUpgradeab1e11111111111111111111111`
-- Instructions: [LoaderInstruction](https://docs.rs/solana-sdk/VERSION_FOR_DOCS_RS/solana_sdk/loader_upgradeable_instruction/enum.UpgradeableLoaderInstruction.html)
+- Instructions: [LoaderInstruction](https://docs.rs/domichain-sdk/VERSION_FOR_DOCS_RS/domichain_sdk/loader_upgradeable_instruction/enum.UpgradeableLoaderInstruction.html)
 
 The BPF Upgradeable Loader marks itself as "owner" of the executable and
 program-data accounts it creates to store your program. When a user invokes an
@@ -71,7 +71,7 @@ Verify ed25519 signature program. This program takes an ed25519 signature, publi
 Multiple signatures can be verified. If any of the signatures fail to verify, an error is returned.
 
 - Program id: `Ed25519SigVerify111111111111111111111111111`
-- Instructions: [new_ed25519_instruction](https://github.com/solana-labs/solana/blob/master/sdk/src/ed25519_instruction.rs#L45)
+- Instructions: [new_ed25519_instruction](https://github.com/domichain-labs/domichain/blob/master/sdk/src/ed25519_instruction.rs#L45)
 
 The ed25519 program processes an instruction. The first `u8` is a count of the number of
 signatures to check, which is followed by a single byte padding. After that, the
@@ -115,7 +115,7 @@ process_instruction() {
 Verify secp256k1 public key recovery operations (ecrecover).
 
 - Program id: `KeccakSecp256k11111111111111111111111111111`
-- Instructions: [new_secp256k1_instruction](https://github.com/solana-labs/solana/blob/1a658c7f31e1e0d2d39d9efbc0e929350e2c2bcb/sdk/src/secp256k1_instruction.rs#L31)
+- Instructions: [new_secp256k1_instruction](https://github.com/domichain-labs/domichain/blob/1a658c7f31e1e0d2d39d9efbc0e929350e2c2bcb/sdk/src/secp256k1_instruction.rs#L31)
 
 The secp256k1 program processes an instruction which takes in as the first byte
 a count of the following struct serialized in the instruction data:

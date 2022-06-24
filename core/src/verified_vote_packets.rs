@@ -1,8 +1,8 @@
 use {
     crate::{cluster_info_vote_listener::VerifiedLabelVotePacketsReceiver, result::Result},
-    solana_perf::packet::PacketBatch,
-    solana_runtime::{bank::Bank, vote_transaction::VoteTransaction},
-    solana_sdk::{
+    domichain_perf::packet::PacketBatch,
+    domichain_runtime::{bank::Bank, vote_transaction::VoteTransaction},
+    domichain_sdk::{
         account::from_account, clock::Slot, hash::Hash, pubkey::Pubkey, signature::Signature,
         slot_hashes::SlotHashes, sysvar,
     },
@@ -178,15 +178,15 @@ mod tests {
         super::*,
         crate::{result::Error, vote_simulator::VoteSimulator},
         crossbeam_channel::unbounded,
-        solana_perf::packet::Packet,
-        solana_sdk::slot_hashes::MAX_ENTRIES,
-        solana_vote_program::vote_state::Vote,
+        domichain_perf::packet::Packet,
+        domichain_sdk::slot_hashes::MAX_ENTRIES,
+        domichain_vote_program::vote_state::Vote,
     };
 
     #[test]
     fn test_verified_vote_packets_receive_and_process_vote_packets() {
         let (s, r) = unbounded();
-        let vote_account_key = solana_sdk::pubkey::new_rand();
+        let vote_account_key = domichain_sdk::pubkey::new_rand();
 
         // Construct the buffer
         let mut verified_vote_packets = VerifiedVotePackets(HashMap::new());
@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn test_verified_vote_packets_receive_and_process_vote_packets_max_len() {
         let (s, r) = unbounded();
-        let vote_account_key = solana_sdk::pubkey::new_rand();
+        let vote_account_key = domichain_sdk::pubkey::new_rand();
 
         // Construct the buffer
         let mut verified_vote_packets = VerifiedVotePackets(HashMap::new());

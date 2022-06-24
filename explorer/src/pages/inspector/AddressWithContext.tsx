@@ -1,5 +1,5 @@
 import React from "react";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@domichain/web3.js";
 import { Address } from "components/common/Address";
 import {
   Account,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-declare -r SOLANA_LOCK_FILE="/home/solana/.solana.lock"
+declare -r SOLANA_LOCK_FILE="/home/domichain/.domichain.lock"
 
 __colo_here="$(dirname "${BASH_SOURCE[0]}")"
 
@@ -78,7 +78,7 @@ colo_instance_run() {
   declare CMD="${2}"
   declare OUT
   set +e
-  OUT=$(ssh -l solana -o "StrictHostKeyChecking=no" -o "ConnectTimeout=3" -n "${IP}" "${CMD}" 2>&1)
+  OUT=$(ssh -l domichain -o "StrictHostKeyChecking=no" -o "ConnectTimeout=3" -n "${IP}" "${CMD}" 2>&1)
   declare RC=$?
   set -e
   while read -r LINE; do
@@ -128,7 +128,7 @@ colo_whoami() {
 }
 
 COLO_SOLANA_USER=""
-colo_get_solana_user() {
+colo_get_domichain_user() {
   if [ -z "${COLO_SOLANA_USER}" ]; then
     COLO_SOLANA_USER=$(colo_whoami)
   fi
@@ -198,7 +198,7 @@ colo_node_requisition() {
 SOLANA_LOCK_FILE="${SOLANA_LOCK_FILE}"
 INSTANCE_NAME="${INSTANCE_NAME}"
 PREEMPTIBLE="${PREEMPTIBLE}"
-SSH_AUTHORIZED_KEYS='$("${__colo_here}"/add-datacenter-solana-user-authorized_keys.sh 2> /dev/null)'
+SSH_AUTHORIZED_KEYS='$("${__colo_here}"/add-datacenter-domichain-user-authorized_keys.sh 2> /dev/null)'
 SSH_PRIVATE_KEY_TEXT="$(<"${SSH_PRIVATE_KEY}")"
 SSH_PUBLIC_KEY_TEXT="$(<"${SSH_PRIVATE_KEY}.pub")"
 NETWORK_INFO="$(printNetworkInfo 2>/dev/null)"
@@ -244,7 +244,7 @@ colo_node_free() {
   colo_instance_run "${IP}" "$(cat <<EOF
 SOLANA_LOCK_FILE="${SOLANA_LOCK_FILE}"
 SECONDARY_DISK_MOUNT_POINT="${SECONDARY_DISK_MOUNT_POINT}"
-SSH_AUTHORIZED_KEYS='$("${__colo_here}"/add-datacenter-solana-user-authorized_keys.sh 2> /dev/null)'
+SSH_AUTHORIZED_KEYS='$("${__colo_here}"/add-datacenter-domichain-user-authorized_keys.sh 2> /dev/null)'
 FORCE_DELETE="${FORCE_DELETE}"
 $(<"${__colo_here}"/colo-node-onfree.sh)
 EOF

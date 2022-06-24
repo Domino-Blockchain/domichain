@@ -1,7 +1,7 @@
 use {
     clap::{crate_description, crate_name, crate_version, ArgEnum, Args, Parser},
     serde::{Deserialize, Serialize},
-    solana_sdk::pubkey::Pubkey,
+    domichain_sdk::pubkey::Pubkey,
     std::{net::SocketAddr, process::exit, str::FromStr},
 };
 
@@ -133,7 +133,7 @@ pub enum TransactionType {
 }
 
 fn addr_parser(addr: &str) -> Result<SocketAddr, &'static str> {
-    match solana_net_utils::parse_host_port(addr) {
+    match domichain_net_utils::parse_host_port(addr) {
         Ok(v) => Ok(v),
         Err(_) => Err("failed to parse address"),
     }
@@ -173,12 +173,12 @@ pub fn build_cli_parameters() -> DosClientParameters {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, clap::Parser, solana_sdk::pubkey::Pubkey};
+    use {super::*, clap::Parser, domichain_sdk::pubkey::Pubkey};
 
     #[test]
     fn test_cli_parse_rpc_no_data_input() {
         let result = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "rpc",
             "--data-type",
@@ -198,7 +198,7 @@ mod tests {
         let pubkey = Pubkey::default();
         let pubkey_str: String = pubkey.to_string();
         let params = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "rpc",
             "--data-type",
@@ -227,7 +227,7 @@ mod tests {
     fn test_cli_parse_dos_valid_signatures() {
         let entrypoint_addr: SocketAddr = "127.0.0.1:8001".parse().unwrap();
         let params = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",
@@ -266,7 +266,7 @@ mod tests {
     fn test_cli_parse_dos_transfer() {
         let entrypoint_addr: SocketAddr = "127.0.0.1:8001".parse().unwrap();
         let params = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",
@@ -302,7 +302,7 @@ mod tests {
         );
 
         let result = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",
@@ -321,7 +321,7 @@ mod tests {
 
         let entrypoint_addr: SocketAddr = "127.0.0.1:8001".parse().unwrap();
         let params = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",
@@ -361,7 +361,7 @@ mod tests {
     fn test_cli_parse_dos_create_account() {
         let entrypoint_addr: SocketAddr = "127.0.0.1:8001".parse().unwrap();
         let params = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",
@@ -400,7 +400,7 @@ mod tests {
     fn test_cli_parse_dos_conflicting_sign_instruction() {
         // check conflicting args num-signatures and num-instructions
         let result = DosClientParameters::try_parse_from(vec![
-            "solana-dos",
+            "domichain-dos",
             "--mode",
             "tpu",
             "--data-type",

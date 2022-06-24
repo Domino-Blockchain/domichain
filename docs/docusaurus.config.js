@@ -4,11 +4,11 @@ module.exports = {
   title: "Domichain Docs",
   tagline:
     "Domichain is an open source project implementing a new, high-performance, permissionless blockchain.",
-  url: "https://docs.solana.com",
+  url: "https://docs.domichain.com",
   baseUrl: "/",
   favicon: "img/favicon.ico",
-  organizationName: "solana-labs", // Usually your GitHub org/user name.
-  projectName: "solana", // Usually your repo name.
+  organizationName: "domichain-labs", // Usually your GitHub org/user name.
+  projectName: "domichain", // Usually your repo name.
   onBrokenLinks: "throw",
   stylesheets: [
     {
@@ -53,7 +53,7 @@ module.exports = {
       },
       items: [
         {
-          href: "https://spl.solana.com",
+          href: "https://spl.domichain.com",
           label: "Program Library »",
           position: "left",
         },
@@ -87,7 +87,7 @@ module.exports = {
           position: "right",
         },
         {
-          href: "https://github.com/solana-labs/solana",
+          href: "https://github.com/domichain-labs/domichain",
           label: "GitHub",
           position: "right",
         },
@@ -96,7 +96,7 @@ module.exports = {
     algolia: {
       // This API key is "search-only" and safe to be published
       apiKey: "d58e0d68c875346d52645d68b13f3ac0",
-      indexName: "solana",
+      indexName: "domichain",
       contextualSearch: true,
     },
     footer: {
@@ -120,11 +120,11 @@ module.exports = {
             },
             {
               label: "Twitter",
-              href: "https://twitter.com/solana",
+              href: "https://twitter.com/domichain",
             },
             {
               label: "Forums",
-              href: "https://forums.solana.com",
+              href: "https://forums.domichain.com",
             },
           ],
         },
@@ -133,7 +133,7 @@ module.exports = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/solana-labs/solana",
+              href: "https://github.com/domichain-labs/domichain",
             },
           ],
         },

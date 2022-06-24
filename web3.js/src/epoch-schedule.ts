@@ -25,7 +25,7 @@ function nextPowerOfTwo(n: number) {
 
 /**
  * Epoch schedule
- * (see https://docs.solana.com/terminology#epoch)
+ * (see https://docs.domichain.com/terminology#epoch)
  * Can be retrieved with the {@link connection.getEpochSchedule} method
  */
 export class EpochSchedule {

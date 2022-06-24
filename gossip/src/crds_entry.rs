@@ -8,7 +8,7 @@ use {
         },
     },
     indexmap::IndexMap,
-    solana_sdk::pubkey::Pubkey,
+    domichain_sdk::pubkey::Pubkey,
 };
 
 type CrdsTable = IndexMap<CrdsValueLabel, VersionedCrdsValue>;
@@ -83,7 +83,7 @@ mod tests {
             crds_value::new_rand_timestamp,
         },
         rand::seq::SliceRandom,
-        solana_sdk::signature::Keypair,
+        domichain_sdk::signature::Keypair,
         std::collections::HashMap,
     };
 

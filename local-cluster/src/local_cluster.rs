@@ -6,25 +6,25 @@ use {
     },
     itertools::izip,
     log::*,
-    solana_client::{
+    domichain_client::{
         connection_cache::{
             ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC,
         },
         thin_client::ThinClient,
     },
-    solana_core::{
+    domichain_core::{
         tower_storage::FileTowerStorage,
         validator::{Validator, ValidatorConfig, ValidatorStartProgress},
     },
-    solana_gossip::{
+    domichain_gossip::{
         cluster_info::Node, contact_info::ContactInfo, gossip_service::discover_cluster,
     },
-    solana_ledger::create_new_tmp_ledger,
-    solana_runtime::genesis_utils::{
+    domichain_ledger::create_new_tmp_ledger,
+    domichain_runtime::genesis_utils::{
         create_genesis_config_with_vote_accounts_and_cluster_type, GenesisConfigInfo,
         ValidatorVoteKeypairs,
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{Account, AccountSharedData},
         client::SyncClient,
         clock::{DEFAULT_DEV_SLOTS_PER_EPOCH, DEFAULT_TICKS_PER_SLOT},
@@ -42,9 +42,9 @@ use {
         system_transaction,
         transaction::Transaction,
     },
-    solana_stake_program::{config::create_account as create_stake_config_account, stake_state},
-    solana_streamer::socket::SocketAddrSpace,
-    solana_vote_program::{
+    domichain_stake_program::{config::create_account as create_stake_config_account, stake_state},
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_vote_program::{
         vote_instruction,
         vote_state::{VoteInit, VoteState},
     },

@@ -9,7 +9,7 @@ use {
     },
     lazy_static::lazy_static,
     log::*,
-    solana_sdk::transport::Result as TransportResult,
+    domichain_sdk::transport::Result as TransportResult,
     std::{net::SocketAddr, sync::Arc},
     tokio::runtime::Runtime,
 };

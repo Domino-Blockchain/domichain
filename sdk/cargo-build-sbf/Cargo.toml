@@ -1,10 +1,10 @@
 [package]
-name = "solana-cargo-build-sbf"
+name = "domichain-cargo-build-sbf"
 version = "1.11.1"
 description = "Compile a local package and all of its dependencies using the Domichain SBF SDK"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+homepage = "https://domichain.com/"
 license = "Apache-2.0"
 edition = "2021"
 publish = false
@@ -15,9 +15,9 @@ cargo_metadata = "0.14.2"
 clap = { version = "3.1.5", features = ["cargo", "env"] }
 log = { version = "0.4.14", features = ["std"] }
 regex = "1.5.6"
-solana-download-utils = { path = "../../download-utils", version = "=1.11.1" }
-solana-logger = { path = "../../logger", version = "=1.11.1" }
-solana-sdk = { path = "..", version = "=1.11.1" }
+domichain-download-utils = { path = "../../download-utils", version = "=1.11.1" }
+domichain-logger = { path = "../../logger", version = "=1.11.1" }
+domichain-sdk = { path = "..", version = "=1.11.1" }
 tar = "0.4.38"
 
 [dev-dependencies]

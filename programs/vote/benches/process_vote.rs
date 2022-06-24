@@ -3,8 +3,8 @@
 extern crate test;
 
 use {
-    solana_program_runtime::invoke_context::InvokeContext,
-    solana_sdk::{
+    domichain_program_runtime::invoke_context::InvokeContext,
+    domichain_sdk::{
         account::{create_account_for_test, Account, AccountSharedData},
         clock::{Clock, Slot},
         hash::Hash,
@@ -13,7 +13,7 @@ use {
         sysvar,
         transaction_context::{InstructionAccount, TransactionAccount, TransactionContext},
     },
-    solana_vote_program::{
+    domichain_vote_program::{
         vote_instruction::VoteInstruction,
         vote_state::{
             Vote, VoteInit, VoteState, VoteStateUpdate, VoteStateVersions, MAX_LOCKOUT_HISTORY,
@@ -61,14 +61,14 @@ fn create_accounts() -> (
         Account {
             lamports: 1,
             data: vote_account_data,
-            owner: solana_vote_program::id(),
+            owner: domichain_vote_program::id(),
             executable: false,
             rent_epoch: 0,
         }
     };
 
     let transaction_accounts = vec![
-        (solana_vote_program::id(), AccountSharedData::default()),
+        (domichain_vote_program::id(), AccountSharedData::default()),
         (vote_pubkey, AccountSharedData::from(vote_account)),
         (
             sysvar::slot_hashes::id(),
@@ -113,7 +113,7 @@ fn bench_process_vote_instruction(
             .push(&instruction_accounts, &[0], &instruction_data)
             .unwrap();
         assert!(
-            solana_vote_program::vote_processor::process_instruction(1, &mut invoke_context)
+            domichain_vote_program::vote_processor::process_instruction(1, &mut invoke_context)
                 .is_ok()
         );
         invoke_context.pop().unwrap();

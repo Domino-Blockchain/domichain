@@ -1,6 +1,6 @@
 //! Example Rust-based BPF program that prints out the parameters passed to it
 
-use solana_program::{
+use domichain_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, log::*, msg, pubkey::Pubkey,
 };
 
@@ -16,7 +16,7 @@ fn return_sstruct() -> SStruct {
     SStruct { x: 1, y: 2, z: 3 }
 }
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -51,7 +51,7 @@ fn process_instruction(
 
     {
         // Test - arch config
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         panic!();
     }
 

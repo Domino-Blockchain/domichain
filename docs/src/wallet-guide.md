@@ -50,7 +50,7 @@ you first will need to create a wallet.**
 ## Supported Wallets
 
 Several browser and mobile app based wallets support Domichain. Find the right one
-for you on the [Domichain Ecosystem](https://solana.com/ecosystem/explore?categories=wallet)
+for you on the [Domichain Ecosystem](https://domichain.com/ecosystem/explore?categories=wallet)
 page.
 
 For advanced users or developers, the [command-line wallets](wallet-guide/cli.md)

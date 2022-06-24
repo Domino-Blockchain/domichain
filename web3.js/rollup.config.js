@@ -92,7 +92,7 @@ function generateConfig(configType, format) {
     // Prevent dependencies from being bundled
     config.external = [
       /@babel\/runtime/,
-      '@solana/buffer-layout',
+      '@domichain/buffer-layout',
       'bigint-buffer',
       'bn.js',
       'borsh',
@@ -119,13 +119,13 @@ function generateConfig(configType, format) {
             {
               file: 'lib/index.iife.js',
               format: 'iife',
-              name: 'solanaWeb3',
+              name: 'domichainWeb3',
               sourcemap: true,
             },
             {
               file: 'lib/index.iife.min.js',
               format: 'iife',
-              name: 'solanaWeb3',
+              name: 'domichainWeb3',
               sourcemap: true,
               plugins: [terser({mangle: false, compress: false})],
             },
@@ -150,7 +150,7 @@ function generateConfig(configType, format) {
           // Prevent dependencies from being bundled
           config.external = [
             /@babel\/runtime/,
-            '@solana/buffer-layout',
+            '@domichain/buffer-layout',
             'bigint-buffer',
             'bn.js',
             'borsh',

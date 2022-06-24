@@ -10,11 +10,11 @@ use {
     jsonrpc_core::{futures::future, types::error, BoxFuture, Error, Metadata, Result},
     jsonrpc_derive::rpc,
     serde::{Deserialize, Serialize},
-    solana_account_decoder::{
+    domichain_account_decoder::{
         parse_token::{is_known_spl_token_id, token_amount_to_ui_amount, UiTokenAmount},
         UiAccount, UiAccountEncoding, UiDataSliceConfig, MAX_BASE58_BYTES,
     },
-    solana_client::{
+    domichain_client::{
         connection_cache::ConnectionCache,
         rpc_cache::LargestAccountsCache,
         rpc_config::*,
@@ -30,18 +30,18 @@ use {
         },
         rpc_response::{Response as RpcResponse, *},
     },
-    solana_entry::entry::Entry,
-    solana_faucet::faucet::request_airdrop_transaction,
-    solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
-    solana_ledger::{
+    domichain_entry::entry::Entry,
+    domichain_faucet::faucet::request_airdrop_transaction,
+    domichain_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
+    domichain_ledger::{
         blockstore::{Blockstore, SignatureInfosForAddress},
         blockstore_db::BlockstoreError,
         get_tmp_ledger_path,
         leader_schedule_cache::LeaderScheduleCache,
     },
-    solana_metrics::inc_new_counter_info,
-    solana_perf::packet::PACKET_DATA_SIZE,
-    solana_runtime::{
+    domichain_metrics::inc_new_counter_info,
+    domichain_perf::packet::PACKET_DATA_SIZE,
+    domichain_runtime::{
         accounts::AccountAddressFilter,
         accounts_index::{AccountIndex, AccountSecondaryIndexes, IndexKey, ScanConfig},
         bank::{Bank, TransactionSimulationResult},
@@ -53,7 +53,7 @@ use {
         snapshot_config::SnapshotConfig,
         snapshot_utils,
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         account_utils::StateMut,
         clock::{Slot, UnixTimestamp, MAX_RECENT_BLOCKHASHES},
@@ -76,22 +76,22 @@ use {
             VersionedTransaction,
         },
     },
-    solana_send_transaction_service::{
+    domichain_send_transaction_service::{
         send_transaction_service::{SendTransactionService, TransactionInfo},
         tpu_info::NullTpuInfo,
     },
-    solana_storage_bigtable::Error as StorageError,
-    solana_streamer::socket::SocketAddrSpace,
-    solana_transaction_status::{
+    domichain_storage_bigtable::Error as StorageError,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, ConfirmedTransactionStatusWithSignature,
         ConfirmedTransactionWithStatusMeta, EncodedConfirmedTransactionWithStatusMeta, Reward,
         RewardType, TransactionBinaryEncoding, TransactionConfirmationStatus, TransactionStatus,
         UiConfirmedBlock, UiTransactionEncoding,
     },
-    solana_vote_program::vote_state::{VoteState, MAX_LOCKOUT_HISTORY},
+    domichain_vote_program::vote_state::{VoteState, MAX_LOCKOUT_HISTORY},
     spl_token_2022::{
         extension::StateWithExtensions,
-        solana_program::program_pack::Pack,
+        domichain_program::program_pack::Pack,
         state::{Account as TokenAccount, Mint},
     },
     std::{
@@ -180,8 +180,8 @@ pub struct RpcBigtableConfig {
 
 impl Default for RpcBigtableConfig {
     fn default() -> Self {
-        let bigtable_instance_name = solana_storage_bigtable::DEFAULT_INSTANCE_NAME.to_string();
-        let bigtable_app_profile_id = solana_storage_bigtable::DEFAULT_APP_PROFILE_ID.to_string();
+        let bigtable_instance_name = domichain_storage_bigtable::DEFAULT_INSTANCE_NAME.to_string();
+        let bigtable_app_profile_id = domichain_storage_bigtable::DEFAULT_APP_PROFILE_ID.to_string();
         Self {
             enable_bigtable_ledger_upload: false,
             bigtable_instance_name,
@@ -204,7 +204,7 @@ pub struct JsonRpcRequestProcessor {
     cluster_info: Arc<ClusterInfo>,
     genesis_hash: Hash,
     transaction_sender: Arc<Mutex<Sender<TransactionInfo>>>,
-    bigtable_ledger_storage: Option<solana_storage_bigtable::LedgerStorage>,
+    bigtable_ledger_storage: Option<domichain_storage_bigtable::LedgerStorage>,
     optimistically_confirmed_bank: Arc<RwLock<OptimisticallyConfirmedBank>>,
     largest_accounts_cache: Arc<RwLock<LargestAccountsCache>>,
     max_slots: Arc<MaxSlots>,
@@ -285,7 +285,7 @@ impl JsonRpcRequestProcessor {
             // BlockCommitmentCache should hold an `Arc<Bank>` everywhere it currently holds
             // a slot.
             //
-            // For more information, see https://github.com/solana-labs/solana/issues/11078
+            // For more information, see https://github.com/domichain-labs/domichain/issues/11078
             warn!(
                 "Bank with {:?} not found at slot: {:?}",
                 commitment.commitment, slot
@@ -309,7 +309,7 @@ impl JsonRpcRequestProcessor {
         health: Arc<RpcHealth>,
         cluster_info: Arc<ClusterInfo>,
         genesis_hash: Hash,
-        bigtable_ledger_storage: Option<solana_storage_bigtable::LedgerStorage>,
+        bigtable_ledger_storage: Option<domichain_storage_bigtable::LedgerStorage>,
         optimistically_confirmed_bank: Arc<RwLock<OptimisticallyConfirmedBank>>,
         largest_accounts_cache: Arc<RwLock<LargestAccountsCache>>,
         max_slots: Arc<MaxSlots>,
@@ -1039,9 +1039,9 @@ impl JsonRpcRequestProcessor {
 
     fn check_bigtable_result<T>(
         &self,
-        result: &std::result::Result<T, solana_storage_bigtable::Error>,
+        result: &std::result::Result<T, domichain_storage_bigtable::Error>,
     ) -> Result<()> {
-        if let Err(solana_storage_bigtable::Error::BlockNotFound(slot)) = result {
+        if let Err(domichain_storage_bigtable::Error::BlockNotFound(slot)) = result {
             return Err(RpcCustomError::LongTermStorageSlotSkipped { slot: *slot }.into());
         }
         Ok(())
@@ -1541,7 +1541,7 @@ impl JsonRpcRequestProcessor {
     ) -> Vec<Signature> {
         if self.config.enable_rpc_transaction_history {
             // TODO: Add bigtable_ledger_storage support as a part of
-            // https://github.com/solana-labs/solana/pull/10928
+            // https://github.com/domichain-labs/domichain/pull/10928
             let end_slot = min(
                 end_slot,
                 self.block_commitment_cache
@@ -1713,7 +1713,7 @@ impl JsonRpcRequestProcessor {
             min_context_slot: config.min_context_slot,
         })?;
         let epoch = config.epoch.unwrap_or_else(|| bank.epoch());
-        if bank.epoch().saturating_sub(epoch) > solana_sdk::stake_history::MAX_ENTRIES as u64 {
+        if bank.epoch().saturating_sub(epoch) > domichain_sdk::stake_history::MAX_ENTRIES as u64 {
             return Err(Error::invalid_params(format!(
                 "Invalid param: epoch {:?} is too far in the past",
                 epoch
@@ -1756,7 +1756,7 @@ impl JsonRpcRequestProcessor {
             .get_account(&stake_history::id())
             .ok_or_else(Error::internal_error)?;
         let stake_history =
-            solana_sdk::account::from_account::<StakeHistory, _>(&stake_history_account)
+            domichain_sdk::account::from_account::<StakeHistory, _>(&stake_history_account)
                 .ok_or_else(Error::internal_error)?;
 
         let StakeActivationStatus {
@@ -2558,7 +2558,7 @@ pub mod rpc_minimal {
         #[rpc(meta, name = "getVersion")]
         fn get_version(&self, meta: Self::Metadata) -> Result<RpcVersionInfo>;
 
-        // TODO: Refactor `solana-validator wait-for-restart-window` to not require this method, so
+        // TODO: Refactor `domichain-validator wait-for-restart-window` to not require this method, so
         //       it can be removed from rpc_minimal
         #[rpc(meta, name = "getVoteAccounts")]
         fn get_vote_accounts(
@@ -2567,7 +2567,7 @@ pub mod rpc_minimal {
             config: Option<RpcGetVoteAccountsConfig>,
         ) -> Result<RpcVoteAccountStatus>;
 
-        // TODO: Refactor `solana-validator wait-for-restart-window` to not require this method, so
+        // TODO: Refactor `domichain-validator wait-for-restart-window` to not require this method, so
         //       it can be removed from rpc_minimal
         #[rpc(meta, name = "getLeaderSchedule")]
         fn get_leader_schedule(
@@ -2686,14 +2686,14 @@ pub mod rpc_minimal {
 
         fn get_version(&self, _: Self::Metadata) -> Result<RpcVersionInfo> {
             debug!("get_version rpc request received");
-            let version = solana_version::Version::default();
+            let version = domichain_version::Version::default();
             Ok(RpcVersionInfo {
-                solana_core: version.to_string(),
+                domichain_core: version.to_string(),
                 feature_set: Some(version.feature_set),
             })
         }
 
-        // TODO: Refactor `solana-validator wait-for-restart-window` to not require this method, so
+        // TODO: Refactor `domichain-validator wait-for-restart-window` to not require this method, so
         //       it can be removed from rpc_minimal
         fn get_vote_accounts(
             &self,
@@ -2704,7 +2704,7 @@ pub mod rpc_minimal {
             meta.get_vote_accounts(config)
         }
 
-        // TODO: Refactor `solana-validator wait-for-restart-window` to not require this method, so
+        // TODO: Refactor `domichain-validator wait-for-restart-window` to not require this method, so
         //       it can be removed from rpc_minimal
         fn get_leader_schedule(
             &self,
@@ -2730,7 +2730,7 @@ pub mod rpc_minimal {
                 .get_epoch_leader_schedule(epoch)
                 .map(|leader_schedule| {
                     let mut schedule_by_identity =
-                        solana_ledger::leader_schedule_utils::leader_schedule_by_identity(
+                        domichain_ledger::leader_schedule_utils::leader_schedule_by_identity(
                             leader_schedule.get_slot_leaders().iter().enumerate(),
                         );
                     if let Some(identity) = config.identity {
@@ -2935,7 +2935,7 @@ pub mod rpc_bank {
                 }
 
                 let mut entry = block_production.entry(identity).or_default();
-                if slot_history.check(slot) == solana_sdk::slot_history::Check::Found {
+                if slot_history.check(slot) == domichain_sdk::slot_history::Check::Found {
                     entry.1 += 1; // Increment blocks_produced
                 }
                 entry.0 += 1; // Increment leader_slots
@@ -3022,7 +3022,7 @@ pub mod rpc_accounts {
         ) -> Result<RpcStakeActivation>;
 
         // SPL Token-specific RPC endpoints
-        // See https://github.com/solana-labs/solana-program-library/releases/tag/token-v2.0.0 for
+        // See https://github.com/domichain-labs/domichain-program-library/releases/tag/token-v2.0.0 for
         // program details
 
         #[rpc(meta, name = "getTokenAccountBalance")]
@@ -4469,23 +4469,23 @@ pub fn create_test_transaction_entries(
     let mut signatures = Vec::new();
     // Generate transactions for processing
     // Successful transaction
-    let success_tx = solana_sdk::system_transaction::transfer(
+    let success_tx = domichain_sdk::system_transaction::transfer(
         mint_keypair,
         &keypair1.pubkey(),
         rent_exempt_amount,
         blockhash,
     );
     signatures.push(success_tx.signatures[0]);
-    let entry_1 = solana_entry::entry::next_entry(&blockhash, 1, vec![success_tx]);
+    let entry_1 = domichain_entry::entry::next_entry(&blockhash, 1, vec![success_tx]);
     // Failed transaction, InstructionError
-    let ix_error_tx = solana_sdk::system_transaction::transfer(
+    let ix_error_tx = domichain_sdk::system_transaction::transfer(
         keypair2,
         &keypair3.pubkey(),
         2 * rent_exempt_amount,
         blockhash,
     );
     signatures.push(ix_error_tx.signatures[0]);
-    let entry_2 = solana_entry::entry::next_entry(&entry_1.hash, 1, vec![ix_error_tx]);
+    let entry_2 = domichain_entry::entry::next_entry(&entry_1.hash, 1, vec![ix_error_tx]);
     (vec![entry_1, entry_2], signatures)
 }
 
@@ -4498,7 +4498,7 @@ pub fn populate_blockstore_for_tests(
     let slot = bank.slot();
     let parent_slot = bank.parent_slot();
     let shreds =
-        solana_ledger::blockstore::entries_to_test_shreds(&entries, slot, parent_slot, true, 0);
+        domichain_ledger::blockstore::entries_to_test_shreds(&entries, slot, parent_slot, true, 0);
     blockstore.insert_shreds(shreds, None, false).unwrap();
     blockstore.set_roots(std::iter::once(&slot)).unwrap();
 
@@ -4518,12 +4518,12 @@ pub fn populate_blockstore_for_tests(
     // Check that process_entries successfully writes can_commit transactions statuses, and
     // that they are matched properly by get_rooted_block
     assert_eq!(
-        solana_ledger::blockstore_processor::process_entries_for_tests(
+        domichain_ledger::blockstore_processor::process_entries_for_tests(
             &bank,
             entries,
             true,
             Some(
-                &solana_ledger::blockstore_processor::TransactionStatusSender {
+                &domichain_ledger::blockstore_processor::TransactionStatusSender {
                     sender: transaction_status_sender,
                 },
             ),
@@ -4551,8 +4551,8 @@ pub mod tests {
         jsonrpc_core::{futures, ErrorCode, MetaIoHandler, Output, Response, Value},
         jsonrpc_core_client::transports::local,
         serde::de::DeserializeOwned,
-        solana_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
-        solana_client::{
+        domichain_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
+        domichain_client::{
             rpc_custom_error::{
                 JSON_RPC_SERVER_ERROR_BLOCK_NOT_AVAILABLE,
                 JSON_RPC_SERVER_ERROR_TRANSACTION_HISTORY_NOT_AVAILABLE,
@@ -4560,18 +4560,18 @@ pub mod tests {
             },
             rpc_filter::{Memcmp, MemcmpEncodedBytes},
         },
-        solana_entry::entry::next_versioned_entry,
-        solana_gossip::{contact_info::ContactInfo, socketaddr},
-        solana_ledger::{
+        domichain_entry::entry::next_versioned_entry,
+        domichain_gossip::{contact_info::ContactInfo, socketaddr},
+        domichain_ledger::{
             blockstore_meta::PerfSample,
             blockstore_processor::fill_blockstore_slot_with_ticks,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
         },
-        solana_runtime::{
+        domichain_runtime::{
             accounts_background_service::AbsRequestSender, commitment::BlockCommitment,
             inline_spl_token, non_circulating_supply::non_circulating_accounts,
         },
-        solana_sdk::{
+        domichain_sdk::{
             account::{Account, WritableAccount},
             clock::MAX_RECENT_BLOCKHASHES,
             fee_calculator::DEFAULT_BURN_PERCENT,
@@ -4588,11 +4588,11 @@ pub mod tests {
                 self, SimpleAddressLoader, Transaction, TransactionError, TransactionVersion,
             },
         },
-        solana_transaction_status::{
+        domichain_transaction_status::{
             EncodedConfirmedBlock, EncodedTransaction, EncodedTransactionWithStatusMeta,
             TransactionDetails,
         },
-        solana_vote_program::{
+        domichain_vote_program::{
             vote_instruction,
             vote_state::{Vote, VoteInit, VoteStateVersions, MAX_LOCKOUT_HISTORY},
         },
@@ -4602,7 +4602,7 @@ pub mod tests {
                 mint_close_authority::MintCloseAuthority, ExtensionType, StateWithExtensionsMut,
             },
             pod::OptionalNonZeroPubkey,
-            solana_program::{program_option::COption, pubkey::Pubkey as SplTokenPubkey},
+            domichain_program::{program_option::COption, pubkey::Pubkey as SplTokenPubkey},
             state::{AccountState as TokenAccountState, Mint},
         },
         std::{borrow::Cow, collections::HashMap},
@@ -4831,7 +4831,7 @@ pub mod tests {
                 AccountSharedData::create(
                     min_balance_lamports,
                     address_table_data,
-                    solana_address_lookup_table_program::id(),
+                    domichain_address_lookup_table_program::id(),
                     false,
                     0,
                 )
@@ -4914,7 +4914,7 @@ pub mod tests {
             let space = VoteState::size_of();
             let balance = bank.get_minimum_balance_for_rent_exemption(space);
             let mut vote_account =
-                AccountSharedData::new(balance, space, &solana_vote_program::id());
+                AccountSharedData::new(balance, space, &domichain_vote_program::id());
             VoteState::to(&versioned, &mut vote_account).unwrap();
             bank.store_account(vote_pubkey, &vote_account);
         }
@@ -4930,7 +4930,7 @@ pub mod tests {
 
     #[test]
     fn test_rpc_request_processor_new() {
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let genesis = create_genesis_config(100);
         let bank = Arc::new(Bank::new_for_tests(&genesis.genesis_config));
         bank.transfer(20, &genesis.mint_keypair, &bob_pubkey)
@@ -5086,7 +5086,7 @@ pub mod tests {
 
     #[test]
     fn test_rpc_get_tx_count() {
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let genesis = create_genesis_config(10);
         let bank = Arc::new(Bank::new_for_tests(&genesis.genesis_config));
         // Add 4 transactions
@@ -5689,7 +5689,7 @@ pub mod tests {
             ref meta, ref io, ..
         } = rpc;
 
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let mut tx = system_transaction::transfer(
             &rpc.mint_keypair,
             &bob_pubkey,
@@ -5722,7 +5722,7 @@ pub mod tests {
                  ]
             }}"#,
             tx_serialized_encoded,
-            solana_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
             bob_pubkey,
         );
         let res = io.handle_request_sync(&req, meta.clone());
@@ -6012,7 +6012,7 @@ pub mod tests {
         assert_eq!(None, result.confirmations);
 
         // Test getSignatureStatus request on unprocessed tx
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let tx = system_transaction::transfer(
             &mint_keypair,
             &bob_pubkey,
@@ -6207,7 +6207,7 @@ pub mod tests {
         let RpcHandler { meta, io, .. } = RpcHandler::start();
 
         // Expect internal error because no faucet is available
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let req = format!(
             r#"{{"jsonrpc":"2.0","id":1,"method":"requestAirdrop","params":["{}", 50]}}"#,
             bob_pubkey
@@ -6294,7 +6294,7 @@ pub mod tests {
 
         let mut bad_transaction = system_transaction::transfer(
             &mint_keypair,
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             42,
             Hash::default(),
         );
@@ -6329,7 +6329,7 @@ pub mod tests {
         );
         let mut bad_transaction = system_transaction::transfer(
             &mint_keypair,
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             42,
             recent_blockhash,
         );
@@ -6414,7 +6414,7 @@ pub mod tests {
 
     #[test]
     fn test_rpc_verify_pubkey() {
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         assert_eq!(verify_pubkey(&pubkey.to_string()).unwrap(), pubkey);
         let bad_pubkey = "a1b2c3d4";
         assert_eq!(
@@ -6427,7 +6427,7 @@ pub mod tests {
     fn test_rpc_verify_signature() {
         let tx = system_transaction::transfer(
             &Keypair::new(),
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             20,
             hash(&[0]),
         );
@@ -6493,9 +6493,9 @@ pub mod tests {
         let request = create_test_request("getVersion", None);
         let result: Value = parse_success_result(rpc.handle_request_sync(request));
         let expected = {
-            let version = solana_version::Version::default();
+            let version = domichain_version::Version::default();
             json!({
-                "solana-core": version.to_string(),
+                "domichain-core": version.to_string(),
                 "feature-set": version.feature_set,
             })
         };
@@ -7245,15 +7245,15 @@ pub mod tests {
 
     #[test]
     fn test_token_rpcs() {
-        for program_id in solana_account_decoder::parse_token::spl_token_ids() {
+        for program_id in domichain_account_decoder::parse_token::spl_token_ids() {
             let rpc = RpcHandler::start();
             let bank = rpc.working_bank();
             let RpcHandler { io, meta, .. } = rpc;
             let mint = SplTokenPubkey::new(&[2; 32]);
             let owner = SplTokenPubkey::new(&[3; 32]);
             let delegate = SplTokenPubkey::new(&[4; 32]);
-            let token_account_pubkey = solana_sdk::pubkey::new_rand();
-            let token_with_different_mint_pubkey = solana_sdk::pubkey::new_rand();
+            let token_account_pubkey = domichain_sdk::pubkey::new_rand();
+            let token_with_different_mint_pubkey = domichain_sdk::pubkey::new_rand();
             let new_mint = SplTokenPubkey::new(&[5; 32]);
             if program_id == inline_spl_token_2022::id() {
                 // Add the token account
@@ -7322,7 +7322,7 @@ pub mod tests {
                 bank.store_account(&Pubkey::from_str(&mint.to_string()).unwrap(), &mint_account);
 
                 // Add another token account with the same owner, delegate, and mint
-                let other_token_account_pubkey = solana_sdk::pubkey::new_rand();
+                let other_token_account_pubkey = domichain_sdk::pubkey::new_rand();
                 bank.store_account(&other_token_account_pubkey, &token_account);
 
                 // Add another token account with the same owner and delegate but different mint
@@ -7386,7 +7386,7 @@ pub mod tests {
                 bank.store_account(&Pubkey::from_str(&mint.to_string()).unwrap(), &mint_account);
 
                 // Add another token account with the same owner, delegate, and mint
-                let other_token_account_pubkey = solana_sdk::pubkey::new_rand();
+                let other_token_account_pubkey = domichain_sdk::pubkey::new_rand();
                 bank.store_account(&other_token_account_pubkey, &token_account);
 
                 // Add another token account with the same owner and delegate but different mint
@@ -7429,7 +7429,7 @@ pub mod tests {
             // Test non-existent token account
             let req = format!(
                 r#"{{"jsonrpc":"2.0","id":1,"method":"getTokenAccountBalance","params":["{}"]}}"#,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7455,7 +7455,7 @@ pub mod tests {
             // Test non-existent mint address
             let req = format!(
                 r#"{{"jsonrpc":"2.0","id":1,"method":"getTokenSupply","params":["{}"]}}"#,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7543,7 +7543,7 @@ pub mod tests {
                     "params":["{}", {{"programId": "{}"}}]
                 }}"#,
                 owner,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7557,7 +7557,7 @@ pub mod tests {
                     "params":["{}", {{"mint": "{}"}}]
                 }}"#,
                 owner,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7572,7 +7572,7 @@ pub mod tests {
                     "method":"getTokenAccountsByOwner",
                     "params":["{}", {{"programId": "{}"}}]
                 }}"#,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
                 program_id,
             );
             let res = io.handle_request_sync(&req, meta.clone());
@@ -7625,7 +7625,7 @@ pub mod tests {
                     "params":["{}", {{"programId": "{}"}}]
                 }}"#,
                 delegate,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7639,7 +7639,7 @@ pub mod tests {
                     "params":["{}", {{"mint": "{}"}}]
                 }}"#,
                 delegate,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
             );
             let res = io.handle_request_sync(&req, meta.clone());
             let result: Value = serde_json::from_str(&res.expect("actual response"))
@@ -7654,7 +7654,7 @@ pub mod tests {
                     "method":"getTokenAccountsByDelegate",
                     "params":["{}", {{"programId": "{}"}}]
                 }}"#,
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
                 program_id,
             );
             let res = io.handle_request_sync(&req, meta.clone());
@@ -7702,7 +7702,7 @@ pub mod tests {
                 owner: program_id,
                 ..Account::default()
             });
-            let token_with_smaller_balance = solana_sdk::pubkey::new_rand();
+            let token_with_smaller_balance = domichain_sdk::pubkey::new_rand();
             bank.store_account(&token_with_smaller_balance, &token_account);
 
             // Test largest token accounts
@@ -7743,7 +7743,7 @@ pub mod tests {
 
     #[test]
     fn test_token_parsing() {
-        for program_id in solana_account_decoder::parse_token::spl_token_ids() {
+        for program_id in domichain_account_decoder::parse_token::spl_token_ids() {
             let rpc = RpcHandler::start();
             let bank = rpc.working_bank();
             let RpcHandler { io, meta, .. } = rpc;
@@ -7751,7 +7751,7 @@ pub mod tests {
             let mint = SplTokenPubkey::new(&[2; 32]);
             let owner = SplTokenPubkey::new(&[3; 32]);
             let delegate = SplTokenPubkey::new(&[4; 32]);
-            let token_account_pubkey = solana_sdk::pubkey::new_rand();
+            let token_account_pubkey = domichain_sdk::pubkey::new_rand();
             let (program_name, account_size, mint_size) = if program_id
                 == inline_spl_token_2022::id()
             {
@@ -8353,7 +8353,7 @@ pub mod tests {
         let tx58 = bs58::encode(&tx_ser).into_string();
         let tx58_len = tx58.len();
         let expect58 = Error::invalid_params(format!(
-            "encoded solana_sdk::transaction::Transaction too large: {} bytes (max: encoded/raw {}/{})",
+            "encoded domichain_sdk::transaction::Transaction too large: {} bytes (max: encoded/raw {}/{})",
             tx58_len, MAX_BASE58_SIZE, PACKET_DATA_SIZE,
         ));
         assert_eq!(
@@ -8364,7 +8364,7 @@ pub mod tests {
         let tx64 = base64::encode(&tx_ser);
         let tx64_len = tx64.len();
         let expect64 = Error::invalid_params(format!(
-            "encoded solana_sdk::transaction::Transaction too large: {} bytes (max: encoded/raw {}/{})",
+            "encoded domichain_sdk::transaction::Transaction too large: {} bytes (max: encoded/raw {}/{})",
             tx64_len, MAX_BASE64_SIZE, PACKET_DATA_SIZE,
         ));
         assert_eq!(
@@ -8376,7 +8376,7 @@ pub mod tests {
         let tx_ser = vec![0x00u8; too_big];
         let tx58 = bs58::encode(&tx_ser).into_string();
         let expect = Error::invalid_params(format!(
-            "encoded solana_sdk::transaction::Transaction too large: {} bytes (max: {} bytes)",
+            "encoded domichain_sdk::transaction::Transaction too large: {} bytes (max: {} bytes)",
             too_big, PACKET_DATA_SIZE
         ));
         assert_eq!(

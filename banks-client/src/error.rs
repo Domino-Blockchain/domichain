@@ -1,5 +1,5 @@
 use {
-    solana_sdk::{
+    domichain_sdk::{
         transaction::TransactionError, transaction_context::TransactionReturnData,
         transport::TransportError,
     },

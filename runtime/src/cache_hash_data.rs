@@ -6,7 +6,7 @@ use {
     },
     log::*,
     memmap2::MmapMut,
-    solana_measure::measure::Measure,
+    domichain_measure::measure::Measure,
     std::{
         collections::HashSet,
         fs::{self, remove_file, OpenOptions},
@@ -422,14 +422,14 @@ pub mod tests {
                                 let mut pk;
                                 loop {
                                     // expensive, but small numbers and for tests, so ok
-                                    pk = solana_sdk::pubkey::new_rand();
+                                    pk = domichain_sdk::pubkey::new_rand();
                                     if binner.bin_from_pubkey(&pk) == bin {
                                         break;
                                     }
                                 }
 
                                 CalculateHashIntermediate::new(
-                                    solana_sdk::hash::new_rand(&mut rng),
+                                    domichain_sdk::hash::new_rand(&mut rng),
                                     ct as u64,
                                     pk,
                                 )

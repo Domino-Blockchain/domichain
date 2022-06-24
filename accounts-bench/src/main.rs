@@ -4,8 +4,8 @@ extern crate log;
 use {
     clap::{crate_description, crate_name, value_t, App, Arg},
     rayon::prelude::*,
-    solana_measure::measure::Measure,
-    solana_runtime::{
+    domichain_measure::measure::Measure,
+    domichain_runtime::{
         accounts::{
             test_utils::{create_test_accounts, update_accounts_bench},
             Accounts,
@@ -15,18 +15,18 @@ use {
         ancestors::Ancestors,
         rent_collector::RentCollector,
     },
-    solana_sdk::{
+    domichain_sdk::{
         genesis_config::ClusterType, pubkey::Pubkey, sysvar::epoch_schedule::EpochSchedule,
     },
     std::{env, fs, path::PathBuf},
 };
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("num_slots")
                 .long("num_slots")
@@ -131,7 +131,7 @@ fn main() {
             let results_store = accounts.accounts_db.update_accounts_hash_with_index_option(
                 false,
                 false,
-                solana_sdk::clock::Slot::default(),
+                domichain_sdk::clock::Slot::default(),
                 &ancestors,
                 None,
                 false,

@@ -94,7 +94,7 @@ if [[ -f "${SOLANA_LOCK_FILE}" ]]; then
 
     # Begin filesystem cleanup
     git clean -qxdff
-    rm -f /solana-scratch/* /solana-scratch/.[^.]*
+    rm -f /domichain-scratch/* /domichain-scratch/.[^.]*
     cat > "${HOME}/.ssh/authorized_keys" <<EOAK
 ${SSH_AUTHORIZED_KEYS}
 EOAK

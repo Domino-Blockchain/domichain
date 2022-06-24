@@ -6,12 +6,12 @@ use {
         sigverify_stage::{SigVerifier, SigVerifyServiceError},
     },
     crossbeam_channel::Sender,
-    solana_ledger::{
+    domichain_ledger::{
         leader_schedule_cache::LeaderScheduleCache, shred, sigverify_shreds::verify_shreds_gpu,
     },
-    solana_perf::{self, packet::PacketBatch, recycler_cache::RecyclerCache},
-    solana_runtime::bank_forks::BankForks,
-    solana_sdk::clock::Slot,
+    domichain_perf::{self, packet::PacketBatch, recycler_cache::RecyclerCache},
+    domichain_runtime::bank_forks::BankForks,
+    domichain_sdk::clock::Slot,
     std::{
         collections::{HashMap, HashSet},
         sync::{Arc, RwLock},
@@ -81,7 +81,7 @@ impl SigVerifier for ShredSigVerifier {
         leader_slots.insert(std::u64::MAX, [0u8; 32]);
 
         let r = verify_shreds_gpu(&batches, &leader_slots, &self.recycler_cache);
-        solana_perf::sigverify::mark_disabled(&mut batches, &r);
+        domichain_perf::sigverify::mark_disabled(&mut batches, &r);
         batches
     }
 }
@@ -91,18 +91,18 @@ pub mod tests {
     use {
         super::*,
         crossbeam_channel::unbounded,
-        solana_ledger::{
+        domichain_ledger::{
             genesis_utils::create_genesis_config_with_leader,
             shred::{Shred, ShredFlags},
         },
-        solana_perf::packet::Packet,
-        solana_runtime::bank::Bank,
-        solana_sdk::signature::{Keypair, Signer},
+        domichain_perf::packet::Packet,
+        domichain_runtime::bank::Bank,
+        domichain_sdk::signature::{Keypair, Signer},
     };
 
     #[test]
     fn test_sigverify_shreds_read_slots() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut shred = Shred::new_from_data(
             0xdead_c0de,
             0xc0de,
@@ -190,7 +190,7 @@ pub mod tests {
         batches[0][1].buffer_mut()[..shred.payload().len()].copy_from_slice(shred.payload());
         batches[0][1].meta.size = shred.payload().len();
 
-        let num_packets = solana_perf::sigverify::count_packets_in_batches(&batches);
+        let num_packets = domichain_perf::sigverify::count_packets_in_batches(&batches);
         let rv = verifier.verify_batches(batches, num_packets);
         assert!(!rv[0][0].meta.discard());
         assert!(rv[0][1].meta.discard());

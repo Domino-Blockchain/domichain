@@ -2,8 +2,8 @@ use {
     crate::blockstore::Blockstore,
     crossbeam_channel::{bounded, unbounded},
     log::*,
-    solana_measure::measure::Measure,
-    solana_sdk::clock::Slot,
+    domichain_measure::measure::Measure,
+    domichain_sdk::clock::Slot,
     std::{
         cmp::{max, min},
         collections::HashSet,
@@ -43,7 +43,7 @@ struct BlockstoreLoadStats {
 
 pub async fn upload_confirmed_blocks(
     blockstore: Arc<Blockstore>,
-    bigtable: solana_storage_bigtable::LedgerStorage,
+    bigtable: domichain_storage_bigtable::LedgerStorage,
     starting_slot: Slot,
     ending_slot: Slot,
     config: ConfirmedBlockUploadConfig,

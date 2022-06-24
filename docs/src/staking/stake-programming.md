@@ -12,7 +12,7 @@ stakes easier to manage.
 This off-chain program manages a large population of validators staked by a
 central authority. The Domichain Foundation uses an auto-delegation bot to regularly delegate its
 stake to "non-delinquent" validators that meet specified performance requirements. More information can be found on the
-[official announcement](https://forums.solana.com/t/stake-o-matic-delegation-matching-program/790).
+[official announcement](https://forums.domichain.com/t/stake-o-matic-delegation-matching-program/790).
 
 #### Stake Pools
 
@@ -24,4 +24,4 @@ of an auto-delegation bot as described above. As stakes earn rewards, the pool a
 grow proportionally in value. Finally, pool token holders can send SPL tokens
 back to the stake pool to redeem SOL, thereby participating in decentralization with much
 less work required. More information can be found at the
-[SPL stake pool documentation](https://spl.solana.com/stake-pool).
+[SPL stake pool documentation](https://spl.domichain.com/stake-pool).

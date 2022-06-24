@@ -12,20 +12,20 @@
 //!
 //! Logs can be viewed in multiple ways:
 //!
-//! - The `solana logs` command displays logs for all transactions executed on a
+//! - The `domichain logs` command displays logs for all transactions executed on a
 //!   network. Note though that transactions that fail during pre-flight
 //!   simulation are not displayed here.
 //! - When submitting transactions via [`RpcClient`], if Rust's own logging is
-//!   active then the `solana_client` crate logs at the "debug" level any logs
+//!   active then the `domichain_client` crate logs at the "debug" level any logs
 //!   for transactions that failed during simulation. If using [`env_logger`]
-//!   these logs can be activated by setting `RUST_LOG=solana_client=debug`.
+//!   these logs can be activated by setting `RUST_LOG=domichain_client=debug`.
 //! - Logs can be retrieved from a finalized transaction by calling
 //!   [`RpcClient::get_transaction`].
 //! - Block explorers may display logs.
 //!
-//! [`RpcClient`]: https://docs.rs/solana-client/latest/solana_client/rpc_client/struct.RpcClient.html
+//! [`RpcClient`]: https://docs.rs/domichain-client/latest/domichain_client/rpc_client/struct.RpcClient.html
 //! [`env_logger`]: https://docs.rs/env_logger
-//! [`RpcClient::get_transaction`]: https://docs.rs/solana-client/latest/solana_client/rpc_client/struct.RpcClient.html#method.get_transaction
+//! [`RpcClient::get_transaction`]: https://docs.rs/domichain-client/latest/domichain_client/rpc_client/struct.RpcClient.html#method.get_transaction
 //!
 //! While most logging functions are defined in this module, [`Pubkey`]s can
 //! also be efficiently logged with the [`Pubkey::log`] function.
@@ -71,7 +71,7 @@ macro_rules! info {
 /// # Examples
 ///
 /// ```
-/// use solana_program::msg;
+/// use domichain_program::msg;
 ///
 /// // The fast form
 /// msg!("verifying multisig");
@@ -91,35 +91,35 @@ macro_rules! msg {
 /// Print a string to the log.
 #[inline]
 pub fn sol_log(message: &str) {
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     unsafe {
         crate::syscalls::sol_log_(message.as_ptr(), message.len() as u64);
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     crate::program_stubs::sol_log(message);
 }
 
 /// Print 64-bit values represented as hexadecimal to the log.
 #[inline]
 pub fn sol_log_64(arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64) {
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     unsafe {
         crate::syscalls::sol_log_64_(arg1, arg2, arg3, arg4, arg5);
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     crate::program_stubs::sol_log_64(arg1, arg2, arg3, arg4, arg5);
 }
 
 /// Print some slices as base64.
 pub fn sol_log_data(data: &[&[u8]]) {
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     unsafe {
         crate::syscalls::sol_log_data(data as *const _ as *const u8, data.len() as u64)
     };
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     crate::program_stubs::sol_log_data(data);
 }
 
@@ -158,10 +158,10 @@ pub fn sol_log_params(accounts: &[AccountInfo], data: &[u8]) {
 /// Print the remaining compute units available to the program.
 #[inline]
 pub fn sol_log_compute_units() {
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     unsafe {
         crate::syscalls::sol_log_compute_units_();
     }
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     crate::program_stubs::sol_log_compute_units();
 }

@@ -5,13 +5,13 @@
 use {
     crate::banking_stage::{BatchedTransactionDetails, CommitTransactionDetails},
     crossbeam_channel::{unbounded, Receiver, Sender},
-    solana_measure::measure::Measure,
-    solana_runtime::{
+    domichain_measure::measure::Measure,
+    domichain_runtime::{
         bank::Bank,
         cost_model::{CostModel, TransactionCost},
         cost_tracker::CostTrackerError,
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         transaction::{self, SanitizedTransaction, TransactionError},
     },
@@ -72,7 +72,7 @@ impl QosService {
         let metrics_clone = Arc::clone(&metrics);
         let reporting_thread = Some(
             Builder::new()
-                .name("solana-qos-service-metrics-repoting".to_string())
+                .name("domichain-qos-service-metrics-repoting".to_string())
                 .spawn(move || {
                     Self::reporting_loop(running_flag_clone, metrics_clone, report_receiver);
                 })
@@ -551,18 +551,18 @@ mod tests {
     use {
         super::*,
         itertools::Itertools,
-        solana_runtime::genesis_utils::{create_genesis_config, GenesisConfigInfo},
-        solana_sdk::{
+        domichain_runtime::genesis_utils::{create_genesis_config, GenesisConfigInfo},
+        domichain_sdk::{
             hash::Hash,
             signature::{Keypair, Signer},
             system_transaction,
         },
-        solana_vote_program::vote_transaction,
+        domichain_vote_program::vote_transaction,
     };
 
     #[test]
     fn test_compute_transaction_costs() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         // make a vec of txs
         let keypair = Keypair::new();
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_select_transactions_per_cost() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
         let cost_model = Arc::new(RwLock::new(CostModel::default()));
@@ -654,7 +654,7 @@ mod tests {
 
     #[test]
     fn test_update_or_remove_transaction_costs_commited() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 
@@ -708,7 +708,7 @@ mod tests {
 
     #[test]
     fn test_update_or_remove_transaction_costs_not_commited() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 
@@ -747,7 +747,7 @@ mod tests {
 
     #[test]
     fn test_update_or_remove_transaction_costs_mixed_execution() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 

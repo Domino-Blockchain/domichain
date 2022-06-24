@@ -24,20 +24,20 @@ programs should define an `no-entrypoint` feature in `Cargo.toml` and use
 to exclude the entrypoint.
 
 - [Define the
-  feature](https://github.com/solana-labs/solana-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token/program/Cargo.toml#L12)
+  feature](https://github.com/domichain-labs/domichain-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token/program/Cargo.toml#L12)
 - [Exclude the
-  entrypoint](https://github.com/solana-labs/solana-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token/program/src/lib.rs#L12)
+  entrypoint](https://github.com/domichain-labs/domichain-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token/program/src/lib.rs#L12)
 
 Then when other programs include this program as a dependency, they should do so
 using the `no-entrypoint` feature.
 
 - [Include without
-  entrypoint](https://github.com/solana-labs/solana-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token-swap/program/Cargo.toml#L22)
+  entrypoint](https://github.com/domichain-labs/domichain-program-library/blob/fca9836a2c8e18fc7e3595287484e9acd60a8f64/token-swap/program/Cargo.toml#L22)
 
 ## Project Dependencies
 
 At a minimum, Domichain Rust programs must pull in the
-[solana-program](https://crates.io/crates/solana-program) crate.
+[domichain-program](https://crates.io/crates/domichain-program) crate.
 
 Domichain BPF programs have some [restrictions](#restrictions) that may prevent the
 inclusion of some crates as dependencies or require special handling.
@@ -60,7 +60,7 @@ First setup the environment:
 
 - Install the latest Rust stable from https://rustup.rs/
 - Install the latest Domichain command-line tools from
-  https://docs.solana.com/cli/install-solana-cli-tools
+  https://docs.domichain.com/cli/install-domichain-cli-tools
 
 The normal cargo build is available for building programs against your host
 machine which can be used for unit testing:
@@ -84,12 +84,12 @@ exercising program functions directly.
 
 To help facilitate testing in an environment that more closely matches a live
 cluster, developers can use the
-[`program-test`](https://crates.io/crates/solana-program-test) crate. The
+[`program-test`](https://crates.io/crates/domichain-program-test) crate. The
 `program-test` crate starts up a local instance of the runtime and allows tests
 to send multiple transactions while keeping state for the duration of the test.
 
 For more information the [test in sysvar
-example](https://github.com/solana-labs/solana-program-library/blob/master/examples/rust/sysvar/tests/functional.rs)
+example](https://github.com/domichain-labs/domichain-program-library/blob/master/examples/rust/sysvar/tests/functional.rs)
 shows how an instruction containing sysvar account is sent and processed by the
 program.
 
@@ -102,9 +102,9 @@ Programs must be written for and deployed to the same loader. For more details
 see the [overview](overview#loaders).
 
 Currently there are two supported loaders [BPF
-Loader](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/bpf_loader.rs#L17)
+Loader](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/bpf_loader.rs#L17)
 and [BPF loader
-deprecated](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/bpf_loader_deprecated.rs#L14)
+deprecated](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/bpf_loader_deprecated.rs#L14)
 
 They both have the same raw entrypoint definition, the following is the raw
 symbol that the runtime looks up and calls:
@@ -123,9 +123,9 @@ processing function, and returns the results.
 You can find the entrypoint macros here:
 
 - [BPF Loader's entrypoint
-  macro](https://github.com/solana-labs/solana/blob/9b1199cdb1b391b00d510ed7fc4866bdf6ee4eb3/sdk/program/src/entrypoint.rs#L42)
+  macro](https://github.com/domichain-labs/domichain/blob/9b1199cdb1b391b00d510ed7fc4866bdf6ee4eb3/sdk/program/src/entrypoint.rs#L42)
 - [BPF Loader deprecated's entrypoint
-  macro](https://github.com/solana-labs/solana/blob/9b1199cdb1b391b00d510ed7fc4866bdf6ee4eb3/sdk/program/src/entrypoint_deprecated.rs#L38)
+  macro](https://github.com/domichain-labs/domichain/blob/9b1199cdb1b391b00d510ed7fc4866bdf6ee4eb3/sdk/program/src/entrypoint_deprecated.rs#L38)
 
 The program defined instruction processing function that the entrypoint macros
 call must be of this form:
@@ -136,7 +136,7 @@ pub type ProcessInstruction =
 ```
 
 Refer to [helloworld's use of the
-entrypoint](https://github.com/solana-labs/example-helloworld/blob/1e049076e10be8712b1a725d2d886ce0cd036b2e/src/program-rust/src/lib.rs#L19)
+entrypoint](https://github.com/domichain-labs/example-helloworld/blob/1e049076e10be8712b1a725d2d886ce0cd036b2e/src/program-rust/src/lib.rs#L19)
 as an example of how things fit together.
 
 ### Parameter Deserialization
@@ -146,9 +146,9 @@ parameters into Rust types. The entrypoint macros automatically calls the
 deserialization helper:
 
 - [BPF Loader
-  deserialization](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint.rs#L146)
+  deserialization](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint.rs#L146)
 - [BPF Loader deprecated
-  deserialization](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint_deprecated.rs#L57)
+  deserialization](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint_deprecated.rs#L57)
 
 Some programs may want to perform deserialization themselves and they can by
 providing their own implementation of the [raw entrypoint](#program-entrypoint).
@@ -177,7 +177,7 @@ The program id is the public key of the currently executing program.
 
 The accounts is an ordered slice of the accounts referenced by the instruction
 and represented as an
-[AccountInfo](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/account_info.rs#L12)
+[AccountInfo](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/account_info.rs#L12)
 structures. An account's place in the array signifies its meaning, for example,
 when transferring lamports an instruction may define the first account as the
 source and the second as the destination.
@@ -201,7 +201,7 @@ being processed.
 ## Heap
 
 Rust programs implement the heap directly by defining a custom
-[`global_allocator`](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint.rs#L72)
+[`global_allocator`](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/entrypoint.rs#L72)
 
 Programs may implement their own `global_allocator` based on its specific needs.
 Refer to the [custom heap example](#examples) for more information.
@@ -274,7 +274,7 @@ getrandom = { version = "0.2.2", features = ["custom"] }
 
 Rust's `println!` macro is computationally expensive and not supported. Instead
 the helper macro
-[`msg!`](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/log.rs#L33)
+[`msg!`](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/log.rs#L33)
 is provided.
 
 `msg!` has two forms:
@@ -305,13 +305,13 @@ Rust's `panic!`, `assert!`, and internal panic results are printed to the
 [program logs](debugging.md#logging) by default.
 
 ```
-INFO  solana_runtime::message_processor] Finalized account CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ
-INFO  solana_runtime::message_processor] Call BPF program CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ
-INFO  solana_runtime::message_processor] Program log: Panicked at: 'assertion failed: `(left == right)`
+INFO  domichain_runtime::message_processor] Finalized account CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ
+INFO  domichain_runtime::message_processor] Call BPF program CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ
+INFO  domichain_runtime::message_processor] Program log: Panicked at: 'assertion failed: `(left == right)`
       left: `1`,
      right: `2`', rust/panic/src/lib.rs:22:5
-INFO  solana_runtime::message_processor] BPF program consumed 5453 of 200000 units
-INFO  solana_runtime::message_processor] BPF program CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ failed: BPF program panicked
+INFO  domichain_runtime::message_processor] BPF program consumed 5453 of 200000 units
+INFO  domichain_runtime::message_processor] BPF program CGLhHSuWsp1gT4B7MY2KACqp9RUwQRhcUFfVSuxpSajZ failed: BPF program panicked
 ```
 
 ### Custom Panic Handler
@@ -330,11 +330,11 @@ custom-panic = []
 Then provide a custom implementation of the panic handler:
 
 ```rust
-#[cfg(all(feature = "custom-panic", target_os = "solana"))]
+#[cfg(all(feature = "custom-panic", target_os = "domichain"))]
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
-    solana_program::msg!("program custom panic enabled");
-    solana_program::msg!("{}", info);
+    domichain_program::msg!("program custom panic enabled");
+    domichain_program::msg!("{}", info);
 }
 ```
 
@@ -351,7 +351,7 @@ programs can provide their own custom panic handler with an empty
 implementation.
 
 ```rust
-#[cfg(all(feature = "custom-panic", target_os = "solana"))]
+#[cfg(all(feature = "custom-panic", target_os = "domichain"))]
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     // Do nothing to save space
@@ -361,7 +361,7 @@ fn custom_panic(info: &core::panic::PanicInfo<'_>) {
 ## Compute Budget
 
 Use the system call
-[`sol_log_compute_units()`](https://github.com/solana-labs/solana/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/log.rs#L141)
+[`sol_log_compute_units()`](https://github.com/domichain-labs/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/log.rs#L141)
 to log a message containing the remaining number of compute units the program
 may consume before execution is halted
 
@@ -388,5 +388,5 @@ $ cargo build-bpf --dump
 ## Examples
 
 The [Domichain Program Library
-github](https://github.com/solana-labs/solana-program-library/tree/master/examples/rust)
+github](https://github.com/domichain-labs/domichain-program-library/tree/master/examples/rust)
 repo contains a collection of Rust examples.

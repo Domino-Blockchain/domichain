@@ -4,14 +4,14 @@ extern crate test;
 
 use {
     bincode::{deserialize, serialize},
-    solana_ledger::{
+    domichain_ledger::{
         blockstore::Blockstore,
         blockstore_db::{columns as cf, LedgerColumn},
         get_tmp_ledger_path,
     },
-    solana_runtime::bank::RewardType,
-    solana_sdk::{clock::Slot, pubkey},
-    solana_transaction_status::{Reward, Rewards},
+    domichain_runtime::bank::RewardType,
+    domichain_sdk::{clock::Slot, pubkey},
+    domichain_transaction_status::{Reward, Rewards},
     std::path::Path,
     test::Bencher,
 };

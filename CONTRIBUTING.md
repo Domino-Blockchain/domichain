@@ -149,12 +149,12 @@ matches the logical flow in your PR description.
 ### The PR / Issue Labels
 Labels make it easier to manage and track PRs / issues.  Below some common labels
 that we use in Domichain.  For the complete list of labels, please refer to the
-[label page](https://github.com/solana-labs/solana/issues/labels):
+[label page](https://github.com/domichain-labs/domichain/issues/labels):
 
 * "feature-gate": when you add a new feature gate or modify the behavior of
 an existing feature gate, please add the "feature-gate" label to your PR.
 New feature gates should also always have a corresponding tracking issue
-(go to "New Issue" -> "Feature Gate Tracker [Get Started](https://github.com/solana-labs/solana/issues/new?assignees=&labels=feature-gate&template=1-feature-gate.yml&title=Feature+Gate%3A+)")
+(go to "New Issue" -> "Feature Gate Tracker [Get Started](https://github.com/domichain-labs/domichain/issues/new?assignees=&labels=feature-gate&template=1-feature-gate.yml&title=Feature+Gate%3A+)")
 and should be updated each time the feature is activated on a cluster.
 
 * "automerge": When a PR is labelled with "automerge", the PR will be
@@ -260,7 +260,7 @@ confused with 3-letter acronyms.
 Domichain's architecture is described by docs generated from markdown files in
 the `docs/src/` directory, maintained by an *editor* (currently @garious). To
 add a design proposal, you'll need to include it in the
-[Accepted Design Proposals](https://docs.solana.com/proposals/accepted-design-proposals)
+[Accepted Design Proposals](https://docs.domichain.com/proposals/accepted-design-proposals)
 section of the Domichain docs.  Here's the full process:
 
 1. Propose a design by creating a PR that adds a markdown document to the

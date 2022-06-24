@@ -10,7 +10,7 @@
 //! The protocol guarantees computationally soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::encryption::{
         elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
@@ -46,7 +46,7 @@ pub struct CtxtCommEqualityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CtxtCommEqualityProof {
     /// Equality proof constructor. The proof is with respect to a ciphertext and commitment.
     ///
@@ -243,7 +243,7 @@ pub struct CtxtCtxtEqualityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CtxtCtxtEqualityProof {
     /// Equality proof constructor. The proof is with respect to two ciphertexts.
     ///

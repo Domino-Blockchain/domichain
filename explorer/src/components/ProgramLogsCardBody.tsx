@@ -1,4 +1,4 @@
-import { Message, ParsedMessage } from "@solana/web3.js";
+import { Message, ParsedMessage } from "@domichain/web3.js";
 import { Cluster } from "providers/cluster";
 import { TableCardBody } from "components/common/TableCardBody";
 import { InstructionLogs } from "utils/program-logs";

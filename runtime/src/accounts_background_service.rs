@@ -14,8 +14,8 @@ use {
     crossbeam_channel::{Receiver, SendError, Sender, TrySendError},
     log::*,
     rand::{thread_rng, Rng},
-    solana_measure::measure::Measure,
-    solana_sdk::{
+    domichain_measure::measure::Measure,
+    domichain_sdk::{
         clock::{BankId, Slot},
         hash::Hash,
     },
@@ -90,7 +90,7 @@ impl BankDropQueueStats {
             BankDropQueueEvent::Disconnected => "disconnected",
         };
 
-        let ts = solana_sdk::timing::timestamp();
+        let ts = domichain_sdk::timing::timestamp();
         let last_report_time = self.report_time.load(Ordering::Acquire);
         if ts.saturating_sub(last_report_time) > BANK_DROP_SIGNAL_CHANNEL_REPORT_INTERVAL {
             let val = counter.load(Ordering::Relaxed);
@@ -455,7 +455,7 @@ impl AccountsBackgroundService {
         let mut total_remove_slots_time = 0;
         let mut last_expiration_check_time = Instant::now();
         let t_background = Builder::new()
-            .name("solana-bg-accounts".to_string())
+            .name("domichain-bg-accounts".to_string())
             .spawn(move || {
                 let mut last_snapshot_end_time = None;
                 loop {
@@ -606,7 +606,7 @@ mod test {
         super::*,
         crate::genesis_utils::create_genesis_config,
         crossbeam_channel::unbounded,
-        solana_sdk::{account::AccountSharedData, pubkey::Pubkey},
+        domichain_sdk::{account::AccountSharedData, pubkey::Pubkey},
     };
 
     #[test]

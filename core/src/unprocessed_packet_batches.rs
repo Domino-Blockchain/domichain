@@ -1,8 +1,8 @@
 use {
     min_max_heap::MinMaxHeap,
-    solana_perf::packet::{Packet, PacketBatch},
-    solana_program_runtime::compute_budget::ComputeBudget,
-    solana_sdk::{
+    domichain_perf::packet::{Packet, PacketBatch},
+    domichain_program_runtime::compute_budget::ComputeBudget,
+    domichain_sdk::{
         hash::Hash,
         message::{Message, SanitizedVersionedMessage},
         sanitize::SanitizeError,
@@ -420,7 +420,7 @@ pub fn transactions_to_deserialized_packets(
 mod tests {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             compute_budget::ComputeBudgetInstruction, message::VersionedMessage, pubkey::Pubkey,
             signature::Keypair, system_instruction, system_transaction,
         },
@@ -430,7 +430,7 @@ mod tests {
     fn packet_with_sender_stake(sender_stake: u64, ip: Option<IpAddr>) -> DeserializedPacket {
         let tx = system_transaction::transfer(
             &Keypair::new(),
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             1,
             Hash::new_unique(),
         );
@@ -445,7 +445,7 @@ mod tests {
     fn packet_with_priority_details(priority: u64, compute_unit_limit: u64) -> DeserializedPacket {
         let tx = system_transaction::transfer(
             &Keypair::new(),
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             1,
             Hash::new_unique(),
         );
@@ -574,7 +574,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: 0,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -618,7 +618,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: requested_price,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );

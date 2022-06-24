@@ -1,8 +1,8 @@
 /farf/
-/solana-release/
-/solana-release.tar.bz2
-/solana-metrics/
-/solana-metrics.tar.bz2
+/domichain-release/
+/domichain-release.tar.bz2
+/domichain-metrics/
+/domichain-metrics.tar.bz2
 /target/
 /test-ledger/
 
@@ -20,7 +20,7 @@ log-*/
 
 # intellij files
 /.idea/
-/solana.iml
+/domichain.iml
 /.vscode/
 
 # fetch-spl.sh artifacts

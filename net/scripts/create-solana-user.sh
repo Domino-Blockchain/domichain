@@ -4,25 +4,25 @@ set -ex
 [[ $(uname) = Linux ]] || exit 1
 [[ $USER = root ]] || exit 1
 
-if grep -q solana /etc/passwd ; then
-  echo "User solana already exists"
+if grep -q domichain /etc/passwd ; then
+  echo "User domichain already exists"
 else
-  adduser solana --gecos "" --disabled-password --quiet
-  adduser solana sudo
-  adduser solana adm
-  echo "solana ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-  id solana
+  adduser domichain --gecos "" --disabled-password --quiet
+  adduser domichain sudo
+  adduser domichain adm
+  echo "domichain ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+  id domichain
 
-  [[ -r /solana-scratch/id_ecdsa ]] || exit 1
-  [[ -r /solana-scratch/id_ecdsa.pub ]] || exit 1
+  [[ -r /domichain-scratch/id_ecdsa ]] || exit 1
+  [[ -r /domichain-scratch/id_ecdsa.pub ]] || exit 1
 
-  sudo -u solana bash -c "
-    echo 'PATH=\"/home/solana/.cargo/bin:$PATH\"' > /home/solana/.profile
-    mkdir -p /home/solana/.ssh/
-    cd /home/solana/.ssh/
-    cp /solana-scratch/id_ecdsa.pub authorized_keys
+  sudo -u domichain bash -c "
+    echo 'PATH=\"/home/domichain/.cargo/bin:$PATH\"' > /home/domichain/.profile
+    mkdir -p /home/domichain/.ssh/
+    cd /home/domichain/.ssh/
+    cp /domichain-scratch/id_ecdsa.pub authorized_keys
     umask 377
-    cp /solana-scratch/id_ecdsa id_ecdsa
+    cp /domichain-scratch/id_ecdsa id_ecdsa
     echo \"
       Host *
       BatchMode yes

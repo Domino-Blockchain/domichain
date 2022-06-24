@@ -51,12 +51,12 @@ mod tests {
         fs_extra::dir::CopyOptions,
         itertools::Itertools,
         log::{info, trace},
-        solana_core::{
+        domichain_core::{
             accounts_hash_verifier::AccountsHashVerifier,
             snapshot_packager_service::SnapshotPackagerService,
         },
-        solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
-        solana_runtime::{
+        domichain_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
+        domichain_runtime::{
             accounts_background_service::{
                 AbsRequestHandler, AbsRequestSender, AccountsBackgroundService,
                 SnapshotRequestHandler,
@@ -75,7 +75,7 @@ mod tests {
             snapshot_utils::{self, ArchiveFormat, SnapshotVersion},
             status_cache::MAX_CACHE_ENTRIES,
         },
-        solana_sdk::{
+        domichain_sdk::{
             clock::Slot,
             genesis_config::{ClusterType, GenesisConfig},
             hash::{hashv, Hash},
@@ -84,7 +84,7 @@ mod tests {
             system_transaction,
             timing::timestamp,
         },
-        solana_streamer::socket::SocketAddrSpace,
+        domichain_streamer::socket::SocketAddrSpace,
         std::{
             collections::HashSet,
             fs,
@@ -132,7 +132,7 @@ mod tests {
             // snapshots.
             let mut genesis_config_info = create_genesis_config_with_leader(
                 10_000,                          // mint_lamports
-                &solana_sdk::pubkey::new_rand(), // validator_pubkey
+                &domichain_sdk::pubkey::new_rand(), // validator_pubkey
                 1,                               // validator_stake_lamports
             );
             genesis_config_info.genesis_config.cluster_type = cluster_type;
@@ -239,7 +239,7 @@ mod tests {
     ) where
         F: Fn(&mut Bank, &Keypair),
     {
-        solana_logger::setup();
+        domichain_logger::setup();
         // Set up snapshotting config
         let mut snapshot_test_config = SnapshotTestConfig::new(
             snapshot_version,
@@ -295,7 +295,7 @@ mod tests {
             Some(SnapshotType::FullSnapshot),
         )
         .unwrap();
-        solana_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
+        domichain_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
             accounts_package.snapshot_links.path(),
             accounts_package.slot,
             &last_bank.get_accounts_hash(),
@@ -360,7 +360,7 @@ mod tests {
         snapshot_version: SnapshotVersion,
         cluster_type: ClusterType,
     ) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         // Set up snapshotting config
         let mut snapshot_test_config =
@@ -528,7 +528,7 @@ mod tests {
                     .unwrap()
                     .take()
                     .unwrap();
-                solana_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
+                domichain_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
                     accounts_package.snapshot_links.path(),
                     accounts_package.slot,
                     &Hash::default(),
@@ -571,7 +571,7 @@ mod tests {
         .unwrap();
 
         // files were saved off before we reserialized the bank in the hacked up accounts_hash_verifier stand-in.
-        solana_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
+        domichain_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
             saved_snapshots_dir.path(),
             saved_slot,
             &Hash::default(),
@@ -587,7 +587,7 @@ mod tests {
     }
 
     fn run_test_slots_to_snapshot(snapshot_version: SnapshotVersion, cluster_type: ClusterType) {
-        solana_logger::setup();
+        domichain_logger::setup();
         let num_set_roots = MAX_CACHE_ENTRIES * 2;
 
         for add_root_interval in &[1, 3, 9] {
@@ -672,7 +672,7 @@ mod tests {
         snapshot_version: SnapshotVersion,
         cluster_type: ClusterType,
     ) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         const SET_ROOT_INTERVAL: Slot = 2;
         const INCREMENTAL_SNAPSHOT_ARCHIVE_INTERVAL_SLOTS: Slot = SET_ROOT_INTERVAL * 2;
@@ -880,7 +880,7 @@ mod tests {
         snapshot_version: SnapshotVersion,
         cluster_type: ClusterType,
     ) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         const SET_ROOT_INTERVAL_SLOTS: Slot = 2;
         const BANK_SNAPSHOT_INTERVAL_SLOTS: Slot = SET_ROOT_INTERVAL_SLOTS * 2;

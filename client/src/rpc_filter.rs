@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 use {
-    solana_sdk::account::{AccountSharedData, ReadableAccount},
+    domichain_sdk::account::{AccountSharedData, ReadableAccount},
     spl_token_2022::{generic_token_account::GenericTokenAccount, state::Account},
     std::borrow::Cow,
     thiserror::Error,

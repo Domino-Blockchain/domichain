@@ -7,8 +7,8 @@ use {
         SIZE_OF_CODING_SHRED_HEADERS, SIZE_OF_COMMON_SHRED_HEADER, SIZE_OF_DATA_SHRED_HEADERS,
         SIZE_OF_SIGNATURE,
     },
-    solana_perf::packet::deserialize_from_with_limit,
-    solana_sdk::{
+    domichain_perf::packet::deserialize_from_with_limit,
+    domichain_sdk::{
         clock::Slot,
         hash::{hashv, Hash},
         signature::Signature,
@@ -271,7 +271,7 @@ impl Shred for ShredCode {
             .take(usize::from(proof_size))
             .collect::<Result<_, _>>()?;
         let merkle_branch = MerkleBranch { root, proof };
-        // see: https://github.com/solana-labs/solana/pull/10109
+        // see: https://github.com/domichain-labs/domichain/pull/10109
         payload.truncate(Self::SIZE_OF_PAYLOAD);
         let shred = Self {
             common_header,

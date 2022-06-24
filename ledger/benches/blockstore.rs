@@ -1,16 +1,16 @@
 #![allow(clippy::integer_arithmetic)]
 #![feature(test)]
-extern crate solana_ledger;
+extern crate domichain_ledger;
 extern crate test;
 
 use {
     rand::Rng,
-    solana_entry::entry::{create_ticks, Entry},
-    solana_ledger::{
+    domichain_entry::entry::{create_ticks, Entry},
+    domichain_ledger::{
         blockstore::{entries_to_test_shreds, Blockstore},
         get_tmp_ledger_path,
     },
-    solana_sdk::{clock::Slot, hash::Hash},
+    domichain_sdk::{clock::Slot, hash::Hash},
     std::path::Path,
     test::Bencher,
 };

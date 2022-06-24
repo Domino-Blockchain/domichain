@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import * as BufferLayout from '@solana/buffer-layout';
+import * as BufferLayout from '@domichain/buffer-layout';
 
 import * as Layout from './layout';
 
@@ -11,7 +11,7 @@ export interface IInstructionInputData {
  * @internal
  */
 export type InstructionType<TInputData extends IInstructionInputData> = {
-  /** The Instruction index (from solana upstream program) */
+  /** The Instruction index (from domichain upstream program) */
   index: number;
   /** The BufferLayout to use to build data */
   layout: BufferLayout.Layout<TInputData>;

@@ -2,7 +2,7 @@
 title: CLI Usage Reference
 ---
 
-The [solana-cli crate](https://crates.io/crates/solana-cli) provides a command-line interface tool for Domichain
+The [domichain-cli crate](https://crates.io/crates/domichain-cli) provides a command-line interface tool for Domichain
 
 ## Examples
 
@@ -10,7 +10,7 @@ The [solana-cli crate](https://crates.io/crates/solana-cli) provides a command-l
 
 ```bash
 // Command
-$ solana-keygen pubkey
+$ domichain-keygen pubkey
 
 // Return
 <PUBKEY>
@@ -20,7 +20,7 @@ $ solana-keygen pubkey
 
 ```bash
 // Command
-$ solana airdrop 1
+$ domichain airdrop 1
 
 // Return
 "1 SOL"
@@ -30,7 +30,7 @@ $ solana airdrop 1
 
 ```bash
 // Command
-$ solana balance
+$ domichain balance
 
 // Return
 "3.00050001 SOL"
@@ -40,7 +40,7 @@ $ solana balance
 
 ```bash
 // Command
-$ solana confirm <TX_SIGNATURE>
+$ domichain confirm <TX_SIGNATURE>
 
 // Return
 "Confirmed" / "Not found" / "Transaction failed with error <ERR>"
@@ -50,7 +50,7 @@ $ solana confirm <TX_SIGNATURE>
 
 ```bash
 // Command
-$ solana program deploy <PATH>
+$ domichain program deploy <PATH>
 
 // Return
 <PROGRAM_ID>

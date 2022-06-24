@@ -1,14 +1,14 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 edition = "2021"
-name = "solana-validator"
+name = "domichain-validator"
 description = "Blockchain, Rebuilt for Scale"
 version = "1.11.1"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-validator"
-default-run = "solana-validator"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-validator"
+default-run = "domichain-validator"
 
 [dependencies]
 chrono = { version = "0.4.11", features = ["serde"] }
@@ -28,30 +28,30 @@ num_cpus = "1.13.1"
 rand = "0.7.0"
 serde = "1.0.137"
 serde_json = "1.0.81"
-solana-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
-solana-cli-config = { path = "../cli-config", version = "=1.11.1" }
-solana-client = { path = "../client", version = "=1.11.1" }
-solana-core = { path = "../core", version = "=1.11.1" }
-solana-download-utils = { path = "../download-utils", version = "=1.11.1" }
-solana-entry = { path = "../entry", version = "=1.11.1" }
-solana-faucet = { path = "../faucet", version = "=1.11.1" }
-solana-genesis-utils = { path = "../genesis-utils", version = "=1.11.1" }
-solana-gossip = { path = "../gossip", version = "=1.11.1" }
-solana-ledger = { path = "../ledger", version = "=1.11.1" }
-solana-logger = { path = "../logger", version = "=1.11.1" }
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
-solana-net-utils = { path = "../net-utils", version = "=1.11.1" }
-solana-perf = { path = "../perf", version = "=1.11.1" }
-solana-poh = { path = "../poh", version = "=1.11.1" }
-solana-rpc = { path = "../rpc", version = "=1.11.1" }
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-send-transaction-service = { path = "../send-transaction-service", version = "=1.11.1" }
-solana-storage-bigtable = { path = "../storage-bigtable", version = "=1.11.1" }
-solana-streamer = { path = "../streamer", version = "=1.11.1" }
-solana-test-validator = { path = "../test-validator", version = "=1.11.1" }
-solana-version = { path = "../version", version = "=1.11.1" }
-solana-vote-program = { path = "../programs/vote", version = "=1.11.1" }
+domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
+domichain-cli-config = { path = "../cli-config", version = "=1.11.1" }
+domichain-client = { path = "../client", version = "=1.11.1" }
+domichain-core = { path = "../core", version = "=1.11.1" }
+domichain-download-utils = { path = "../download-utils", version = "=1.11.1" }
+domichain-entry = { path = "../entry", version = "=1.11.1" }
+domichain-faucet = { path = "../faucet", version = "=1.11.1" }
+domichain-genesis-utils = { path = "../genesis-utils", version = "=1.11.1" }
+domichain-gossip = { path = "../gossip", version = "=1.11.1" }
+domichain-ledger = { path = "../ledger", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-net-utils = { path = "../net-utils", version = "=1.11.1" }
+domichain-perf = { path = "../perf", version = "=1.11.1" }
+domichain-poh = { path = "../poh", version = "=1.11.1" }
+domichain-rpc = { path = "../rpc", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-send-transaction-service = { path = "../send-transaction-service", version = "=1.11.1" }
+domichain-storage-bigtable = { path = "../storage-bigtable", version = "=1.11.1" }
+domichain-streamer = { path = "../streamer", version = "=1.11.1" }
+domichain-test-validator = { path = "../test-validator", version = "=1.11.1" }
+domichain-version = { path = "../version", version = "=1.11.1" }
+domichain-vote-program = { path = "../programs/vote", version = "=1.11.1" }
 symlink = "0.1.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]

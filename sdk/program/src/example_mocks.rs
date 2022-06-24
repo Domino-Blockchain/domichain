@@ -13,7 +13,7 @@
 #![doc(hidden)]
 #![allow(clippy::new_without_default)]
 
-pub mod solana_client {
+pub mod domichain_client {
     pub mod client_error {
         #[derive(thiserror::Error, Debug)]
         #[error("mock-error")]
@@ -23,7 +23,7 @@ pub mod solana_client {
 
     pub mod nonce_utils {
         use {
-            super::super::solana_sdk::{
+            super::super::domichain_sdk::{
                 account::ReadableAccount, account_utils::StateMut, pubkey::Pubkey,
             },
             crate::nonce::state::{Data, DurableNonce, Versions},
@@ -47,7 +47,7 @@ pub mod solana_client {
     pub mod rpc_client {
         use {
             super::{
-                super::solana_sdk::{
+                super::domichain_sdk::{
                     account::Account, hash::Hash, pubkey::Pubkey, signature::Signature,
                     transaction::Transaction,
                 },
@@ -106,12 +106,12 @@ pub mod solana_client {
     }
 }
 
-/// Re-exports and mocks of solana-program modules that mirror those from
-/// solana-program.
+/// Re-exports and mocks of domichain-program modules that mirror those from
+/// domichain-program.
 ///
-/// This lets examples in solana-program appear to be written as client
+/// This lets examples in domichain-program appear to be written as client
 /// programs.
-pub mod solana_sdk {
+pub mod domichain_sdk {
     pub use crate::{
         address_lookup_table_account, hash, instruction, message, nonce,
         pubkey::{self, Pubkey},
@@ -270,7 +270,7 @@ pub mod solana_sdk {
     }
 }
 
-pub mod solana_address_lookup_table_program {
+pub mod domichain_address_lookup_table_program {
     crate::declare_id!("AddressLookupTab1e1111111111111111111111111");
 
     pub mod state {

@@ -1,6 +1,6 @@
 use {
     super::*,
-    spl_token_2022::solana_program::{program_option::COption, pubkey::Pubkey},
+    spl_token_2022::domichain_program::{program_option::COption, pubkey::Pubkey},
 };
 
 pub(in crate::parse_token) fn parse_initialize_mint_close_authority_instruction(
@@ -24,8 +24,8 @@ mod test {
         super::*,
         crate::parse_token::test::*,
         serde_json::Value,
-        solana_sdk::pubkey::Pubkey,
-        spl_token_2022::{instruction::*, solana_program::message::Message},
+        domichain_sdk::pubkey::Pubkey,
+        spl_token_2022::{instruction::*, domichain_program::message::Message},
     };
 
     #[test]

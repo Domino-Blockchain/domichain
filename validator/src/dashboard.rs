@@ -4,11 +4,11 @@ use {
         ProgressBar,
     },
     console::style,
-    solana_client::{
+    domichain_client::{
         client_error, rpc_client::RpcClient, rpc_request, rpc_response::RpcContactInfo,
     },
-    solana_core::validator::ValidatorStartProgress,
-    solana_sdk::{
+    domichain_core::validator::ValidatorStartProgress,
+    domichain_sdk::{
         clock::Slot, commitment_config::CommitmentConfig, exit::Exit, native_token::Sol,
         pubkey::Pubkey,
     },

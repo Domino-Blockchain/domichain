@@ -12,10 +12,10 @@ use {
         pubkey::Pubkey,
         sanitize::Sanitize,
         signature::Signature,
-        solana_sdk::feature_set,
+        domichain_sdk::feature_set,
         transaction::{Result, Transaction, TransactionError, VersionedTransaction},
     },
-    solana_program::message::SanitizedVersionedMessage,
+    domichain_program::message::SanitizedVersionedMessage,
     std::sync::Arc,
 };
 

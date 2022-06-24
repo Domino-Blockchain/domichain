@@ -23,13 +23,13 @@ use {
         IteratorMode as RocksIteratorMode, Options, WriteBatch as RWriteBatch, DB,
     },
     serde::{de::DeserializeOwned, Serialize},
-    solana_runtime::hardened_unpack::UnpackError,
-    solana_sdk::{
+    domichain_runtime::hardened_unpack::UnpackError,
+    domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         pubkey::Pubkey,
         signature::Signature,
     },
-    solana_storage_proto::convert::generated,
+    domichain_storage_proto::convert::generated,
     std::{
         collections::{HashMap, HashSet},
         ffi::{CStr, CString},
@@ -285,13 +285,13 @@ impl Rocks {
                 write_batch_perf_status: PerfSamplingStatus::default(),
             },
             AccessType::Secondary => {
-                let secondary_path = path.join("solana-secondary");
+                let secondary_path = path.join("domichain-secondary");
 
                 info!(
                     "Opening Rocks with secondary (read only) access at: {:?}",
                     secondary_path
                 );
-                info!("This secondary access could temporarily degrade other accesses, such as by solana-validator");
+                info!("This secondary access could temporarily degrade other accesses, such as by domichain-validator");
 
                 Rocks {
                     db: DB::open_cf_descriptors_as_secondary(
@@ -307,7 +307,7 @@ impl Rocks {
                 }
             }
         };
-        // This is only needed by solana-validator for LedgerCleanupService so guard with AccessType::Primary
+        // This is only needed by domichain-validator for LedgerCleanupService so guard with AccessType::Primary
         if matches!(access_type, AccessType::Primary) {
             for cf_name in Self::columns() {
                 // these special column families must be excluded from LedgerCleanupService's rocksdb

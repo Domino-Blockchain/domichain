@@ -54,7 +54,7 @@ get() {
   declare version=$1
   declare dirname=$2
   declare job=$3
-  declare cache_root=~/.cache/solana
+  declare cache_root=~/.cache/domichain
   declare cache_dirname="$cache_root/$version/$dirname"
   declare cache_partial_dirname="$cache_dirname"_partial
 
@@ -109,9 +109,9 @@ if [[ ! -e bpf-tools-$version.md || ! -e bpf-tools ]]; then
     rm -rf bpf-tools*
     rm -rf xargo
     job="download \
-           https://github.com/solana-labs/bpf-tools/releases/download \
+           https://github.com/domichain-labs/bpf-tools/releases/download \
            $version \
-           solana-bpf-tools-$machine.tar.bz2 \
+           domichain-bpf-tools-$machine.tar.bz2 \
            bpf-tools"
     get $version bpf-tools "$job"
   )

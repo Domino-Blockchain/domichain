@@ -13,9 +13,9 @@ use {
     ahash::AHasher,
     rand::{thread_rng, Rng},
     rayon::{prelude::*, ThreadPool},
-    solana_metrics::inc_new_counter_debug,
-    solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::{
+    domichain_metrics::inc_new_counter_debug,
+    domichain_rayon_threadlimit::get_thread_count,
+    domichain_sdk::{
         hash::Hash,
         message::{MESSAGE_HEADER_LENGTH, MESSAGE_VERSION_PREFIX},
         pubkey::Pubkey,
@@ -423,7 +423,7 @@ fn check_for_simple_vote_transaction(
     if packet
         .data(instruction_program_id_start..instruction_program_id_end)
         .ok_or(PacketError::InvalidLen)?
-        == solana_sdk::vote::program::id().as_ref()
+        == domichain_sdk::vote::program::id().as_ref()
     {
         packet.meta.flags |= PacketFlags::SIMPLE_VOTE_TX;
     }
@@ -816,7 +816,7 @@ mod tests {
         bincode::{deserialize, serialize},
         curve25519_dalek::{edwards::CompressedEdwardsY, scalar::Scalar},
         rand::{thread_rng, Rng},
-        solana_sdk::{
+        domichain_sdk::{
             instruction::CompiledInstruction,
             message::{Message, MessageHeader},
             signature::{Keypair, Signature, Signer},
@@ -934,7 +934,7 @@ mod tests {
 
     #[test]
     fn test_pubkey_too_small() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut tx = test_tx();
         let sig = tx.signatures[0];
         const NUM_SIG: usize = 18;
@@ -958,7 +958,7 @@ mod tests {
     fn test_pubkey_len() {
         // See that the verify cannot walk off the end of the packet
         // trying to index into the account_keys to access pubkey.
-        solana_logger::setup();
+        domichain_logger::setup();
 
         const NUM_SIG: usize = 17;
         let keypair1 = Keypair::new();
@@ -1271,7 +1271,7 @@ mod tests {
 
     #[test]
     fn test_verify_multisig() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let tx = test_multisig_tx();
         let mut packet = Packet::from_data(None, tx).unwrap();
@@ -1306,7 +1306,7 @@ mod tests {
 
     #[test]
     fn test_verify_fuzz() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let tx = test_multisig_tx();
         let packet = Packet::from_data(None, tx).unwrap();
@@ -1357,7 +1357,7 @@ mod tests {
 
     #[test]
     fn test_get_checked_scalar() {
-        solana_logger::setup();
+        domichain_logger::setup();
         if perf_libs::api().is_none() {
             return;
         }
@@ -1392,7 +1392,7 @@ mod tests {
 
     #[test]
     fn test_ge_small_order() {
-        solana_logger::setup();
+        domichain_logger::setup();
         if perf_libs::api().is_none() {
             return;
         }
@@ -1434,7 +1434,7 @@ mod tests {
 
     #[test]
     fn test_is_simple_vote_transaction() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut rng = rand::thread_rng();
 
         // tansfer tx is not
@@ -1466,7 +1466,7 @@ mod tests {
                 &[&key],
                 &[key1, key2],
                 Hash::default(),
-                vec![solana_vote_program::id(), Pubkey::new_unique()],
+                vec![domichain_vote_program::id(), Pubkey::new_unique()],
                 vec![
                     CompiledInstruction::new(3, &(), vec![0, 1]),
                     CompiledInstruction::new(4, &(), vec![0, 2]),
@@ -1481,7 +1481,7 @@ mod tests {
 
     #[test]
     fn test_is_simple_vote_transaction_with_offsets() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut rng = rand::thread_rng();
 
         let mut current_offset = 0usize;

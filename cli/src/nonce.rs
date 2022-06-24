@@ -10,17 +10,17 @@ use {
         spend_utils::{resolve_spend_tx_and_check_account_balance, SpendAmount},
     },
     clap::{App, Arg, ArgMatches, SubCommand},
-    solana_clap_utils::{
+    domichain_clap_utils::{
         input_parsers::*,
         input_validators::*,
         keypair::{CliSigners, DefaultSigner, SignerIndex},
         memo::{memo_arg, MEMO_ARG},
         nonce::*,
     },
-    solana_cli_output::CliNonceAccount,
-    solana_client::{nonce_utils::*, rpc_client::RpcClient},
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_sdk::{
+    domichain_cli_output::CliNonceAccount,
+    domichain_client::{nonce_utils::*, rpc_client::RpcClient},
+    domichain_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_sdk::{
         account::Account,
         feature_set::merge_nonce_error_into_system_error,
         hash::Hash,
@@ -721,7 +721,7 @@ mod tests {
     use {
         super::*,
         crate::{clap_app::get_clap_app, cli::parse_command},
-        solana_sdk::{
+        domichain_sdk::{
             account::Account,
             account_utils::StateMut,
             hash::hash,
@@ -1009,7 +1009,7 @@ mod tests {
         let durable_nonce =
             DurableNonce::from_blockhash(&Hash::default(), /*separate_domains:*/ true);
         let blockhash = *durable_nonce.as_hash();
-        let nonce_pubkey = solana_sdk::pubkey::new_rand();
+        let nonce_pubkey = domichain_sdk::pubkey::new_rand();
         let data = Versions::new(
             State::Initialized(nonce::state::Data::new(nonce_pubkey, durable_nonce, 0)),
             true, // separate_domains
@@ -1054,7 +1054,7 @@ mod tests {
             );
         }
 
-        let new_nonce_authority = solana_sdk::pubkey::new_rand();
+        let new_nonce_authority = domichain_sdk::pubkey::new_rand();
         let data = Versions::new(
             State::Initialized(nonce::state::Data::new(
                 new_nonce_authority,

@@ -1,11 +1,11 @@
 [package]
-name = "solana-sdk-macro"
+name = "domichain-sdk-macro"
 version = "1.11.1"
 description = "Domichain SDK Macro"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-sdk-macro"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-sdk-macro"
 license = "Apache-2.0"
 edition = "2021"
 

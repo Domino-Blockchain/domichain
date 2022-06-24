@@ -5,11 +5,11 @@ import {
   usePerformanceInfo,
   PERF_UPDATE_SEC,
   ClusterStatsStatus,
-} from "providers/stats/solanaClusterStats";
+} from "providers/stats/domichainClusterStats";
 import classNames from "classnames";
 import { TableCardBody } from "components/common/TableCardBody";
 import { ChartOptions, ChartTooltipModel } from "chart.js";
-import { PerformanceInfo } from "providers/stats/solanaPerformanceInfo";
+import { PerformanceInfo } from "providers/stats/domichainPerformanceInfo";
 import { StatsNotReady } from "pages/ClusterStatsPage";
 import {
   PingInfo,
@@ -319,7 +319,7 @@ function PingStatsNotReady({ error, retry }: StatsNotReadyProps) {
   if (error) {
     return (
       <div className="card-body text-center">
-        There was a problem loading solana ping stats.{" "}
+        There was a problem loading domichain ping stats.{" "}
         {retry && (
           <button
             className="btn btn-white btn-sm"

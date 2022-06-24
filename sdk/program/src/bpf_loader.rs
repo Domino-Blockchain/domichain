@@ -14,7 +14,7 @@
 //! version. An example is [`bpf_loader_deprecated`] which requires
 //! [`entrypoint_deprecated`].
 //!
-//! The `solana deploy` and `solana program deploy` CLI commands use the
+//! The `domichain deploy` and `domichain program deploy` CLI commands use the
 //! [upgradeable BPF loader][ubpfl].
 //!
 //! [`bpf_loader_deprecated`]: crate::bpf_loader_deprecated

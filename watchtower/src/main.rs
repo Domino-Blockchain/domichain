@@ -4,15 +4,15 @@
 use {
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg},
     log::*,
-    solana_clap_utils::{
+    domichain_clap_utils::{
         input_parsers::pubkeys_of,
         input_validators::{is_parsable, is_pubkey_or_keypair, is_url},
     },
-    solana_cli_output::display::format_labeled_address,
-    solana_client::{client_error, rpc_client::RpcClient, rpc_response::RpcVoteAccountStatus},
-    solana_metrics::{datapoint_error, datapoint_info},
-    solana_notifier::Notifier,
-    solana_sdk::{
+    domichain_cli_output::display::format_labeled_address,
+    domichain_client::{client_error, rpc_client::RpcClient, rpc_response::RpcVoteAccountStatus},
+    domichain_metrics::{datapoint_error, datapoint_info},
+    domichain_notifier::Notifier,
+    domichain_sdk::{
         hash::Hash,
         native_token::{sol_to_lamports, Sol},
         pubkey::Pubkey,
@@ -39,10 +39,10 @@ struct Config {
 fn get_config() -> Config {
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .after_help("ADDITIONAL HELP:
         To receive a Slack, Discord and/or Telegram notification on sanity failure,
-        define environment variables before running `solana-watchtower`:
+        define environment variables before running `domichain-watchtower`:
 
         export SLACK_WEBHOOK=...
         export DISCORD_WEBHOOK=...
@@ -54,7 +54,7 @@ fn get_config() -> Config {
 
         To receive a Twilio SMS notification on failure, having a Twilio account,
         and a sending number owned by that account,
-        define environment variable before running `solana-watchtower`:
+        define environment variable before running `domichain-watchtower`:
 
         export TWILIO_CONFIG='ACCOUNT=<account>,TOKEN=<securityToken>,TO=<receivingNumber>,FROM=<sendingNumber>'")
         .arg({
@@ -65,7 +65,7 @@ fn get_config() -> Config {
                 .takes_value(true)
                 .global(true)
                 .help("Configuration file to use");
-            if let Some(ref config_file) = *solana_cli_config::CONFIG_FILE {
+            if let Some(ref config_file) = *domichain_cli_config::CONFIG_FILE {
                 arg.default_value(config_file)
             } else {
                 arg
@@ -137,9 +137,9 @@ fn get_config() -> Config {
         .get_matches();
 
     let config = if let Some(config_file) = matches.value_of("config_file") {
-        solana_cli_config::Config::load(config_file).unwrap_or_default()
+        domichain_cli_config::Config::load(config_file).unwrap_or_default()
     } else {
-        solana_cli_config::Config::default()
+        domichain_cli_config::Config::default()
     };
 
     let interval = Duration::from_secs(value_t_or_exit!(matches, "interval", u64));
@@ -203,8 +203,8 @@ fn get_cluster_info(
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-    solana_logger::setup_with_default("solana=info");
-    solana_metrics::set_panic_hook("watchtower", /*version:*/ None);
+    domichain_logger::setup_with_default("domichain=info");
+    domichain_metrics::set_panic_hook("watchtower", /*version:*/ None);
 
     let config = get_config();
 
@@ -337,7 +337,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         if let Some((failure_test_name, failure_error_message)) = &failure {
             let notification_msg = format!(
-                "solana-watchtower: Error: {}: {}",
+                "domichain-watchtower: Error: {}: {}",
                 failure_test_name, failure_error_message
             );
             num_consecutive_failures += 1;
@@ -370,7 +370,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     humantime::format_duration(alarm_duration)
                 );
                 info!("{}", all_clear_msg);
-                notifier.send(&format!("solana-watchtower: {}", all_clear_msg));
+                notifier.send(&format!("domichain-watchtower: {}", all_clear_msg));
             }
             last_notification_msg = "".into();
             last_success = Instant::now();

@@ -1,8 +1,8 @@
 use {
     assert_matches::assert_matches,
-    solana_banks_client::BanksClientError,
-    solana_program_test::{processor, ProgramTest},
-    solana_sdk::{
+    domichain_banks_client::BanksClientError,
+    domichain_program_test::{processor, ProgramTest},
+    domichain_sdk::{
         account_info::{next_account_info, AccountInfo},
         commitment_config::CommitmentLevel,
         entrypoint::ProgramResult,

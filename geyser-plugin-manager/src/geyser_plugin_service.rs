@@ -8,11 +8,11 @@ use {
     },
     crossbeam_channel::Receiver,
     log::*,
-    solana_rpc::{
+    domichain_rpc::{
         optimistically_confirmed_bank_tracker::BankNotification,
         transaction_notifier_interface::TransactionNotifierLock,
     },
-    solana_runtime::accounts_update_notifier_interface::AccountsUpdateNotifier,
+    domichain_runtime::accounts_update_notifier_interface::AccountsUpdateNotifier,
     std::{
         fs::File,
         io::Read,

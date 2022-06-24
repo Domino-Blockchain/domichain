@@ -1,18 +1,18 @@
 [package]
-name = "solana-measure"
+name = "domichain-measure"
 description = "Blockchain, Rebuilt for Scale"
 version = "1.11.1"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-measure"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-measure"
 readme = "../README.md"
-repository = "https://github.com/solana-labs/solana"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
 log = "0.4.17"
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

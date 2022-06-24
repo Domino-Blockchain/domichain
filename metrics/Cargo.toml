@@ -1,12 +1,12 @@
 [package]
-name = "solana-metrics"
+name = "domichain-metrics"
 version = "1.11.1"
 description = "Domichain Metrics"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-metrics"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-metrics"
 edition = "2021"
 
 [dependencies]
@@ -15,7 +15,7 @@ gethostname = "0.2.3"
 lazy_static = "1.4.0"
 log = "0.4.17"
 reqwest = { version = "0.11.10", default-features = false, features = ["blocking", "rustls-tls", "json"] }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [dev-dependencies]
 env_logger = "0.9.0"
@@ -23,7 +23,7 @@ rand = "0.7.0"
 serial_test = "0.6.0"
 
 [lib]
-name = "solana_metrics"
+name = "domichain_metrics"
 
 [[bench]]
 name = "metrics"

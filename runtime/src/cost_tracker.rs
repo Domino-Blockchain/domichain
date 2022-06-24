@@ -5,7 +5,7 @@
 //!
 use {
     crate::{block_cost_limits::*, cost_model::TransactionCost},
-    solana_sdk::{clock::Slot, pubkey::Pubkey, saturating_add_assign},
+    domichain_sdk::{clock::Slot, pubkey::Pubkey, saturating_add_assign},
     std::{cmp::Ordering, collections::HashMap},
 };
 
@@ -279,7 +279,7 @@ mod tests {
             bank::Bank,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
         },
-        solana_sdk::{
+        domichain_sdk::{
             hash::Hash,
             signature::{Keypair, Signer},
             system_transaction,
@@ -287,7 +287,7 @@ mod tests {
                 MessageHash, SanitizedTransaction, SimpleAddressLoader, VersionedTransaction,
             },
         },
-        solana_vote_program::vote_transaction,
+        domichain_vote_program::vote_transaction,
         std::{cmp, sync::Arc},
     };
 
@@ -311,7 +311,7 @@ mod tests {
     }
 
     fn test_setup() -> (Keypair, Hash) {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,

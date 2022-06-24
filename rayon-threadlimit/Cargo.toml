@@ -1,12 +1,12 @@
 [package]
-name = "solana-rayon-threadlimit"
+name = "domichain-rayon-threadlimit"
 version = "1.11.1"
-description = "solana-rayon-threadlimit"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-rayon-threadlimit"
+description = "domichain-rayon-threadlimit"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-rayon-threadlimit"
 readme = "../README.md"
-repository = "https://github.com/solana-labs/solana"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 license = "Apache-2.0"
 edition = "2021"
 

@@ -14,16 +14,16 @@ use {
     indicatif::{ProgressBar, ProgressStyle},
     pickledb::PickleDb,
     serde::{Deserialize, Serialize},
-    solana_account_decoder::parse_token::{
+    domichain_account_decoder::parse_token::{
         pubkey_from_spl_token, real_number_string, spl_token_pubkey,
     },
-    solana_client::{
+    domichain_client::{
         client_error::{ClientError, Result as ClientResult},
         rpc_client::RpcClient,
         rpc_config::RpcSendTransactionConfig,
         rpc_request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS,
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Slot, DEFAULT_MS_PER_SLOT},
         commitment_config::CommitmentConfig,
         hash::Hash,
@@ -38,9 +38,9 @@ use {
         system_instruction,
         transaction::Transaction,
     },
-    solana_transaction_status::TransactionStatus,
+    domichain_transaction_status::TransactionStatus,
     spl_associated_token_account::get_associated_token_address,
-    spl_token::solana_program::program_error::ProgramError,
+    spl_token::domichain_program::program_error::ProgramError,
     std::{
         cmp::{self},
         io,
@@ -879,7 +879,7 @@ pub fn process_transaction_log(args: &TransactionLogArgs) -> Result<(), Error> {
 
 use {
     crate::db::check_output_file,
-    solana_sdk::{pubkey::Pubkey, signature::Keypair},
+    domichain_sdk::{pubkey::Pubkey, signature::Keypair},
     tempfile::{tempdir, NamedTempFile},
 };
 pub fn test_process_distribute_tokens_with_client(
@@ -909,7 +909,7 @@ pub fn test_process_distribute_tokens_with_client(
     } else {
         sol_to_lamports(1000.0)
     };
-    let alice_pubkey = solana_sdk::pubkey::new_rand();
+    let alice_pubkey = domichain_sdk::pubkey::new_rand();
     let allocations_file = NamedTempFile::new().unwrap();
     let input_csv = allocations_file.path().to_str().unwrap().to_string();
     let mut wtr = csv::WriterBuilder::new().from_writer(allocations_file);
@@ -1009,7 +1009,7 @@ pub fn test_process_create_stake_with_client(client: &RpcClient, sender_keypair:
         .unwrap();
 
     let expected_amount = sol_to_lamports(1000.0);
-    let alice_pubkey = solana_sdk::pubkey::new_rand();
+    let alice_pubkey = domichain_sdk::pubkey::new_rand();
     let file = NamedTempFile::new().unwrap();
     let input_csv = file.path().to_str().unwrap().to_string();
     let mut wtr = csv::WriterBuilder::new().from_writer(file);
@@ -1131,7 +1131,7 @@ pub fn test_process_distribute_stake_with_client(client: &RpcClient, sender_keyp
         .unwrap();
 
     let expected_amount = sol_to_lamports(1000.0);
-    let alice_pubkey = solana_sdk::pubkey::new_rand();
+    let alice_pubkey = domichain_sdk::pubkey::new_rand();
     let file = NamedTempFile::new().unwrap();
     let input_csv = file.path().to_str().unwrap().to_string();
     let mut wtr = csv::WriterBuilder::new().from_writer(file);
@@ -1223,14 +1223,14 @@ pub fn test_process_distribute_stake_with_client(client: &RpcClient, sender_keyp
 mod tests {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             instruction::AccountMeta,
             signature::{read_keypair_file, write_keypair_file, Signer},
             stake::instruction::StakeInstruction,
         },
-        solana_streamer::socket::SocketAddrSpace,
-        solana_test_validator::TestValidator,
-        solana_transaction_status::TransactionConfirmationStatus,
+        domichain_streamer::socket::SocketAddrSpace,
+        domichain_test_validator::TestValidator,
+        domichain_transaction_status::TransactionConfirmationStatus,
     };
 
     fn one_signer_message(client: &RpcClient) -> Message {
@@ -1291,7 +1291,7 @@ mod tests {
 
     #[test]
     fn test_read_allocations() {
-        let alice_pubkey = solana_sdk::pubkey::new_rand();
+        let alice_pubkey = domichain_sdk::pubkey::new_rand();
         let allocation = Allocation {
             recipient: alice_pubkey.to_string(),
             amount: 42,
@@ -1330,8 +1330,8 @@ mod tests {
 
     #[test]
     fn test_read_allocations_no_lockup() {
-        let pubkey0 = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey0 = domichain_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
         let file = NamedTempFile::new().unwrap();
         let input_csv = file.path().to_str().unwrap().to_string();
         let mut wtr = csv::WriterBuilder::new().from_writer(file);
@@ -1362,8 +1362,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_read_allocations_malformed() {
-        let pubkey0 = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey0 = domichain_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
         let file = NamedTempFile::new().unwrap();
         let input_csv = file.path().to_str().unwrap().to_string();
         let mut wtr = csv::WriterBuilder::new().from_writer(file);
@@ -1393,9 +1393,9 @@ mod tests {
 
     #[test]
     fn test_read_allocations_transfer_amount() {
-        let pubkey0 = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey0 = domichain_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         let file = NamedTempFile::new().unwrap();
         let input_csv = file.path().to_str().unwrap().to_string();
         let mut wtr = csv::WriterBuilder::new().from_writer(file);
@@ -1432,8 +1432,8 @@ mod tests {
 
     #[test]
     fn test_apply_previous_transactions() {
-        let alice = solana_sdk::pubkey::new_rand();
-        let bob = solana_sdk::pubkey::new_rand();
+        let alice = domichain_sdk::pubkey::new_rand();
+        let bob = domichain_sdk::pubkey::new_rand();
         let mut allocations = vec![
             Allocation {
                 recipient: alice.to_string(),
@@ -1461,8 +1461,8 @@ mod tests {
 
     #[test]
     fn test_has_same_recipient() {
-        let alice_pubkey = solana_sdk::pubkey::new_rand();
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let alice_pubkey = domichain_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let lockup0 = "2021-01-07T00:00:00Z".to_string();
         let lockup1 = "9999-12-31T23:59:59Z".to_string();
         let alice_alloc = Allocation {
@@ -1518,8 +1518,8 @@ mod tests {
             amount: sol_to_lamports(1.0),
             lockup_date: lockup_date_str.to_string(),
         };
-        let stake_account_address = solana_sdk::pubkey::new_rand();
-        let new_stake_account_address = solana_sdk::pubkey::new_rand();
+        let stake_account_address = domichain_sdk::pubkey::new_rand();
+        let new_stake_account_address = domichain_sdk::pubkey::new_rand();
         let lockup_authority = Keypair::new();
         let lockup_authority_address = lockup_authority.pubkey();
         let sender_stake_args = SenderStakeArgs {
@@ -1576,7 +1576,7 @@ mod tests {
         fee_payer: &str,
         stake_args: Option<StakeArgs>,
     ) -> (Vec<Allocation>, DistributeTokensArgs) {
-        let recipient = solana_sdk::pubkey::new_rand();
+        let recipient = domichain_sdk::pubkey::new_rand();
         let allocations = vec![Allocation {
             recipient: recipient.to_string(),
             amount: allocation_amount,
@@ -1859,7 +1859,7 @@ mod tests {
         // Underfunded stake-account
         let expensive_allocation_amount = 5000.0;
         let expensive_allocations = vec![Allocation {
-            recipient: solana_sdk::pubkey::new_rand().to_string(),
+            recipient: domichain_sdk::pubkey::new_rand().to_string(),
             amount: sol_to_lamports(expensive_allocation_amount),
             lockup_date: "".to_string(),
         }];

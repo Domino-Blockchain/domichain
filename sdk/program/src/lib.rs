@@ -5,11 +5,11 @@
 //! the [Rust standard library][std], though it is [modified][sstd] for the
 //! Domichain runtime environment. While off-chain programs that interact with the
 //! Domichain network _can_ link to this crate, they typically instead use the
-//! [`solana-sdk`] crate, which reexports all modules from `solana-program`.
+//! [`domichain-sdk`] crate, which reexports all modules from `domichain-program`.
 //!
 //! [std]: https://doc.rust-lang.org/stable/std/
-//! [sstd]: https://docs.solana.com/developing/on-chain-programs/developing-rust#restrictions
-//! [`solana-sdk`]: https://docs.rs/solana-sdk/latest/solana_sdk/
+//! [sstd]: https://docs.domichain.com/developing/on-chain-programs/developing-rust#restrictions
+//! [`domichain-sdk`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/
 //!
 //! This library defines
 //!
@@ -22,7 +22,7 @@
 //!   [native programs][np],
 //! - [sysvar] accessors.
 //!
-//! [pe]: #defining-a-solana-program
+//! [pe]: #defining-a-domichain-program
 //! [cdt]: #core-data-types
 //! [logging]: crate::log
 //! [serialization]: #serialization
@@ -30,12 +30,12 @@
 //! [cpi]: #cross-program-instruction-execution
 //! [sysvar]: #sysvars
 //!
-//! Idiomatic examples of `solana-program` usage can be found in
+//! Idiomatic examples of `domichain-program` usage can be found in
 //! [the Domichain Program Library][spl].
 //!
-//! [spl]: https://github.com/solana-labs/solana-program-library
+//! [spl]: https://github.com/domichain-labs/domichain-program-library
 //!
-//! # Defining a solana program
+//! # Defining a domichain program
 //!
 //! Domichain program crates have some unique properties compared to typical Rust
 //! programs:
@@ -68,7 +68,7 @@
 //! ```
 //! #[cfg(not(feature = "no-entrypoint"))]
 //! pub mod entrypoint {
-//!     use solana_program::{
+//!     use domichain_program::{
 //!         account_info::AccountInfo,
 //!         entrypoint,
 //!         entrypoint::ProgramResult,
@@ -112,22 +112,22 @@
 //! and off-chain execution, the environments of which are significantly
 //! different, it extensively uses [conditional compilation][cc] to tailor its
 //! implementation to the environment. The `cfg` predicate used for identifying
-//! compilation for on-chain programs is `target_os = "solana"`, as in this
-//! example from the `solana-program` codebase that logs a message via a
+//! compilation for on-chain programs is `target_os = "domichain"`, as in this
+//! example from the `domichain-program` codebase that logs a message via a
 //! syscall when run on-chain, and via a library call when offchain:
 //!
-//! [rbpf]: https://github.com/solana-labs/rbpf
+//! [rbpf]: https://github.com/domichain-labs/rbpf
 //! [eBPF]: https://ebpf.io/
 //! [cc]: https://doc.rust-lang.org/reference/conditional-compilation.html
 //!
 //! ```
 //! pub fn sol_log(message: &str) {
-//!     #[cfg(target_os = "solana")]
+//!     #[cfg(target_os = "domichain")]
 //!     unsafe {
 //!         sol_log_(message.as_ptr(), message.len() as u64);
 //!     }
 //!
-//!     #[cfg(not(target_os = "solana"))]
+//!     #[cfg(not(target_os = "domichain"))]
 //!     program_stubs::sol_log(message);
 //! }
 //! # mod program_stubs {
@@ -138,8 +138,8 @@
 //! This `cfg` pattern is suitable as well for user code that needs to work both
 //! on-chain and off-chain.
 //!
-//! `solana-program` and `solana-sdk` were previously a single crate. Because of
-//! this history, and because of the dual-usage of `solana-program` for two
+//! `domichain-program` and `domichain-sdk` were previously a single crate. Because of
+//! this history, and because of the dual-usage of `domichain-program` for two
 //! different environments, it contains some features that are not available to
 //! on-chain programs at compile-time. It also contains some on-chain features
 //! that will fail in off-chain scenarios at runtime. This distinction is not
@@ -148,7 +148,7 @@
 //! For a more complete description of Domichain's implementation of eBPF and its
 //! limitations, see the main Domichain documentation for [on-chain programs][ocp].
 //!
-//! [ocp]: https://docs.solana.com/developing/on-chain-programs/overview
+//! [ocp]: https://docs.domichain.com/developing/on-chain-programs/overview
 //!
 //! # Core data types
 //!
@@ -159,7 +159,7 @@
 //!   addresses_][pdas] &mdash; or the secret key is not relevant to the
 //!   operation of a program, and may have even been disposed of. As running
 //!   Domichain programs can not safely create or manage secret keys, the full
-//!   [`Keypair`] is not defined in `solana-program` but in `solana-sdk`.
+//!   [`Keypair`] is not defined in `domichain-program` but in `domichain-sdk`.
 //! - [`Hash`] &mdash; A cryptographic hash. Used to uniquely identify blocks,
 //!   and also for general purpose hashing.
 //! - [`AccountInfo`] &mdash; A description of a single Domichain account. All accounts
@@ -173,7 +173,7 @@
 //!   [_lamports_], the smallest fractional unit of SOL, in the [`native_token`]
 //!   module.
 //!
-//! [acc]: https://docs.solana.com/developing/programming-model/accounts
+//! [acc]: https://docs.domichain.com/developing/programming-model/accounts
 //! [`Pubkey`]: pubkey::Pubkey
 //! [`Hash`]: hash::Hash
 //! [`Instruction`]: instruction::Instruction
@@ -181,15 +181,15 @@
 //! [`ProgramError`]: program_error::ProgramError
 //! [`ProgramResult`]: entrypoint::ProgramResult
 //! [ed25519]: https://ed25519.cr.yp.to/
-//! [`Keypair`]: https://docs.rs/solana-sdk/latest/solana_sdk/signer/keypair/struct.Keypair.html
+//! [`Keypair`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/signer/keypair/struct.Keypair.html
 //! [SHA-256]: https://en.wikipedia.org/wiki/SHA-2
 //! [`Sol`]: native_token::Sol
-//! [_lamports_]: https://docs.solana.com/introduction#what-are-sols
+//! [_lamports_]: https://docs.domichain.com/introduction#what-are-sols
 //!
 //! # Serialization
 //!
 //! Within the Domichain runtime, programs, and network, at least three different
-//! serialization formats are used, and `solana-program` provides access to
+//! serialization formats are used, and `domichain-program` provides access to
 //! those needed by programs.
 //!
 //! In user-written Domichain program code, serialization is primarily used for
@@ -210,7 +210,7 @@
 //!   and is recommended for all purposes.
 //!
 //!   Users need to import the [`borsh`] crate themselves &mdash; it is not
-//!   re-exported by `solana-program`, though this crate provides several useful
+//!   re-exported by `domichain-program`, though this crate provides several useful
 //!   utilities in its [`borsh` module][borshmod] that are not available in the
 //!   `borsh` library.
 //!
@@ -272,12 +272,12 @@
 //!
 //! [`invoke`]: program::invoke
 //! [`invoke_signed`]: program::invoke_signed
-//! [cpi]: https://docs.solana.com/developing/programming-model/calling-between-programs
+//! [cpi]: https://docs.domichain.com/developing/programming-model/calling-between-programs
 //!
 //! A simple example of transferring lamports via CPI:
 //!
 //! ```
-//! use solana_program::{
+//! use domichain_program::{
 //!     account_info::{next_account_info, AccountInfo},
 //!     entrypoint,
 //!     entrypoint::ProgramResult,
@@ -323,13 +323,13 @@
 //! `invoke_signed` to call another program while virtually "signing" for the
 //! PDA.
 //!
-//! [pdas]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
+//! [pdas]: https://docs.domichain.com/developing/programming-model/calling-between-programs#program-derived-addresses
 //! [`Pubkey::find_program_address`]: pubkey::Pubkey::find_program_address
 //!
 //! A simple example of creating an account for a PDA:
 //!
 //! ```
-//! use solana_program::{
+//! use domichain_program::{
 //!     account_info::{next_account_info, AccountInfo},
 //!     entrypoint,
 //!     entrypoint::ProgramResult,
@@ -392,16 +392,16 @@
 //!
 //! # Native programs
 //!
-//! Some solana programs are [_native programs_][np2], running native machine
+//! Some domichain programs are [_native programs_][np2], running native machine
 //! code that is distributed with the runtime, with well-known program IDs.
 //!
-//! [np2]: https://docs.solana.com/developing/runtime-facilities/programs
+//! [np2]: https://docs.domichain.com/developing/runtime-facilities/programs
 //!
 //! Some native programs can be [invoked][cpi] by other programs, but some can
 //! only be executed as "top-level" instructions included by off-chain clients
 //! in a [`Transaction`].
 //!
-//! [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+//! [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 //!
 //! This crate defines the program IDs for most native programs. Even though
 //! some native programs cannot be invoked by other programs, a Domichain program
@@ -417,55 +417,55 @@
 //! While some native programs have been active since the genesis block, others
 //! are activated dynamically after a specific [slot], and some are not yet
 //! active. This documentation does not distinguish which native programs are
-//! active on any particular network. The `solana feature status` CLI command
+//! active on any particular network. The `domichain feature status` CLI command
 //! can help in determining active features.
 //!
-//! [slot]: https://docs.solana.com/terminology#slot
+//! [slot]: https://docs.domichain.com/terminology#slot
 //!
 //! Native programs important to Domichain program authors include:
 //!
 //! - __System Program__: Creates new accounts, allocates account data, assigns
 //!   accounts to owning programs, transfers lamports from System Program owned
 //!   accounts and pays transaction fees.
-//!   - ID: [`solana_program::system_program`]
-//!   - Instruction: [`solana_program::system_instruction`]
+//!   - ID: [`domichain_program::system_program`]
+//!   - Instruction: [`domichain_program::system_instruction`]
 //!   - Invokable by programs? yes
 //!
 //! - __Compute Budget Program__: Requests additional CPU or memory resources
 //!   for a transaction. This program does nothing when called from another
 //!   program.
-//!   - ID: [`solana_sdk::compute_budget`](https://docs.rs/solana-sdk/latest/solana_sdk/compute_budget/index.html)
-//!   - Instruction: [`solana_sdk::compute_budget`](https://docs.rs/solana-sdk/latest/solana_sdk/compute_budget/index.html)
+//!   - ID: [`domichain_sdk::compute_budget`](https://docs.rs/domichain-sdk/latest/domichain_sdk/compute_budget/index.html)
+//!   - Instruction: [`domichain_sdk::compute_budget`](https://docs.rs/domichain-sdk/latest/domichain_sdk/compute_budget/index.html)
 //!   - Invokable by programs? no
 //!
 //! - __ed25519 Program__: Verifies an ed25519 signature.
-//!   - ID: [`solana_program::ed25519_program`]
-//!   - Instruction: [`solana_sdk::ed25519_instruction`](https://docs.rs/solana-sdk/latest/solana_sdk/ed25519_instruction/index.html)
+//!   - ID: [`domichain_program::ed25519_program`]
+//!   - Instruction: [`domichain_sdk::ed25519_instruction`](https://docs.rs/domichain-sdk/latest/domichain_sdk/ed25519_instruction/index.html)
 //!   - Invokable by programs? no
 //!
 //! - __secp256k1 Program__: Verifies secp256k1 public key recovery operations.
-//!   - ID: [`solana_program::secp256k1_program`]
-//!   - Instruction: [`solana_sdk::secp256k1_instruction`](https://docs.rs/solana-sdk/latest/solana_sdk/secp256k1_instruction/index.html)
+//!   - ID: [`domichain_program::secp256k1_program`]
+//!   - Instruction: [`domichain_sdk::secp256k1_instruction`](https://docs.rs/domichain-sdk/latest/domichain_sdk/secp256k1_instruction/index.html)
 //!   - Invokable by programs? no
 //!
 //! - __BPF Loader__: Deploys, and executes immutable programs on the chain.
-//!   - ID: [`solana_program::bpf_loader`]
-//!   - Instruction: [`solana_program::loader_instruction`]
+//!   - ID: [`domichain_program::bpf_loader`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
 //!   - Invokable by programs? yes
 //!
 //! - __Upgradable BPF Loader__: Deploys, upgrades, and executes upgradable
 //!   programs on the chain.
-//!   - ID: [`solana_program::bpf_loader_upgradeable`]
-//!   - Instruction: [`solana_program::loader_upgradeable_instruction`]
+//!   - ID: [`domichain_program::bpf_loader_upgradeable`]
+//!   - Instruction: [`domichain_program::loader_upgradeable_instruction`]
 //!   - Invokable by programs? yes
 //!
 //! - __Deprecated BPF Loader__: Deploys, and executes immutable programs on the
 //!   chain.
-//!   - ID: [`solana_program::bpf_loader_deprecated`]
-//!   - Instruction: [`solana_program::loader_instruction`]
+//!   - ID: [`domichain_program::bpf_loader_deprecated`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
 //!   - Invokable by programs? yes
 //!
-//! [lut]: https://docs.solana.com/proposals/transactions-v2
+//! [lut]: https://docs.domichain.com/proposals/transactions-v2
 //!
 //! # Sysvars
 //!
@@ -479,7 +479,7 @@
 //! [`Sysvar::get`]: sysvar::Sysvar::get
 //!
 //! ```
-//! use solana_program::{
+//! use domichain_program::{
 //!     account_info::AccountInfo,
 //!     clock,
 //!     entrypoint::ProgramResult,
@@ -508,7 +508,7 @@
 //! [clk]: sysvar::clock
 //!
 //! ```
-//! use solana_program::{
+//! use domichain_program::{
 //!     account_info::{next_account_info, AccountInfo},
 //!     clock,
 //!     entrypoint::ProgramResult,
@@ -548,14 +548,14 @@
 //!
 //! For more details see the Domichain [documentation on sysvars][sysvardoc].
 //!
-//! [sysvardoc]: https://docs.solana.com/developing/runtime-facilities/sysvars
+//! [sysvardoc]: https://docs.domichain.com/developing/runtime-facilities/sysvars
 
 #![allow(incomplete_features)]
 #![cfg_attr(RUSTC_WITH_SPECIALIZATION, feature(specialization))]
 #![cfg_attr(RUSTC_NEEDS_PROC_MACRO_HYGIENE, feature(proc_macro_hygiene))]
 
-// Allows macro expansion of `use ::solana_program::*` to work within this crate
-extern crate self as solana_program;
+// Allows macro expansion of `use ::domichain_program::*` to work within this crate
+extern crate self as domichain_program;
 
 pub mod account_info;
 pub mod address_lookup_table_account;
@@ -603,24 +603,24 @@ pub mod slot_hashes;
 pub mod slot_history;
 pub mod stake;
 pub mod stake_history;
-#[cfg(target_os = "solana")]
+#[cfg(target_os = "domichain")]
 pub mod syscalls;
 pub mod system_instruction;
 pub mod system_program;
 pub mod sysvar;
 pub mod wasm;
 
-#[cfg(target_os = "solana")]
-pub use solana_sdk_macro::wasm_bindgen_stub as wasm_bindgen;
+#[cfg(target_os = "domichain")]
+pub use domichain_sdk_macro::wasm_bindgen_stub as wasm_bindgen;
 /// Re-export of [wasm-bindgen].
 ///
 /// [wasm-bindgen]: https://rustwasm.github.io/docs/wasm-bindgen/
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 pub use wasm_bindgen::prelude::wasm_bindgen;
 
 /// The [config native program][np].
 ///
-/// [np]: https://docs.solana.com/developing/runtime-facilities/programs#config-program
+/// [np]: https://docs.domichain.com/developing/runtime-facilities/programs#config-program
 pub mod config {
     pub mod program {
         crate::declare_id!("Config1111111111111111111111111111111111111");
@@ -629,7 +629,7 @@ pub mod config {
 
 /// The [vote native program][np].
 ///
-/// [np]: https://docs.solana.com/developing/runtime-facilities/programs#vote-program
+/// [np]: https://docs.domichain.com/developing/runtime-facilities/programs#vote-program
 pub mod vote {
     pub mod program {
         crate::declare_id!("Vote111111111111111111111111111111111111111");
@@ -641,7 +641,7 @@ pub mod sdk_ids {
     use {
         crate::{
             bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config, ed25519_program,
-            feature, incinerator, secp256k1_program, solana_program::pubkey::Pubkey, stake,
+            feature, incinerator, secp256k1_program, domichain_program::pubkey::Pubkey, stake,
             system_program, sysvar, vote,
         },
         lazy_static::lazy_static,
@@ -670,7 +670,7 @@ pub mod sdk_ids {
 }
 
 /// Same as [`declare_id`] except that it reports that this ID has been deprecated.
-pub use solana_sdk_macro::program_declare_deprecated_id as declare_deprecated_id;
+pub use domichain_sdk_macro::program_declare_deprecated_id as declare_deprecated_id;
 /// Convenience macro to declare a static public key and functions to interact with it.
 ///
 /// Input: a single literal base58 string representation of a program's ID.
@@ -681,10 +681,10 @@ pub use solana_sdk_macro::program_declare_deprecated_id as declare_deprecated_id
 /// # // wrapper is used so that the macro invocation occurs in the item position
 /// # // rather than in the statement position which isn't allowed.
 /// use std::str::FromStr;
-/// use solana_program::{declare_id, pubkey::Pubkey};
+/// use domichain_program::{declare_id, pubkey::Pubkey};
 ///
 /// # mod item_wrapper {
-/// #   use solana_program::declare_id;
+/// #   use domichain_program::declare_id;
 /// declare_id!("My11111111111111111111111111111111111111111");
 /// # }
 /// # use item_wrapper::id;
@@ -692,7 +692,7 @@ pub use solana_sdk_macro::program_declare_deprecated_id as declare_deprecated_id
 /// let my_id = Pubkey::from_str("My11111111111111111111111111111111111111111").unwrap();
 /// assert_eq!(id(), my_id);
 /// ```
-pub use solana_sdk_macro::program_declare_id as declare_id;
+pub use domichain_sdk_macro::program_declare_id as declare_id;
 /// Convenience macro to define a static public key.
 ///
 /// Input: a single literal base58 string representation of a Pubkey.
@@ -701,20 +701,20 @@ pub use solana_sdk_macro::program_declare_id as declare_id;
 ///
 /// ```
 /// use std::str::FromStr;
-/// use solana_program::{pubkey, pubkey::Pubkey};
+/// use domichain_program::{pubkey, pubkey::Pubkey};
 ///
 /// static ID: Pubkey = pubkey!("My11111111111111111111111111111111111111111");
 ///
 /// let my_id = Pubkey::from_str("My11111111111111111111111111111111111111111").unwrap();
 /// assert_eq!(ID, my_id);
 /// ```
-pub use solana_sdk_macro::program_pubkey as pubkey;
+pub use domichain_sdk_macro::program_pubkey as pubkey;
 
 #[macro_use]
 extern crate serde_derive;
 
 #[macro_use]
-extern crate solana_frozen_abi_macro;
+extern crate domichain_frozen_abi_macro;
 
 /// Convenience macro for doing integer division where the operation's safety
 /// can be checked at compile-time.
@@ -727,7 +727,7 @@ extern crate solana_frozen_abi_macro;
 /// Literal denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// let _ = unchecked_div_by_const!(10, 0);
 /// # }
@@ -736,7 +736,7 @@ extern crate solana_frozen_abi_macro;
 /// Const denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// const D: u64 = 0;
 /// let _ = unchecked_div_by_const!(10, D);
@@ -746,7 +746,7 @@ extern crate solana_frozen_abi_macro;
 /// Non-const denominator fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// let d = 0;
 /// let _ = unchecked_div_by_const!(10, d);
@@ -756,7 +756,7 @@ extern crate solana_frozen_abi_macro;
 /// Literal denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// const N: u64 = 10;
 /// let _ = unchecked_div_by_const!(N, 0);
@@ -766,7 +766,7 @@ extern crate solana_frozen_abi_macro;
 /// Const denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// const N: u64 = 10;
 /// const D: u64 = 0;
@@ -777,7 +777,7 @@ extern crate solana_frozen_abi_macro;
 /// Non-const denominator fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// # const N: u64 = 10;
 /// let d = 0;
@@ -788,7 +788,7 @@ extern crate solana_frozen_abi_macro;
 /// Literal denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// let n = 10;
 /// let _ = unchecked_div_by_const!(n, 0);
@@ -798,7 +798,7 @@ extern crate solana_frozen_abi_macro;
 /// Const denominator div-by-zero fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// let n = 10;
 /// const D: u64 = 0;
@@ -809,7 +809,7 @@ extern crate solana_frozen_abi_macro;
 /// Non-const denominator fails:
 ///
 /// ```compile_fail
-/// # use solana_program::unchecked_div_by_const;
+/// # use domichain_program::unchecked_div_by_const;
 /// # fn main() {
 /// let n = 10;
 /// let d = 0;
@@ -854,11 +854,11 @@ where
 
 // This module is purposefully listed after all other exports: because of an
 // interaction within rustdoc between the reexports inside this module of
-// `solana_program`'s top-level modules, and `solana_sdk`'s glob re-export of
-// `solana_program`'s top-level modules, if this module is not lexically last
+// `domichain_program`'s top-level modules, and `domichain_sdk`'s glob re-export of
+// `domichain_program`'s top-level modules, if this module is not lexically last
 // rustdoc fails to generate documentation for the re-exports within
-// `solana_sdk`.
-#[cfg(not(target_os = "solana"))]
+// `domichain_sdk`.
+#[cfg(not(target_os = "domichain"))]
 pub mod example_mocks;
 
 #[cfg(test)]

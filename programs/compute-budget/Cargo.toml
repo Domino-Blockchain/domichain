@@ -1,21 +1,21 @@
 [package]
-name = "solana-compute-budget-program"
+name = "domichain-compute-budget-program"
 description = "Domichain Compute Budget program"
 version = "1.11.1"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-compute-budget-program"
-repository = "https://github.com/solana-labs/solana"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-compute-budget-program"
+repository = "https://github.com/domichain-labs/domichain"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]
-solana-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-solana-sdk = { path = "../../sdk", version = "=1.11.1" }
+domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "solana_compute_budget_program"
+name = "domichain_compute_budget_program"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

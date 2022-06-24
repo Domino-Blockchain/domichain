@@ -8,7 +8,7 @@ use {
         leader_schedule_cache::LeaderScheduleCache,
     },
     log::*,
-    solana_runtime::{
+    domichain_runtime::{
         accounts_update_notifier_interface::AccountsUpdateNotifier,
         bank_forks::BankForks,
         snapshot_archive_info::SnapshotArchiveInfoGetter,
@@ -16,7 +16,7 @@ use {
         snapshot_hash::{FullSnapshotHash, IncrementalSnapshotHash, StartingSnapshotHashes},
         snapshot_utils,
     },
-    solana_sdk::genesis_config::GenesisConfig,
+    domichain_sdk::genesis_config::GenesisConfig,
     std::{
         fs,
         path::PathBuf,
@@ -68,7 +68,7 @@ pub fn load(
         &process_options,
         transaction_status_sender,
         cache_block_meta_sender,
-        &solana_runtime::accounts_background_service::AbsRequestSender::default(),
+        &domichain_runtime::accounts_background_service::AbsRequestSender::default(),
     )
     .map(|_| (bank_forks, leader_schedule_cache, starting_snapshot_hashes))
 }

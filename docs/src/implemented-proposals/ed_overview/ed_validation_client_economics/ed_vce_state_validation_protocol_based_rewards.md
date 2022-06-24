@@ -2,7 +2,7 @@
 title: Inflation Schedule
 ---
 
-**Subject to change. Follow most recent economic discussions in the Domichain forums: https://forums.solana.com**
+**Subject to change. Follow most recent economic discussions in the Domichain forums: https://forums.domichain.com**
 
 Validator-clients have two functional roles in the Domichain network:
 

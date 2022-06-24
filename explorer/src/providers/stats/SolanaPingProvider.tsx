@@ -1,7 +1,7 @@
 import React from "react";
 import { Cluster, clusterSlug, useCluster } from "providers/cluster";
 import { fetch } from "cross-fetch";
-import { useStatsProvider } from "providers/stats/solanaClusterStats";
+import { useStatsProvider } from "providers/stats/domichainClusterStats";
 
 const FETCH_PING_INTERVAL = 60 * 1000;
 
@@ -12,7 +12,7 @@ function getPingUrl(cluster: Cluster) {
     return undefined;
   }
 
-  return `https://ping.solana.com/${slug}/last6hours`;
+  return `https://ping.domichain.com/${slug}/last6hours`;
 }
 
 export type PingMetric = {

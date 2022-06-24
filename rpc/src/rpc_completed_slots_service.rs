@@ -1,9 +1,9 @@
 use {
     crate::rpc_subscriptions::RpcSubscriptions,
     crossbeam_channel::RecvTimeoutError,
-    solana_client::rpc_response::SlotUpdate,
-    solana_ledger::blockstore::CompletedSlotsReceiver,
-    solana_sdk::timing::timestamp,
+    domichain_client::rpc_response::SlotUpdate,
+    domichain_ledger::blockstore::CompletedSlotsReceiver,
+    domichain_sdk::timing::timestamp,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -24,7 +24,7 @@ impl RpcCompletedSlotsService {
         exit: Arc<AtomicBool>,
     ) -> JoinHandle<()> {
         Builder::new()
-            .name("solana-rpc-completed-slots-service".to_string())
+            .name("domichain-rpc-completed-slots-service".to_string())
             .spawn(move || loop {
                 // received exit signal, shutdown the service
                 if exit.load(Ordering::Relaxed) {

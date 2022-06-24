@@ -1,10 +1,10 @@
-import * as BufferLayout from "@solana/buffer-layout";
+import * as BufferLayout from "@domichain/buffer-layout";
 import {
   InstructionType,
   PublicKey,
   TransactionInstruction,
-} from "@solana/web3.js";
-import { Layout, uint8ArrayToBuffer } from "@solana/buffer-layout";
+} from "@domichain/web3.js";
+import { Layout, uint8ArrayToBuffer } from "@domichain/buffer-layout";
 
 /**
  * An enumeration of valid PythInstructionTypes

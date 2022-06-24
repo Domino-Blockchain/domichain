@@ -1,17 +1,17 @@
 [package]
-name = "solana-bpf-rust-128bit"
+name = "domichain-bpf-rust-128bit"
 version = "1.11.1"
 description = "Domichain BPF test program written in Rust"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bpf-rust-128bit"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bpf-rust-128bit"
 edition = "2021"
 
 [dependencies]
-solana-program = { path = "../../../../sdk/program", version = "=1.11.1" }
-solana-bpf-rust-128bit-dep = { path = "../128bit_dep", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-bpf-rust-128bit-dep = { path = "../128bit_dep", version = "=1.11.1" }
 
 [lib]
 crate-type = ["cdylib"]

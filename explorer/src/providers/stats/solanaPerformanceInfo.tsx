@@ -1,5 +1,5 @@
-import { PerfSample } from "@solana/web3.js";
-import { ClusterStatsStatus } from "./solanaClusterStats";
+import { PerfSample } from "@domichain/web3.js";
+import { ClusterStatsStatus } from "./domichainClusterStats";
 
 export type PerformanceInfo = {
   status: ClusterStatsStatus;

@@ -1,11 +1,11 @@
 //! Example Rust-based BPF program that tests sysvar use
 
-extern crate solana_program;
+extern crate domichain_program;
 #[allow(deprecated)]
-use solana_program::sysvar::fees::Fees;
+use domichain_program::sysvar::fees::Fees;
 #[allow(deprecated)]
-use solana_program::sysvar::recent_blockhashes::RecentBlockhashes;
-use solana_program::{
+use domichain_program::sysvar::recent_blockhashes::RecentBlockhashes;
+use domichain_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
@@ -18,7 +18,7 @@ use solana_program::{
     },
 };
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 #[allow(clippy::unnecessary_wraps)]
 pub fn process_instruction(
     program_id: &Pubkey,

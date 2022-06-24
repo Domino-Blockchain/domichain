@@ -1,12 +1,12 @@
 [package]
-name = "solana-download-utils"
+name = "domichain-download-utils"
 version = "1.11.1"
 description = "Domichain Download Utils"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-download-utils"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-download-utils"
 edition = "2021"
 
 [dependencies]
@@ -14,12 +14,12 @@ console = "0.15.0"
 indicatif = "0.16.2"
 log = "0.4.17"
 reqwest = { version = "0.11.10", default-features = false, features = ["blocking", "rustls-tls", "json"] }
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "solana_download_utils"
+name = "domichain_download_utils"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

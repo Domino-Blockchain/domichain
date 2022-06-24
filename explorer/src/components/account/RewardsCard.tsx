@@ -1,5 +1,5 @@
 import React from "react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@domichain/web3.js";
 import { useFetchRewards, useRewards } from "providers/accounts/rewards";
 import { LoadingCard } from "components/common/LoadingCard";
 import { FetchStatus } from "providers/cache";

@@ -9,6 +9,6 @@ features on popular wallets, and we do our best to keep our documents up to date
 with the latest available features.
 
 If you have questions after reading the docs, feel free to reach out to us on
-our [Telegram](https://t.me/solana).
+our [Telegram](https://t.me/domichain).
 
-For **technical support**, please ask a question on [StackOverflow](https://stackoverflow.com/questions/tagged/solana) and tag your questions with `solana`.
+For **technical support**, please ask a question on [StackOverflow](https://stackoverflow.com/questions/tagged/domichain) and tag your questions with `domichain`.

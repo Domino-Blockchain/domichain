@@ -11,7 +11,7 @@ use {
     },
     bincode::serialize,
     log::*,
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
         epoch_info::EpochInfo,

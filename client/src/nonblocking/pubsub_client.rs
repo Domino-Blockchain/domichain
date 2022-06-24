@@ -19,8 +19,8 @@ use {
     log::*,
     serde::de::DeserializeOwned,
     serde_json::{json, Map, Value},
-    solana_account_decoder::UiAccount,
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
+    domichain_account_decoder::UiAccount,
+    domichain_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     std::collections::BTreeMap,
     thiserror::Error,
     tokio::{

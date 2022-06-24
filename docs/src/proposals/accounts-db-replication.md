@@ -47,7 +47,7 @@ for commitment levels confirmed and finalized. For V1, we only support queries a
 levels.
 
 ### Domichain Replica Node
-A new node named solana-replica-node will be introduced whose main responsibility is to maintain
+A new node named domichain-replica-node will be introduced whose main responsibility is to maintain
 the AccountsDb replica. The RPC node or replica node is used interchangeably in this document.
 It will be a separate executable from the validator.
 

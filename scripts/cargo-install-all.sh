@@ -82,29 +82,29 @@ if [[ $CI_OS_NAME = windows ]]; then
     cargo-build-sbf
     cargo-test-bpf
     cargo-test-sbf
-    solana
-    solana-install
-    solana-install-init
-    solana-keygen
-    solana-stake-accounts
-    solana-test-validator
-    solana-tokens
+    domichain
+    domichain-install
+    domichain-install-init
+    domichain-keygen
+    domichain-stake-accounts
+    domichain-test-validator
+    domichain-tokens
   )
 else
   ./fetch-perf-libs.sh
 
   BINS=(
-    solana
-    solana-bench-tps
-    solana-faucet
-    solana-gossip
-    solana-install
-    solana-keygen
-    solana-ledger-tool
-    solana-log-analyzer
-    solana-net-shaper
-    solana-sys-tuner
-    solana-validator
+    domichain
+    domichain-bench-tps
+    domichain-faucet
+    domichain-gossip
+    domichain-install
+    domichain-keygen
+    domichain-ledger-tool
+    domichain-log-analyzer
+    domichain-net-shaper
+    domichain-sys-tuner
+    domichain-validator
     rbpf-cli
   )
 
@@ -115,18 +115,18 @@ else
       cargo-build-sbf
       cargo-test-bpf
       cargo-test-sbf
-      solana-dos
-      solana-install-init
-      solana-stake-accounts
-      solana-test-validator
-      solana-tokens
-      solana-watchtower
+      domichain-dos
+      domichain-install-init
+      domichain-stake-accounts
+      domichain-test-validator
+      domichain-tokens
+      domichain-watchtower
     )
   fi
 
-  #XXX: Ensure `solana-genesis` is built LAST!
-  # See https://github.com/solana-labs/solana/issues/5826
-  BINS+=(solana-genesis)
+  #XXX: Ensure `domichain-genesis` is built LAST!
+  # See https://github.com/domichain-labs/domichain/issues/5826
+  BINS+=(domichain-genesis)
 fi
 
 binArgs=()
@@ -169,7 +169,7 @@ fi
   set -x
   # deps dir can be empty
   shopt -s nullglob
-  for dep in target/"$buildVariant"/deps/libsolana*program.*; do
+  for dep in target/"$buildVariant"/deps/libdomichain*program.*; do
     cp -fv "$dep" "$installDir/bin/deps"
   done
 )

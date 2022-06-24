@@ -7,7 +7,7 @@ use {
             RemoteWalletType,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         derivation_path::DerivationPath,
         pubkey::Pubkey,
         signature::{Signature, Signer, SignerError},

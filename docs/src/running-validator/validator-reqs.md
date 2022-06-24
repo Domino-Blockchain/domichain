@@ -78,12 +78,12 @@ Docker's containerzation overhead and resultant performance degradation unless
 specially configured.
 
 We use Docker only for development purposes. Docker Hub contains images for all
-releases at [solanalabs/solana](https://hub.docker.com/r/solanalabs/solana).
+releases at [domichainlabs/domichain](https://hub.docker.com/r/domichainlabs/domichain).
 
 ## Software
 
 - We build and run on Ubuntu 20.04.
-- See [Installing Domichain](../cli/install-solana-cli-tools.md) for the current Domichain software release.
+- See [Installing Domichain](../cli/install-domichain-cli-tools.md) for the current Domichain software release.
 
 Prebuilt binaries are available for Linux x86_64 on CPUs supporting AVX2 \(Ubuntu 20.04 recommended\).
 MacOS or WSL users may build from source.

@@ -1,14 +1,14 @@
 use {
     clap::{crate_description, crate_name, value_t_or_exit, App, Arg},
     log::*,
-    solana_runtime::append_vec::AppendVec,
+    domichain_runtime::append_vec::AppendVec,
 };
 
 fn main() {
-    solana_logger::setup_with_default("solana=info");
+    domichain_logger::setup_with_default("domichain=info");
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("file")
                 .long("file")

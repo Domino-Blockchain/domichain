@@ -1,9 +1,9 @@
 use {
     crossbeam_channel::{Receiver, RecvTimeoutError, Sender},
-    solana_ledger::blockstore::Blockstore,
-    solana_runtime::bank::RewardInfo,
-    solana_sdk::{clock::Slot, pubkey::Pubkey},
-    solana_transaction_status::Reward,
+    domichain_ledger::blockstore::Blockstore,
+    domichain_runtime::bank::RewardInfo,
+    domichain_sdk::{clock::Slot, pubkey::Pubkey},
+    domichain_transaction_status::Reward,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -30,7 +30,7 @@ impl RewardsRecorderService {
     ) -> Self {
         let exit = exit.clone();
         let thread_hdl = Builder::new()
-            .name("solana-rewards-writer".to_string())
+            .name("domichain-rewards-writer".to_string())
             .spawn(move || loop {
                 if exit.load(Ordering::Relaxed) {
                     break;

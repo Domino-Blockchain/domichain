@@ -7,8 +7,8 @@ use {
         SIZE_OF_CODING_SHRED_HEADERS, SIZE_OF_COMMON_SHRED_HEADER, SIZE_OF_DATA_SHRED_HEADERS,
         SIZE_OF_SIGNATURE,
     },
-    solana_perf::packet::deserialize_from_with_limit,
-    solana_sdk::{clock::Slot, signature::Signature},
+    domichain_perf::packet::deserialize_from_with_limit,
+    domichain_sdk::{clock::Slot, signature::Signature},
     static_assertions::const_assert_eq,
     std::{io::Cursor, ops::Range},
 };
@@ -62,8 +62,8 @@ impl Shred for ShredData {
         let data_header = deserialize_from_with_limit(&mut cursor)?;
         // Shreds stored to blockstore may have trailing zeros trimmed.
         // Repair packets have nonce at the end of packet payload; see:
-        // https://github.com/solana-labs/solana/pull/10109
-        // https://github.com/solana-labs/solana/pull/16602
+        // https://github.com/domichain-labs/domichain/pull/10109
+        // https://github.com/domichain-labs/domichain/pull/16602
         if payload.len() < SIZE_OF_DATA_SHRED_HEADERS {
             return Err(Error::InvalidPayloadSize(payload.len()));
         }
@@ -125,7 +125,7 @@ impl Shred for ShredCode {
         }
         let coding_header = deserialize_from_with_limit(&mut cursor)?;
         // Repair packets have nonce at the end of packet payload:
-        // https://github.com/solana-labs/solana/pull/10109
+        // https://github.com/domichain-labs/domichain/pull/10109
         payload.truncate(Self::SIZE_OF_PAYLOAD);
         let shred = Self {
             common_header,

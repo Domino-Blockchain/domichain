@@ -8,25 +8,25 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_client::connection_cache::ConnectionCache,
-    solana_core::{
+    domichain_client::connection_cache::ConnectionCache,
+    domichain_core::{
         banking_stage::{BankingStage, BankingStageStats},
         leader_slot_banking_stage_metrics::LeaderSlotMetricsTracker,
         qos_service::QosService,
         unprocessed_packet_batches::*,
     },
-    solana_entry::entry::{next_hash, Entry},
-    solana_gossip::cluster_info::{ClusterInfo, Node},
-    solana_ledger::{
+    domichain_entry::entry::{next_hash, Entry},
+    domichain_gossip::cluster_info::{ClusterInfo, Node},
+    domichain_ledger::{
         blockstore::Blockstore,
         blockstore_processor::process_entries_for_tests,
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         get_tmp_ledger_path,
     },
-    solana_perf::{packet::to_packet_batches, test_tx::test_tx},
-    solana_poh::poh_recorder::{create_test_recorder, WorkingBankEntry},
-    solana_runtime::{bank::Bank, cost_model::CostModel},
-    solana_sdk::{
+    domichain_perf::{packet::to_packet_batches, test_tx::test_tx},
+    domichain_poh::poh_recorder::{create_test_recorder, WorkingBankEntry},
+    domichain_runtime::{bank::Bank, cost_model::CostModel},
+    domichain_sdk::{
         genesis_config::GenesisConfig,
         hash::Hash,
         message::Message,
@@ -36,7 +36,7 @@ use {
         timing::{duration_as_us, timestamp},
         transaction::{Transaction, VersionedTransaction},
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         sync::{atomic::Ordering, Arc, RwLock},
         time::{Duration, Instant},
@@ -147,7 +147,7 @@ enum TransactionType {
 }
 
 fn bench_banking(bencher: &mut Bencher, tx_type: TransactionType) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let num_threads = BankingStage::num_threads() as usize;
     //   a multiple of packet chunk duplicates to avoid races
     const CHUNKS: usize = 8;

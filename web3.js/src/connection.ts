@@ -475,7 +475,7 @@ export type VoteAccountStatus = {
 
 /**
  * Network Inflation
- * (see https://docs.solana.com/implemented-proposals/ed_overview)
+ * (see https://docs.domichain.com/implemented-proposals/ed_overview)
  */
 export type InflationGovernor = {
   foundation: number;
@@ -554,7 +554,7 @@ const GetEpochScheduleResult = pick({
 
 /**
  * Leader schedule
- * (see https://docs.solana.com/terminology#leader-schedule)
+ * (see https://docs.domichain.com/terminology#leader-schedule)
  */
 export type LeaderSchedule = {
   [address: string]: number[];
@@ -583,13 +583,13 @@ const SignatureReceivedResult = literal('receivedSignature');
  * Version info for a node
  */
 export type Version = {
-  /** Version of solana-core */
-  'solana-core': string;
+  /** Version of domichain-core */
+  'domichain-core': string;
   'feature-set'?: number;
 };
 
 const VersionResult = pick({
-  'solana-core': string(),
+  'domichain-core': string(),
   'feature-set': optional(number()),
 });
 
@@ -2260,7 +2260,7 @@ export class Connection {
    * clear out the subscription locally without telling the server).
    *
    * NOTE: There is a proposal to eliminate this special case, here:
-   * https://github.com/solana-labs/solana/issues/18892
+   * https://github.com/domichain-labs/domichain/issues/18892
    */
   /** @internal */ private _subscriptionsAutoDisposedByRpc: Set<ServerSubscriptionId> =
     new Set();
@@ -3974,10 +3974,10 @@ export class Connection {
    * Request an allocation of lamports to the specified address
    *
    * ```typescript
-   * import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+   * import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@domichain/web3.js";
    *
    * (async () => {
-   *   const connection = new Connection("https://api.testnet.solana.com", "confirmed");
+   *   const connection = new Connection("https://api.testnet.domichain.com", "confirmed");
    *   const myAddress = new PublicKey("2nr1bHFT86W9tGnyvmYW4vcHKsQB3sVQfnddasz4kExM");
    *   const signature = await connection.requestAirdrop(myAddress, LAMPORTS_PER_SOL);
    *   await connection.confirmTransaction(signature);
@@ -4443,7 +4443,7 @@ export class Connection {
                    * tear down the subscription here.
                    *
                    * NOTE: There is a proposal to eliminate this special case, here:
-                   * https://github.com/solana-labs/solana/issues/18892
+                   * https://github.com/domichain-labs/domichain/issues/18892
                    */
                   this._subscriptionsAutoDisposedByRpc.delete(
                     serverSubscriptionId,
@@ -4914,7 +4914,7 @@ export class Connection {
        * clear out the subscription locally without telling the server).
        *
        * NOTE: There is a proposal to eliminate this special case, here:
-       * https://github.com/solana-labs/solana/issues/18892
+       * https://github.com/domichain-labs/domichain/issues/18892
        */
       this._subscriptionsAutoDisposedByRpc.add(subscription);
     }

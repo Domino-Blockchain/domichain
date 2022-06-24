@@ -1,12 +1,12 @@
 use {
     crate::consensus::{SwitchForkDecision, TowerError},
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         hash::Hash,
         pubkey::Pubkey,
         signature::{Signature, Signer},
     },
-    solana_vote_program::vote_state::{BlockTimestamp, Vote, VoteState},
+    domichain_vote_program::vote_state::{BlockTimestamp, Vote, VoteState},
 };
 
 #[frozen_abi(digest = "7phMrqmBo2D3rXPdhBj8CpjRvvmx9qgpcU4cDGkL3W9q")]

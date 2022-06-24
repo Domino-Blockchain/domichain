@@ -64,9 +64,9 @@ use {
     rand::{thread_rng, Rng},
     rayon::{prelude::*, ThreadPool},
     serde::{Deserialize, Serialize},
-    solana_measure::measure::Measure,
-    solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::{
+    domichain_measure::measure::Measure,
+    domichain_rayon_threadlimit::get_thread_count,
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         clock::{BankId, Epoch, Slot, SlotCount},
         epoch_schedule::EpochSchedule,
@@ -1677,14 +1677,14 @@ pub fn make_min_priority_thread_pool() -> ThreadPool {
     // Use lower thread count to reduce priority.
     let num_threads = quarter_thread_count();
     rayon::ThreadPoolBuilder::new()
-        .thread_name(|i| format!("solana-cleanup-accounts-{}", i))
+        .thread_name(|i| format!("domichain-cleanup-accounts-{}", i))
         .num_threads(num_threads)
         .build()
         .unwrap()
 }
 
 #[cfg(all(test, RUSTC_WITH_SPECIALIZATION))]
-impl solana_frozen_abi::abi_example::AbiExample for AccountsDb {
+impl domichain_frozen_abi::abi_example::AbiExample for AccountsDb {
     fn example() -> Self {
         let accounts_db = AccountsDb::new_single_for_tests();
         let key = Pubkey::default();
@@ -1924,7 +1924,7 @@ impl AccountsDb {
             file_size: DEFAULT_FILE_SIZE,
             thread_pool: rayon::ThreadPoolBuilder::new()
                 .num_threads(num_threads)
-                .thread_name(|i| format!("solana-db-accounts-{}", i))
+                .thread_name(|i| format!("domichain-db-accounts-{}", i))
                 .stack_size(ACCOUNTS_STACK_SIZE)
                 .build()
                 .unwrap(),
@@ -2014,7 +2014,7 @@ impl AccountsDb {
             .unwrap_or_default();
 
         let filler_account_suffix = if filler_accounts_config.count > 0 {
-            Some(solana_sdk::pubkey::new_rand())
+            Some(domichain_sdk::pubkey::new_rand())
         } else {
             None
         };
@@ -2267,7 +2267,7 @@ impl AccountsDb {
     fn start_background_hasher(&mut self) {
         let (sender, receiver) = unbounded();
         Builder::new()
-            .name("solana-db-store-hasher-accounts".to_string())
+            .name("domichain-db-store-hasher-accounts".to_string())
             .spawn(move || {
                 Self::background_hasher(receiver);
             })
@@ -5296,7 +5296,7 @@ impl AccountsDb {
         hasher.update(pubkey.as_ref());
 
         Hash::new_from_array(
-            <[u8; solana_sdk::hash::HASH_BYTES]>::try_from(hasher.finalize().as_slice()).unwrap(),
+            <[u8; domichain_sdk::hash::HASH_BYTES]>::try_from(hasher.finalize().as_slice()).unwrap(),
         )
     }
 
@@ -7974,7 +7974,7 @@ impl AccountsDb {
     fn get_filler_account_pubkeys(&self, count: usize) -> Vec<Pubkey> {
         (0..count)
             .map(|_| {
-                let subrange = solana_sdk::pubkey::new_rand();
+                let subrange = domichain_sdk::pubkey::new_rand();
                 self.get_filler_account_pubkey(&subrange)
             })
             .collect()
@@ -8712,7 +8712,7 @@ pub mod tests {
         },
         assert_matches::assert_matches,
         rand::{prelude::SliceRandom, thread_rng, Rng},
-        solana_sdk::{
+        domichain_sdk::{
             account::{
                 accounts_equal, Account, AccountSharedData, ReadableAccount, WritableAccount,
             },
@@ -8888,7 +8888,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_scan_snapshot_stores() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let (storages, raw_expected) = sample_storages_and_accounts();
 
         let bins = 1;
@@ -9139,7 +9139,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_calculate_accounts_hash_without_index_simple() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let (storages, _size, _slot_expected) = sample_storage();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
@@ -9163,7 +9163,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_calculate_accounts_hash_without_index() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let (storages, raw_expected) = sample_storages_and_accounts();
         let expected_hash =
@@ -9244,7 +9244,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_scan_account_storage_no_bank() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let expected = 1;
         let tf = crate::append_vec::test_utils::get_append_vec_path(
@@ -9259,7 +9259,7 @@ pub mod tests {
 
         let arc = Arc::new(data);
         let storages = vec![vec![arc]];
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let acc = AccountSharedData::new(1, 48, AccountSharedData::default().owner());
         let sm = StoredMeta {
             data_len: 1,
@@ -9313,7 +9313,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_scan_account_storage_no_bank_one_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let expected = 1;
         let tf = crate::append_vec::test_utils::get_append_vec_path(
@@ -9328,7 +9328,7 @@ pub mod tests {
 
         let arc = Arc::new(data);
         let storages = vec![vec![arc]];
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let acc = AccountSharedData::new(1, 48, AccountSharedData::default().owner());
         let sm = StoredMeta {
             data_len: 1,
@@ -9391,7 +9391,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_scan_multiple_account_storage_no_bank_one_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let slot_expected: Slot = 0;
         let tf = crate::append_vec::test_utils::get_append_vec_path(
@@ -9399,8 +9399,8 @@ pub mod tests {
         );
         let write_version1 = 0;
         let write_version2 = 1;
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         for swap in [false, true].iter() {
             let mut storages = [
                 sample_storage_with_entries(&tf, write_version1, slot_expected, &pubkey1)
@@ -9495,7 +9495,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_add_root() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let key = Pubkey::default();
         let account0 = AccountSharedData::new(1, 0, &key);
@@ -9511,7 +9511,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_latest_ancestor() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let key = Pubkey::default();
         let account0 = AccountSharedData::new(1, 0, &key);
@@ -9546,7 +9546,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_latest_ancestor_with_root() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let key = Pubkey::default();
         let account0 = AccountSharedData::new(1, 0, &key);
@@ -9572,7 +9572,7 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_root_one_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let key = Pubkey::default();
@@ -9667,14 +9667,14 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_count_stores() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new_single_for_tests();
 
         let mut pubkeys: Vec<Pubkey> = vec![];
         create_account(&db, &mut pubkeys, 0, 2, DEFAULT_FILE_SIZE as usize / 3, 0);
         assert!(check_storage(&db, 0, 2));
 
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, DEFAULT_FILE_SIZE as usize / 3, &pubkey);
         db.store_uncached(1, &[(&pubkey, &account)]);
         db.store_uncached(1, &[(&pubkeys[0], &account)]);
@@ -9805,11 +9805,11 @@ pub mod tests {
 
     #[test]
     fn test_remove_unrooted_slot_snapshot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let unrooted_slot = 9;
         let unrooted_bank_id = 9;
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let account0 = AccountSharedData::new(1, 0, &key);
         db.store_uncached(unrooted_slot, &[(&key, &account0)]);
 
@@ -9817,7 +9817,7 @@ pub mod tests {
         db.remove_unrooted_slots(&[(unrooted_slot, unrooted_bank_id)]);
 
         // Add a new root
-        let key2 = solana_sdk::pubkey::new_rand();
+        let key2 = domichain_sdk::pubkey::new_rand();
         let new_root = unrooted_slot + 1;
         db.store_uncached(new_root, &[(&key2, &account0)]);
         db.add_root(new_root);
@@ -9845,7 +9845,7 @@ pub mod tests {
     ) {
         let ancestors = vec![(slot, 0)].into_iter().collect();
         for t in 0..num {
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = domichain_sdk::pubkey::new_rand();
             let account =
                 AccountSharedData::new((t + 1) as u64, space, AccountSharedData::default().owner());
             pubkeys.push(pubkey);
@@ -9855,9 +9855,9 @@ pub mod tests {
             accounts.store_uncached(slot, &[(&pubkey, &account)]);
         }
         for t in 0..num_vote {
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = domichain_sdk::pubkey::new_rand();
             let account =
-                AccountSharedData::new((num + t + 1) as u64, space, &solana_vote_program::id());
+                AccountSharedData::new((num + t + 1) as u64, space, &domichain_vote_program::id());
             pubkeys.push(pubkey);
             let ancestors = vec![(slot, 0)].into_iter().collect();
             assert!(accounts
@@ -10006,7 +10006,7 @@ pub mod tests {
         let accounts = AccountsDb::new_sized(paths, size);
         let mut keys = vec![];
         for i in 0..9 {
-            let key = solana_sdk::pubkey::new_rand();
+            let key = domichain_sdk::pubkey::new_rand();
             let account = AccountSharedData::new(i + 1, size as usize / 4, &key);
             accounts.store_uncached(0, &[(&key, &account)]);
             keys.push(key);
@@ -10041,7 +10041,7 @@ pub mod tests {
         let accounts = AccountsDb::new_single_for_tests();
 
         let status = [AccountStorageStatus::Available, AccountStorageStatus::Full];
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
         let account1 = AccountSharedData::new(1, DEFAULT_FILE_SIZE as usize / 2, &pubkey1);
         accounts.store_uncached(0, &[(&pubkey1, &account1)]);
         {
@@ -10052,7 +10052,7 @@ pub mod tests {
             assert_eq!(r_stores[&0].status(), AccountStorageStatus::Available);
         }
 
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         let account2 = AccountSharedData::new(1, DEFAULT_FILE_SIZE as usize / 2, &pubkey2);
         accounts.store_uncached(0, &[(&pubkey2, &account2)]);
         {
@@ -10111,12 +10111,12 @@ pub mod tests {
 
     #[test]
     fn test_lazy_gc_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         //This test is pedantic
         //A slot is purged when a non root bank is cleaned up.  If a slot is behind root but it is
         //not root, it means we are retaining dead banks.
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         //store an account
         accounts.store_uncached(0, &[(&pubkey, &account)]);
@@ -10187,11 +10187,11 @@ pub mod tests {
 
     #[test]
     fn test_clean_zero_lamport_and_dead_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
         let zero_lamport_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
@@ -10244,11 +10244,11 @@ pub mod tests {
 
     #[test]
     fn test_clean_multiple_zero_lamport_decrements_index_ref_count() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         let zero_lamport_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
@@ -10289,10 +10289,10 @@ pub mod tests {
 
     #[test]
     fn test_clean_zero_lamport_and_old_roots() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         let zero_lamport_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
@@ -10332,10 +10332,10 @@ pub mod tests {
 
     #[test]
     fn test_clean_old_with_normal_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         //store an account
         accounts.store_uncached(0, &[(&pubkey, &account)]);
@@ -10360,11 +10360,11 @@ pub mod tests {
 
     #[test]
     fn test_clean_old_with_zero_lamport_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         let normal_account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         let zero_account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         //store an account
@@ -10394,7 +10394,7 @@ pub mod tests {
 
     #[test]
     fn test_clean_old_with_both_normal_and_zero_lamport_accounts() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let mut accounts = AccountsDb::new_with_config_for_tests(
             Vec::new(),
@@ -10403,8 +10403,8 @@ pub mod tests {
             false,
             AccountShrinkThreshold::default(),
         );
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
 
         // Set up account to be added to secondary index
         let mint_key = Pubkey::new_unique();
@@ -10536,10 +10536,10 @@ pub mod tests {
 
     #[test]
     fn test_clean_max_slot_zero_lamport_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         let zero_account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
@@ -10579,10 +10579,10 @@ pub mod tests {
 
     #[test]
     fn test_uncleaned_roots_with_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         //store an account
         accounts.store_uncached(0, &[(&pubkey, &account)]);
@@ -10599,7 +10599,7 @@ pub mod tests {
 
     #[test]
     fn test_uncleaned_roots_with_no_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
@@ -10616,7 +10616,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_db_serialize1() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts = AccountsDb::new_single_for_tests();
         let mut pubkeys: Vec<Pubkey> = vec![];
 
@@ -10762,17 +10762,17 @@ pub mod tests {
 
     #[test]
     fn test_accounts_db_purge_keep_live() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let some_lamport = 223;
         let zero_lamport = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
         let account = AccountSharedData::new(some_lamport, no_data, &owner);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
 
         let account2 = AccountSharedData::new(some_lamport, no_data, &owner);
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
 
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
@@ -10841,14 +10841,14 @@ pub mod tests {
 
     #[test]
     fn test_accounts_db_purge1() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let some_lamport = 223;
         let zero_lamport = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
         let account = AccountSharedData::new(some_lamport, no_data, &owner);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
 
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
@@ -10900,7 +10900,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_db_serialize_zero_and_free() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let some_lamport = 223;
         let zero_lamport = 0;
@@ -10908,14 +10908,14 @@ pub mod tests {
         let owner = *AccountSharedData::default().owner();
 
         let account = AccountSharedData::new(some_lamport, no_data, &owner);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
         let account2 = AccountSharedData::new(some_lamport + 1, no_data, &owner);
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
 
         let filler_account = AccountSharedData::new(some_lamport, no_data, &owner);
-        let filler_account_pubkey = solana_sdk::pubkey::new_rand();
+        let filler_account_pubkey = domichain_sdk::pubkey::new_rand();
 
         let accounts = AccountsDb::new_single_for_tests();
 
@@ -10970,9 +10970,9 @@ pub mod tests {
         let account3 = AccountSharedData::new(some_lamport + 100_002, no_data, &owner);
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let purged_pubkey1 = solana_sdk::pubkey::new_rand();
-        let purged_pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
+        let purged_pubkey1 = domichain_sdk::pubkey::new_rand();
+        let purged_pubkey2 = domichain_sdk::pubkey::new_rand();
 
         let dummy_account = AccountSharedData::new(dummy_lamport, no_data, &owner);
         let dummy_pubkey = Pubkey::default();
@@ -11029,7 +11029,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_purge_chained_purge_before_snapshot_restore() {
-        solana_logger::setup();
+        domichain_logger::setup();
         with_chained_zero_lamport_accounts(|accounts, current_slot| {
             accounts.clean_accounts(None, false, None);
             reconstruct_accounts_db_via_serialization(&accounts, current_slot)
@@ -11038,7 +11038,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_purge_chained_purge_after_snapshot_restore() {
-        solana_logger::setup();
+        domichain_logger::setup();
         with_chained_zero_lamport_accounts(|accounts, current_slot| {
             let accounts = reconstruct_accounts_db_via_serialization(&accounts, current_slot);
             accounts.print_accounts_stats("after_reconstruct");
@@ -11065,7 +11065,7 @@ pub mod tests {
                 std::thread::Builder::new()
                     .name("account-writers".to_string())
                     .spawn(move || {
-                        let pubkey = solana_sdk::pubkey::new_rand();
+                        let pubkey = domichain_sdk::pubkey::new_rand();
                         let mut account = AccountSharedData::new(1, 0, &pubkey);
                         let mut i = 0;
                         loop {
@@ -11094,15 +11094,15 @@ pub mod tests {
 
     #[test]
     fn test_accountsdb_scan_accounts() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let key = Pubkey::default();
-        let key0 = solana_sdk::pubkey::new_rand();
+        let key0 = domichain_sdk::pubkey::new_rand();
         let account0 = AccountSharedData::new(1, 0, &key);
 
         db.store_uncached(0, &[(&key0, &account0)]);
 
-        let key1 = solana_sdk::pubkey::new_rand();
+        let key1 = domichain_sdk::pubkey::new_rand();
         let account1 = AccountSharedData::new(2, 0, &key);
         db.store_uncached(1, &[(&key1, &account1)]);
 
@@ -11131,16 +11131,16 @@ pub mod tests {
 
     #[test]
     fn test_cleanup_key_not_removed() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new_single_for_tests();
 
         let key = Pubkey::default();
-        let key0 = solana_sdk::pubkey::new_rand();
+        let key0 = domichain_sdk::pubkey::new_rand();
         let account0 = AccountSharedData::new(1, 0, &key);
 
         db.store_uncached(0, &[(&key0, &account0)]);
 
-        let key1 = solana_sdk::pubkey::new_rand();
+        let key1 = domichain_sdk::pubkey::new_rand();
         let account1 = AccountSharedData::new(2, 0, &key);
         db.store_uncached(1, &[(&key1, &account1)]);
 
@@ -11166,7 +11166,7 @@ pub mod tests {
 
     #[test]
     fn test_store_large_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let key = Pubkey::default();
@@ -11278,7 +11278,7 @@ pub mod tests {
 
     #[test]
     fn test_bank_hash_stats() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let key = Pubkey::default();
@@ -11305,10 +11305,10 @@ pub mod tests {
 
     #[test]
     fn test_calculate_accounts_hash_check_hash_mismatch() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let some_data_len = 0;
         let some_slot: Slot = 0;
         let account = AccountSharedData::new(1, some_data_len, &key);
@@ -11344,10 +11344,10 @@ pub mod tests {
 
     #[test]
     fn test_calculate_accounts_hash_check_hash() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let some_data_len = 0;
         let some_slot: Slot = 0;
         let account = AccountSharedData::new(1, some_data_len, &key);
@@ -11390,10 +11390,10 @@ pub mod tests {
     #[test]
     fn test_verify_bank_hash() {
         use BankHashVerificationError::*;
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let some_data_len = 0;
         let some_slot: Slot = 0;
         let account = AccountSharedData::new(1, some_data_len, &key);
@@ -11456,10 +11456,10 @@ pub mod tests {
     #[test]
     fn test_verify_bank_capitalization() {
         use BankHashVerificationError::*;
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let some_data_len = 0;
         let some_slot: Slot = 0;
         let account = AccountSharedData::new(1, some_data_len, &key);
@@ -11481,12 +11481,12 @@ pub mod tests {
             Ok(_)
         );
 
-        let native_account_pubkey = solana_sdk::pubkey::new_rand();
+        let native_account_pubkey = domichain_sdk::pubkey::new_rand();
         db.store_uncached(
             some_slot,
             &[(
                 &native_account_pubkey,
-                &solana_sdk::native_loader::create_loadable_account_for_test("foo"),
+                &domichain_sdk::native_loader::create_loadable_account_for_test("foo"),
             )],
         );
         db.update_accounts_hash_test(some_slot, &ancestors);
@@ -11511,7 +11511,7 @@ pub mod tests {
 
     #[test]
     fn test_verify_bank_hash_no_account() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let some_slot: Slot = 0;
@@ -11540,7 +11540,7 @@ pub mod tests {
     #[test]
     fn test_verify_bank_hash_bad_account_hash() {
         use BankHashVerificationError::*;
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let key = Pubkey::default();
@@ -11577,12 +11577,12 @@ pub mod tests {
 
     #[test]
     fn test_storage_finder() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new_sized(Vec::new(), 16 * 1024);
-        let key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
         let lamports = 100;
         let data_len = 8190;
-        let account = AccountSharedData::new(lamports, data_len, &solana_sdk::pubkey::new_rand());
+        let account = AccountSharedData::new(lamports, data_len, &domichain_sdk::pubkey::new_rand());
         // pre-populate with a smaller empty store
         db.create_and_insert_store(1, 8192, "test_storage_finder");
         db.store_uncached(1, &[(&key, &account)]);
@@ -11714,7 +11714,7 @@ pub mod tests {
     #[should_panic(expected = "double remove of account in slot: 0/store: 0!!")]
     fn test_storage_remove_account_double_remove() {
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         accounts.store_uncached(0, &[(&pubkey, &account)]);
         let storage_entry = accounts
@@ -11733,7 +11733,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_purge_long_chained_after_snapshot_restore() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let old_lamport = 223;
         let zero_lamport = 0;
         let no_data = 0;
@@ -11745,10 +11745,10 @@ pub mod tests {
         let dummy_account = AccountSharedData::new(99_999_999, no_data, &owner);
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let dummy_pubkey = solana_sdk::pubkey::new_rand();
-        let purged_pubkey1 = solana_sdk::pubkey::new_rand();
-        let purged_pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
+        let dummy_pubkey = domichain_sdk::pubkey::new_rand();
+        let purged_pubkey1 = domichain_sdk::pubkey::new_rand();
+        let purged_pubkey2 = domichain_sdk::pubkey::new_rand();
 
         let mut current_slot = 0;
         let accounts = AccountsDb::new_single_for_tests();
@@ -11904,7 +11904,7 @@ pub mod tests {
 
     #[test]
     fn test_full_clean_refcount() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         // Setup 3 scenarios which try to differentiate between pubkey1 being in an
         // Available slot or a Full slot which would cause a different reset behavior
@@ -11923,7 +11923,7 @@ pub mod tests {
 
     #[test]
     fn test_accounts_clean_after_snapshot_restore_then_old_revives() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let old_lamport = 223;
         let zero_lamport = 0;
         let no_data = 0;
@@ -11936,9 +11936,9 @@ pub mod tests {
         let dummy_account = AccountSharedData::new(dummy_lamport, no_data, &owner);
         let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
 
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
-        let dummy_pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
+        let dummy_pubkey = domichain_sdk::pubkey::new_rand();
 
         let mut current_slot = 0;
         let accounts = AccountsDb::new_single_for_tests();
@@ -12125,14 +12125,14 @@ pub mod tests {
 
     #[test]
     fn test_shrink_stale_slots_processed() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         for startup in &[false, true] {
             let accounts = AccountsDb::new_single_for_tests();
 
             let pubkey_count = 100;
             let pubkeys: Vec<_> = (0..pubkey_count)
-                .map(|_| solana_sdk::pubkey::new_rand())
+                .map(|_| domichain_sdk::pubkey::new_rand())
                 .collect();
 
             let some_lamport = 223;
@@ -12216,13 +12216,13 @@ pub mod tests {
 
     #[test]
     fn test_shrink_candidate_slots() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let accounts = AccountsDb::new_single_for_tests();
 
         let pubkey_count = 30000;
         let pubkeys: Vec<_> = (0..pubkey_count)
-            .map(|_| solana_sdk::pubkey::new_rand())
+            .map(|_| domichain_sdk::pubkey::new_rand())
             .collect();
 
         let some_lamport = 223;
@@ -12276,7 +12276,7 @@ pub mod tests {
     #[test]
     fn test_select_candidates_by_total_usage_no_candidates() {
         // no input candidates -- none should be selected
-        solana_logger::setup();
+        domichain_logger::setup();
         let candidates: ShrinkCandidates = HashMap::new();
 
         let (selected_candidates, next_candidates) = AccountsDb::select_candidates_by_total_usage(
@@ -12291,7 +12291,7 @@ pub mod tests {
     #[test]
     fn test_select_candidates_by_total_usage_3_way_split_condition() {
         // three candidates, one selected for shrink, one is put back to the candidate list and one is ignored
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut candidates: ShrinkCandidates = HashMap::new();
 
         let common_store_path = Path::new("");
@@ -12366,7 +12366,7 @@ pub mod tests {
     #[test]
     fn test_select_candidates_by_total_usage_2_way_split_condition() {
         // three candidates, 2 are selected for shrink, one is ignored
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut candidates: ShrinkCandidates = HashMap::new();
 
         let common_store_path = Path::new("");
@@ -12438,7 +12438,7 @@ pub mod tests {
     #[test]
     fn test_select_candidates_by_total_usage_all_clean() {
         // 2 candidates, they must be selected to achieve the target alive ratio
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut candidates: ShrinkCandidates = HashMap::new();
 
         let slot1 = 12;
@@ -12499,14 +12499,14 @@ pub mod tests {
 
     #[test]
     fn test_shrink_stale_slots_skipped() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let mut accounts = AccountsDb::new_single_for_tests();
         accounts.caching_enabled = false;
 
         let pubkey_count = 30000;
         let pubkeys: Vec<_> = (0..pubkey_count)
-            .map(|_| solana_sdk::pubkey::new_rand())
+            .map(|_| domichain_sdk::pubkey::new_rand())
             .collect();
 
         let some_lamport = 223;
@@ -12561,7 +12561,7 @@ pub mod tests {
 
     #[test]
     fn test_delete_dependencies() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts_index = AccountsIndex::default_for_tests();
         let key0 = Pubkey::new_from_array([0u8; 32]);
         let key1 = Pubkey::new_from_array([1u8; 32]);
@@ -12671,8 +12671,8 @@ pub mod tests {
 
     #[test]
     fn test_account_balance_for_capitalization_sysvar() {
-        let normal_sysvar = solana_sdk::account::create_account_for_test(
-            &solana_sdk::slot_history::SlotHistory::default(),
+        let normal_sysvar = domichain_sdk::account::create_account_for_test(
+            &domichain_sdk::slot_history::SlotHistory::default(),
         );
         assert_eq!(normal_sysvar.lamports(), 1);
     }
@@ -12680,7 +12680,7 @@ pub mod tests {
     #[test]
     fn test_account_balance_for_capitalization_native_program() {
         let normal_native_program =
-            solana_sdk::native_loader::create_loadable_account_for_test("foo");
+            domichain_sdk::native_loader::create_loadable_account_for_test("foo");
         assert_eq!(normal_native_program.lamports(), 1);
     }
 
@@ -12703,10 +12703,10 @@ pub mod tests {
 
     #[test]
     fn test_store_overhead() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts = AccountsDb::new_single_for_tests();
         let account = AccountSharedData::default();
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         accounts.store_uncached(0, &[(&pubkey, &account)]);
         let slot_stores = accounts.storage.get_slot_stores(0).unwrap();
         let mut total_len = 0;
@@ -12719,7 +12719,7 @@ pub mod tests {
 
     #[test]
     fn test_store_clean_after_shrink() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts = AccountsDb::new_with_config_for_tests(
             vec![],
             &ClusterType::Development,
@@ -12729,10 +12729,10 @@ pub mod tests {
         );
 
         let account = AccountSharedData::new(1, 16 * 4096, &Pubkey::default());
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = domichain_sdk::pubkey::new_rand();
         accounts.store_cached((0, &[(&pubkey1, &account)][..]), None);
 
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey2 = domichain_sdk::pubkey::new_rand();
         accounts.store_cached((0, &[(&pubkey2, &account)][..]), None);
 
         let zero_account = AccountSharedData::new(0, 1, &Pubkey::default());
@@ -12768,7 +12768,7 @@ pub mod tests {
 
     #[test]
     fn test_store_reuse() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts = AccountsDb::new_sized(vec![], 4096);
 
         let size = 100;
@@ -12776,7 +12776,7 @@ pub mod tests {
         let mut keys = Vec::new();
         for i in 0..num_accounts {
             let account = AccountSharedData::new((i + 1) as u64, size, &Pubkey::default());
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = domichain_sdk::pubkey::new_rand();
             accounts.store_uncached(0, &[(&pubkey, &account)]);
             keys.push(pubkey);
         }
@@ -12852,7 +12852,7 @@ pub mod tests {
     #[test]
     #[should_panic(expected = "We've run out of storage ids!")]
     fn test_reuse_append_vec_id() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let zero_lamport_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
@@ -12971,9 +12971,9 @@ pub mod tests {
         let unrooted_slot = 4;
         let root5 = 5;
         let root6 = 6;
-        let unrooted_key = solana_sdk::pubkey::new_rand();
-        let key5 = solana_sdk::pubkey::new_rand();
-        let key6 = solana_sdk::pubkey::new_rand();
+        let unrooted_key = domichain_sdk::pubkey::new_rand();
+        let key5 = domichain_sdk::pubkey::new_rand();
+        let key6 = domichain_sdk::pubkey::new_rand();
         db.store_cached((unrooted_slot, &[(&unrooted_key, &account0)][..]), None);
         db.store_cached((root5, &[(&key5, &account0)][..]), None);
         db.store_cached((root6, &[(&key6, &account0)][..]), None);
@@ -13997,7 +13997,7 @@ pub mod tests {
 
     #[test]
     fn test_partial_clean() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let account_key1 = Pubkey::new_unique();
         let account_key2 = Pubkey::new_unique();
@@ -14061,7 +14061,7 @@ pub mod tests {
 
     #[test]
     fn test_recycle_stores_expiration() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let common_store_path = Path::new("");
         let common_slot_id = 12;
@@ -14174,7 +14174,7 @@ pub mod tests {
     }
 
     fn do_test_load_account_and_cache_flush_race(with_retry: bool) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let caching_enabled = true;
         let mut db = AccountsDb::new_with_config_for_tests(
@@ -14535,7 +14535,7 @@ pub mod tests {
 
     #[test]
     fn test_collect_uncleaned_slots_up_to_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let slot1 = 11;
@@ -14565,7 +14565,7 @@ pub mod tests {
 
     #[test]
     fn test_remove_uncleaned_slots_and_collect_pubkeys() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let slot1 = 11;
@@ -14623,7 +14623,7 @@ pub mod tests {
 
     #[test]
     fn test_remove_uncleaned_slots_and_collect_pubkeys_up_to_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
         let slot1 = 11;
@@ -14663,7 +14663,7 @@ pub mod tests {
 
     #[test]
     fn test_shrink_productive() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let s1 = AccountStorageEntry::new(Path::new("."), 0, 0, 1024);
         let stores = vec![Arc::new(s1)];
         assert!(!AccountsDb::is_shrinking_productive(0, &stores));
@@ -14688,7 +14688,7 @@ pub mod tests {
 
     #[test]
     fn test_is_candidate_for_shrink() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let mut accounts = AccountsDb::new_single_for_tests();
         let common_store_path = Path::new("");
@@ -14724,7 +14724,7 @@ pub mod tests {
     #[test]
     fn test_calculate_storage_count_and_alive_bytes() {
         let accounts = AccountsDb::new_single_for_tests();
-        let shared_key = solana_sdk::pubkey::new_rand();
+        let shared_key = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
         let slot0 = 0;
         accounts.store_uncached(slot0, &[(&shared_key, &account)]);
@@ -14759,8 +14759,8 @@ pub mod tests {
     fn test_calculate_storage_count_and_alive_bytes_2_accounts() {
         let accounts = AccountsDb::new_single_for_tests();
         let keys = [
-            solana_sdk::pubkey::Pubkey::new(&[0; 32]),
-            solana_sdk::pubkey::Pubkey::new(&[255; 32]),
+            domichain_sdk::pubkey::Pubkey::new(&[0; 32]),
+            domichain_sdk::pubkey::Pubkey::new(&[255; 32]),
         ];
         // make sure accounts are in 2 different bins
         assert!(
@@ -14801,7 +14801,7 @@ pub mod tests {
         let accounts = AccountsDb::new_single_for_tests();
 
         // make sure we have storage 0
-        let shared_key = solana_sdk::pubkey::new_rand();
+        let shared_key = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
         let slot0 = 0;
         accounts.store_uncached(slot0, &[(&shared_key, &account)]);
@@ -14838,9 +14838,9 @@ pub mod tests {
         let accounts = AccountsDb::new_single_for_tests();
 
         // Key shared between rooted and nonrooted slot
-        let shared_key = solana_sdk::pubkey::new_rand();
+        let shared_key = domichain_sdk::pubkey::new_rand();
         // Key to keep the storage entry for the unrooted slot alive
-        let unrooted_key = solana_sdk::pubkey::new_rand();
+        let unrooted_key = domichain_sdk::pubkey::new_rand();
         let slot0 = 0;
         let slot1 = 1;
 
@@ -14897,10 +14897,10 @@ pub mod tests {
     ///     - ensure Account1 *has* been purged
     #[test]
     fn test_clean_accounts_with_last_full_snapshot_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let accounts_db = AccountsDb::new_single_for_tests();
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let owner = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
+        let owner = domichain_sdk::pubkey::new_rand();
         let space = 0;
 
         let slot1: Slot = 1;
@@ -14935,7 +14935,7 @@ pub mod tests {
 
     #[test]
     fn test_filter_zero_lamport_clean_for_incremental_snapshots() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let slot = 10;
 
         struct TestParameters {
@@ -14946,7 +14946,7 @@ pub mod tests {
 
         let do_test = |test_params: TestParameters| {
             let account_info = AccountInfo::new(StorageLocation::AppendVec(42, 128), 234, 0);
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = domichain_sdk::pubkey::new_rand();
             let mut key_set = HashSet::default();
             key_set.insert(pubkey);
             let store_count = 0;
@@ -15064,8 +15064,8 @@ pub mod tests {
 
     #[test]
     fn test_hash_account_with_rent_epoch() {
-        let owner = solana_sdk::pubkey::new_rand();
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let owner = domichain_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let slot = 9;
         let mut account = AccountSharedData::new(2, 1, &owner);
         for rent in 0..3 {

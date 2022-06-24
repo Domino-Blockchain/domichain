@@ -5,7 +5,7 @@ pub use target_arch::*;
 #[repr(transparent)]
 pub struct PodRistrettoPoint(pub [u8; 32]);
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 mod target_arch {
     use {
         super::*,
@@ -99,7 +99,7 @@ mod target_arch {
             Some((&result).into())
         }
 
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         fn multiply(scalar: &PodScalar, point: &Self) -> Option<Self> {
             let scalar: Scalar = scalar.into();
             let point: RistrettoPoint = point.try_into().ok()?;
@@ -125,7 +125,7 @@ mod target_arch {
     }
 }
 
-#[cfg(target_os = "solana")]
+#[cfg(target_os = "domichain")]
 #[allow(unused_variables)]
 mod target_arch {
     use {
@@ -139,7 +139,7 @@ mod target_arch {
     pub fn validate_ristretto(point: &PodRistrettoPoint) -> bool {
         let mut validate_result = 0u8;
         let result = unsafe {
-            solana_program::syscalls::sol_curve_validate_point(
+            domichain_program::syscalls::sol_curve_validate_point(
                 CURVE25519_RISTRETTO,
                 &point.0 as *const u8,
                 &mut validate_result,
@@ -155,7 +155,7 @@ mod target_arch {
     ) -> Option<PodRistrettoPoint> {
         let mut result_point = PodRistrettoPoint::zeroed();
         let result = unsafe {
-            solana_program::syscalls::sol_curve_group_op(
+            domichain_program::syscalls::sol_curve_group_op(
                 CURVE25519_RISTRETTO,
                 ADD,
                 &left_point.0 as *const u8,
@@ -177,7 +177,7 @@ mod target_arch {
     ) -> Option<PodRistrettoPoint> {
         let mut result_point = PodRistrettoPoint::zeroed();
         let result = unsafe {
-            solana_program::syscalls::sol_curve_group_op(
+            domichain_program::syscalls::sol_curve_group_op(
                 CURVE25519_RISTRETTO,
                 SUB,
                 &left_point.0 as *const u8,
@@ -199,7 +199,7 @@ mod target_arch {
     ) -> Option<PodRistrettoPoint> {
         let mut result_point = PodRistrettoPoint::zeroed();
         let result = unsafe {
-            solana_program::syscalls::sol_curve_group_op(
+            domichain_program::syscalls::sol_curve_group_op(
                 CURVE25519_RISTRETTO,
                 MUL,
                 &scalar.0 as *const u8,

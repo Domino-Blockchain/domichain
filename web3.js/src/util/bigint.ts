@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import {blob, Layout} from '@solana/buffer-layout';
+import {blob, Layout} from '@domichain/buffer-layout';
 import {toBigIntLE, toBufferLE} from 'bigint-buffer';
 
 interface EncodeDecode<T> {

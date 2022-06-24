@@ -55,7 +55,7 @@ BPF_C_FLAGS := \
   $(C_FLAGS) \
   -target bpf \
   -fPIC \
-  -march=bpfel+solana
+  -march=bpfel+domichain
 
 BPF_CXX_FLAGS := \
   $(CXX_FLAGS) \
@@ -65,7 +65,7 @@ BPF_CXX_FLAGS := \
   -fno-exceptions \
   -fno-asynchronous-unwind-tables \
   -fno-unwind-tables \
-  -march=bpfel+solana
+  -march=bpfel+domichain
 
 BPF_LLD_FLAGS := \
   -z notext \
@@ -205,10 +205,10 @@ $1: $2
 	$(_@)mkdir -p $(dir $1)
 	$(_@)$(LLD) $(BPF_LLD_FLAGS) -o $1 $2 $(COMPILER_RT_DIR)/libcompiler_builtins-*.rlib
 ifeq (,$(wildcard $(subst .so,-keypair.json,$1)))
-	$(_@)solana-keygen new --no-passphrase --silent -o $(subst .so,-keypair.json,$1)
+	$(_@)domichain-keygen new --no-passphrase --silent -o $(subst .so,-keypair.json,$1)
 endif
 	@echo To deploy this program:
-	@echo $$$$ solana program deploy $(abspath $1)
+	@echo $$$$ domichain program deploy $(abspath $1)
 endef
 
 define TEST_C_RULE

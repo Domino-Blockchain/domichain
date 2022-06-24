@@ -77,19 +77,19 @@ The Domichain Foundation does not recommend any particular validator.
 The Mainnet Beta validators introduce themselves and their services on this
 Domichain Forum thread:
 
-- https://forums.solana.com/t/validator-information-thread
+- https://forums.domichain.com/t/validator-information-thread
 
-The site solanabeach.io is built and maintained by one of our validators,
+The site domichainbeach.io is built and maintained by one of our validators,
 Staking Facilities. It provides a some high-level graphical information about
 the network as a whole, as well as a list of each validator and some recent
 performance statistics about each one.
 
-- https://solanabeach.io
+- https://domichainbeach.io
 
 To view block production statistics, use the Domichain command-line tools:
 
-- `solana validators`
-- `solana block-production`
+- `domichain validators`
+- `domichain block-production`
 
 The Domichain team does not make recommendations on how to interpret this
 information. Do your own due diligence.

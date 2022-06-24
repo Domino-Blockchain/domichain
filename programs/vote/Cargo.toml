@@ -1,12 +1,12 @@
 [package]
-name = "solana-vote-program"
+name = "domichain-vote-program"
 version = "1.11.1"
 description = "Domichain Vote program"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-vote-program"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-vote-program"
 edition = "2021"
 
 [dependencies]
@@ -16,22 +16,22 @@ num-derive = "0.3"
 num-traits = "0.2"
 serde = "1.0.137"
 serde_derive = "1.0.103"
-solana-frozen-abi = { path = "../../frozen-abi", version = "=1.11.1" }
-solana-frozen-abi-macro = { path = "../../frozen-abi/macro", version = "=1.11.1" }
-solana-metrics = { path = "../../metrics", version = "=1.11.1" }
-solana-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-solana-sdk = { path = "../../sdk", version = "=1.11.1" }
+domichain-frozen-abi = { path = "../../frozen-abi", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "../../frozen-abi/macro", version = "=1.11.1" }
+domichain-metrics = { path = "../../metrics", version = "=1.11.1" }
+domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
 thiserror = "1.0"
 
 [dev-dependencies]
-solana-logger = { path = "../../logger", version = "=1.11.1" }
+domichain-logger = { path = "../../logger", version = "=1.11.1" }
 
 [build-dependencies]
 rustc_version = "0.4"
 
 [lib]
 crate-type = ["lib"]
-name = "solana_vote_program"
+name = "domichain_vote_program"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

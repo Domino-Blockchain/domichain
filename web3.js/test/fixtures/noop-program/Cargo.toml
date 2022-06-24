@@ -1,23 +1,23 @@
 [package]
-name = "solana-bpf-rust-noop"
+name = "domichain-bpf-rust-noop"
 version = "1.8.0"
 description = "Domichain BPF noop program written in Rust"
-authors = ["Domichain Maintainers <maintainers@solana.com>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.com>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bpf-rust-noop"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bpf-rust-noop"
 edition = "2021"
 
 [dependencies]
 num-derive = "0.3"
 num-traits = "0.2"
-solana-program = "1.4.16"
+domichain-program = "1.4.16"
 thiserror = "1.0"
 
 [workspace]
 members = []
 
 [lib]
-name = "solana_bpf_rust_noop"
+name = "domichain_bpf_rust_noop"
 crate-type = ["cdylib"]

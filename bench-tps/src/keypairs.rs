@@ -4,8 +4,8 @@ use {
         bench_tps_client::BenchTpsClient,
     },
     log::*,
-    solana_genesis::Base64Account,
-    solana_sdk::signature::{Keypair, Signer},
+    domichain_genesis::Base64Account,
+    domichain_sdk::signature::{Keypair, Signer},
     std::{collections::HashMap, fs::File, path::Path, process::exit, sync::Arc},
 };
 

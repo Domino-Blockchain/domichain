@@ -1,12 +1,12 @@
 [package]
-name = "solana-bloom"
+name = "domichain-bloom"
 version = "1.11.1"
 description = "Domichain bloom filter"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bloom"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bloom"
 edition = "2021"
 
 [dependencies]
@@ -17,13 +17,13 @@ rand = "0.7.0"
 rayon = "1.5.3"
 serde = { version = "1.0.137", features = ["rc"] }
 serde_derive = "1.0.103"
-solana-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-solana-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "solana_bloom"
+name = "domichain_bloom"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

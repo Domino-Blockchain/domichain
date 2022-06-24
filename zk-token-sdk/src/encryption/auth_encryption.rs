@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     aes_gcm_siv::{
         aead::{Aead, NewAead},
@@ -8,7 +8,7 @@ use {
 };
 use {
     arrayref::{array_ref, array_refs},
-    solana_sdk::{
+    domichain_sdk::{
         instruction::Instruction,
         message::Message,
         pubkey::Pubkey,
@@ -21,13 +21,13 @@ use {
 
 struct AuthenticatedEncryption;
 impl AuthenticatedEncryption {
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     #[allow(clippy::new_ret_no_self)]
     fn keygen<T: RngCore + CryptoRng>(rng: &mut T) -> AeKey {
         AeKey(rng.gen::<[u8; 16]>())
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
         let mut plaintext = balance.to_le_bytes();
         let nonce: Nonce = OsRng.gen::<[u8; 12]>();
@@ -45,7 +45,7 @@ impl AuthenticatedEncryption {
         }
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn decrypt(key: &AeKey, ct: &AeCiphertext) -> Option<u64> {
         let plaintext =
             Aes128GcmSiv::new(&key.0.into()).decrypt(&ct.nonce.into(), ct.ciphertext.as_ref());
@@ -133,7 +133,7 @@ impl AeCiphertext {
 mod tests {
     use {
         super::*,
-        solana_sdk::{signature::Keypair, signer::null_signer::NullSigner},
+        domichain_sdk::{signature::Keypair, signer::null_signer::NullSigner},
     };
 
     #[test]

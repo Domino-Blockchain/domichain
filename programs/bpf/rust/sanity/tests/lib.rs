@@ -1,9 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
 use {
-    solana_bpf_rust_sanity::process_instruction,
-    solana_program_test::*,
-    solana_sdk::{
+    domichain_bpf_rust_sanity::process_instruction,
+    domichain_program_test::*,
+    domichain_sdk::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         signature::{Keypair, Signer},
@@ -15,7 +15,7 @@ use {
 async fn test_sysvars() {
     let program_id = Pubkey::new_unique();
     let program_test = ProgramTest::new(
-        "solana_bpf_rust_sanity",
+        "domichain_bpf_rust_sanity",
         program_id,
         processor!(process_instruction),
     );

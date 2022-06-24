@@ -3,7 +3,7 @@ title: Optimize RocksDB Compaction for Domichain BlockStore
 ---
 
 This document explores RocksDB based solutions for Domichain BlockStore
-mentioned in issue [#16234](https://github.com/solana-labs/solana/issues/16234).
+mentioned in issue [#16234](https://github.com/domichain-labs/domichain/issues/16234).
 
 ## Background
 Domichain uses RocksDB as the underlying storage for its blockstore.  RocksDB
@@ -27,7 +27,7 @@ be always suitable.  This document focuses on RocksDB's compaction
 optimization for Domichain's Blockstore.
 
 ## Problems
-As mentioned in [#16234](https://github.com/solana-labs/solana/issues/16234),
+As mentioned in [#16234](https://github.com/domichain-labs/domichain/issues/16234),
 there're several issues in the Domichain's BlockStore which runs RocksDB with
 level compaction.  Here's a quick summary of the issues:
 
@@ -39,9 +39,9 @@ the write rate, the number of logical levels will eventually exceeds the
 configured limit.  In such case, RocksDB will rate-limit / stop all writes
 when it reaches soft / hard threshold.
 
-In [#14586](https://github.com/solana-labs/solana/issues/14586), it is reported
+In [#14586](https://github.com/domichain-labs/domichain/issues/14586), it is reported
 that the write stalls in Domichain's use case can be 40 minutes long.  It is also
-reported in [#16234](https://github.com/solana-labs/solana/issues/16234) that
+reported in [#16234](https://github.com/domichain-labs/domichain/issues/16234) that
 writes are also slowed-down, indicating the underlying RocksDB instance has
 reach the soft limit for write stall.
 
@@ -248,7 +248,7 @@ In addition, there is no disk read involved in FIFO's compaction process.
 
 ## Summary
 This documents proposes a FIFO-compaction based solution to the performance
-issues of blockstore [#16234](https://github.com/solana-labs/solana/issues/16234).
+issues of blockstore [#16234](https://github.com/domichain-labs/domichain/issues/16234).
 It minimizes read / write / space amplification factors by leveraging the
 unique property of Domichain BlockStore workload where write-keys are mostly
 monotonically increasing over time.  Experimental results from the single

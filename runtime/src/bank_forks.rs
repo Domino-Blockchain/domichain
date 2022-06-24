@@ -7,8 +7,8 @@ use {
         snapshot_config::SnapshotConfig,
     },
     log::*,
-    solana_measure::measure::Measure,
-    solana_sdk::{clock::Slot, hash::Hash, timing},
+    domichain_measure::measure::Measure,
+    domichain_sdk::{clock::Slot, hash::Hash, timing},
     std::{
         collections::{hash_map::Entry, HashMap, HashSet},
         ops::Index,
@@ -537,14 +537,14 @@ mod tests {
                 create_genesis_config, create_genesis_config_with_leader, GenesisConfigInfo,
             },
         },
-        solana_sdk::{
+        domichain_sdk::{
             clock::UnixTimestamp,
             hash::Hash,
             pubkey::Pubkey,
             signature::{Keypair, Signer},
             sysvar::epoch_schedule::EpochSchedule,
         },
-        solana_vote_program::vote_state::BlockTimestamp,
+        domichain_vote_program::vote_state::BlockTimestamp,
     };
 
     #[test]
@@ -632,7 +632,7 @@ mod tests {
 
     #[test]
     fn test_bank_forks_different_set_root() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let leader_keypair = Keypair::new();
         let GenesisConfigInfo {
             mut genesis_config,

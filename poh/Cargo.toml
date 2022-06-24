@@ -1,37 +1,37 @@
 [package]
-name = "solana-poh"
+name = "domichain-poh"
 version = "1.11.1"
 description = "Domichain PoH"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-poh"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-poh"
 edition = "2021"
 
 [dependencies]
 core_affinity = "0.5.10"
 crossbeam-channel = "0.5"
 log = "0.4.17"
-solana-entry = { path = "../entry", version = "=1.11.1" }
-solana-ledger = { path = "../ledger", version = "=1.11.1" }
-solana-measure = { path = "../measure", version = "=1.11.1" }
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-sys-tuner = { path = "../sys-tuner", version = "=1.11.1" }
+domichain-entry = { path = "../entry", version = "=1.11.1" }
+domichain-ledger = { path = "../ledger", version = "=1.11.1" }
+domichain-measure = { path = "../measure", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-sys-tuner = { path = "../sys-tuner", version = "=1.11.1" }
 thiserror = "1.0"
 
 [dev-dependencies]
 bincode = "1.3.3"
 matches = "0.1.9"
 rand = "0.7.0"
-solana-logger = { path = "../logger", version = "=1.11.1" }
-solana-perf = { path = "../perf", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-perf = { path = "../perf", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "solana_poh"
+name = "domichain_poh"
 
 [[bench]]
 name = "poh"

@@ -3,9 +3,9 @@
 # to ALL testnets and datacenter nodes.
 #
 # To add an entry into this list:
-# 1. Run: ssh-keygen -t ecdsa -N '' -f ~/.ssh/id-solana-testnet
+# 1. Run: ssh-keygen -t ecdsa -N '' -f ~/.ssh/id-domichain-testnet
 # 2. Add an entry to SOLANA_USERS with your username
-# 3. Add an entry to SOLANA_PUBKEYS with the contents of ~/.ssh/id-solana-testnet.pub
+# 3. Add an entry to SOLANA_PUBKEYS with the contents of ~/.ssh/id-domichain-testnet.pub
 #
 # If you need multiple keys with your username, repeatedly add your username to SOLANA_USERS, once per key
 #
@@ -37,7 +37,7 @@ SOLANA_USERS+=('dan')
 SOLANA_PUBKEYS+=('ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLG+2CSMwuSjX1l4ke7ScGOgmE2/ZICvJUg6re5w5znPy1gZ3YenypoBkoj3mWmavJ09OrUAELzYj3YQU9tSVh4= dan@cabbage-patch')
 
 SOLANA_USERS+=('greg')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG3eu2c7DZS+FE3MZmtU+nv1nn9RqW0lno0gyKpGtxT7 greg@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG3eu2c7DZS+FE3MZmtU+nv1nn9RqW0lno0gyKpGtxT7 greg@domichain.com')
 
 SOLANA_USERS+=('tyera')
 SOLANA_PUBKEYS+=('ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDSWMrqTMsML19cDKmxhfwkDfMWwpcVSYJ49cYkZYpZfTvFjV/Wdbpklo0+fp98i5AzfNYnvl0oxVpFg8A8dpYk=')
@@ -79,25 +79,25 @@ SOLANA_USERS+=('aeyakovenko')
 SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEl4U9VboeYbZNOVn8SB1NM29HeI3SwqsbM22Jmw6975 aeyakovenko@valverde')
 
 SOLANA_USERS+=('alexander')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINHM/Rdj1UtrqPWMWjgXkjr5xFkyV0yRseM/uHxlHmxe alexander@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINHM/Rdj1UtrqPWMWjgXkjr5xFkyV0yRseM/uHxlHmxe alexander@domichain.com')
 
 SOLANA_USERS+=('behzad')
-SOLANA_PUBKEYS+=('ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBBalCzbx2ObVYy4OdkKi8csr4xxutk8iVhMWqLCjeSbDgyR9p6LgnDyEKLE+B0qyn3Os85ochKdnvWVopEyPjc= behzad@solana.com')
+SOLANA_PUBKEYS+=('ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBBalCzbx2ObVYy4OdkKi8csr4xxutk8iVhMWqLCjeSbDgyR9p6LgnDyEKLE+B0qyn3Os85ochKdnvWVopEyPjc= behzad@domichain.com')
 
 SOLANA_USERS+=('joe')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP4aNf4MPb9oVGHjsneIF3iyBRMu4+J62G6hk0AptFAa joe@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP4aNf4MPb9oVGHjsneIF3iyBRMu4+J62G6hk0AptFAa joe@domichain.com')
 
 SOLANA_USERS+=('jwash')
 SOLANA_PUBKEYS+=('ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHe1QgXIAip9AR8Av5KSMxyhjP3FPIBGHKpug0/bBSsO0+gcmZiXsfmIJvRlkk5rfzCBh1VXyF2ae4OzGdazWjI= jeffreywashington@JeffMBPro.local')
 
 SOLANA_USERS+=('dmitri')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHSYk99LYQ82tnVUav8Mu/ZrQGXOzt4esSWTbd9IV3FF dmitri@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHSYk99LYQ82tnVUav8Mu/ZrQGXOzt4esSWTbd9IV3FF dmitri@domichain.com')
 
 SOLANA_USERS+=('tao')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOmCHHDxKrRKAV+b6O3fucTbbKfu6W2E3/RQcec7F4pi tao@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOmCHHDxKrRKAV+b6O3fucTbbKfu6W2E3/RQcec7F4pi tao@domichain.com')
 
 SOLANA_USERS+=('brooks')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDImuwyrRE5XE/KrXD1PsN1xXBkdhW5VxQ7/s98EAgV brooks@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHDImuwyrRE5XE/KrXD1PsN1xXBkdhW5VxQ7/s98EAgV brooks@domichain.com')
 
 SOLANA_USERS+=('stevecz')
-SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICH5kB/thr4+ayLOYaKVkYme96LRACx0noO8f4Xpukws steven@solana.com')
+SOLANA_PUBKEYS+=('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICH5kB/thr4+ayLOYaKVkYme96LRACx0noO8f4Xpukws steven@domichain.com')

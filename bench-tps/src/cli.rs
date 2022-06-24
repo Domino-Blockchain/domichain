@@ -1,9 +1,9 @@
 use {
     clap::{crate_description, crate_name, App, Arg, ArgMatches},
-    solana_clap_utils::input_validators::{is_url, is_url_or_moniker},
-    solana_cli_config::{ConfigInput, CONFIG_FILE},
-    solana_client::connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
-    solana_sdk::{
+    domichain_clap_utils::input_validators::{is_url, is_url_or_moniker},
+    domichain_cli_config::{ConfigInput, CONFIG_FILE},
+    domichain_client::connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
+    domichain_sdk::{
         fee_calculator::FeeRateGovernor,
         pubkey::Pubkey,
         signature::{read_keypair_file, Keypair},
@@ -11,7 +11,7 @@ use {
     std::{net::SocketAddr, process::exit, time::Duration},
 };
 
-const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = solana_sdk::native_token::LAMPORTS_PER_SOL;
+const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::LAMPORTS_PER_SOL;
 
 pub enum ExternalClientType {
     // Submits transactions to an Rpc node using an RpcClient
@@ -123,7 +123,7 @@ pub fn build_args<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .takes_value(true)
                 .global(true)
                 .validator(is_url)
-                .help("WebSocket URL for the solana cluster"),
+                .help("WebSocket URL for the domichain cluster"),
         )
         .arg(
             Arg::with_name("rpc_addr")
@@ -314,9 +314,9 @@ pub fn extract_args(matches: &ArgMatches) -> Config {
     let mut args = Config::default();
 
     let config = if let Some(config_file) = matches.value_of("config_file") {
-        solana_cli_config::Config::load(config_file).unwrap_or_default()
+        domichain_cli_config::Config::load(config_file).unwrap_or_default()
     } else {
-        solana_cli_config::Config::default()
+        domichain_cli_config::Config::default()
     };
     let (_, json_rpc_url) = ConfigInput::compute_json_rpc_url_setting(
         matches.value_of("json_rpc_url").unwrap_or(""),
@@ -360,7 +360,7 @@ pub fn extract_args(matches: &ArgMatches) -> Config {
     }
 
     if let Some(addr) = matches.value_of("entrypoint") {
-        args.entrypoint_addr = solana_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
+        args.entrypoint_addr = domichain_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
             eprintln!("failed to parse entrypoint address: {}", e);
             exit(1)
         });

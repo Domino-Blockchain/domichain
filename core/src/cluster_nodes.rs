@@ -4,7 +4,7 @@ use {
     lru::LruCache,
     rand::{seq::SliceRandom, Rng, SeedableRng},
     rand_chacha::ChaChaRng,
-    solana_gossip::{
+    domichain_gossip::{
         cluster_info::{compute_retransmit_peers, ClusterInfo},
         contact_info::ContactInfo,
         crds::GossipRoute,
@@ -12,16 +12,16 @@ use {
         crds_value::{CrdsData, CrdsValue},
         weighted_shuffle::WeightedShuffle,
     },
-    solana_ledger::shred::Shred,
-    solana_runtime::bank::Bank,
-    solana_sdk::{
+    domichain_ledger::shred::Shred,
+    domichain_runtime::bank::Bank,
+    domichain_sdk::{
         clock::{Epoch, Slot},
         feature_set,
         pubkey::Pubkey,
         signature::Keypair,
         timing::timestamp,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         any::TypeId,
         cmp::Reverse,

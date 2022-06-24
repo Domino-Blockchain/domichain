@@ -1,19 +1,19 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    solana_cli::{
+    domichain_cli::{
         check_balance,
         cli::{process_command, request_and_confirm_airdrop, CliCommand, CliConfig},
         spend_utils::SpendAmount,
         test_utils::check_ready,
     },
-    solana_cli_output::{parse_sign_only_reply_string, OutputFormat},
-    solana_client::{
+    domichain_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    domichain_client::{
         blockhash_query::{self, BlockhashQuery},
         nonce_utils,
         rpc_client::RpcClient,
     },
-    solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         hash::Hash,
         native_token::sol_to_lamports,
@@ -21,8 +21,8 @@ use {
         signature::{keypair_from_seed, Keypair, Signer},
         system_program,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
 };
 
 #[test]
@@ -165,7 +165,7 @@ fn full_battery_tests(
     assert_ne!(first_nonce, third_nonce);
 
     // Withdraw from nonce account
-    let payee_pubkey = solana_sdk::pubkey::new_rand();
+    let payee_pubkey = domichain_sdk::pubkey::new_rand();
     config_payer.signers = authorized_signers;
     config_payer.command = CliCommand::WithdrawFromNonceAccount {
         nonce_account,
@@ -239,7 +239,7 @@ fn full_battery_tests(
 #[allow(clippy::redundant_closure)]
 fn test_create_account_with_seed() {
     const ONE_SIG_FEE: f64 = 0.000005;
-    solana_logger::setup();
+    domichain_logger::setup();
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
     let faucet_addr = run_local_faucet(mint_keypair, None);

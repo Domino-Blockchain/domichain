@@ -1,9 +1,9 @@
 //! Example Rust-based BPF program tests loop iteration
 
-extern crate solana_program;
+extern crate domichain_program;
 use {
-    solana_bpf_rust_param_passing_dep::{Data, TestDep},
-    solana_program::{
+    domichain_bpf_rust_param_passing_dep::{Data, TestDep},
+    domichain_program::{
         custom_heap_default, custom_panic_default, entrypoint::SUCCESS, log::sol_log_64,
     },
 };

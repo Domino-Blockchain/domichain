@@ -2,11 +2,11 @@ use {
     crate::tpu_info::TpuInfo,
     crossbeam_channel::{Receiver, RecvTimeoutError},
     log::*,
-    solana_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
-    solana_measure::measure::Measure,
-    solana_metrics::datapoint_warn,
-    solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{
+    domichain_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
+    domichain_measure::measure::Measure,
+    domichain_metrics::datapoint_warn,
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{
         hash::Hash, nonce_account, pubkey::Pubkey, saturating_add_assign, signature::Signature,
         timing::AtomicInterval, transport::TransportError,
     },
@@ -776,7 +776,7 @@ mod test {
         super::*,
         crate::tpu_info::NullTpuInfo,
         crossbeam_channel::unbounded,
-        solana_sdk::{
+        domichain_sdk::{
             account::AccountSharedData,
             genesis_config::create_genesis_config,
             nonce::{self, state::DurableNonce},
@@ -811,7 +811,7 @@ mod test {
 
     #[test]
     fn process_transactions() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let (genesis_config, mint_keypair) = create_genesis_config(4);
         let bank = Bank::new_for_tests(&genesis_config);
@@ -1073,7 +1073,7 @@ mod test {
 
     #[test]
     fn test_retry_durable_nonce_transactions() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let (genesis_config, mint_keypair) = create_genesis_config(4);
         let bank = Bank::new_for_tests(&genesis_config);

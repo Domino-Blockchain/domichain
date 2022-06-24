@@ -8,7 +8,7 @@ steps:
     timeout_in_minutes: 60
     name: "publish tarball"
   - wait
-  - command: "sdk/docker-solana/build.sh"
+  - command: "sdk/docker-domichain/build.sh"
     agents:
       - "queue=release-build"
     timeout_in_minutes: 60

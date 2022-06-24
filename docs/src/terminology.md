@@ -275,7 +275,7 @@ The [native token](#native-token) of a Domichain [cluster](#cluster).
 
 ## Domichain Program Library (SPL)
 
-A [library of programs](https://spl.solana.com/) on Domichain such as spl-token that facilitates tasks such as creating and using tokens.
+A [library of programs](https://spl.domichain.com/) on Domichain such as spl-token that facilitates tasks such as creating and using tokens.
 
 ## stake
 

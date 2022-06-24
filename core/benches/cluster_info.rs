@@ -4,27 +4,27 @@ extern crate test;
 
 use {
     rand::{thread_rng, Rng},
-    solana_core::{
+    domichain_core::{
         broadcast_stage::{
             broadcast_metrics::TransmitShredsStats, broadcast_shreds, BroadcastStage,
         },
         cluster_nodes::ClusterNodesCache,
     },
-    solana_gossip::{
+    domichain_gossip::{
         cluster_info::{ClusterInfo, Node},
         contact_info::ContactInfo,
     },
-    solana_ledger::{
+    domichain_ledger::{
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         shred::{Shred, ShredFlags},
     },
-    solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{
         pubkey,
         signature::Keypair,
         timing::{timestamp, AtomicInterval},
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         collections::HashMap,
         net::UdpSocket,
@@ -36,7 +36,7 @@ use {
 
 #[bench]
 fn broadcast_shreds_bench(bencher: &mut Bencher) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let leader_pubkey = pubkey::new_rand();
     let leader_info = Node::new_localhost_with_pubkey(&leader_pubkey);
     let cluster_info = ClusterInfo::new(

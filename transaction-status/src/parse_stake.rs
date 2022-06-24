@@ -4,7 +4,7 @@ use {
     },
     bincode::deserialize,
     serde_json::{json, Map, Value},
-    solana_sdk::{
+    domichain_sdk::{
         instruction::CompiledInstruction, message::AccountKeys,
         stake::instruction::StakeInstruction,
     },
@@ -295,7 +295,7 @@ fn check_num_stake_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInst
 mod test {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             message::Message,
             pubkey::Pubkey,
             stake::{

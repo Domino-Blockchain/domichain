@@ -5,8 +5,8 @@ use {
     bv::BitVec,
     fnv::FnvHasher,
     rand::Rng,
-    solana_bloom::bloom::{AtomicBloom, Bloom, BloomHashIndex},
-    solana_sdk::{
+    domichain_bloom::bloom::{AtomicBloom, Bloom, BloomHashIndex},
+    domichain_sdk::{
         hash::{hash, Hash},
         signature::Signature,
     },
@@ -103,7 +103,7 @@ fn bench_sigs_hashmap(bencher: &mut Bencher) {
 #[bench]
 fn bench_add_hash(bencher: &mut Bencher) {
     let mut rng = rand::thread_rng();
-    let hash_values: Vec<_> = std::iter::repeat_with(|| solana_sdk::hash::new_rand(&mut rng))
+    let hash_values: Vec<_> = std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
         .take(1200)
         .collect();
     let mut fail = 0;
@@ -123,7 +123,7 @@ fn bench_add_hash(bencher: &mut Bencher) {
 #[bench]
 fn bench_add_hash_atomic(bencher: &mut Bencher) {
     let mut rng = rand::thread_rng();
-    let hash_values: Vec<_> = std::iter::repeat_with(|| solana_sdk::hash::new_rand(&mut rng))
+    let hash_values: Vec<_> = std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
         .take(1200)
         .collect();
     let mut fail = 0;

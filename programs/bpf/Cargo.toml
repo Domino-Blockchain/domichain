@@ -1,12 +1,12 @@
 [package]
-name = "solana-bpf-programs"
+name = "domichain-bpf-programs"
 description = "Blockchain, Rebuilt for Scale"
 version = "1.11.1"
-documentation = "https://docs.rs/solana"
-homepage = "https://solana.com/"
+documentation = "https://docs.rs/domichain"
+homepage = "https://domichain.com/"
 readme = "README.md"
-repository = "https://github.com/solana-labs/solana"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 license = "Apache-2.0"
 edition = "2021"
 publish = false
@@ -26,19 +26,19 @@ itertools = "0.10.1"
 log = "0.4.11"
 miow = "0.3.6"
 net2 = "0.2.37"
-solana-bpf-rust-invoke = { path = "rust/invoke", version = "=1.11.1"}
-solana-bpf-loader-program = { path = "../bpf_loader", version = "=1.11.1"}
-solana-bpf-rust-realloc = { path = "rust/realloc", version = "=1.11.1"}
-solana-bpf-rust-realloc-invoke = { path = "rust/realloc_invoke", version = "=1.11.1"}
-solana-cli-output = { path = "../../cli-output", version = "=1.11.1" }
-solana-logger = { path = "../../logger", version = "=1.11.1" }
-solana-measure = { path = "../../measure", version = "=1.11.1" }
-solana_rbpf = "=0.2.31"
-solana-runtime = { path = "../../runtime", version = "=1.11.1" }
-solana-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-solana-sdk = { path = "../../sdk", version = "=1.11.1" }
-solana-transaction-status = { path = "../../transaction-status", version = "=1.11.1" }
-solana-account-decoder = { path = "../../account-decoder", version = "=1.11.1" }
+domichain-bpf-rust-invoke = { path = "rust/invoke", version = "=1.11.1"}
+domichain-bpf-loader-program = { path = "../bpf_loader", version = "=1.11.1"}
+domichain-bpf-rust-realloc = { path = "rust/realloc", version = "=1.11.1"}
+domichain-bpf-rust-realloc-invoke = { path = "rust/realloc_invoke", version = "=1.11.1"}
+domichain-cli-output = { path = "../../cli-output", version = "=1.11.1" }
+domichain-logger = { path = "../../logger", version = "=1.11.1" }
+domichain-measure = { path = "../../measure", version = "=1.11.1" }
+domichain_rbpf = "=0.2.31"
+domichain-runtime = { path = "../../runtime", version = "=1.11.1" }
+domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
+domichain-transaction-status = { path = "../../transaction-status", version = "=1.11.1" }
+domichain-account-decoder = { path = "../../account-decoder", version = "=1.11.1" }
 
 [[bench]]
 name = "bpf_loader"

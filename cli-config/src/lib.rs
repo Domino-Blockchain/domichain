@@ -9,7 +9,7 @@
 //! [`CONFIG_FILE`], which is a [lazy_static] of `Option<String>`, the value of
 //! which is
 //!
-//! > `~/.config/solana/cli/config.yml`
+//! > `~/.config/domichain/cli/config.yml`
 //!
 //! [`CONFIG_FILE`]: struct@CONFIG_FILE
 //! [lazy_static]: https://docs.rs/lazy_static
@@ -23,10 +23,10 @@
 //! Two important fields of `Config` are
 //!
 //! - [`json_rpc_url`], the URL to pass to
-//!   `solana_client::rpc_client::RpcClient`.
+//!   `domichain_client::rpc_client::RpcClient`.
 //! - [`keypair_path`], a signing source, which may be a keypair file, but
 //!   may also represent several other types of signers, as described in
-//!   the documentation for `solana_clap_utils::keypair::signer_from_path`.
+//!   the documentation for `domichain_clap_utils::keypair::signer_from_path`.
 //!
 //! [`json_rpc_url`]: Config::json_rpc_url
 //! [`keypair_path`]: Config::keypair_path
@@ -40,13 +40,13 @@
 //!
 //! ```no_run
 //! use anyhow::anyhow;
-//! use solana_cli_config::{CONFIG_FILE, Config};
+//! use domichain_cli_config::{CONFIG_FILE, Config};
 //!
-//! let config_file = solana_cli_config::CONFIG_FILE.as_ref()
+//! let config_file = domichain_cli_config::CONFIG_FILE.as_ref()
 //!     .ok_or_else(|| anyhow!("unable to get config file path"))?;
 //! let mut cli_config = Config::load(&config_file)?;
 //! // Set the RPC URL to devnet
-//! cli_config.json_rpc_url = "https://api.devnet.solana.com".to_string();
+//! cli_config.json_rpc_url = "https://api.devnet.domichain.com".to_string();
 //! cli_config.save(&config_file)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```

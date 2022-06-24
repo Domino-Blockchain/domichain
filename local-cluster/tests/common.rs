@@ -1,28 +1,28 @@
 #![allow(clippy::integer_arithmetic, dead_code)]
 use {
     log::*,
-    solana_client::rpc_client::RpcClient,
-    solana_core::{
+    domichain_client::rpc_client::RpcClient,
+    domichain_core::{
         broadcast_stage::BroadcastStageType,
         consensus::{Tower, SWITCH_FORK_THRESHOLD},
         tower_storage::{FileTowerStorage, SavedTower, SavedTowerVersions, TowerStorage},
         validator::ValidatorConfig,
     },
-    solana_gossip::gossip_service::discover_cluster,
-    solana_ledger::{
+    domichain_gossip::gossip_service::discover_cluster,
+    domichain_ledger::{
         ancestor_iterator::AncestorIterator,
         blockstore::{Blockstore, PurgeType},
         blockstore_options::{AccessType, BlockstoreOptions},
         leader_schedule::{FixedSchedule, LeaderSchedule},
     },
-    solana_local_cluster::{
+    domichain_local_cluster::{
         cluster::{Cluster, ClusterValidatorInfo},
         cluster_tests,
         local_cluster::{ClusterConfig, LocalCluster},
         validator_configs::*,
     },
-    solana_runtime::snapshot_config::SnapshotConfig,
-    solana_sdk::{
+    domichain_runtime::snapshot_config::SnapshotConfig,
+    domichain_sdk::{
         account::AccountSharedData,
         clock::{self, Slot, DEFAULT_MS_PER_SLOT, DEFAULT_TICKS_PER_SLOT},
         hash::Hash,
@@ -30,7 +30,7 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         collections::HashSet,
         fs, iter,
@@ -46,7 +46,7 @@ use {
 };
 
 pub const RUST_LOG_FILTER: &str =
-    "error,solana_core::replay_stage=warn,solana_local_cluster=info,local_cluster=info";
+    "error,domichain_core::replay_stage=warn,domichain_local_cluster=info,local_cluster=info";
 
 pub const DEFAULT_CLUSTER_LAMPORTS: u64 = 10_000_000 * LAMPORTS_PER_SOL;
 pub const DEFAULT_NODE_STAKE: u64 = 10 * LAMPORTS_PER_SOL;
@@ -266,7 +266,7 @@ pub fn run_cluster_partition<C>(
     ticks_per_slot: Option<u64>,
     additional_accounts: Vec<(Pubkey, AccountSharedData)>,
 ) {
-    solana_logger::setup_with_default(RUST_LOG_FILTER);
+    domichain_logger::setup_with_default(RUST_LOG_FILTER);
     info!("PARTITION_TEST!");
     let num_nodes = partitions.len();
     let node_stakes: Vec<_> = partitions
@@ -386,7 +386,7 @@ pub fn test_faulty_node(
     faulty_node_type: BroadcastStageType,
     node_stakes: Vec<u64>,
 ) -> (LocalCluster, Vec<Arc<Keypair>>) {
-    solana_logger::setup_with_default("solana_local_cluster=info");
+    domichain_logger::setup_with_default("domichain_local_cluster=info");
     let num_nodes = node_stakes.len();
 
     let error_validator_config = ValidatorConfig {

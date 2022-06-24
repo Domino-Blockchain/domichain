@@ -4,8 +4,8 @@ use {
         validator_info::*, vote::*, wallet::*,
     },
     clap::{App, AppSettings, Arg, ArgGroup, SubCommand},
-    solana_clap_utils::{self, input_validators::*, keypair::*},
-    solana_cli_config::CONFIG_FILE,
+    domichain_clap_utils::{self, input_validators::*, keypair::*},
+    domichain_cli_config::CONFIG_FILE,
 };
 
 pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> App<'ab, 'v> {
@@ -47,7 +47,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .takes_value(true)
                 .global(true)
                 .validator(is_url)
-                .help("WebSocket URL for the solana cluster"),
+                .help("WebSocket URL for the domichain cluster"),
         )
         .arg(
             Arg::with_name("keypair")

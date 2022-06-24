@@ -11,11 +11,11 @@ if [[ -n $TRAVIS ]]; then
   clang-7 --version
 fi
 
-sh -c "$(curl -sSfL https://release.solana.com/edge/install)"
-PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-solana --version
+sh -c "$(curl -sSfL https://release.domichain.com/edge/install)"
+PATH="$HOME/.local/share/domichain/install/active_release/bin:$PATH"
+domichain --version
 
 if [[ -n $GITHUB_ACTIONS ]]; then
-  echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+  echo "$HOME/.local/share/domichain/install/active_release/bin" >> "$GITHUB_PATH"
   npm install -g npm@7
 fi

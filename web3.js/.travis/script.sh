@@ -1,7 +1,7 @@
 # |source| this file
 
 set -ex
-solana --version
+domichain --version
 
 npm run clean
 npm run build

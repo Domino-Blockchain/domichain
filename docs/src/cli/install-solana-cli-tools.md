@@ -5,7 +5,7 @@ title: Install the Domichain Tool Suite
 There are multiple ways to install the Domichain tools on your computer
 depending on your preferred workflow:
 
-- [Use Domichain's Install Tool (Simplest option)](#use-solanas-install-tool)
+- [Use Domichain's Install Tool (Simplest option)](#use-domichains-install-tool)
 - [Download Prebuilt Binaries](#download-prebuilt-binaries)
 - [Build from Source](#build-from-source)
 - [Use Homebrew](#use-homebrew)
@@ -17,11 +17,11 @@ depending on your preferred workflow:
 - Open your favorite Terminal application
 
 - Install the Domichain release
-  [LATEST_SOLANA_RELEASE_VERSION](https://github.com/solana-labs/solana/releases/tag/LATEST_SOLANA_RELEASE_VERSION) on your
+  [LATEST_SOLANA_RELEASE_VERSION](https://github.com/domichain-labs/domichain/releases/tag/LATEST_SOLANA_RELEASE_VERSION) on your
   machine by running:
 
 ```bash
-sh -c "$(curl -sSfL https://release.solana.com/LATEST_SOLANA_RELEASE_VERSION/install)"
+sh -c "$(curl -sSfL https://release.domichain.com/LATEST_SOLANA_RELEASE_VERSION/install)"
 ```
 
 - You can replace `LATEST_SOLANA_RELEASE_VERSION` with the release tag matching
@@ -32,10 +32,10 @@ sh -c "$(curl -sSfL https://release.solana.com/LATEST_SOLANA_RELEASE_VERSION/ins
 
 ```text
 downloading LATEST_SOLANA_RELEASE_VERSION installer
-Configuration: /home/solana/.config/solana/install/config.yml
-Active release directory: /home/solana/.local/share/solana/install/active_release
+Configuration: /home/domichain/.config/domichain/install/config.yml
+Active release directory: /home/domichain/.local/share/domichain/install/active_release
 * Release version: LATEST_SOLANA_RELEASE_VERSION
-* Release URL: https://github.com/solana-labs/solana/releases/download/LATEST_SOLANA_RELEASE_VERSION/solana-release-x86_64-unknown-linux-gnu.tar.bz2
+* Release URL: https://github.com/domichain-labs/domichain/releases/download/LATEST_SOLANA_RELEASE_VERSION/domichain-release-x86_64-unknown-linux-gnu.tar.bz2
 Update successful
 ```
 
@@ -43,18 +43,18 @@ Update successful
   to
 
 ```bash
-Please update your PATH environment variable to include the solana programs:
+Please update your PATH environment variable to include the domichain programs:
 ```
 
 - If you get the above message, copy and paste the recommended command below
   it to update `PATH`
-- Confirm you have the desired version of `solana` installed by running:
+- Confirm you have the desired version of `domichain` installed by running:
 
 ```bash
-solana --version
+domichain --version
 ```
 
-- After a successful install, `solana-install update` may be used to easily
+- After a successful install, `domichain-install update` may be used to easily
   update the Domichain software to a newer version at any time.
 
 ---
@@ -72,7 +72,7 @@ solana --version
   installer into a temporary directory:
 
 ```bash
-curl https://release.solana.com/LATEST_SOLANA_RELEASE_VERSION/solana-install-init-x86_64-pc-windows-msvc.exe --output C:\solana-install-tmp\solana-install-init.exe --create-dirs
+curl https://release.domichain.com/LATEST_SOLANA_RELEASE_VERSION/domichain-install-init-x86_64-pc-windows-msvc.exe --output C:\domichain-install-tmp\domichain-install-init.exe --create-dirs
 ```
 
 - Copy and paste the following command, then press Enter to install the latest
@@ -80,7 +80,7 @@ curl https://release.solana.com/LATEST_SOLANA_RELEASE_VERSION/solana-install-ini
   to allow the program to run.
 
 ```bash
-C:\solana-install-tmp\solana-install-init.exe LATEST_SOLANA_RELEASE_VERSION
+C:\domichain-install-tmp\domichain-install-init.exe LATEST_SOLANA_RELEASE_VERSION
 ```
 
 - When the installer is finished, press Enter.
@@ -89,58 +89,58 @@ C:\solana-install-tmp\solana-install-init.exe LATEST_SOLANA_RELEASE_VERSION
   normal user
   - Search for "Command Prompt" in the search bar, then left click on the
     Command Prompt app icon, no need to run as Administrator)
-- Confirm you have the desired version of `solana` installed by entering:
+- Confirm you have the desired version of `domichain` installed by entering:
 
 ```bash
-solana --version
+domichain --version
 ```
 
-- After a successful install, `solana-install update` may be used to easily
+- After a successful install, `domichain-install update` may be used to easily
   update the Domichain software to a newer version at any time.
 
 ## Download Prebuilt Binaries
 
-If you would rather not use `solana-install` to manage the install, you can
+If you would rather not use `domichain-install` to manage the install, you can
 manually download and install the binaries.
 
 ### Linux
 
 Download the binaries by navigating to
-[https://github.com/solana-labs/solana/releases/latest](https://github.com/solana-labs/solana/releases/latest),
-download **solana-release-x86_64-unknown-linux-msvc.tar.bz2**, then extract the
+[https://github.com/domichain-labs/domichain/releases/latest](https://github.com/domichain-labs/domichain/releases/latest),
+download **domichain-release-x86_64-unknown-linux-msvc.tar.bz2**, then extract the
 archive:
 
 ```bash
-tar jxf solana-release-x86_64-unknown-linux-gnu.tar.bz2
-cd solana-release/
+tar jxf domichain-release-x86_64-unknown-linux-gnu.tar.bz2
+cd domichain-release/
 export PATH=$PWD/bin:$PATH
 ```
 
 ### MacOS
 
 Download the binaries by navigating to
-[https://github.com/solana-labs/solana/releases/latest](https://github.com/solana-labs/solana/releases/latest),
-download **solana-release-x86_64-apple-darwin.tar.bz2**, then extract the
+[https://github.com/domichain-labs/domichain/releases/latest](https://github.com/domichain-labs/domichain/releases/latest),
+download **domichain-release-x86_64-apple-darwin.tar.bz2**, then extract the
 archive:
 
 ```bash
-tar jxf solana-release-x86_64-apple-darwin.tar.bz2
-cd solana-release/
+tar jxf domichain-release-x86_64-apple-darwin.tar.bz2
+cd domichain-release/
 export PATH=$PWD/bin:$PATH
 ```
 
 ### Windows
 
 - Download the binaries by navigating to
-  [https://github.com/solana-labs/solana/releases/latest](https://github.com/solana-labs/solana/releases/latest),
-  download **solana-release-x86_64-pc-windows-msvc.tar.bz2**, then extract the
+  [https://github.com/domichain-labs/domichain/releases/latest](https://github.com/domichain-labs/domichain/releases/latest),
+  download **domichain-release-x86_64-pc-windows-msvc.tar.bz2**, then extract the
   archive using WinZip or similar.
 
 - Open a Command Prompt and navigate to the directory into which you extracted
   the binaries and run:
 
 ```bash
-cd solana-release/
+cd domichain-release/
 set PATH=%cd%/bin;%PATH%
 ```
 
@@ -148,7 +148,7 @@ set PATH=%cd%/bin;%PATH%
 
 If you are unable to use the prebuilt binaries or prefer to build it yourself
 from source, navigate to
-[https://github.com/solana-labs/solana/releases/latest](https://github.com/solana-labs/solana/releases/latest),
+[https://github.com/domichain-labs/domichain/releases/latest](https://github.com/domichain-labs/domichain/releases/latest),
 and download the **Source Code** archive. Extract the code and build the
 binaries with:
 
@@ -161,7 +161,7 @@ You can then run the following command to obtain the same result as with
 prebuilt binaries:
 
 ```bash
-solana-install init
+domichain-install init
 ```
 
 ## Use Homebrew
@@ -170,14 +170,14 @@ This option requires you to have [Homebrew](https://brew.sh/) package manager on
 
 ### MacOS & Linux
 
-- Follow instructions at: https://formulae.brew.sh/formula/solana
+- Follow instructions at: https://formulae.brew.sh/formula/domichain
 
-[Homebrew formulae](https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/solana.rb)
-is updated after each `solana` release, however it is possible that
+[Homebrew formulae](https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/domichain.rb)
+is updated after each `domichain` release, however it is possible that
 the Homebrew version is outdated.
 
-- Confirm you have the desired version of `solana` installed by entering:
+- Confirm you have the desired version of `domichain` installed by entering:
 
 ```bash
-solana --version
+domichain --version
 ```

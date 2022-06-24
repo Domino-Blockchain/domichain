@@ -3,8 +3,8 @@ use {
     clap::{crate_description, crate_name, crate_version, Arg},
     log::*,
     regex::Regex,
-    solana_download_utils::download_file,
-    solana_sdk::signature::{write_keypair_file, Keypair},
+    domichain_download_utils::download_file,
+    domichain_sdk::signature::{write_keypair_file, Keypair},
     std::{
         collections::{HashMap, HashSet},
         env,
@@ -138,7 +138,7 @@ fn install_if_missing(
         fs::remove_dir(&target_path).map_err(|err| err.to_string())?;
     }
 
-    // Check whether the package is already in ~/.cache/solana.
+    // Check whether the package is already in ~/.cache/domichain.
     // Download it and place in the proper location if not found.
     if !target_path.is_dir()
         && !target_path
@@ -432,7 +432,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         }
     };
 
-    let legacy_program_feature_present = package.name == "solana-sdk";
+    let legacy_program_feature_present = package.name == "domichain-sdk";
     let root_package_dir = &package.manifest_path.parent().unwrap_or_else(|| {
         error!("Unable to get directory of {}", package.manifest_path);
         exit(1);
@@ -444,7 +444,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         .cloned()
         .unwrap_or_else(|| target_directory.join("deploy"));
 
-    let target_build_directory = target_directory.join("sbf-solana-solana").join("release");
+    let target_build_directory = target_directory.join("sbf-domichain-domichain").join("release");
 
     env::set_current_dir(&root_package_dir).unwrap_or_else(|err| {
         error!(
@@ -465,11 +465,11 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         info!("Legacy program feature detected");
     }
     let sbf_tools_download_file_name = if cfg!(target_os = "windows") {
-        "solana-sbf-tools-windows.tar.bz2"
+        "domichain-sbf-tools-windows.tar.bz2"
     } else if cfg!(target_os = "macos") {
-        "solana-sbf-tools-osx.tar.bz2"
+        "domichain-sbf-tools-osx.tar.bz2"
     } else {
-        "solana-sbf-tools-linux.tar.bz2"
+        "domichain-sbf-tools-linux.tar.bz2"
     };
 
     let home_dir = PathBuf::from(env::var("HOME").unwrap_or_else(|err| {
@@ -479,13 +479,13 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
     let package = "sbf-tools";
     let target_path = home_dir
         .join(".cache")
-        .join("solana")
+        .join("domichain")
         .join(config.sbf_tools_version)
         .join(package);
     install_if_missing(
         config,
         package,
-        "https://github.com/solana-labs/bpf-tools/releases/download",
+        "https://github.com/domichain-labs/bpf-tools/releases/download",
         sbf_tools_download_file_name,
         &target_path,
     )
@@ -532,7 +532,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         "+sbf",
         "build",
         "--target",
-        "sbf-solana-solana",
+        "sbf-domichain-domichain",
         "--release",
     ];
     if config.no_default_features {
@@ -655,7 +655,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         check_undefined_symbols(config, &program_so);
 
         info!("To deploy this program:");
-        info!("  $ solana program deploy {}", program_so.display());
+        info!("  $ domichain program deploy {}", program_so.display());
         info!("The program address will default to this keypair (override with --program-id):");
         info!("  {}", program_keypair.display());
     } else if config.dump {
@@ -705,7 +705,7 @@ fn build_sbf(config: Config, manifest_path: Option<PathBuf>) {
 }
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let default_config = Config::default();
     let default_sbf_sdk = format!("{}", default_config.sbf_sdk.display());
 

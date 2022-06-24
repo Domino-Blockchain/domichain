@@ -3,7 +3,7 @@ import {
   ComputeBudgetInstruction,
   SignatureResult,
   TransactionInstruction,
-} from "@solana/web3.js";
+} from "@domichain/web3.js";
 import { InstructionCard } from "./InstructionCard";
 import { microLamportsToLamportsString, SolBalance } from "utils";
 import { Address } from "components/common/Address";

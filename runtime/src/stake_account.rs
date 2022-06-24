@@ -1,7 +1,7 @@
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
-use solana_frozen_abi::abi_example::AbiExample;
+use domichain_frozen_abi::abi_example::AbiExample;
 use {
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         account_utils::StateMut,
         instruction::InstructionError,
@@ -58,7 +58,7 @@ impl StakeAccount<Delegation> {
 impl TryFrom<AccountSharedData> for StakeAccount<()> {
     type Error = Error;
     fn try_from(account: AccountSharedData) -> Result<Self, Self::Error> {
-        if account.owner() != &solana_stake_program::id() {
+        if account.owner() != &domichain_stake_program::id() {
             return Err(Error::InvalidOwner(*account.owner()));
         }
         let stake_state = account.state()?;
@@ -123,14 +123,14 @@ impl<S, T> PartialEq<StakeAccount<S>> for StakeAccount<T> {
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for StakeAccount<Delegation> {
     fn example() -> Self {
-        use solana_sdk::{
+        use domichain_sdk::{
             account::Account,
             stake::state::{Meta, Stake},
         };
         let stake_state = StakeState::Stake(Meta::example(), Stake::example());
         let mut account = Account::example();
         account.data.resize(196, 0u8);
-        account.owner = solana_stake_program::id();
+        account.owner = domichain_stake_program::id();
         account.set_state(&stake_state).unwrap();
         Self::try_from(AccountSharedData::from(account)).unwrap()
     }

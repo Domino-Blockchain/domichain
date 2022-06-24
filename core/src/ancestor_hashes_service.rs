@@ -12,18 +12,18 @@ use {
     },
     crossbeam_channel::{unbounded, Receiver, Sender},
     dashmap::{mapref::entry::Entry::Occupied, DashMap},
-    solana_ledger::{blockstore::Blockstore, shred::SIZE_OF_NONCE},
-    solana_perf::{
+    domichain_ledger::{blockstore::Blockstore, shred::SIZE_OF_NONCE},
+    domichain_perf::{
         packet::{Packet, PacketBatch},
         recycler::Recycler,
     },
-    solana_runtime::bank::Bank,
-    solana_sdk::{
+    domichain_runtime::bank::Bank,
+    domichain_sdk::{
         clock::{Slot, SLOT_MS},
         pubkey::Pubkey,
         timing::timestamp,
     },
-    solana_streamer::streamer::{self, PacketBatchReceiver, StreamerReceiveStats},
+    domichain_streamer::streamer::{self, PacketBatchReceiver, StreamerReceiveStats},
     std::{
         collections::HashSet,
         net::UdpSocket,
@@ -207,7 +207,7 @@ impl AncestorHashesService {
         retryable_slots_sender: RetryableSlotsSender,
     ) -> JoinHandle<()> {
         Builder::new()
-            .name("solana-ancestor-hashes-responses-service".to_string())
+            .name("domichain-ancestor-hashes-responses-service".to_string())
             .spawn(move || {
                 let mut last_stats_report = Instant::now();
                 let mut stats = AncestorHashesResponsesStats::default();
@@ -461,7 +461,7 @@ impl AncestorHashesService {
         // to MAX_ANCESTOR_HASHES_SLOT_REQUESTS_PER_SECOND/second
         let mut request_throttle = vec![];
         Builder::new()
-            .name("solana-manage-ancestor-requests".to_string())
+            .name("domichain-manage-ancestor-requests".to_string())
             .spawn(move || loop {
                 if exit.load(Ordering::Relaxed) {
                     return;
@@ -688,14 +688,14 @@ mod test {
             serve_repair::MAX_ANCESTOR_RESPONSES,
             vote_simulator::VoteSimulator,
         },
-        solana_gossip::{
+        domichain_gossip::{
             cluster_info::{ClusterInfo, Node},
             contact_info::ContactInfo,
         },
-        solana_ledger::{blockstore::make_many_slot_entries, get_tmp_ledger_path},
-        solana_runtime::{accounts_background_service::AbsRequestSender, bank_forks::BankForks},
-        solana_sdk::{hash::Hash, signature::Keypair},
-        solana_streamer::socket::SocketAddrSpace,
+        domichain_ledger::{blockstore::make_many_slot_entries, get_tmp_ledger_path},
+        domichain_runtime::{accounts_background_service::AbsRequestSender, bank_forks::BankForks},
+        domichain_sdk::{hash::Hash, signature::Keypair},
+        domichain_streamer::socket::SocketAddrSpace,
         std::collections::HashMap,
         trees::tr,
     };

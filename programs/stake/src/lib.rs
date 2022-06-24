@@ -2,10 +2,10 @@
 #![allow(clippy::integer_arithmetic)]
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solana_sdk::stake::program::id` or `solana_program::stake::program::id` instead"
+    note = "Please use `domichain_sdk::stake::program::id` or `domichain_program::stake::program::id` instead"
 )]
-pub use solana_sdk::stake::program::{check_id, id};
-use solana_sdk::{
+pub use domichain_sdk::stake::program::{check_id, id};
+use domichain_sdk::{
     feature_set::{self, FeatureSet},
     genesis_config::GenesisConfig,
     native_token::LAMPORTS_PER_SOL,
@@ -29,6 +29,6 @@ pub fn get_minimum_delegation(feature_set: &FeatureSet) -> u64 {
         MINIMUM_DELEGATION_SOL * LAMPORTS_PER_SOL
     } else {
         #[allow(deprecated)]
-        solana_sdk::stake::MINIMUM_STAKE_DELEGATION
+        domichain_sdk::stake::MINIMUM_STAKE_DELEGATION
     }
 }

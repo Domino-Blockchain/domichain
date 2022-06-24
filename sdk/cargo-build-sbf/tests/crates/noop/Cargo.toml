@@ -2,15 +2,15 @@
 name = "noop"
 version = "1.11.1"
 description = "Domichain SBF test program written in Rust"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
+homepage = "https://domichain.com/"
 edition = "2021"
 publish = false
 
 [dependencies]
-solana-program = { path = "../../../../program", version = "=1.11.1" }
+domichain-program = { path = "../../../../program", version = "=1.11.1" }
 
 [lib]
 crate-type = ["cdylib"]

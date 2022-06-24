@@ -6,7 +6,7 @@ Many terms are thrown around when discussing inflation and the related component
 
 ### Total Current Supply [SOL]
 
-The total amount of tokens (locked or unlocked) that have been generated (via genesis block or protocol inflation) minus any tokens that have been burnt (via transaction fees or other mechanism) or slashed. At network launch, 500,000,000 SOL were instantiated in the genesis block. Since then the Total Current Supply has been reduced by the burning of transaction fees and a planned token reduction event. Domichain’s _Total Current Supply_ can be found at https://explorer.solana.com/supply
+The total amount of tokens (locked or unlocked) that have been generated (via genesis block or protocol inflation) minus any tokens that have been burnt (via transaction fees or other mechanism) or slashed. At network launch, 500,000,000 SOL were instantiated in the genesis block. Since then the Total Current Supply has been reduced by the burning of transaction fees and a planned token reduction event. Domichain’s _Total Current Supply_ can be found at https://explorer.domichain.com/supply
 
 ### Inflation Rate [%]
 

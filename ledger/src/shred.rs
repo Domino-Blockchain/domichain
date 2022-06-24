@@ -60,9 +60,9 @@ use {
     bitflags::bitflags,
     num_enum::{IntoPrimitive, TryFromPrimitive},
     serde::{Deserialize, Serialize},
-    solana_entry::entry::{create_ticks, Entry},
-    solana_perf::packet::Packet,
-    solana_sdk::{
+    domichain_entry::entry::{create_ticks, Entry},
+    domichain_perf::packet::Packet,
+    domichain_sdk::{
         clock::Slot,
         hash::{hashv, Hash},
         pubkey::Pubkey,
@@ -751,7 +751,7 @@ mod tests {
         matches::assert_matches,
         rand::Rng,
         rand_chacha::{rand_core::SeedableRng, ChaChaRng},
-        solana_sdk::{shred_version, signature::Signer},
+        domichain_sdk::{shred_version, signature::Signer},
     };
 
     fn bs58_decode<T: AsRef<[u8]>>(data: T) -> Vec<u8> {
@@ -863,7 +863,7 @@ mod tests {
 
     #[test]
     fn test_shred_offsets() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut packet = Packet::default();
         let shred = Shred::new_from_data(1, 3, 0, &[], ShredFlags::LAST_SHRED_IN_SLOT, 0, 0, 0);
         shred.copy_to_packet(&mut packet);

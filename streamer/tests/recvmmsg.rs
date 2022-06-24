@@ -1,7 +1,7 @@
 #![cfg(target_os = "linux")]
 
 use {
-    solana_streamer::{
+    domichain_streamer::{
         packet::{Meta, Packet, PACKET_DATA_SIZE},
         recvmmsg::*,
     },

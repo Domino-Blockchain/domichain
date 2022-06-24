@@ -1,6 +1,6 @@
 import bs58 from 'bs58';
 import {Buffer} from 'buffer';
-import * as splToken from '@solana/spl-token';
+import * as splToken from '@domichain/spl-token';
 import {expect, use} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {useFakeTimers, SinonFakeTimers} from 'sinon';
@@ -117,7 +117,7 @@ describe('Connection', function () {
       await mockRpcResponse({
         method: 'getVersion',
         params: [],
-        value: {'solana-core': '0.20.4'},
+        value: {'domichain-core': '0.20.4'},
         withHeaders: headers,
       });
 
@@ -137,7 +137,7 @@ describe('Connection', function () {
       await mockRpcResponse({
         method: 'getVersion',
         params: [],
-        value: {'solana-core': '0.20.4'},
+        value: {'domichain-core': '0.20.4'},
         withHeaders: {
           Authorization: 'Bearer 123',
         },
@@ -2464,7 +2464,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/solana-labs/solana/issues/23853.',
+              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
           );
           this.skip();
         } else {
@@ -2631,7 +2631,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/solana-labs/solana/issues/23853.',
+              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
           );
           this.skip();
         } else {
@@ -2875,7 +2875,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/solana-labs/solana/issues/23853.',
+              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
           );
           this.skip();
         } else {
@@ -3588,11 +3588,11 @@ describe('Connection', function () {
     await mockRpcResponse({
       method: 'getVersion',
       params: [],
-      value: {'solana-core': '0.20.4'},
+      value: {'domichain-core': '0.20.4'},
     });
 
     const version = await connection.getVersion();
-    expect(version['solana-core']).to.be.ok;
+    expect(version['domichain-core']).to.be.ok;
   });
 
   it('getGenesisHash', async () => {
@@ -4175,9 +4175,9 @@ describe('Connection', function () {
     });
 
     it('https request', async () => {
-      const connection = new Connection('https://api.mainnet-beta.solana.com');
+      const connection = new Connection('https://api.mainnet-beta.domichain.com');
       const version = await connection.getVersion();
-      expect(version['solana-core']).to.be.ok;
+      expect(version['domichain-core']).to.be.ok;
     }).timeout(20 * 1000);
   }
 });

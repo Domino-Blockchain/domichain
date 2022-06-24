@@ -128,14 +128,14 @@ impl Hash {
 pub fn hashv(vals: &[&[u8]]) -> Hash {
     // Perform the calculation inline, calling this from within a program is
     // not supported
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     {
         let mut hasher = Hasher::default();
         hasher.hashv(vals);
         hasher.result()
     }
     // Call via a system call to perform the calculation
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     {
         let mut hash_result = [0; HASH_BYTES];
         unsafe {

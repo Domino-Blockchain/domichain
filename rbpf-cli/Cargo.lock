@@ -300,7 +300,7 @@ name = "rbpf_cli"
 version = "0.2.8"
 dependencies = [
  "clap",
- "solana_rbpf",
+ "domichain_rbpf",
  "test_utils",
 ]
 
@@ -331,7 +331,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana_rbpf"
+name = "domichain_rbpf"
 version = "0.2.8"
 dependencies = [
  "byteorder",
@@ -378,7 +378,7 @@ name = "test_utils"
 version = "0.2.8"
 dependencies = [
  "libc",
- "solana_rbpf",
+ "domichain_rbpf",
 ]
 
 [[package]]

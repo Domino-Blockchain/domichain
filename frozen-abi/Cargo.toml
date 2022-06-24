@@ -1,11 +1,11 @@
 [package]
-name = "solana-frozen-abi"
+name = "domichain-frozen-abi"
 version = "1.11.1"
 description = "Domichain Frozen ABI"
-authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-frozen-abi"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://github.com/domichain-labs/domichain"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-frozen-abi"
 license = "Apache-2.0"
 edition = "2021"
 
@@ -18,10 +18,10 @@ serde = "1.0.137"
 serde_derive = "1.0.103"
 serde_bytes = "0.11"
 sha2 = "0.10.2"
-solana-frozen-abi-macro = { path = "macro", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "macro", version = "=1.11.1" }
 thiserror = "1.0"
 
-[target.'cfg(not(target_os = "solana"))'.dependencies]
+[target.'cfg(not(target_os = "domichain"))'.dependencies]
 generic-array = { version = "0.14.5", default-features = false, features = [
 	"serde",
 	"more_lengths"
@@ -29,8 +29,8 @@ generic-array = { version = "0.14.5", default-features = false, features = [
 im = { version = "15.1.0", features = ["rayon", "serde"] }
 memmap2 = "0.5.3"
 
-[target.'cfg(not(target_os = "solana"))'.dev-dependencies]
-solana-logger = { path = "../logger", version = "=1.11.1" }
+[target.'cfg(not(target_os = "domichain"))'.dev-dependencies]
+domichain-logger = { path = "../logger", version = "=1.11.1" }
 
 [build-dependencies]
 rustc_version = "0.4"
