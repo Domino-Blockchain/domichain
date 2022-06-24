@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 HERE="$(dirname "$0")"
-SOLANA_ROOT="$HERE"/../..
+DOMICHAIN_ROOT="$HERE"/../..
 
 # shellcheck source=ci/setup-new-buildkite-agent/utils.sh
 source "$HERE"/utils.sh
@@ -26,21 +26,21 @@ apt install -y build-essential pkg-config clang cmake sysstat linux-tools-common
 gem install ejson ejson2env
 mkdir -p /opt/ejson/keys
 
-"$SOLANA_ROOT"/net/scripts/install-docker.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-docker.sh
 usermod -aG docker "$SETUP_USER"
-"$SOLANA_ROOT"/net/scripts/install-certbot.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-certbot.sh
 "$HERE"/setup-sudoers.sh
 "$HERE"/setup-ssh.sh
 
 "$HERE"/disable-nouveau.sh
 "$HERE"/disable-networkd-wait.sh
 
-"$SOLANA_ROOT"/net/scripts/install-earlyoom.sh
-"$SOLANA_ROOT"/net/scripts/install-nodejs.sh
-"$SOLANA_ROOT"/net/scripts/localtime.sh
-"$SOLANA_ROOT"/net/scripts/install-redis.sh
-"$SOLANA_ROOT"/net/scripts/install-rsync.sh
-"$SOLANA_ROOT"/net/scripts/install-libssl-compatability.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-earlyoom.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-nodejs.sh
+"$DOMICHAIN_ROOT"/net/scripts/localtime.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-redis.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-rsync.sh
+"$DOMICHAIN_ROOT"/net/scripts/install-libssl-compatability.sh
 
 "$HERE"/setup-procfs-knobs.sh
 "$HERE"/setup-limits.sh

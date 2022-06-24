@@ -40,7 +40,7 @@ export RUST_BACKTRACE=1
 dataDir=$PWD/config/"$(basename "$0" .sh)"
 ledgerDir=$PWD/config/ledger
 
-SOLANA_RUN_SH_CLUSTER_TYPE=${SOLANA_RUN_SH_CLUSTER_TYPE:-development}
+DOMICHAIN_RUN_SH_CLUSTER_TYPE=${DOMICHAIN_RUN_SH_CLUSTER_TYPE:-development}
 
 set -x
 if ! domichain address; then
@@ -83,9 +83,9 @@ else
       "$validator_vote_account" \
       "$validator_stake_account" \
     --ledger "$ledgerDir" \
-    --cluster-type "$SOLANA_RUN_SH_CLUSTER_TYPE" \
+    --cluster-type "$DOMICHAIN_RUN_SH_CLUSTER_TYPE" \
     $SPL_GENESIS_ARGS \
-    $SOLANA_RUN_SH_GENESIS_ARGS
+    $DOMICHAIN_RUN_SH_GENESIS_ARGS
 fi
 
 abort() {
@@ -116,7 +116,7 @@ args=(
   --no-os-network-limits-test
 )
 # shellcheck disable=SC2086
-domichain-validator "${args[@]}" $SOLANA_RUN_SH_VALIDATOR_ARGS &
+domichain-validator "${args[@]}" $DOMICHAIN_RUN_SH_VALIDATOR_ARGS &
 validator=$!
 
 wait "$validator"

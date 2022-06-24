@@ -28,7 +28,7 @@ Explorers:
 - Metrics environment variable for Devnet:
 
 ```bash
-export SOLANA_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=devnet,u=scratch_writer,p=topsecret"
+export DOMICHAIN_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=devnet,u=scratch_writer,p=topsecret"
 ```
 
 - RPC URL for Devnet: `https://api.devnet.domichain.com`
@@ -80,7 +80,7 @@ are operated by Domichain Labs
 - Metrics environment variable for Testnet:
 
 ```bash
-export SOLANA_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=tds,u=testnet_write,p=c4fa841aa918bf8274e3e2a44d77568d9861b3ea"
+export DOMICHAIN_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=tds,u=testnet_write,p=c4fa841aa918bf8274e3e2a44d77568d9861b3ea"
 ```
 
 - RPC URL for Testnet: `https://api.testnet.domichain.com`
@@ -132,7 +132,7 @@ A permissionless, persistent cluster for Domichain users, builders, validators a
 - Metrics environment variable for Mainnet Beta:
 
 ```bash
-export SOLANA_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=mainnet-beta,u=mainnet-beta_write,p=password"
+export DOMICHAIN_METRICS_CONFIG="host=https://metrics.domichain.com:8086,db=mainnet-beta,u=mainnet-beta_write,p=password"
 ```
 
 - RPC URL for Mainnet Beta: `https://api.mainnet-beta.domichain.com`

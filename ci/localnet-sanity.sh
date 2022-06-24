@@ -202,8 +202,8 @@ killNodes() {
   # Try to use the RPC exit API to cleanly exit the first two nodes
   # (dynamic nodes, -x, are just killed)
   echo "--- RPC exit"
-  $domichain_validator --ledger "$SOLANA_CONFIG_DIR"/bootstrap-validator exit --force || true
-  $domichain_validator --ledger "$SOLANA_CONFIG_DIR"/validator exit --force || true
+  $domichain_validator --ledger "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator exit --force || true
+  $domichain_validator --ledger "$DOMICHAIN_CONFIG_DIR"/validator exit --force || true
 
   # Give the nodes a splash of time to cleanly exit before killing them
   sleep 2
@@ -271,7 +271,7 @@ verifyLedger() {
     echo "--- $ledger ledger verification"
     (
       set -x
-      $domichain_ledger_tool --ledger "$SOLANA_CONFIG_DIR"/$ledger verify
+      $domichain_ledger_tool --ledger "$DOMICHAIN_CONFIG_DIR"/$ledger verify
     ) || flag_error
   done
 }
@@ -304,7 +304,7 @@ flag_error() {
 }
 
 if ! $skipSetup; then
-  clear_config_dir "$SOLANA_CONFIG_DIR"
+  clear_config_dir "$DOMICHAIN_CONFIG_DIR"
   multinode-demo/setup.sh --hashes-per-tick sleep
 else
   verifyLedger

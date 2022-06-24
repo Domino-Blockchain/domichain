@@ -17,25 +17,25 @@ depending on your preferred workflow:
 - Open your favorite Terminal application
 
 - Install the Domichain release
-  [LATEST_SOLANA_RELEASE_VERSION](https://github.com/domichain-labs/domichain/releases/tag/LATEST_SOLANA_RELEASE_VERSION) on your
+  [LATEST_DOMICHAIN_RELEASE_VERSION](https://github.com/domichain-labs/domichain/releases/tag/LATEST_DOMICHAIN_RELEASE_VERSION) on your
   machine by running:
 
 ```bash
-sh -c "$(curl -sSfL https://release.domichain.com/LATEST_SOLANA_RELEASE_VERSION/install)"
+sh -c "$(curl -sSfL https://release.domichain.com/LATEST_DOMICHAIN_RELEASE_VERSION/install)"
 ```
 
-- You can replace `LATEST_SOLANA_RELEASE_VERSION` with the release tag matching
+- You can replace `LATEST_DOMICHAIN_RELEASE_VERSION` with the release tag matching
   the software version of your desired release, or use one of the three symbolic
   channel names: `stable`, `beta`, or `edge`.
 
 - The following output indicates a successful update:
 
 ```text
-downloading LATEST_SOLANA_RELEASE_VERSION installer
+downloading LATEST_DOMICHAIN_RELEASE_VERSION installer
 Configuration: /home/domichain/.config/domichain/install/config.yml
 Active release directory: /home/domichain/.local/share/domichain/install/active_release
-* Release version: LATEST_SOLANA_RELEASE_VERSION
-* Release URL: https://github.com/domichain-labs/domichain/releases/download/LATEST_SOLANA_RELEASE_VERSION/domichain-release-x86_64-unknown-linux-gnu.tar.bz2
+* Release version: LATEST_DOMICHAIN_RELEASE_VERSION
+* Release URL: https://github.com/domichain-labs/domichain/releases/download/LATEST_DOMICHAIN_RELEASE_VERSION/domichain-release-x86_64-unknown-linux-gnu.tar.bz2
 Update successful
 ```
 
@@ -72,7 +72,7 @@ domichain --version
   installer into a temporary directory:
 
 ```bash
-curl https://release.domichain.com/LATEST_SOLANA_RELEASE_VERSION/domichain-install-init-x86_64-pc-windows-msvc.exe --output C:\domichain-install-tmp\domichain-install-init.exe --create-dirs
+curl https://release.domichain.com/LATEST_DOMICHAIN_RELEASE_VERSION/domichain-install-init-x86_64-pc-windows-msvc.exe --output C:\domichain-install-tmp\domichain-install-init.exe --create-dirs
 ```
 
 - Copy and paste the following command, then press Enter to install the latest
@@ -80,7 +80,7 @@ curl https://release.domichain.com/LATEST_SOLANA_RELEASE_VERSION/domichain-insta
   to allow the program to run.
 
 ```bash
-C:\domichain-install-tmp\domichain-install-init.exe LATEST_SOLANA_RELEASE_VERSION
+C:\domichain-install-tmp\domichain-install-init.exe LATEST_DOMICHAIN_RELEASE_VERSION
 ```
 
 - When the installer is finished, press Enter.

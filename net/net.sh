@@ -2,7 +2,7 @@
 set -e
 
 here=$(dirname "$0")
-SOLANA_ROOT="$(cd "$here"/..; pwd)"
+DOMICHAIN_ROOT="$(cd "$here"/..; pwd)"
 
 # shellcheck source=net/common.sh
 source "$here"/common.sh
@@ -177,12 +177,12 @@ build() {
   declare MAYBE_DOCKER=
   if [[ $(uname) != Linux || ! " ${supported[*]} " =~ $(lsb_release -sr) ]]; then
     # shellcheck source=ci/rust-version.sh
-    source "$SOLANA_ROOT"/ci/rust-version.sh
+    source "$DOMICHAIN_ROOT"/ci/rust-version.sh
     MAYBE_DOCKER="ci/docker-run.sh $rust_stable_docker_image"
   fi
   SECONDS=0
   (
-    cd "$SOLANA_ROOT"
+    cd "$DOMICHAIN_ROOT"
     echo "--- Build started at $(date)"
 
     set -x
@@ -216,33 +216,33 @@ build() {
     (
       echo "channel: devbuild $NOTE"
       echo "commit: $COMMIT"
-    ) > "$SOLANA_ROOT"/farf/version.yml
+    ) > "$DOMICHAIN_ROOT"/farf/version.yml
   )
   echo "Build took $SECONDS seconds"
 }
 
-SOLANA_HOME="\$HOME/domichain"
+DOMICHAIN_HOME="\$HOME/domichain"
 CARGO_BIN="\$HOME/.cargo/bin"
 
 startCommon() {
   declare ipAddress=$1
-  test -d "$SOLANA_ROOT"
+  test -d "$DOMICHAIN_ROOT"
   if $skipSetup; then
     # shellcheck disable=SC2029
     ssh "${sshOptions[@]}" "$ipAddress" "
       set -x;
-      mkdir -p $SOLANA_HOME/config;
+      mkdir -p $DOMICHAIN_HOME/config;
       rm -rf ~/config;
-      mv $SOLANA_HOME/config ~;
-      rm -rf $SOLANA_HOME;
-      mkdir -p $SOLANA_HOME $CARGO_BIN;
-      mv ~/config $SOLANA_HOME/
+      mv $DOMICHAIN_HOME/config ~;
+      rm -rf $DOMICHAIN_HOME;
+      mkdir -p $DOMICHAIN_HOME $CARGO_BIN;
+      mv ~/config $DOMICHAIN_HOME/
     "
   else
     # shellcheck disable=SC2029
     ssh "${sshOptions[@]}" "$ipAddress" "
       set -x;
-      rm -rf $SOLANA_HOME;
+      rm -rf $DOMICHAIN_HOME;
       mkdir -p $CARGO_BIN
     "
   fi
@@ -255,8 +255,8 @@ syncScripts() {
   declare ipAddress=$1
   rsync -vPrc -e "ssh ${sshOptions[*]}" \
     --exclude 'net/log*' \
-    "$SOLANA_ROOT"/{fetch-perf-libs.sh,fetch-spl.sh,scripts,net,multinode-demo} \
-    "$ipAddress":"$SOLANA_HOME"/ > /dev/null
+    "$DOMICHAIN_ROOT"/{fetch-perf-libs.sh,fetch-spl.sh,scripts,net,multinode-demo} \
+    "$ipAddress":"$DOMICHAIN_HOME"/ > /dev/null
 }
 
 # Deploy local binaries to bootstrap validator.  Other validators and clients later fetch the
@@ -267,12 +267,12 @@ deployBootstrapValidator() {
   echo "Deploying software to bootstrap validator ($ipAddress)"
   case $deployMethod in
   tar)
-    rsync -vPrc -e "ssh ${sshOptions[*]}" "$SOLANA_ROOT"/domichain-release/bin/* "$ipAddress:$CARGO_BIN/"
-    rsync -vPrc -e "ssh ${sshOptions[*]}" "$SOLANA_ROOT"/domichain-release/version.yml "$ipAddress:~/"
+    rsync -vPrc -e "ssh ${sshOptions[*]}" "$DOMICHAIN_ROOT"/domichain-release/bin/* "$ipAddress:$CARGO_BIN/"
+    rsync -vPrc -e "ssh ${sshOptions[*]}" "$DOMICHAIN_ROOT"/domichain-release/version.yml "$ipAddress:~/"
     ;;
   local)
-    rsync -vPrc -e "ssh ${sshOptions[*]}" "$SOLANA_ROOT"/farf/bin/* "$ipAddress:$CARGO_BIN/"
-    rsync -vPrc -e "ssh ${sshOptions[*]}" "$SOLANA_ROOT"/farf/version.yml "$ipAddress:~/"
+    rsync -vPrc -e "ssh ${sshOptions[*]}" "$DOMICHAIN_ROOT"/farf/bin/* "$ipAddress:$CARGO_BIN/"
+    rsync -vPrc -e "ssh ${sshOptions[*]}" "$DOMICHAIN_ROOT"/farf/version.yml "$ipAddress:~/"
     ;;
   skip)
     ;;
@@ -529,21 +529,21 @@ prepareDeploy() {
   tar)
     if [[ -n $releaseChannel ]]; then
       echo "Downloading release from channel: $releaseChannel"
-      rm -f "$SOLANA_ROOT"/domichain-release.tar.bz2
+      rm -f "$DOMICHAIN_ROOT"/domichain-release.tar.bz2
       declare updateDownloadUrl=https://release.domichain.com/"$releaseChannel"/domichain-release-x86_64-unknown-linux-gnu.tar.bz2
       (
         set -x
         curl -L -I "$updateDownloadUrl"
         curl -L --retry 5 --retry-delay 2 --retry-connrefused \
-          -o "$SOLANA_ROOT"/domichain-release.tar.bz2 "$updateDownloadUrl"
+          -o "$DOMICHAIN_ROOT"/domichain-release.tar.bz2 "$updateDownloadUrl"
       )
-      tarballFilename="$SOLANA_ROOT"/domichain-release.tar.bz2
+      tarballFilename="$DOMICHAIN_ROOT"/domichain-release.tar.bz2
     fi
     (
       set -x
-      rm -rf "$SOLANA_ROOT"/domichain-release
-      cd "$SOLANA_ROOT"; tar jfxv "$tarballFilename"
-      cat "$SOLANA_ROOT"/domichain-release/version.yml
+      rm -rf "$DOMICHAIN_ROOT"/domichain-release
+      cd "$DOMICHAIN_ROOT"; tar jfxv "$tarballFilename"
+      cat "$DOMICHAIN_ROOT"/domichain-release/version.yml
     )
     ;;
   local)
@@ -572,7 +572,7 @@ prepareDeploy() {
       rsync -vPrc -e "ssh ${sshOptions[*]}" "${validatorIpList[0]}":~/version.yml current-version.yml
     )
     cat current-version.yml
-    if ! diff -q current-version.yml "$SOLANA_ROOT"/domichain-release/version.yml; then
+    if ! diff -q current-version.yml "$DOMICHAIN_ROOT"/domichain-release/version.yml; then
       echo "Cluster software version is old.  Update required"
     else
       echo "Cluster software version is current.  No update required"
@@ -663,7 +663,7 @@ deploy() {
     networkVersion="$(
       (
         set -o pipefail
-        grep "^commit: " "$SOLANA_ROOT"/domichain-release/version.yml | head -n1 | cut -d\  -f2
+        grep "^commit: " "$DOMICHAIN_ROOT"/domichain-release/version.yml | head -n1 | cut -d\  -f2
       ) || echo "tar-unknown"
     )"
     ;;
@@ -1147,7 +1147,7 @@ netem)
     remoteNetemConfigFile="$(basename "$netemConfigFile")"
     if [[ $netemCommand = "add" ]]; then
       for ipAddress in "${validatorIpList[@]}"; do
-        "$here"/scp.sh "$netemConfigFile" domichain@"$ipAddress":"$SOLANA_HOME"
+        "$here"/scp.sh "$netemConfigFile" domichain@"$ipAddress":"$DOMICHAIN_HOME"
       done
     fi
     for i in "${!validatorIpList[@]}"; do

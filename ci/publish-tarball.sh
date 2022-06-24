@@ -156,9 +156,9 @@ if [[ -n $DO_NOT_PUBLISH_TAR ]]; then
   echo "Skipping publishing install wrapper"
 elif [[ -n $BUILDKITE ]]; then
   cat > release.domichain.com-install <<EOF
-SOLANA_RELEASE=$CHANNEL_OR_TAG
-SOLANA_INSTALL_INIT_ARGS=$CHANNEL_OR_TAG
-SOLANA_DOWNLOAD_ROOT=https://release.domichain.com
+DOMICHAIN_RELEASE=$CHANNEL_OR_TAG
+DOMICHAIN_INSTALL_INIT_ARGS=$CHANNEL_OR_TAG
+DOMICHAIN_DOWNLOAD_ROOT=https://release.domichain.com
 EOF
   echo release.domichain.com-install
   cat install/domichain-install-init.sh >> release.domichain.com-install

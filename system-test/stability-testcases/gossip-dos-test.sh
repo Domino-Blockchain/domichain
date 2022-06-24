@@ -2,7 +2,7 @@
 
 set -e
 cd "$(dirname "$0")"
-SOLANA_ROOT="$(cd ../..; pwd)"
+DOMICHAIN_ROOT="$(cd ../..; pwd)"
 
 logDir="$PWD"/logs
 rm -rf "$logDir"
@@ -19,7 +19,7 @@ domichainInstallGlobalOpts=(
 bootstrapInstall() {
   declare v=$1
   if [[ ! -h $domichainInstallDataDir/active_release ]]; then
-    sh "$SOLANA_ROOT"/install/domichain-install-init.sh "$v" "${domichainInstallGlobalOpts[@]}"
+    sh "$DOMICHAIN_ROOT"/install/domichain-install-init.sh "$v" "${domichainInstallGlobalOpts[@]}"
   fi
   export PATH="$domichainInstallDataDir/active_release/bin/:$PATH"
 }

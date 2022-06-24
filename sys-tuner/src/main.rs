@@ -119,13 +119,13 @@ fn main() {
     info!("Tune will service requests only from user {}", user);
 
     unsafe { libc::umask(0o077) };
-    if let Err(e) = std::fs::remove_file(domichain_sys_tuner::SOLANA_SYS_TUNER_PATH) {
+    if let Err(e) = std::fs::remove_file(domichain_sys_tuner::DOMICHAIN_SYS_TUNER_PATH) {
         if e.kind() != std::io::ErrorKind::NotFound {
             panic!("Failed to remove stale socket file: {:?}", e)
         }
     }
 
-    let listener = unix_socket::UnixListener::bind(domichain_sys_tuner::SOLANA_SYS_TUNER_PATH)
+    let listener = unix_socket::UnixListener::bind(domichain_sys_tuner::DOMICHAIN_SYS_TUNER_PATH)
         .expect("Failed to bind to the socket file");
 
     let peer_uid;
@@ -135,7 +135,7 @@ fn main() {
         peer_uid = user.uid();
         info!("UID for domichain is {}", peer_uid);
         nix::unistd::chown(
-            domichain_sys_tuner::SOLANA_SYS_TUNER_PATH,
+            domichain_sys_tuner::DOMICHAIN_SYS_TUNER_PATH,
             Some(nix::unistd::Uid::from_raw(peer_uid)),
             None,
         )

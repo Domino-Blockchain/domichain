@@ -196,7 +196,7 @@ while [[ -n $1 ]]; do
   fi
 done
 
-if [[ "$SOLANA_GPU_MISSING" -eq 1 ]]; then
+if [[ "$DOMICHAIN_GPU_MISSING" -eq 1 ]]; then
   echo "Testnet requires GPUs, but none were found!  Aborting..."
   exit 1
 fi
@@ -209,7 +209,7 @@ if [[ -n $REQUIRE_LEDGER_DIR ]]; then
   if [[ -z $ledger_dir ]]; then
     usage "Error: --ledger not specified"
   fi
-  SOLANA_CONFIG_DIR="$ledger_dir"
+  DOMICHAIN_CONFIG_DIR="$ledger_dir"
 fi
 
 if [[ -n $REQUIRE_KEYPAIRS ]]; then
@@ -225,7 +225,7 @@ if [[ -n $REQUIRE_KEYPAIRS ]]; then
 fi
 
 if [[ -z "$ledger_dir" ]]; then
-  ledger_dir="$SOLANA_CONFIG_DIR/validator$label"
+  ledger_dir="$DOMICHAIN_CONFIG_DIR/validator$label"
 fi
 mkdir -p "$ledger_dir"
 
@@ -267,7 +267,7 @@ if [[ $maybeRequireTower = true ]]; then
   default_arg --require-tower
 fi
 
-if [[ -n $SOLANA_CUDA ]]; then
+if [[ -n $DOMICHAIN_CUDA ]]; then
   program=$domichain_validator_cuda
 else
   program=$domichain_validator
@@ -316,7 +316,7 @@ setup_validator_accounts() {
       (
         set -x
         $domichain_cli \
-          --keypair "$SOLANA_CONFIG_DIR/faucet.json" --url "$rpc_url" \
+          --keypair "$DOMICHAIN_CONFIG_DIR/faucet.json" --url "$rpc_url" \
           transfer --allow-unfunded-recipient "$identity" "$node_sol"
       ) || return $?
     fi

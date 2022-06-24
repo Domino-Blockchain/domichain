@@ -14,8 +14,8 @@ echoDomichainMetricsConfig() {
   )
 }
 
-SOLANA_METRICS_CONFIG=$(echoDomichainMetricsConfig)
-export SOLANA_METRICS_CONFIG
+DOMICHAIN_METRICS_CONFIG=$(echoDomichainMetricsConfig)
+export DOMICHAIN_METRICS_CONFIG
 unset -f echoDomichainMetricsConfig
 
 __configure_metrics_sh="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. || true; pwd)"/scripts/configure-metrics.sh

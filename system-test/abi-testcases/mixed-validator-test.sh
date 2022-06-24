@@ -6,7 +6,7 @@
 
 set -e
 cd "$(dirname "$0")"
-SOLANA_ROOT="$(cd ../..; pwd)"
+DOMICHAIN_ROOT="$(cd ../..; pwd)"
 
 logDir="$PWD"/logs
 ledgerDir="$PWD"/config
@@ -30,7 +30,7 @@ domichainInstallGlobalOpts=(
 bootstrapInstall() {
   declare v=$1
   if [[ ! -h $domichainInstallDataDir/active_release ]]; then
-    sh "$SOLANA_ROOT"/install/domichain-install-init.sh "$v" "${domichainInstallGlobalOpts[@]}"
+    sh "$DOMICHAIN_ROOT"/install/domichain-install-init.sh "$v" "${domichainInstallGlobalOpts[@]}"
   fi
   export PATH="$domichainInstallDataDir/active_release/bin/:$PATH"
 }
@@ -46,8 +46,8 @@ ORIGINAL_PATH=$PATH
 domichainInstallUse() {
   declare version=$1
   echo "--- Now using domichain $version"
-  SOLANA_BIN="$domichainInstallDataDir/releases/$version/domichain-release/bin"
-  export PATH="$SOLANA_BIN:$ORIGINAL_PATH"
+  DOMICHAIN_BIN="$domichainInstallDataDir/releases/$version/domichain-release/bin"
+  export PATH="$DOMICHAIN_BIN:$ORIGINAL_PATH"
 }
 
 killSession() {
@@ -89,7 +89,7 @@ for v in "${otherVersions[@]}"; do
   echo "--- Looking for bootstrap validator on gossip"
   (
     set -x
-    "$SOLANA_BIN"/domichain-gossip spy \
+    "$DOMICHAIN_BIN"/domichain-gossip spy \
       --entrypoint 127.0.0.1:8001 \
       --num-nodes-exactly 1 \
       --timeout 30
@@ -113,13 +113,13 @@ for v in "${otherVersions[@]}"; do
   (
     set -x
     tmux new-window -t abi -n "$v" " \
-      $SOLANA_BIN/domichain-validator \
+      $DOMICHAIN_BIN/domichain-validator \
       --ledger $ledger \
       --no-snapshot-fetch \
       --entrypoint 127.0.0.1:8001 \
       -o - 2>&1 | tee $logDir/$v.log \
     "
-    "$SOLANA_BIN"/domichain-gossip spy \
+    "$DOMICHAIN_BIN"/domichain-gossip spy \
       --entrypoint 127.0.0.1:8001 \
       --num-nodes-exactly $nodeCount \
       --timeout 30

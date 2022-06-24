@@ -50,7 +50,7 @@ export enum PROGRAM_NAMES {
   // other
   ACUMEN = "Acumen Program",
   BONFIDA_POOL = "Bonfida Pool Program",
-  BREAK_SOLANA = "Break Domichain Program",
+  BREAK_DOMICHAIN = "Break Domichain Program",
   CHAINLINK_ORACLE = "Chainlink OCR2 Oracle Program",
   CHAINLINK_STORE = "Chainlink Store Program",
   MANGO_GOVERNANCE = "Mango Governance Program",
@@ -93,8 +93,8 @@ export enum PROGRAM_NAMES {
   SWIM_SWAP = "Swim Swap Program",
   SWITCHBOARD = "Switchboard Oracle Program",
   WORMHOLE = "Wormhole",
-  SOLANART = "Domichainrt",
-  SOLANART_GO = "Domichainrt - Global offers",
+  DOMICHAINRT = "Domichainrt",
+  DOMICHAINRT_GO = "Domichainrt - Global offers",
   STEPN_DEX = "STEPN Dex",
 }
 
@@ -205,7 +205,7 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
     deployments: [Cluster.MainnetBeta],
   },
   BrEAK7zGZ6dM71zUDACDqJnekihmwF15noTddWTsknjC: {
-    name: PROGRAM_NAMES.BREAK_SOLANA,
+    name: PROGRAM_NAMES.BREAK_DOMICHAIN,
     deployments: LIVE_CLUSTERS,
   },
   cjg3oHmg9uuPsP8D6g29NWvhySJkdYdAo9D25PRbKXJ: {
@@ -377,11 +377,11 @@ export const PROGRAM_INFO_BY_ID: { [address: string]: ProgramInfo } = {
     deployments: [Cluster.MainnetBeta],
   },
   CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz: {
-    name: PROGRAM_NAMES.SOLANART,
+    name: PROGRAM_NAMES.DOMICHAINRT,
     deployments: [Cluster.MainnetBeta],
   },
   "5ZfZAwP2m93waazg8DkrrVmsupeiPEvaEHowiUP7UAbJ": {
-    name: PROGRAM_NAMES.SOLANART_GO,
+    name: PROGRAM_NAMES.DOMICHAINRT_GO,
     deployments: [Cluster.MainnetBeta],
   },
   Dooar9JkhdZ7J3LHN3A7YCuoGRUggXhQaG4kijfLGU2j: {
