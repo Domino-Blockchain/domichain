@@ -665,7 +665,7 @@ pub mod test {
         domichain_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
         domichain_test_validator::TestValidator,
         spl_token::{
-            domichain_program::program_pack::Pack,
+            solana_program::program_pack::Pack,
             state::{Account, Mint},
         },
     };

@@ -40,7 +40,7 @@ use {
     },
     domichain_transaction_status::TransactionStatus,
     spl_associated_token_account::get_associated_token_address,
-    spl_token::domichain_program::program_error::ProgramError,
+    spl_token::solana_program::program_error::ProgramError,
     std::{
         cmp::{self},
         io,

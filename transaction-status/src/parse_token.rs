@@ -17,7 +17,7 @@ use {
     spl_token_2022::{
         extension::ExtensionType,
         instruction::{AuthorityType, TokenInstruction},
-        domichain_program::{
+        solana_program::{
             instruction::Instruction as SplTokenInstruction, program_option::COption,
             pubkey::Pubkey,
         },
@@ -671,7 +671,7 @@ mod test {
         domichain_sdk::{instruction::CompiledInstruction, pubkey::Pubkey},
         spl_token_2022::{
             instruction::*,
-            domichain_program::{
+            solana_program::{
                 instruction::CompiledInstruction as SplTokenCompiledInstruction, message::Message,
                 pubkey::Pubkey as SplTokenPubkey,
             },

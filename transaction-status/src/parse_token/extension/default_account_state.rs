@@ -59,7 +59,7 @@ mod test {
             extension::default_account_state::instruction::{
                 initialize_default_account_state, update_default_account_state,
             },
-            domichain_program::message::Message,
+            solana_program::message::Message,
             state::AccountState,
         },
     };

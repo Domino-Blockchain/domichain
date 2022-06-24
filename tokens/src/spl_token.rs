@@ -14,7 +14,7 @@ use {
         get_associated_token_address, instruction::create_associated_token_account,
     },
     spl_token::{
-        domichain_program::program_pack::Pack,
+        solana_program::program_pack::Pack,
         state::{Account as SplTokenAccount, Mint},
     },
 };

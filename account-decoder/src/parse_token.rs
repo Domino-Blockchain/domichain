@@ -8,7 +8,7 @@ use {
     spl_token_2022::{
         extension::StateWithExtensions,
         generic_token_account::GenericTokenAccount,
-        domichain_program::{
+        solana_program::{
             program_option::COption, program_pack::Pack, pubkey::Pubkey as SplTokenPubkey,
         },
         state::{Account, AccountState, Mint, Multisig},

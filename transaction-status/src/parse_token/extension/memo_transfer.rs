@@ -46,7 +46,7 @@ mod test {
             extension::memo_transfer::instruction::{
                 disable_required_transfer_memos, enable_required_transfer_memos,
             },
-            domichain_program::message::Message,
+            solana_program::message::Message,
         },
     };
 

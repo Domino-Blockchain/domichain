@@ -9,7 +9,7 @@ use {
     domichain_runtime::{bank::Bank, transaction_batch::TransactionBatch},
     domichain_sdk::{account::ReadableAccount, pubkey::Pubkey},
     spl_token::{
-        domichain_program::program_pack::Pack,
+        solana_program::program_pack::Pack,
         state::{Account as TokenAccount, Mint},
     },
     std::collections::HashMap,
@@ -141,7 +141,7 @@ mod test {
         super::*,
         domichain_account_decoder::parse_token::{pubkey_from_spl_token, spl_token_pubkey},
         domichain_sdk::{account::Account, genesis_config::create_genesis_config},
-        spl_token::domichain_program::program_option::COption,
+        spl_token::solana_program::program_option::COption,
         std::collections::BTreeMap,
     };
 
