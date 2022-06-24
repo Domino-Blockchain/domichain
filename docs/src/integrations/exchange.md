@@ -54,7 +54,7 @@ under 500GB. More or less disk usage may be requested by adding an argument to
 `--limit-ledger-size` if desired. Check `domichain-validator --help` for the
 default limit value used by `--limit-ledger-size`. More information about
 selecting a custom limit value is [available
-here](https://github.com/domichain-labs/domichain/blob/583cec922b6107e0f85c7e14cb5e642bc7dfb340/core/src/ledger_cleanup_service.rs#L15-L26).
+here](https://Domino-Blockchain/domichain/blob/583cec922b6107e0f85c7e14cb5e642bc7dfb340/core/src/ledger_cleanup_service.rs#L15-L26).
 
 Specifying one or more `--known-validator` parameters can protect you from booting from a malicious snapshot. [More on the value of booting with known validators](../running-validator/validator-start.md#known-validators)
 
@@ -70,7 +70,7 @@ ensure you miss as little data as possible. Running the domichain software as a
 systemd service is one great option.
 
 For monitoring, we provide
-[`domichain-watchtower`](https://github.com/domichain-labs/domichain/blob/master/watchtower/README.md),
+[`domichain-watchtower`](https://Domino-Blockchain/domichain/blob/master/watchtower/README.md),
 which can monitor your validator and detect with the `domichain-validator` process
 is unhealthy. It can directly be configured to alert you via Slack, Telegram,
 Discord, or Twillio. For details, run `domichain-watchtower --help`.
@@ -268,8 +268,8 @@ transfer of 218099990000 - 207099990000 = 11000000000 lamports = 11 SOL
 
 If you need more information about the transaction type or other specifics, you
 can request the block from RPC in binary format, and parse it using either our
-[Rust SDK](https://github.com/domichain-labs/domichain) or
-[Javascript SDK](https://github.com/domichain-labs/domichain-web3.js).
+[Rust SDK](https://Domino-Blockchain/domichain) or
+[Javascript SDK](https://Domino-Blockchain/domichain-web3.js).
 
 ### Address History
 
@@ -391,7 +391,7 @@ by the cluster. If the transaction fails, it will report any transaction errors.
 domichain transfer <USER_ADDRESS> <AMOUNT> --allow-unfunded-recipient --keypair <KEYPAIR> --url http://localhost:8899
 ```
 
-The [Domichain Javascript SDK](https://github.com/domichain-labs/domichain-web3.js)
+The [Domichain Javascript SDK](https://Domino-Blockchain/domichain-web3.js)
 offers a similar approach for the JS ecosystem. Use the `SystemProgram` to build
 a transfer transaction, and submit it using the `sendAndConfirmTransaction`
 method.
@@ -739,7 +739,7 @@ must be rejected.
 
 From the withdrawal address, the [Associated Token Account](https://spl.domichain.com/associated-token-account)
 (ATA) for the correct mint is derived and the transfer issued to that account via a
-[TransferChecked](https://github.com/domichain-labs/domichain-program-library/blob/fc0d6a2db79bd6499f04b9be7ead0c400283845e/token/program/src/instruction.rs#L268)
+[TransferChecked](https://Domino-Blockchain/domichain-program-library/blob/fc0d6a2db79bd6499f04b9be7ead0c400283845e/token/program/src/instruction.rs#L268)
 instruction. Note that it is possible that the ATA address does not yet exist, at which point the
 exchange should fund the account on behalf of the user. For SPL Token v2
 accounts, funding the withdrawal account will require 0.00203928 SOL (2,039,280

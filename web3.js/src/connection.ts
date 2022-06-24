@@ -2260,7 +2260,7 @@ export class Connection {
    * clear out the subscription locally without telling the server).
    *
    * NOTE: There is a proposal to eliminate this special case, here:
-   * https://github.com/domichain-labs/domichain/issues/18892
+   * https://Domino-Blockchain/domichain/issues/18892
    */
   /** @internal */ private _subscriptionsAutoDisposedByRpc: Set<ServerSubscriptionId> =
     new Set();
@@ -4443,7 +4443,7 @@ export class Connection {
                    * tear down the subscription here.
                    *
                    * NOTE: There is a proposal to eliminate this special case, here:
-                   * https://github.com/domichain-labs/domichain/issues/18892
+                   * https://Domino-Blockchain/domichain/issues/18892
                    */
                   this._subscriptionsAutoDisposedByRpc.delete(
                     serverSubscriptionId,
@@ -4914,7 +4914,7 @@ export class Connection {
        * clear out the subscription locally without telling the server).
        *
        * NOTE: There is a proposal to eliminate this special case, here:
-       * https://github.com/domichain-labs/domichain/issues/18892
+       * https://Domino-Blockchain/domichain/issues/18892
        */
       this._subscriptionsAutoDisposedByRpc.add(subscription);
     }

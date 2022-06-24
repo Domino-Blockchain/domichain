@@ -149,12 +149,12 @@ matches the logical flow in your PR description.
 ### The PR / Issue Labels
 Labels make it easier to manage and track PRs / issues.  Below some common labels
 that we use in Domichain.  For the complete list of labels, please refer to the
-[label page](https://github.com/domichain-labs/domichain/issues/labels):
+[label page](https://Domino-Blockchain/domichain/issues/labels):
 
 * "feature-gate": when you add a new feature gate or modify the behavior of
 an existing feature gate, please add the "feature-gate" label to your PR.
 New feature gates should also always have a corresponding tracking issue
-(go to "New Issue" -> "Feature Gate Tracker [Get Started](https://github.com/domichain-labs/domichain/issues/new?assignees=&labels=feature-gate&template=1-feature-gate.yml&title=Feature+Gate%3A+)")
+(go to "New Issue" -> "Feature Gate Tracker [Get Started](https://Domino-Blockchain/domichain/issues/new?assignees=&labels=feature-gate&template=1-feature-gate.yml&title=Feature+Gate%3A+)")
 and should be updated each time the feature is activated on a cluster.
 
 * "automerge": When a PR is labelled with "automerge", the PR will be

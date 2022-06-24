@@ -2,7 +2,7 @@
 name = "domichain-ed25519-program-tests"
 version = "1.11.1"
 authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://github.com/domichain-labs/domichain"
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
 homepage = "https://domichain.com/"
 edition = "2021"

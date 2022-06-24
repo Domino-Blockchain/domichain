@@ -33,7 +33,7 @@
 //! Idiomatic examples of `domichain-program` usage can be found in
 //! [the Domichain Program Library][spl].
 //!
-//! [spl]: https://github.com/domichain-labs/domichain-program-library
+//! [spl]: https://Domino-Blockchain/domichain-program-library
 //!
 //! # Defining a domichain program
 //!

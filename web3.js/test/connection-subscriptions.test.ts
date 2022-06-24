@@ -750,7 +750,7 @@ describe('Subscriptions', () => {
    * that the RPC has auto-disposed the subscription.
    *
    * NOTE: There is a proposal to eliminate this special case, here:
-   * https://github.com/domichain-labs/domichain/issues/18892
+   * https://Domino-Blockchain/domichain/issues/18892
    */
   describe('auto-disposing subscriptions', () => {
     let clientSubscriptionId: number;
@@ -904,7 +904,7 @@ describe('Subscriptions', () => {
     });
     /**
      * This is a regression test for the case described here:
-     * https://github.com/domichain-labs/domichain/pull/24473#discussion_r858437090
+     * https://Domino-Blockchain/domichain/pull/24473#discussion_r858437090
      *
      * Essentially, you want to make sure that the state processor, as it recurses
      * always processes the latest version of every subscription. Depending on how

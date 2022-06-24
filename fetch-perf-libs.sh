@@ -27,7 +27,7 @@ if [[ $VERSION != "$(cat target/perf-libs/.version 2> /dev/null)" ]]; then
       cp ~/.cache/domichain-perf-$PERF_LIBS_VERSION.tgz domichain-perf.tgz
     else
       curl -L --retry 5 --retry-delay 2 --retry-connrefused -o domichain-perf.tgz \
-        https://github.com/domichain-labs/domichain-perf-libs/releases/download/$PERF_LIBS_VERSION/domichain-perf.tgz
+        https://Domino-Blockchain/domichain-perf-libs/releases/download/$PERF_LIBS_VERSION/domichain-perf.tgz
     fi
     tar zxvf domichain-perf.tgz
 

@@ -307,7 +307,7 @@ pull_or_push_steps() {
 #   start_pipeline "Tag pipeline for $BUILDKITE_TAG"
 
 #   annotate --style info --context release-tag \
-#     "https://github.com/domichain-labs/domichain/releases/$BUILDKITE_TAG"
+#     "https://Domino-Blockchain/domichain/releases/$BUILDKITE_TAG"
 
 #   # Jump directly to the secondary build to publish release artifacts quickly
 #   trigger_secondary_step
@@ -325,7 +325,7 @@ if [[ $BUILDKITE_BRANCH =~ ^pull ]]; then
 
   # Add helpful link back to the corresponding Github Pull Request
   annotate --style info --context pr-backlink \
-    "Github Pull Request: https://github.com/domichain-labs/domichain/$BUILDKITE_BRANCH"
+    "Github Pull Request: https://Domino-Blockchain/domichain/$BUILDKITE_BRANCH"
 
   if [[ $GITHUB_USER = "dependabot[bot]" ]]; then
     command_step dependabot "ci/dependabot-pr.sh" 5

@@ -10,6 +10,6 @@ Use the Domichain SDK Crate to write client side applications in Rust.  If writi
 
 More information about Domichain is available in the [Domichain documentation](https://docs.domichain.com/).
 
-The [Domichain Program Library](https://github.com/domichain-labs/domichain-program-library) provides examples of how to use this crate.
+The [Domichain Program Library](https://Domino-Blockchain/domichain-program-library) provides examples of how to use this crate.
 
 Still have questions?  Ask us on [Discord](https://discordapp.com/invite/pquxPsq)

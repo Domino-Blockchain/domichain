@@ -100,7 +100,7 @@ Alternatively use the Github UI.
 
 ### Create the Release Tag on GitHub
 
-1. Go to [GitHub Releases](https://github.com/domichain-labs/domichain/releases) for tagging a release.
+1. Go to [GitHub Releases](https://Domino-Blockchain/domichain/releases) for tagging a release.
 1. Click "Draft new release".  The release tag must exactly match the `version`
    field in `/Cargo.toml` prefixed by `v`.
    1.  If the Cargo.toml version field is **0.12.3**, then the release tag must be **v0.12.3**
@@ -119,25 +119,25 @@ Alternatively use the Github UI.
 
 ### Update release branch with the next patch version
 
-[This action](https://github.com/domichain-labs/domichain/blob/master/.github/workflows/increment-cargo-version-on-release.yml) ensures that publishing a release will trigger the creation of a PR to update the Cargo.toml files on **release branch** to the next semantic version (e.g. 0.9.0 -> 0.9.1). Ensure that the created PR makes it through CI and gets submitted.
+[This action](https://Domino-Blockchain/domichain/blob/master/.github/workflows/increment-cargo-version-on-release.yml) ensures that publishing a release will trigger the creation of a PR to update the Cargo.toml files on **release branch** to the next semantic version (e.g. 0.9.0 -> 0.9.1). Ensure that the created PR makes it through CI and gets submitted.
 
 ### Prepare for the next release
-1.  Go to [GitHub Releases](https://github.com/domichain-labs/domichain/releases) and create a new draft release for `X.Y.Z+1` with empty release notes.  This allows people to incrementally add new release notes until it's time for the next release
+1.  Go to [GitHub Releases](https://Domino-Blockchain/domichain/releases) and create a new draft release for `X.Y.Z+1` with empty release notes.  This allows people to incrementally add new release notes until it's time for the next release
     1. Also, point the branch field to the same branch and mark the relese as **"This is a pre-release"**.
-1.  Go to the [Github Milestones](https://github.com/domichain-labs/domichain/milestones).  Create a new milestone for the `X.Y.Z+1`, move over
+1.  Go to the [Github Milestones](https://Domino-Blockchain/domichain/milestones).  Create a new milestone for the `X.Y.Z+1`, move over
 unresolved issues still in the `X.Y.Z` milestone, then close the `X.Y.Z` milestone.
 
 ### Verify release automation success
-Go to [Domichain Releases](https://github.com/domichain-labs/domichain/releases) and click on the latest release that you just published.
+Go to [Domichain Releases](https://Domino-Blockchain/domichain/releases) and click on the latest release that you just published.
 Verify that all of the build artifacts are present, then the uncheck **"This is a pre-release"** for the release.
 
 Build artifacts can take up to 60 minutes after creating the tag before
 appearing.  To check for progress:
 * The `domichain-secondary` Buildkite pipeline handles creating the Linux and macOS release artifacts and updated crates.  Look for a job under the tag name of the release: https://buildkite.com/domichain-labs/domichain-secondary.
-* The Windows release artifacts are produced by GitHub Actions.  Look for a job under the tag name of the release: https://github.com/domichain-labs/domichain/actions.
+* The Windows release artifacts are produced by GitHub Actions.  Look for a job under the tag name of the release: https://Domino-Blockchain/domichain/actions.
 
 [Crates.io](https://crates.io/crates/domichain) should have an updated Domichain version.  This can take 2-3 hours, and sometimes fails in the `domichain-secondary` job.
 If this happens and the error is non-fatal, click "Retry" on the "publish crate" job
 
 ### Update software on testnet.domichain.com
-See the documentation at https://github.com/domichain-labs/cluster-ops/. devnet.domichain.com and mainnet-beta.domichain.com run stable releases that have been tested on testnet. Do not update devnet or mainnet-beta with a beta release.
+See the documentation at https://Domino-Blockchain/cluster-ops/. devnet.domichain.com and mainnet-beta.domichain.com run stable releases that have been tested on testnet. Do not update devnet or mainnet-beta with a beta release.

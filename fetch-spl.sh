@@ -29,7 +29,7 @@ fetch_program() {
       set -x
       curl -L --retry 5 --retry-delay 2 --retry-connrefused \
         -o "$so" \
-        "https://github.com/domichain-labs/domichain-program-library/releases/download/$name-v$version/$so_name"
+        "https://Domino-Blockchain/domichain-program-library/releases/download/$name-v$version/$so_name"
     )
 
     mkdir -p ~/.cache/domichain-spl

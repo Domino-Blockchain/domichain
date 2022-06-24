@@ -16,7 +16,7 @@
 { # this ensures the entire script is downloaded #
 
 if [ -z "$DOMICHAIN_DOWNLOAD_ROOT" ]; then
-    DOMICHAIN_DOWNLOAD_ROOT="https://github.com/domichain-labs/domichain/releases/download/"
+    DOMICHAIN_DOWNLOAD_ROOT="https://Domino-Blockchain/domichain/releases/download/"
 fi
 GH_LATEST_RELEASE="https://api.github.com/repos/domichain-labs/domichain/releases/latest"
 

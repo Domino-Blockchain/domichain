@@ -119,9 +119,9 @@ account's address or owner, it's impossible to be sure whether it's a real and
 valid sysvar account merely by successful deserialization of the account's data.
 
 Accordingly, the Domichain SDK [checks the sysvar account's validity during
-deserialization](https://github.com/domichain-labs/domichain/blob/a95675a7ce1651f7b59443eb146b356bc4b3f374/sdk/program/src/sysvar/mod.rs#L65).
+deserialization](https://Domino-Blockchain/domichain/blob/a95675a7ce1651f7b59443eb146b356bc4b3f374/sdk/program/src/sysvar/mod.rs#L65).
 An alternative and safer way to read a sysvar is via the sysvar's [`get()`
-function](https://github.com/domichain-labs/domichain/blob/64bfc14a75671e4ec3fe969ded01a599645080eb/sdk/program/src/sysvar/mod.rs#L73)
+function](https://Domino-Blockchain/domichain/blob/64bfc14a75671e4ec3fe969ded01a599645080eb/sdk/program/src/sysvar/mod.rs#L73)
 which doesn't require these checks.
 
 If the program always modifies the account in question, the address/owner check

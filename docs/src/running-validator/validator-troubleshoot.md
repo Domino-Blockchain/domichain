@@ -12,6 +12,6 @@ testnet participants, [https://discord.gg/pquxPsq](https://discord.gg/pquxPsq).
 - Validator chat channels
   - [\#validator-support](https://discord.gg/rZsenD) General support channel for any Validator related queries.
   - [\#testnet-announcements](https://discord.gg/Q5TxEC) The single source of truth for critical information relating Testnet
-- [Core software repo](https://github.com/domichain-labs/domichain)
+- [Core software repo](https://Domino-Blockchain/domichain)
 
 Can't find what you're looking for? Send an email to ryan@domichain.com or reach out to @rshea\#2622 on Discord.

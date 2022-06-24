@@ -117,7 +117,7 @@ impl StandardBroadcastRun {
             None => {
                 // If the blockstore has shreds for the slot, it should not
                 // recreate the slot:
-                // https://github.com/domichain-labs/domichain/blob/ff68bf6c2/ledger/src/leader_schedule_cache.rs#L142-L146
+                // https://Domino-Blockchain/domichain/blob/ff68bf6c2/ledger/src/leader_schedule_cache.rs#L142-L146
                 if let Some(slot_meta) = blockstore.meta(slot).unwrap() {
                     if slot_meta.received > 0 || slot_meta.consumed > 0 {
                         process_stats.num_extant_slots += 1;
@@ -240,7 +240,7 @@ impl StandardBroadcastRun {
         // that the leader started this block. This must be done before the
         // blocks are sent out over the wire. By contrast Self::insert skips
         // the 1st data shred with index zero.
-        // https://github.com/domichain-labs/domichain/blob/53695ecd2/core/src/broadcast_stage/standard_broadcast_run.rs#L334-L339
+        // https://Domino-Blockchain/domichain/blob/53695ecd2/core/src/broadcast_stage/standard_broadcast_run.rs#L334-L339
         if let Some(shred) = data_shreds.first() {
             if shred.index() == 0 {
                 blockstore
@@ -341,7 +341,7 @@ impl StandardBroadcastRun {
         let insert_shreds_start = Instant::now();
         let mut shreds = Arc::try_unwrap(shreds).unwrap_or_else(|shreds| (*shreds).clone());
         // The first data shred is inserted synchronously.
-        // https://github.com/domichain-labs/domichain/blob/53695ecd2/core/src/broadcast_stage/standard_broadcast_run.rs#L239-L246
+        // https://Domino-Blockchain/domichain/blob/53695ecd2/core/src/broadcast_stage/standard_broadcast_run.rs#L239-L246
         if let Some(shred) = shreds.first() {
             if shred.is_data() && shred.index() == 0 {
                 shreds.swap_remove(0);

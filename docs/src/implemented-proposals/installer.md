@@ -30,7 +30,7 @@ $ curl -sSf https://raw.githubusercontent.com/domichain-labs/domichain/v1.0.0/in
 With a well-known release URL, a pre-built binary can be obtained for supported platforms:
 
 ```bash
-$ curl -o domichain-install-init https://github.com/domichain-labs/domichain/releases/download/v1.0.0/domichain-install-init-x86_64-apple-darwin
+$ curl -o domichain-install-init https://Domino-Blockchain/domichain/releases/download/v1.0.0/domichain-install-init-x86_64-apple-darwin
 $ chmod +x ./domichain-install-init
 $ ./domichain-install-init --help
 ```
@@ -40,7 +40,7 @@ $ ./domichain-install-init --help
 If a pre-built binary is not available for a given platform, building the installer from source is always an option:
 
 ```bash
-$ git clone https://github.com/domichain-labs/domichain.git
+$ git clone https://Domino-Blockchain/domichain.git
 $ cd domichain/install
 $ cargo run -- --help
 ```

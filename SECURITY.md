@@ -29,7 +29,7 @@ In case an incident is discovered or reported, the following process will be fol
 
 ### 1. Establish a new draft security advisory
 In response to an email to security@domichain.com, a member of the domichain-labs/admins group will
-Create a new draft security advisory for the incident at https://github.com/domichain-labs/domichain/security/advisories
+Create a new draft security advisory for the incident at https://Domino-Blockchain/domichain/security/advisories
 Add the reporter's github user and the domichain-labs/security-incident-response group to the draft security advisory
 Create a private fork of the repository (grey button towards the bottom of the page)
 Respond to the reporter by email, sharing a link to the draft security advisory.

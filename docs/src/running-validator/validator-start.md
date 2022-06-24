@@ -336,7 +336,7 @@ less disk usage may be requested by adding an argument to `--limit-ledger-size`
 if desired. Check `domichain-validator --help` for the default limit value used by
 `--limit-ledger-size`. More information about
 selecting a custom limit value is [available
-here](https://github.com/domichain-labs/domichain/blob/36167b032c03fc7d1d8c288bb621920aaf903311/core/src/ledger_cleanup_service.rs#L23-L34).
+here](https://Domino-Blockchain/domichain/blob/36167b032c03fc7d1d8c288bb621920aaf903311/core/src/ledger_cleanup_service.rs#L23-L34).
 
 ### Systemd Unit
 

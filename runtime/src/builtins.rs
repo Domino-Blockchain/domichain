@@ -91,7 +91,7 @@ impl AutoTraitBreakSendSync for InnerBuiltinFeatureTransition {}
 #[derive(AbiExample, Clone, Debug)]
 pub struct BuiltinFeatureTransition(InnerBuiltinFeatureTransition);
 
-// https://github.com/domichain-labs/domichain/pull/23233 added `BuiltinFeatureTransition`
+// https://Domino-Blockchain/domichain/pull/23233 added `BuiltinFeatureTransition`
 // to `Bank` which triggers https://github.com/rust-lang/rust/issues/92987 while
 // attempting to resolve `Sync` on `BankRc` in `AccountsBackgroundService::new` ala,
 //

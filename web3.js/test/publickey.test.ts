@@ -182,7 +182,7 @@ describe('PublicKey', function () {
       ),
     ).to.be.rejectedWith('Max seed length exceeded');
 
-    // https://github.com/domichain-labs/domichain/issues/11950
+    // https://Domino-Blockchain/domichain/issues/11950
     {
       let seeds = [
         new PublicKey(

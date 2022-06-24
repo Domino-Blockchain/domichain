@@ -22,7 +22,7 @@ example_helloworld() {
   (
     set -x
     rm -rf example-helloworld
-    git clone https://github.com/domichain-labs/example-helloworld.git
+    git clone https://Domino-Blockchain/example-helloworld.git
     cd example-helloworld
 
     update_domichain_dependencies src/program-rust "$domichain_ver"
@@ -53,7 +53,7 @@ spl() {
       )
     set -x
     rm -rf spl
-    git clone https://github.com/domichain-labs/domichain-program-library.git spl
+    git clone https://Domino-Blockchain/domichain-program-library.git spl
     cd spl
 
     ./patch.crates-io.sh "$domichain_dir"

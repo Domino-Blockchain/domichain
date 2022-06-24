@@ -485,7 +485,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
     install_if_missing(
         config,
         package,
-        "https://github.com/domichain-labs/bpf-tools/releases/download",
+        "https://Domino-Blockchain/bpf-tools/releases/download",
         sbf_tools_download_file_name,
         &target_path,
     )

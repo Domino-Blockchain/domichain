@@ -19,12 +19,12 @@ The project comprises of:
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/domichain-labs/example-helloworld.git
+$ git clone https://Domino-Blockchain/example-helloworld.git
 $ cd example-helloworld
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/domichain-labs/example-helloworld/blob/master/README.md).
+[README](https://Domino-Blockchain/example-helloworld/blob/master/README.md).
 
 ## Break
 
@@ -48,12 +48,12 @@ transfer the tokens.
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/domichain-labs/break.git
+$ git clone https://Domino-Blockchain/break.git
 $ cd break
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/domichain-labs/break/blob/master/README.md).
+[README](https://Domino-Blockchain/break/blob/master/README.md).
 
 ## Language Specific
 

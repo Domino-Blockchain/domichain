@@ -591,7 +591,7 @@ impl BankingStage {
             .collect();
 
         let packet_vec_len = packet_vec.len();
-        // TODO: see https://github.com/domichain-labs/domichain/issues/23819
+        // TODO: see https://Domino-Blockchain/domichain/issues/23819
         // fix this so returns the correct number of succeeded packets
         // when there's an error sending the batch. This was left as-is for now
         // in favor of shipping Quic support, which was considered higher-priority

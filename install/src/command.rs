@@ -569,7 +569,7 @@ pub fn init(
 
 fn github_release_download_url(release_semver: &str) -> String {
     format!(
-        "https://github.com/domichain-labs/domichain/releases/download/v{}/domichain-release-{}.tar.bz2",
+        "https://Domino-Blockchain/domichain/releases/download/v{}/domichain-release-{}.tar.bz2",
         release_semver,
         crate::build_env::TARGET
     )

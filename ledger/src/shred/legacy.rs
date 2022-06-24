@@ -62,8 +62,8 @@ impl Shred for ShredData {
         let data_header = deserialize_from_with_limit(&mut cursor)?;
         // Shreds stored to blockstore may have trailing zeros trimmed.
         // Repair packets have nonce at the end of packet payload; see:
-        // https://github.com/domichain-labs/domichain/pull/10109
-        // https://github.com/domichain-labs/domichain/pull/16602
+        // https://Domino-Blockchain/domichain/pull/10109
+        // https://Domino-Blockchain/domichain/pull/16602
         if payload.len() < SIZE_OF_DATA_SHRED_HEADERS {
             return Err(Error::InvalidPayloadSize(payload.len()));
         }
@@ -125,7 +125,7 @@ impl Shred for ShredCode {
         }
         let coding_header = deserialize_from_with_limit(&mut cursor)?;
         // Repair packets have nonce at the end of packet payload:
-        // https://github.com/domichain-labs/domichain/pull/10109
+        // https://Domino-Blockchain/domichain/pull/10109
         payload.truncate(Self::SIZE_OF_PAYLOAD);
         let shred = Self {
             common_header,

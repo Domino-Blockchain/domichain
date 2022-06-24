@@ -11,5 +11,5 @@ apt-get --assume-yes install libssl-dev
 # Install libssl1.1 to be compatible with binaries built in the
 # domichainlabs/rust docker image
 #
-# cc: https://github.com/domichain-labs/domichain/issues/1090
+# cc: https://Domino-Blockchain/domichain/issues/1090
 apt-get --assume-yes install libssl1.1

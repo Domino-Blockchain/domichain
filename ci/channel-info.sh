@@ -11,7 +11,7 @@ here="$(dirname "$0")"
 # shellcheck source=ci/semver_bash/semver.sh
 source "$here"/semver_bash/semver.sh
 
-remote=https://github.com/domichain-labs/domichain.git
+remote=https://Domino-Blockchain/domichain.git
 
 # Fetch all vX.Y.Z tags
 #

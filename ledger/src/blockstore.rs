@@ -88,7 +88,7 @@ pub const BLOCKSTORE_DIRECTORY_ROCKS_LEVEL: &str = "rocksdb";
 pub const BLOCKSTORE_DIRECTORY_ROCKS_FIFO: &str = "rocksdb_fifo";
 
 // get_max_thread_count to match number of threads in the old code.
-// see: https://github.com/domichain-labs/domichain/pull/24853
+// see: https://Domino-Blockchain/domichain/pull/24853
 lazy_static! {
     static ref PAR_THREAD_POOL: ThreadPool = rayon::ThreadPoolBuilder::new()
         .num_threads(get_max_thread_count())
@@ -3537,7 +3537,7 @@ fn find_slot_meta_in_cached_state<'a>(
 /// [`cf::Orphans`].
 ///
 /// For more information about the chaining, check the previous discussion here:
-/// https://github.com/domichain-labs/domichain/pull/2253
+/// https://Domino-Blockchain/domichain/pull/2253
 ///
 /// Arguments:
 /// - `db`: the blockstore db that stores both shreds and their metadata.

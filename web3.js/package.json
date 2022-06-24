@@ -11,10 +11,10 @@
   "homepage": "https://domichain.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/domichain-labs/domichain-web3.js.git"
+    "url": "https://Domino-Blockchain/domichain-web3.js.git"
   },
   "bugs": {
-    "url": "http://github.com/domichain-labs/domichain-web3.js.git/issues"
+    "url": "http://Domino-Blockchain/domichain-web3.js.git/issues"
   },
   "publishConfig": {
     "access": "public"

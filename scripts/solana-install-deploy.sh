@@ -60,7 +60,7 @@ edge|beta)
   DOWNLOAD_URL=https://release.domichain.com/"$TAG"/domichain-release-$TARGET.tar.bz2
   ;;
 *)
-  DOWNLOAD_URL=https://github.com/domichain-labs/domichain/releases/download/"$TAG"/domichain-release-$TARGET.tar.bz2
+  DOWNLOAD_URL=https://Domino-Blockchain/domichain/releases/download/"$TAG"/domichain-release-$TARGET.tar.bz2
   ;;
 esac
 

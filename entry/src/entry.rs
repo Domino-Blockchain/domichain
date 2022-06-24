@@ -42,7 +42,7 @@ use {
 };
 
 // get_max_thread_count to match number of threads in the old code.
-// see: https://github.com/domichain-labs/domichain/pull/24853
+// see: https://Domino-Blockchain/domichain/pull/24853
 lazy_static! {
     static ref PAR_THREAD_POOL: ThreadPool = rayon::ThreadPoolBuilder::new()
         .num_threads(get_max_thread_count())

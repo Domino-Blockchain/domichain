@@ -271,7 +271,7 @@ impl Shred for ShredCode {
             .take(usize::from(proof_size))
             .collect::<Result<_, _>>()?;
         let merkle_branch = MerkleBranch { root, proof };
-        // see: https://github.com/domichain-labs/domichain/pull/10109
+        // see: https://Domino-Blockchain/domichain/pull/10109
         payload.truncate(Self::SIZE_OF_PAYLOAD);
         let shred = Self {
             common_header,

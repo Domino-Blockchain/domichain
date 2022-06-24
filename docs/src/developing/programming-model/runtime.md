@@ -69,7 +69,7 @@ parent. If an invoked program consumes the budget or exceeds a bound, the entire
 invocation chain and the parent are halted.
 
 The current [compute
-budget](https://github.com/domichain-labs/domichain/blob/db32549c00a1b5370fcaf128981ad3323bbd9570/program-runtime/src/compute_budget.rs)
+budget](https://Domino-Blockchain/domichain/blob/db32549c00a1b5370fcaf128981ad3323bbd9570/program-runtime/src/compute_budget.rs)
 can be found in the Domichain Program Runtime.
 
 For example, if the current budget is:
@@ -103,7 +103,7 @@ for more information.
 
 A transaction may set the maximum number of compute units it is allowed to
 consume by including a "request units"
-[`ComputeBudgetInstruction`](https://github.com/domichain-labs/domichain/blob/db32549c00a1b5370fcaf128981ad3323bbd9570/sdk/src/compute_budget.rs#L39).
+[`ComputeBudgetInstruction`](https://Domino-Blockchain/domichain/blob/db32549c00a1b5370fcaf128981ad3323bbd9570/sdk/src/compute_budget.rs#L39).
 Note that a transaction's prioritization fee is calculated from multiplying the
 number of compute units requested by the compute unit price (measured in
 micro-lamports) set by the transaction.  So transactions should request the

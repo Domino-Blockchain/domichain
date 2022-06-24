@@ -30,7 +30,7 @@ macro_rules! declare_builtin_name {
                 // See the `respan!` macro for more details.
                 // This should use `crate::respan!` once
                 // https://github.com/rust-lang/rust/pull/72121 is merged:
-                // see https://github.com/domichain-labs/domichain/issues/10933.
+                // see https://Domino-Blockchain/domichain/issues/10933.
                 // For now, we need to use `::domichain_sdk`
                 //
                 // `respan!` respans the path `$crate::id`, which we then call (hence the extra

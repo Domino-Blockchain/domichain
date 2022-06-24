@@ -4,7 +4,7 @@ title: Optimistic Confirmation and Slashing
 
 Progress on optimistic confirmation can be tracked here
 
-https://github.com/domichain-labs/domichain/projects/52
+https://Domino-Blockchain/domichain/projects/52
 
 At the end of May, the mainnet-beta is moving to 1.1, and testnet is
 moving to 1.2. With 1.2, testnet will behave as if it has optimistic

@@ -6,16 +6,16 @@ The Domichain git repository contains all the scripts you might need to spin up 
 
 For all four variations, you'd need the latest Rust toolchain and the Domichain source code:
 
-First, setup Rust, Cargo and system packages as described in the Domichain [README](https://github.com/domichain-labs/domichain#1-install-rustc-cargo-and-rustfmt)
+First, setup Rust, Cargo and system packages as described in the Domichain [README](https://Domino-Blockchain/domichain#1-install-rustc-cargo-and-rustfmt)
 
 Now checkout the code from github:
 
 ```bash
-git clone https://github.com/domichain-labs/domichain.git
+git clone https://Domino-Blockchain/domichain.git
 cd domichain
 ```
 
-The demo code is sometimes broken between releases as we add new low-level features, so if this is your first time running the demo, you'll improve your odds of success if you check out the [latest release](https://github.com/domichain-labs/domichain/releases) before proceeding:
+The demo code is sometimes broken between releases as we add new low-level features, so if this is your first time running the demo, you'll improve your odds of success if you check out the [latest release](https://Domino-Blockchain/domichain/releases) before proceeding:
 
 ```bash
 TAG=$(git describe --tags $(git rev-list --tags --max-count=1))

@@ -130,7 +130,7 @@ The compute costs are calculated for getting and setting the return data using
 the syscalls.
 
 For a normal RPC or Transaction, the returndata is base64-encoded and stored along side the sol_log
-strings in the [stable log](https://github.com/domichain-labs/domichain/blob/95292841947763bdd47ef116b40fc34d0585bca8/sdk/src/process_instruction.rs#L275-L281).
+strings in the [stable log](https://Domino-Blockchain/domichain/blob/95292841947763bdd47ef116b40fc34d0585bca8/sdk/src/process_instruction.rs#L275-L281).
 
 ## Note on returning errors
 

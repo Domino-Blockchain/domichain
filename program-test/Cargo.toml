@@ -4,7 +4,7 @@ description = "Domichain Program Test Framework"
 edition = "2021"
 license = "Apache-2.0"
 name = "domichain-program-test"
-repository = "https://github.com/domichain-labs/domichain"
+repository = "https://Domino-Blockchain/domichain"
 version = "1.11.1"
 
 [dependencies]

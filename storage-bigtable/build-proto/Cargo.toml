@@ -6,7 +6,7 @@ homepage = "https://domichain.com/"
 license = "Apache-2.0"
 name = "proto"
 publish = false
-repository = "https://github.com/domichain-labs/domichain"
+repository = "https://Domino-Blockchain/domichain"
 version = "1.11.1"
 
 [workspace]

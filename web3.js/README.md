@@ -88,11 +88,11 @@ console.log(domichainWeb3);
 
 Example scripts for the web3.js repo and native programs:
 
-- [Web3 Examples](https://github.com/domichain-labs/domichain/tree/master/web3.js/examples)
+- [Web3 Examples](https://Domino-Blockchain/domichain/tree/master/web3.js/examples)
 
 Example scripts for the Domichain Program Library:
 
-- [Token Program Examples](https://github.com/domichain-labs/domichain-program-library/tree/master/token/js/examples)
+- [Token Program Examples](https://Domino-Blockchain/domichain-program-library/tree/master/token/js/examples)
 
 ## Flow Support (Discontinued)
 
@@ -109,7 +109,7 @@ node_modules/@domichain/web3.js/module.flow.js
 
 ## Releases
 
-Releases are available on [Github](https://github.com/domichain-labs/domichain-web3.js/releases)
+Releases are available on [Github](https://Domino-Blockchain/domichain-web3.js/releases)
 and [npmjs.com](https://www.npmjs.com/package/@domichain/web3.js)
 
 Each Github release features a tarball containing API documentation and a

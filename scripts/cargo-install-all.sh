@@ -125,7 +125,7 @@ else
   fi
 
   #XXX: Ensure `domichain-genesis` is built LAST!
-  # See https://github.com/domichain-labs/domichain/issues/5826
+  # See https://Domino-Blockchain/domichain/issues/5826
   BINS+=(domichain-genesis)
 fi
 

@@ -2464,7 +2464,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
+              'could not be found. See https://Domino-Blockchain/domichain/issues/23853.',
           );
           this.skip();
         } else {
@@ -2631,7 +2631,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
+              'could not be found. See https://Domino-Blockchain/domichain/issues/23853.',
           );
           this.skip();
         } else {
@@ -2875,7 +2875,7 @@ describe('Connection', function () {
         if (process.env.TEST_LIVE) {
           console.warn(
             'WARNING: We ran no assertions about the genesis block because block 0 ' +
-              'could not be found. See https://github.com/domichain-labs/domichain/issues/23853.',
+              'could not be found. See https://Domino-Blockchain/domichain/issues/23853.',
           );
           this.skip();
         } else {

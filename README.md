@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://domichain.com">
-    <img alt="Domichain" src="https://i.imgur.com/IKyzQ6T.png" width="250" />
+    Domino Blockchain
   </a>
 </p>
 
@@ -41,7 +41,7 @@ $ sudo apt-get install libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang c
 ## **2. Download the source code.**
 
 ```bash
-$ git clone https://github.com/domichain-labs/domichain.git
+$ git clone https://Domino-Blockchain/domichain.git
 $ cd domichain
 ```
 
