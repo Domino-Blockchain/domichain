@@ -2,9 +2,9 @@
 title: JSON RPC API
 ---
 
-Solana nodes accept HTTP requests using the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification.
+Domichain nodes accept HTTP requests using the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification.
 
-To interact with a Solana node inside a JavaScript application, use the
+To interact with a Domichain node inside a JavaScript application, use the
 [solana-web3.js](https://github.com/solana-labs/solana-web3.js) library, which
 gives a convenient interface for the RPC methods.
 
@@ -142,12 +142,12 @@ Requests can be sent in batches by sending an array of JSON-RPC request objects 
 
 - Hash: A SHA-256 hash of a chunk of data.
 - Pubkey: The public key of a Ed25519 key-pair.
-- Transaction: A list of Solana instructions signed by a client keypair to authorize those actions.
+- Transaction: A list of Domichain instructions signed by a client keypair to authorize those actions.
 - Signature: An Ed25519 signature of transaction's payload data including instructions. This can be used to identify transactions.
 
 ## Configuring State Commitment
 
-For preflight checks and transaction processing, Solana nodes choose which bank
+For preflight checks and transaction processing, Domichain nodes choose which bank
 state to query based on a commitment requirement set by the client. The
 commitment describes how finalized a block is at that point in time. When
 querying the ledger state, it's recommended to use lower levels of commitment
@@ -550,7 +550,7 @@ Result:
 
 #### Transaction Structure
 
-Transactions are quite different from those on other blockchains. Be sure to review [Anatomy of a Transaction](developing/programming-model/transactions.md) to learn about transactions on Solana.
+Transactions are quite different from those on other blockchains. Be sure to review [Anatomy of a Transaction](developing/programming-model/transactions.md) to learn about transactions on Domichain.
 
 The JSON structure of a transaction is defined as follows:
 
@@ -573,7 +573,7 @@ The JSON structure of a transaction is defined as follows:
 
 #### Inner Instructions Structure
 
-The Solana runtime records the cross-program instructions that are invoked during transaction processing and makes these available for greater transparency of what was executed on-chain per transaction instruction. Invoked instructions are grouped by the originating transaction instruction and are listed in order of processing.
+The Domichain runtime records the cross-program instructions that are invoked during transaction processing and makes these available for greater transparency of what was executed on-chain per transaction instruction. Invoked instructions are grouped by the originating transaction instruction and are listed in order of processing.
 
 The JSON structure of inner instructions is defined as a list of objects in the following structure:
 
@@ -2149,7 +2149,7 @@ active slots plus `MAX_RECENT_BLOCKHASHES` rooted slots.
 
 - `<array>` - An array of transaction signatures to confirm, as base-58 encoded strings (up to a maximum of 256)
 - `<object>` - (optional) Configuration object containing the following field:
-  - `searchTransactionHistory: <bool>` - if true, a Solana node will search its ledger cache for any signatures not found in the recent status cache
+  - `searchTransactionHistory: <bool>` - if true, a Domichain node will search its ledger cache for any signatures not found in the recent status cache
 
 #### Results:
 

@@ -2,11 +2,11 @@
 title: "FAQ"
 ---
 
-When writing or interacting with Solana programs, there are common questions or
+When writing or interacting with Domichain programs, there are common questions or
 challenges that often come up. Below are resources to help answer these
 questions.
 
-If not addressed here, ask on [StackOverflow](https://stackoverflow.com/questions/tagged/solana) with the `solana` tag or check out the Solana [#developer-support](https://discord.gg/RxeGBH)
+If not addressed here, ask on [StackOverflow](https://stackoverflow.com/questions/tagged/solana) with the `solana` tag or check out the Domichain [#developer-support](https://discord.gg/RxeGBH)
 
 ## `CallDepth` error
 

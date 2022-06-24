@@ -36,7 +36,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .global(true)
                 .validator(is_url_or_moniker)
                 .help(
-                    "URL for Solana's JSON RPC or moniker (or their first letter): \
+                    "URL for Domichain's JSON RPC or moniker (or their first letter): \
                        [mainnet-beta, testnet, devnet, localhost]",
                 ),
         )
@@ -136,7 +136,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
         .wallet_subcommands()
         .subcommand(
             SubCommand::with_name("config")
-                .about("Solana command-line tool configuration settings")
+                .about("Domichain command-line tool configuration settings")
                 .aliases(&["get", "set"])
                 .setting(AppSettings::SubcommandRequiredElseHelp)
                 .subcommand(

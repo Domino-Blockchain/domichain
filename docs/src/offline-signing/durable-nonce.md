@@ -4,7 +4,7 @@ title: Durable Transaction Nonces
 
 Durable transaction nonces are a mechanism for getting around the typical
 short lifetime of a transaction's [`recent_blockhash`](developing/programming-model/transactions.md#recent-blockhash).
-They are implemented as a Solana Program, the mechanics of which can be read
+They are implemented as a Domichain Program, the mechanics of which can be read
 about in the [proposal](../implemented-proposals/durable-tx-nonces.md).
 
 ## Usage Examples

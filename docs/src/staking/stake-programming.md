@@ -3,14 +3,14 @@ title: Stake Programming
 ---
 
 To maximize stake distribution, decentralization, and censorship resistance on
-the Solana network, staking can be performed programmatically. The team
+the Domichain network, staking can be performed programmatically. The team
 and community have developed several on-chain and off-chain programs to make
 stakes easier to manage.
 
 #### Stake-o-matic aka Auto-delegation Bots
 
 This off-chain program manages a large population of validators staked by a
-central authority. The Solana Foundation uses an auto-delegation bot to regularly delegate its
+central authority. The Domichain Foundation uses an auto-delegation bot to regularly delegate its
 stake to "non-delinquent" validators that meet specified performance requirements. More information can be found on the
 [official announcement](https://forums.solana.com/t/stake-o-matic-delegation-matching-program/790).
 

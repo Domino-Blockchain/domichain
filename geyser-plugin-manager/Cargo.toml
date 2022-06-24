@@ -1,8 +1,8 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 edition = "2021"
 name = "solana-geyser-plugin-manager"
-description = "The Solana Geyser plugin manager."
+description = "The Domichain Geyser plugin manager."
 version = "1.11.1"
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"

@@ -114,7 +114,7 @@ criteria.
 
 ### Deterministic fees
 
-Solana's fees are currently deterministic based on a given blockhash.  This
+Domichain's fees are currently deterministic based on a given blockhash.  This
 determinism is a nice feature that simplifies client interactions.  An example
 is when draining an account that is also the payer, the transaction issuer can
 pre-compute the fee and then set the entire remaining balance to be transferred

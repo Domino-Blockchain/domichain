@@ -1,7 +1,7 @@
-//! The original and current Solana message format.
+//! The original and current Domichain message format.
 //!
 //! This crate defines two versions of `Message` in their own modules:
-//! [`legacy`] and [`v0`]. `legacy` is the current version as of Solana 1.10.0.
+//! [`legacy`] and [`v0`]. `legacy` is the current version as of Domichain 1.10.0.
 //! `v0` is a [future message format] that encodes more account keys into a
 //! transaction than the legacy format.
 //!
@@ -87,7 +87,7 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Pubkey]) -> Vec<CompiledIns
     ixs.iter().map(|ix| compile_instruction(ix, keys)).collect()
 }
 
-/// A Solana transaction message (legacy).
+/// A Domichain transaction message (legacy).
 ///
 /// See the [`message`] module documentation for further description.
 ///

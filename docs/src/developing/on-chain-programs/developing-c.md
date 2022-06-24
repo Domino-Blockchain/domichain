@@ -2,7 +2,7 @@
 title: "Developing with C"
 ---
 
-Solana supports writing on-chain programs using the C and C++ programming
+Domichain supports writing on-chain programs using the C and C++ programming
 languages.
 
 ## Project Layout
@@ -33,7 +33,7 @@ for an example of a C program.
 First setup the environment:
 
 - Install the latest Rust stable from https://rustup.rs
-- Install the latest Solana command-line tools from
+- Install the latest Domichain command-line tools from
   https://docs.solana.com/cli/install-solana-cli-tools
 
 Then build using make:
@@ -44,7 +44,7 @@ make -C <program directory>
 
 ## How to Test
 
-Solana uses the [Criterion](https://github.com/Snaipe/Criterion) test framework
+Domichain uses the [Criterion](https://github.com/Snaipe/Criterion) test framework
 and tests are executed each time the program is built [How to
 Build](#how-to-build).
 
@@ -56,8 +56,8 @@ information on how to write a test case.
 
 ## Program Entrypoint
 
-Programs export a known entrypoint symbol which the Solana runtime looks up and
-calls when invoking a program. Solana supports multiple [versions of the BPF
+Programs export a known entrypoint symbol which the Domichain runtime looks up and
+calls when invoking a program. Domichain supports multiple [versions of the BPF
 loader](overview.md#versions) and the entrypoints may vary between them.
 Programs must be written for and deployed to the same loader. For more details
 see the [overview](overview#loaders).
@@ -199,4 +199,4 @@ $ make dump_<program name>
 
 ## Examples
 
-The [Solana Program Library github](https://github.com/solana-labs/solana-program-library/tree/master/examples/c) repo contains a collection of C examples
+The [Domichain Program Library github](https://github.com/solana-labs/solana-program-library/tree/master/examples/c) repo contains a collection of C examples

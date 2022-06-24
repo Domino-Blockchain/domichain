@@ -1,13 +1,13 @@
 {
   "name": "@solana/web3.js",
   "version": "0.0.0-development",
-  "description": "Solana Javascript API",
+  "description": "Domichain Javascript API",
   "keywords": [
     "api",
     "blockchain"
   ],
   "license": "MIT",
-  "author": "Solana Maintainers <maintainers@solana.com>",
+  "author": "Domichain Maintainers <maintainers@solana.com>",
   "homepage": "https://solana.com/",
   "repository": {
     "type": "git",

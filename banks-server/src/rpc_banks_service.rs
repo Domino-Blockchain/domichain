@@ -1,4 +1,4 @@
-//! The `rpc_banks_service` module implements the Solana Banks RPC API.
+//! The `rpc_banks_service` module implements the Domichain Banks RPC API.
 
 use {
     crate::banks_server::start_tcp_server,

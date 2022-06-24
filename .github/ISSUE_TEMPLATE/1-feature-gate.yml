@@ -7,7 +7,7 @@ body:
     attributes:
       value: >
         Steps to add a new feature are outlined below. Note that these steps only cover
-        the process of getting a feature into the core Solana code.
+        the process of getting a feature into the core Domichain code.
 
         - For features that are unambiguously good (ie bug fixes), these steps are sufficient.
 

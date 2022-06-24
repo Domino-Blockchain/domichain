@@ -5,7 +5,7 @@
 2. [Incident Response Process](#process)
 
 <a name="reporting"></a>
-## Reporting security problems to Solana
+## Reporting security problems to Domichain
 
 **DO NOT CREATE AN ISSUE** to report a security problem. Instead, please send an
 email to security@solana.com and provide your github username so we can add you
@@ -38,7 +38,7 @@ If the advisory is the result of an audit finding, follow the same process as ab
 
 ### 2. Triage
 Within the draft security advisory, discuss and determine the severity of the issue. If necessary, members of the solana-labs/security-incident-response group may add other github users to the advisory to assist.
-If it is determined that this not a critical network issue then the advisory should be closed and if more follow-up is required a normal Solana public github issue should be created.
+If it is determined that this not a critical network issue then the advisory should be closed and if more follow-up is required a normal Domichain public github issue should be created.
 
 ### 3. Prepare Fixes
 For the affected branches, typically all three (edge, beta and stable), prepare a fix for the issue and push them to the corresponding branch in the private repository associated with the draft security advisory.
@@ -46,13 +46,13 @@ There is no CI available in the private repository so you must build from source
 Code review from the reporter is ideal, as well as from multiple members of the core development team.
 
 ### 4. Notify Security Group Validators
-Once an ETA is available for the fix, a member of the solana-labs/security-incident-response group should notify the validators so they can prepare for an update using the "Solana Red Alert" notification system.
+Once an ETA is available for the fix, a member of the solana-labs/security-incident-response group should notify the validators so they can prepare for an update using the "Domichain Red Alert" notification system.
 The teams are all over the world and it's critical to provide actionable information at the right time. Don't be the person that wakes everybody up at 2am when a fix won't be available for hours.
 
 ### 5. Ship the patch
 Once the fix is accepted, a member of the solana-labs/security-incident-response group should prepare a single patch file for each affected branch. The commit title for the patch should only contain the advisory id, and not disclose any further details about the incident.
 Copy the patches to https://release.solana.com/ under a subdirectory named after the advisory id (example: https://release.solana.com/GHSA-hx59-f5g4-jghh/v1.4.patch). Contact a member of the solana-labs/admins group if you require access to release.solana.com
-Using the "Solana Red Alert" channel:
+Using the "Domichain Red Alert" channel:
     a) Notify validators that there's an issue and a patch will be provided in X minutes
     b) If X minutes expires and there's no patch, notify of the delay and provide a new ETA
     c) Provide links to patches of https://release.solana.com/ for each affected branch

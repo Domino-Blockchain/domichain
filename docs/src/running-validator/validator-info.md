@@ -42,7 +42,7 @@ Validator info from 8WdJvDz6obhADdxpGCiJKZsDYwTLNEDFizayqziDc9ah
 
 ## Keybase
 
-Including a Keybase username allows client applications \(like the Solana
+Including a Keybase username allows client applications \(like the Domichain
 Network Explorer\) to automatically pull in your validator public profile,
 including cryptographic proofs, brand identity, etc. To connect your validator
 pubkey with Keybase:

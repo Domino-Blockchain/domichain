@@ -150,7 +150,7 @@ pub struct ElGamalKeypair {
 }
 
 impl ElGamalKeypair {
-    /// Deterministically derives an ElGamal keypair from an Ed25519 signing key and a Solana address.
+    /// Deterministically derives an ElGamal keypair from an Ed25519 signing key and a Domichain address.
     #[cfg(not(target_os = "solana"))]
     #[allow(non_snake_case)]
     pub fn new(signer: &dyn Signer, address: &Pubkey) -> Result<Self, SignerError> {
@@ -319,7 +319,7 @@ impl fmt::Display for ElGamalPubkey {
 #[zeroize(drop)]
 pub struct ElGamalSecretKey(Scalar);
 impl ElGamalSecretKey {
-    /// Deterministically derives an ElGamal keypair from an Ed25519 signing key and a Solana
+    /// Deterministically derives an ElGamal keypair from an Ed25519 signing key and a Domichain
     /// address.
     pub fn new(signer: &dyn Signer, address: &Pubkey) -> Result<Self, SignerError> {
         let message = Message::new(

@@ -2,7 +2,7 @@
 title: "Native Programs"
 ---
 
-Solana contains a small handful of native programs, which are required to run
+Domichain contains a small handful of native programs, which are required to run
 validator nodes. Unlike third-party programs, the native programs are part of
 the validator implementation and can be upgraded as part of cluster upgrades.
 Upgrades may occur to add features, fix bugs, or improve performance. Interface
@@ -59,7 +59,7 @@ Deploys, upgrades, and executes programs on the chain.
 
 The BPF Upgradeable Loader marks itself as "owner" of the executable and
 program-data accounts it creates to store your program. When a user invokes an
-instruction via a program id, the Solana runtime will load both your the program
+instruction via a program id, the Domichain runtime will load both your the program
 and its owner, the BPF Upgradeable Loader. The runtime then passes your program
 to the BPF Upgradeable Loader to process the instruction.
 

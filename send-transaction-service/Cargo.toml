@@ -1,8 +1,8 @@
 [package]
 name = "solana-send-transaction-service"
 version = "1.11.1"
-description = "Solana send transaction service"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain send transaction service"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-send-transaction-service"

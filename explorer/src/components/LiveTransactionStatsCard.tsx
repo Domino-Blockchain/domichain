@@ -15,8 +15,8 @@ import {
   PingInfo,
   PingRollupInfo,
   PingStatus,
-  useSolanaPingInfo,
-} from "providers/stats/SolanaPingProvider";
+  useDomichainPingInfo,
+} from "providers/stats/DomichainPingProvider";
 
 type Series = "short" | "medium" | "long";
 type SetSeries = (series: Series) => void;
@@ -298,7 +298,7 @@ function PingStatsCardBody({
   series: Series;
   setSeries: SetSeries;
 }) {
-  const pingInfo = useSolanaPingInfo();
+  const pingInfo = useDomichainPingInfo();
 
   if (pingInfo.status !== PingStatus.Ready) {
     return (

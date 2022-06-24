@@ -3,7 +3,7 @@ title: "Transactions"
 ---
 
 Program execution begins with a [transaction](terminology.md#transaction) being
-submitted to the cluster. The Solana runtime will execute a program to process
+submitted to the cluster. The Domichain runtime will execute a program to process
 each of the [instructions](terminology.md#instruction) contained in the
 transaction, in order, and atomically.
 
@@ -15,7 +15,7 @@ This section covers the binary format of a transaction.
 
 A transaction contains a [compact-array](#compact-array-format) of signatures,
 followed by a [message](#message-format). Each item in the signatures array is
-a [digital signature](#signature-format) of the given message. The Solana
+a [digital signature](#signature-format) of the given message. The Domichain
 runtime verifies that the number of signatures matches the number in the first
 8 bits of the [message header](#message-header-format). It also verifies that
 each signature was signed by the private key corresponding to the public key at
@@ -140,7 +140,7 @@ successfully deployed. The runtime will reject transactions that specify program
 that are not executable.
 
 Unlike on-chain programs, [Native Programs](developing/runtime-facilities/programs.md)
-are handled differently in that they are built directly into the Solana runtime.
+are handled differently in that they are built directly into the Domichain runtime.
 
 ### Accounts
 
@@ -162,7 +162,7 @@ overhead of decoding, since that step is performed by the program on-chain. It's
 been observed that some common encodings (Rust's bincode for example) are very
 inefficient.
 
-The [Solana Program Library's Token
+The [Domichain Program Library's Token
 program](https://github.com/solana-labs/solana-program-library/tree/master/token)
 gives one example of how instruction data can be encoded efficiently, but note
 that this method only supports fixed sized types. Token utilizes the

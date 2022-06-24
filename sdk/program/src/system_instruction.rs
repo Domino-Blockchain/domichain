@@ -516,8 +516,8 @@ pub fn create_nonce_account_with_seed(
 /// A [durable transaction nonce][dtn] is a special account that enables
 /// execution of transactions that have been signed in the past.
 ///
-/// Standard Solana transactions include a [recent blockhash][rbh] (sometimes
-/// referred to as a _[nonce]_). During execution the Solana runtime verifies
+/// Standard Domichain transactions include a [recent blockhash][rbh] (sometimes
+/// referred to as a _[nonce]_). During execution the Domichain runtime verifies
 /// the recent blockhash is approximately less than two minutes old, and that in
 /// those two minutes no other identical transaction with the same blockhash has
 /// been executed. These checks prevent accidental replay of transactions.
@@ -652,7 +652,7 @@ pub fn create_nonce_account(
 /// Every transaction that relies on a durable transaction nonce must contain a
 /// [`SystemInstruction::AdvanceNonceAccount`] instruction as the first
 /// instruction in the [`Message`], as created by this function. When included
-/// in the first position, the Solana runtime recognizes the transaction as one
+/// in the first position, the Domichain runtime recognizes the transaction as one
 /// that relies on a durable transaction nonce and processes it accordingly. The
 /// [`Message::new_with_nonce`] function can be used to construct a `Message` in
 /// the correct format without calling `advance_nonce_account` directly.

@@ -1,6 +1,6 @@
 //! Access to special accounts with dynamically-updated data.
 //!
-//! For more details see the Solana [documentation on sysvars][sysvardoc].
+//! For more details see the Domichain [documentation on sysvars][sysvardoc].
 //!
 //! [sysvardoc]: https://docs.solana.com/developing/runtime-facilities/sysvars
 

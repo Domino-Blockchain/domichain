@@ -3,13 +3,13 @@ title: Deploy a Program
 ---
 
 Developers can deploy on-chain [programs](terminology.md#program) (often called
-smart contracts elsewhere) with the Solana tools.
+smart contracts elsewhere) with the Domichain tools.
 
-To learn about developing and executing programs on Solana, start with the
+To learn about developing and executing programs on Domichain, start with the
 [overview](developing/programming-model/overview.md) and then dig into the
 details of [on-chain programs](developing/on-chain-programs/overview.md).
 
-To deploy a program, use the Solana tools to interact with the on-chain loader
+To deploy a program, use the Domichain tools to interact with the on-chain loader
 to:
 
 - Initialize a program account

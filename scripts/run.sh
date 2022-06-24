@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Run a minimal Solana cluster.  Ctrl-C to exit.
+# Run a minimal Domichain cluster.  Ctrl-C to exit.
 #
-# Before running this script ensure standard Solana programs are available
+# Before running this script ensure standard Domichain programs are available
 # in the PATH, or that `cargo build` ran successfully
 #
 set -e

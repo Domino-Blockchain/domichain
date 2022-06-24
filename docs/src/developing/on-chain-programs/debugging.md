@@ -2,9 +2,9 @@
 title: "Debugging"
 ---
 
-Solana programs run on-chain, so debugging them in the wild can be challenging.
+Domichain programs run on-chain, so debugging them in the wild can be challenging.
 To make debugging programs easier, developers can write unit tests that directly
-test their program's execution via the Solana runtime, or run a local cluster
+test their program's execution via the Domichain runtime, or run a local cluster
 that will allow RPC clients to interact with their program.
 
 ## Running unit tests

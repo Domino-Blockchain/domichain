@@ -74,7 +74,7 @@ or [hardware](../wallet-guide/hardware-wallets.md#multiple-addresses-on-a-single
 #### Transfer tokens from your first wallet to the second address
 
 Next, prove that you own the airdropped tokens by transferring them.
-The Solana cluster will only accept the transfer if you sign the transaction
+The Domichain cluster will only accept the transfer if you sign the transaction
 with the private keypair corresponding to the sender's public key in the
 transaction.
 
@@ -140,7 +140,7 @@ $ solana balance 7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv --url https://api.
 ## Receive Tokens
 
 To receive tokens, you will need an address for others to send tokens to. In
-Solana, the wallet address is the public key of a keypair. There are a variety
+Domichain, the wallet address is the public key of a keypair. There are a variety
 of techniques for generating keypairs. The method you choose will depend on how
 you choose to store keypairs. Keypairs are stored in wallets. Before receiving
 tokens, you will need to [create a wallet](../wallet-guide/cli.md).

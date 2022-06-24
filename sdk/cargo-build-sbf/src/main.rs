@@ -740,7 +740,7 @@ fn main() {
                 .value_name("PATH")
                 .takes_value(true)
                 .default_value(&default_sbf_sdk)
-                .help("Path to the Solana SBF SDK"),
+                .help("Path to the Domichain SBF SDK"),
         )
         .arg(
             Arg::new("cargo_args")

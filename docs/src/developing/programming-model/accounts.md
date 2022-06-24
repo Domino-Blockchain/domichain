@@ -18,7 +18,7 @@ and collects rent. Any account that drops to zero lamports is purged. Accounts
 can also be marked [rent-exempt](#rent-exemption) if they contain a sufficient
 number of lamports.
 
-In the same way that a Linux user uses a path to look up a file, a Solana client
+In the same way that a Linux user uses a path to look up a file, a Domichain client
 uses an _address_ to look up an account. The address is a 256-bit public key.
 
 ## Signers
@@ -118,7 +118,7 @@ One example is when programs use a sysvar account. Unless the program checks the
 account's address or owner, it's impossible to be sure whether it's a real and
 valid sysvar account merely by successful deserialization of the account's data.
 
-Accordingly, the Solana SDK [checks the sysvar account's validity during
+Accordingly, the Domichain SDK [checks the sysvar account's validity during
 deserialization](https://github.com/solana-labs/solana/blob/a95675a7ce1651f7b59443eb146b356bc4b3f374/sdk/program/src/sysvar/mod.rs#L65).
 An alternative and safer way to read a sysvar is via the sysvar's [`get()`
 function](https://github.com/solana-labs/solana/blob/64bfc14a75671e4ec3fe969ded01a599645080eb/sdk/program/src/sysvar/mod.rs#L73)
@@ -130,7 +130,7 @@ and the containing transaction will be thrown out.
 
 ## Rent
 
-Keeping accounts alive on Solana incurs a storage cost called _rent_ because the
+Keeping accounts alive on Domichain incurs a storage cost called _rent_ because the
 blockchain cluster must actively maintain the data to process any future transactions.
 This is different from Bitcoin and Ethereum, where storing accounts doesn't
 incur any costs.

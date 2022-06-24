@@ -27,7 +27,7 @@ const LoadingPlaceholder = () => (
 );
 
 const ErrorPlaceHolder = () => (
-  <img src={ErrorLogo} width="120" height="120" alt="Solana Logo" />
+  <img src={ErrorLogo} width="120" height="120" alt="Domichain Logo" />
 );
 
 const ViewOriginalArtContentLink = ({ src }: { src: string }) => {

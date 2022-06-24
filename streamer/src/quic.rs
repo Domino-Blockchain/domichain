@@ -120,7 +120,7 @@ fn new_cert_params(identity_keypair: &Keypair, san: IpAddr) -> CertificateParams
     cert_params.distinguished_name = DistinguishedName::new();
     cert_params
         .distinguished_name
-        .push(DnType::CommonName, "Solana node");
+        .push(DnType::CommonName, "Domichain node");
     cert_params
 }
 

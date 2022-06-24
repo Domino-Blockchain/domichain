@@ -1,4 +1,4 @@
-//! Solana account addresses.
+//! Domichain account addresses.
 
 #![allow(clippy::integer_arithmetic)]
 use {
@@ -50,13 +50,13 @@ impl From<u64> for PubkeyError {
     }
 }
 
-/// The address of a [Solana account][acc].
+/// The address of a [Domichain account][acc].
 ///
 /// Some account addresses are [ed25519] public keys, with corresponding secret
 /// keys that are managed off-chain. Often, though, account addresses do not
 /// have corresponding secret keys &mdash; as with [_program derived
 /// addresses_][pdas] &mdash; or the secret key is not relevant to the operation
-/// of a program, and may have even been disposed of. As running Solana programs
+/// of a program, and may have even been disposed of. As running Domichain programs
 /// can not safely create or manage secret keys, the full [`Keypair`] is not
 /// defined in `solana-program` but in `solana-sdk`.
 ///
@@ -208,7 +208,7 @@ impl Pubkey {
     ///
     /// Program derived addresses (PDAs) are account keys that only the program,
     /// `program_id`, has the authority to sign. The address is of the same form
-    /// as a Solana `Pubkey`, except they are ensured to not be on the ed25519
+    /// as a Domichain `Pubkey`, except they are ensured to not be on the ed25519
     /// curve and thus have no associated private key. When performing
     /// cross-program invocations the program can "sign" for the key by calling
     /// [`invoke_signed`] and passing the same seeds used to generate the
@@ -240,7 +240,7 @@ impl Pubkey {
     /// there is a chance that the program's budget may be occasionally
     /// and unpredictably exceeded.
     ///
-    /// As all account addresses accessed by an on-chain Solana program must be
+    /// As all account addresses accessed by an on-chain Domichain program must be
     /// explicitly passed to the program, it is typical for the PDAs to be
     /// derived in off-chain client programs, avoiding the compute cost of
     /// generating the address on-chain. The address may or may not then be
@@ -278,16 +278,16 @@ impl Pubkey {
     /// This example illustrates a simple case of creating a "vault" account
     /// which is derived from the payer account, but owned by an on-chain
     /// program. The program derived address is derived in an off-chain client
-    /// program, which invokes an on-chain Solana program that uses the address
+    /// program, which invokes an on-chain Domichain program that uses the address
     /// to create a new account owned and controlled by the program itself.
     ///
     /// By convention, the on-chain program will be compiled for use in two
     /// different contexts: both on-chain, to interpret a custom program
-    /// instruction as a Solana transaction; and off-chain, as a library, so
+    /// instruction as a Domichain transaction; and off-chain, as a library, so
     /// that clients can share the instruction data structure, constructors, and
     /// other common code.
     ///
-    /// First the on-chain Solana program:
+    /// First the on-chain Domichain program:
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};

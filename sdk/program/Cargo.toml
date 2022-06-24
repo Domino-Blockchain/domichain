@@ -1,8 +1,8 @@
 [package]
 name = "solana-program"
 version = "1.11.1"
-description = "Solana Program"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain Program"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-program"

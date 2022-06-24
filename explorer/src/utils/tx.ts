@@ -50,7 +50,7 @@ export enum PROGRAM_NAMES {
   // other
   ACUMEN = "Acumen Program",
   BONFIDA_POOL = "Bonfida Pool Program",
-  BREAK_SOLANA = "Break Solana Program",
+  BREAK_SOLANA = "Break Domichain Program",
   CHAINLINK_ORACLE = "Chainlink OCR2 Oracle Program",
   CHAINLINK_STORE = "Chainlink Store Program",
   MANGO_GOVERNANCE = "Mango Governance Program",
@@ -88,13 +88,13 @@ export enum PROGRAM_NAMES {
   SERUM_3 = "Serum Dex Program v3",
   SERUM_SWAP = "Serum Swap Program",
   SOLEND = "Solend Program",
-  SOLIDO = "Lido for Solana Program",
+  SOLIDO = "Lido for Domichain Program",
   STEP_SWAP = "Step Finance Swap Program",
   SWIM_SWAP = "Swim Swap Program",
   SWITCHBOARD = "Switchboard Oracle Program",
   WORMHOLE = "Wormhole",
-  SOLANART = "Solanart",
-  SOLANART_GO = "Solanart - Global offers",
+  SOLANART = "Domichainrt",
+  SOLANART_GO = "Domichainrt - Global offers",
   STEPN_DEX = "STEPN Dex",
 }
 

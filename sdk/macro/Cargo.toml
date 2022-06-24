@@ -1,8 +1,8 @@
 [package]
 name = "solana-sdk-macro"
 version = "1.11.1"
-description = "Solana SDK Macro"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain SDK Macro"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-sdk-macro"

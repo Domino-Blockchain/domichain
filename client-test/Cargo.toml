@@ -1,8 +1,8 @@
 [package]
 name = "solana-client-test"
 version = "1.11.1"
-description = "Solana RPC Test"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain RPC Test"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"

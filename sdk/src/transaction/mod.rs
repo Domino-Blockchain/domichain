@@ -1,8 +1,8 @@
 //! Atomically-committed sequences of instructions.
 //!
-//! While [`Instruction`]s are the basic unit of computation in Solana, they are
+//! While [`Instruction`]s are the basic unit of computation in Domichain, they are
 //! submitted by clients in [`Transaction`]s containing one or more
-//! instructions, and signed by one or more [`Signer`]s. Solana executes the
+//! instructions, and signed by one or more [`Signer`]s. Domichain executes the
 //! instructions in a transaction in order, and only commits any changes if all
 //! instructions terminate without producing an error or exception.
 //!
@@ -10,7 +10,7 @@
 //! a [`Message`], a precompiled representation of a sequence of instructions.
 //! `Message`'s constructors handle the complex task of reordering the
 //! individual lists of accounts required by each instruction into a single flat
-//! list of deduplicated accounts required by the Solana runtime. The
+//! list of deduplicated accounts required by the Domichain runtime. The
 //! `Transaction` type has constructors that build the `Message` so that clients
 //! don't need to interact with them directly.
 //!
@@ -149,7 +149,7 @@ pub type Result<T> = result::Result<T, TransactionError>;
 
 /// An atomically-commited sequence of instructions.
 ///
-/// While [`Instruction`]s are the basic unit of computation in Solana,
+/// While [`Instruction`]s are the basic unit of computation in Domichain,
 /// they are submitted by clients in [`Transaction`]s containing one or
 /// more instructions, and signed by one or more [`Signer`]s.
 ///

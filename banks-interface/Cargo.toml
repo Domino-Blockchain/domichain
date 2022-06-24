@@ -1,8 +1,8 @@
 [package]
 name = "solana-banks-interface"
 version = "1.11.1"
-description = "Solana banks RPC interface"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain banks RPC interface"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"

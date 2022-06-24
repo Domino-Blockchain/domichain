@@ -135,7 +135,7 @@ strings in the [stable log](https://github.com/solana-labs/solana/blob/952928419
 ## Note on returning errors
 
 Solidity on Ethereum allows the contract to return an error in the return data. In this case, all
-the account data changes for the account should be reverted. On Solana, any non-zero exit code
+the account data changes for the account should be reverted. On Domichain, any non-zero exit code
 for a BPF prorgram means the entire transaction fails. We do not wish to support an error return
 by returning success and then returning an error in the return data. This would mean we would have
 to support reverting the account data changes; this too expensive both on the VM side and the BPF

@@ -1,7 +1,7 @@
-//! A future Solana message format.
+//! A future Domichain message format.
 //!
 //! This crate defines two versions of `Message` in their own modules:
-//! [`legacy`] and [`v0`]. `legacy` is the current version as of Solana 1.10.0.
+//! [`legacy`] and [`v0`]. `legacy` is the current version as of Domichain 1.10.0.
 //! `v0` is a [future message format] that encodes more account keys into a
 //! transaction than the legacy format.
 //!
@@ -41,7 +41,7 @@ pub struct MessageAddressTableLookup {
     pub readonly_indexes: Vec<u8>,
 }
 
-/// A Solana transaction message (v0).
+/// A Domichain transaction message (v0).
 ///
 /// This message format supports succinct account loading with
 /// on-chain address lookup tables.

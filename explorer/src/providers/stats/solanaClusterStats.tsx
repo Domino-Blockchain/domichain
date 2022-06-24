@@ -81,7 +81,7 @@ function getConnection(url: string): Connection | undefined {
   } catch (error) {}
 }
 
-export function SolanaClusterStatsProvider({ children }: Props) {
+export function DomichainClusterStatsProvider({ children }: Props) {
   const { cluster, url } = useCluster();
   const [active, setActive] = React.useState(false);
   const [dashboardInfo, dispatchDashboardInfo] = React.useReducer(

@@ -1,8 +1,8 @@
 ---
-title: Add Solana to Your Exchange
+title: Add Domichain to Your Exchange
 ---
 
-This guide describes how to add Solana's native token SOL to your cryptocurrency
+This guide describes how to add Domichain's native token SOL to your cryptocurrency
 exchange.
 
 ## Node Setup
@@ -13,18 +13,18 @@ operations with a bundled monitoring tool.
 
 This setup enables you:
 
-- to have a self-administered gateway to the Solana mainnet-beta cluster to get
+- to have a self-administered gateway to the Domichain mainnet-beta cluster to get
   data and submit withdrawal transactions
 - to have full control over how much historical block data is retained
 - to maintain your service availability even if one node fails
 
-Solana nodes demand relatively high computing power to handle our fast blocks
+Domichain nodes demand relatively high computing power to handle our fast blocks
 and high TPS. For specific requirements, please see
 [hardware recommendations](../running-validator/validator-reqs.md).
 
 To run an api node:
 
-1. [Install the Solana command-line tool suite](../cli/install-solana-cli-tools.md)
+1. [Install the Domichain command-line tool suite](../cli/install-solana-cli-tools.md)
 2. Start the validator with at least the following parameters:
 
 ```bash
@@ -118,9 +118,9 @@ historical ledger data that cannot be filled.
 ### Minimizing Validator Port Exposure
 
 The validator requires that various UDP and TCP ports be open for inbound
-traffic from all other Solana validators. While this is the most efficient mode of
+traffic from all other Domichain validators. While this is the most efficient mode of
 operation, and is strongly recommended, it is possible to restrict the
-validator to only require inbound traffic from one other Solana validator.
+validator to only require inbound traffic from one other Domichain validator.
 
 First add the `--restricted-repair-only-mode` argument. This will cause the
 validator to operate in a restricted mode where it will not receive pushes from
@@ -147,13 +147,13 @@ validators and only on the _Gossip_, _Repair_ and _ServeR_ ports.
 
 ## Setting up Deposit Accounts
 
-Solana accounts do not require any on-chain initialization; once they contain
+Domichain accounts do not require any on-chain initialization; once they contain
 some SOL, they exist. To set up a deposit account for your exchange, simply
-generate a Solana keypair using any of our [wallet tools](../wallet-guide/cli.md).
+generate a Domichain keypair using any of our [wallet tools](../wallet-guide/cli.md).
 
 We recommend using a unique deposit account for each of your users.
 
-Solana accounts must be made rent-exempt by containing 2-years worth of
+Domichain accounts must be made rent-exempt by containing 2-years worth of
 [rent](developing/programming-model/accounts.md#rent) in SOL. In order to find
 the minimum rent-exempt balance for your deposit accounts, query the
 [`getMinimumBalanceForRentExemption` endpoint](developing/clients/jsonrpc-api.md#getminimumbalanceforrentexemption):
@@ -179,7 +179,7 @@ transfer to the appropriate deposit address.
 
 To track all the deposit accounts for your exchange, poll for each confirmed
 block and inspect for addresses of interest, using the JSON-RPC service of your
-Solana API node.
+Domichain API node.
 
 - To identify which blocks are available, send a [`getBlocks` request](developing/clients/jsonrpc-api.md#getblocks),
   passing the last block you have already processed as the start-slot parameter:
@@ -373,16 +373,16 @@ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id":1,"m
 
 ## Sending Withdrawals
 
-To accommodate a user's request to withdraw SOL, you must generate a Solana
+To accommodate a user's request to withdraw SOL, you must generate a Domichain
 transfer transaction, and send it to the api node to be forwarded to your
 cluster.
 
 ### Synchronous
 
-Sending a synchronous transfer to the Solana cluster allows you to easily ensure
+Sending a synchronous transfer to the Domichain cluster allows you to easily ensure
 that a transfer is successful and finalized by the cluster.
 
-Solana's command-line tool offers a simple command, `solana transfer`, to
+Domichain's command-line tool offers a simple command, `solana transfer`, to
 generate, submit, and confirm transfer transactions. By default, this method
 will wait and track progress on stderr until the transaction has been finalized
 by the cluster. If the transaction fails, it will report any transaction errors.
@@ -391,7 +391,7 @@ by the cluster. If the transaction fails, it will report any transaction errors.
 solana transfer <USER_ADDRESS> <AMOUNT> --allow-unfunded-recipient --keypair <KEYPAIR> --url http://localhost:8899
 ```
 
-The [Solana Javascript SDK](https://github.com/solana-labs/solana-web3.js)
+The [Domichain Javascript SDK](https://github.com/solana-labs/solana-web3.js)
 offers a similar approach for the JS ecosystem. Use the `SystemProgram` to build
 a transfer transaction, and submit it using the `sendAndConfirmTransaction`
 method.
@@ -482,14 +482,14 @@ prevent accidental loss of user funds.
 
 #### Basic verfication
 
-Solana addresses a 32-byte array, encoded with the bitcoin base58 alphabet. This
+Domichain addresses a 32-byte array, encoded with the bitcoin base58 alphabet. This
 results in an ASCII text string matching the following regular expression:
 
 ```
 [1-9A-HJ-NP-Za-km-z]{32,44}
 ```
 
-This check is insufficient on its own as Solana addresses are not checksummed, so
+This check is insufficient on its own as Domichain addresses are not checksummed, so
 typos cannot be detected. To further validate the user's input, the string can be
 decoded and the resulting byte array's length confirmed to be 32. However, there
 are some addresses that can decode to 32 bytes despite a typo such as a single
@@ -503,7 +503,7 @@ confirm their intentions if a non-zero balance is discovered.
 
 #### Valid ed25519 pubkey check
 
-The address of a normal account in Solana is a Base58-encoded string of a
+The address of a normal account in Domichain is a Base58-encoded string of a
 256-bit ed25519 public key. Not all bit patterns are valid public keys for the
 ed25519 curve, so it is possible to ensure user-supplied account addresses are
 at least correct ed25519 public keys.
@@ -583,7 +583,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id":1,"m
 ## Supporting the SPL Token Standard
 
 [SPL Token](https://spl.solana.com/token) is the standard for wrapped/synthetic
-token creation and exchange on the Solana blockchain.
+token creation and exchange on the Domichain blockchain.
 
 The SPL Token workflow is similar to that of native SOL tokens, but there are a
 few differences which will be discussed in this section.
@@ -764,7 +764,7 @@ the SPL Token's mint account.
 
 ## Testing the Integration
 
-Be sure to test your complete workflow on Solana devnet and testnet
+Be sure to test your complete workflow on Domichain devnet and testnet
 [clusters](../clusters.md) before moving to production on mainnet-beta. Devnet
 is the most open and flexible, and ideal for initial development, while testnet
 offers more realistic cluster configuration. Both devnet and testnet support a faucet,

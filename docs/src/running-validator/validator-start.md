@@ -2,7 +2,7 @@
 title: Starting a Validator
 ---
 
-## Configure Solana CLI
+## Configure Domichain CLI
 
 The solana cli includes `get` and `set` configuration commands to automatically
 set the `--url` argument for cli commands. For example:
@@ -12,7 +12,7 @@ solana config set --url http://api.devnet.solana.com
 ```
 
 While this section demonstrates how to connect to the Devnet cluster, the steps
-are similar for the other [Solana Clusters](../clusters.md).
+are similar for the other [Domichain Clusters](../clusters.md).
 
 ## Confirm The Cluster Is Reachable
 
@@ -185,7 +185,7 @@ ALLOCATION OF SOL TOO.
 To back-up your validator identify keypair, **back-up your
 "validator-keypair.json” file or your seed phrase to a secure location.**
 
-## More Solana CLI Configuration
+## More Domichain CLI Configuration
 
 Now that you have a keypair, set the solana configuration to use your validator
 keypair for all following commands:
@@ -250,7 +250,7 @@ solana-keygen new -o ~/authorized-withdrawer-keypair.json
 
 If you haven’t already done so, create a vote-account keypair and create the
 vote account on the network. If you have completed this step, you should see the
-“vote-account-keypair.json” in your Solana runtime directory:
+“vote-account-keypair.json” in your Domichain runtime directory:
 
 ```bash
 solana-keygen new -o ~/vote-account-keypair.json
@@ -348,7 +348,7 @@ the following:
 
 ```
 [Unit]
-Description=Solana Validator
+Description=Domichain Validator
 After=network.target
 Wants=solana-sys-tuner.service
 StartLimitIntervalSec=0

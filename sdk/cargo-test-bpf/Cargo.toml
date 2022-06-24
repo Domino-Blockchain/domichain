@@ -1,8 +1,8 @@
 [package]
 name = "solana-cargo-test-bpf"
 version = "1.11.1"
-description = "Execute all unit and integration tests after building with the Solana SBF SDK"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Execute all unit and integration tests after building with the Domichain SBF SDK"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 homepage = "https://solana.com/"
 license = "Apache-2.0"

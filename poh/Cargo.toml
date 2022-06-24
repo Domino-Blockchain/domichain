@@ -1,8 +1,8 @@
 [package]
 name = "solana-poh"
 version = "1.11.1"
-description = "Solana PoH"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain PoH"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"

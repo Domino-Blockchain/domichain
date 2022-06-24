@@ -1,5 +1,5 @@
 ---
-title: Solana Test Validator
+title: Domichain Test Validator
 ---
 
 During early stage development, it is often convenient to target a cluster with
@@ -21,7 +21,7 @@ starts a full-featured, single-node cluster on the developer's workstation.
 
 ## Installation
 
-The `solana-test-validator` binary ships with the Solana CLI Tool Suite.
+The `solana-test-validator` binary ships with the Domichain CLI Tool Suite.
 [Install](/cli/install-solana-cli-tools) before continuing.
 
 ## Running
@@ -60,7 +60,7 @@ needed, it can be stopped with ctrl-c.
 ## Interacting
 
 Open a new terminal to interact with a [running](#running) `solana-test-validator`
-instance using other binaries from the Solana CLI Tool Suite or your own client
+instance using other binaries from the Domichain CLI Tool Suite or your own client
 software.
 
 #### Configure the CLI Tool Suite to target a local cluster by default
@@ -156,7 +156,7 @@ JSON RPC URL: http://127.0.0.1:8899
 
 By default, the test validator runs with all [runtime features](programming-model/runtime#features) activated.
 
-You can verify this using the [Solana command-line tools](cli/install-solana-cli-tools.md):
+You can verify this using the [Domichain command-line tools](cli/install-solana-cli-tools.md):
 
 ```bash
 solana feature status -ul

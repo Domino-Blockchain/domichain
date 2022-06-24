@@ -20,7 +20,7 @@ usage: $0 [cluster_rpc_url]
    CONFIG
 
  Required arguments:
-   cluster_rpc_url  - RPC URL and port for a running Solana cluster (ex: http://34.83.146.144:8899)
+   cluster_rpc_url  - RPC URL and port for a running Domichain cluster (ex: http://34.83.146.144:8899)
 EOF
   exit $exitcode
 }

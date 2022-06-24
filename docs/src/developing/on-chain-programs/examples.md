@@ -4,9 +4,9 @@ title: "Examples"
 
 ## Helloworld
 
-Hello World is a project that demonstrates how to use the Solana Javascript API
+Hello World is a project that demonstrates how to use the Domichain Javascript API
 and both Rust and C programs to build, deploy, and interact with programs on the
-Solana blockchain.
+Domichain blockchain.
 
 The project comprises of:
 
@@ -29,8 +29,8 @@ Next, follow the steps in the git repository's
 ## Break
 
 [Break](https://break.solana.com/) is a React app that gives users a visceral
-feeling for just how fast and high-performance the Solana network really is. Can
-you _break_ the Solana blockchain? During a 15 second play-though, each click of
+feeling for just how fast and high-performance the Domichain network really is. Can
+you _break_ the Domichain blockchain? During a 15 second play-though, each click of
 a button or keystroke sends a new transaction to the cluster. Smash the keyboard
 as fast as you can and watch your transactions get finalized in real time while
 the network takes it all in stride!

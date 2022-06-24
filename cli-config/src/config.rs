@@ -24,13 +24,13 @@ lazy_static! {
     };
 }
 
-/// The Solana CLI configuration.
+/// The Domichain CLI configuration.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Config {
-    /// The RPC address of a Solana validator node.
+    /// The RPC address of a Domichain validator node.
     ///
     /// Typical values for mainnet, devnet, and testnet are [described in the
-    /// Solana documentation][rpcdocs].
+    /// Domichain documentation][rpcdocs].
     ///
     /// For local testing, the typical value is `http://localhost:8899`.
     ///
@@ -53,7 +53,7 @@ pub struct Config {
     /// The signing source can be loaded with either the `signer_from_path`
     /// function, or with `solana_clap_utils::keypair::DefaultSigner`.
     pub keypair_path: String,
-    /// A mapping from Solana addresses to human-readable names.
+    /// A mapping from Domichain addresses to human-readable names.
     ///
     /// By default the only value in this map is the system program.
     #[serde(default)]

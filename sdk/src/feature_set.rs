@@ -1,7 +1,7 @@
 //! Collection of all runtime features.
 //!
 //! Steps to add a new feature are outlined below. Note that these steps only cover
-//! the process of getting a feature into the core Solana code.
+//! the process of getting a feature into the core Domichain code.
 //! - For features that are unambiguously good (ie bug fixes), these steps are sufficient.
 //! - For features that should go up for community vote (ie fee structure changes), more
 //!   information on the additional steps to follow can be found at:

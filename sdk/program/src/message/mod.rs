@@ -2,7 +2,7 @@
 //!
 //! [`Instruction`]: crate::instruction::Instruction
 //!
-//! In Solana, programs execute instructions, and clients submit sequences
+//! In Domichain, programs execute instructions, and clients submit sequences
 //! of instructions to the network to be atomically executed as [`Transaction`]s.
 //!
 //! [`Transaction`]: https://docs.rs/solana-sdk/latest/solana-sdk/transaction/struct.Transaction.html
@@ -26,15 +26,15 @@
 //!
 //! This module defines two versions of `Message` in their own modules:
 //! [`legacy`] and [`v0`]. `legacy` is reexported here and is the current
-//! version as of Solana 1.10.0. `v0` is a [future message format] that encodes
+//! version as of Domichain 1.10.0. `v0` is a [future message format] that encodes
 //! more account keys into a transaction than the legacy format. The
 //! [`VersionedMessage`] type is a thin wrapper around either message version.
 //!
 //! [future message format]: https://docs.solana.com/proposals/transactions-v2
 //!
 //! Despite living in the `solana-program` crate, there is no way to access the
-//! runtime's messages from within a Solana program, and only the legacy message
-//! types continue to be exposed to Solana programs, for backwards compatibility
+//! runtime's messages from within a Domichain program, and only the legacy message
+//! types continue to be exposed to Domichain programs, for backwards compatibility
 //! reasons.
 
 mod compiled_keys;

@@ -1,7 +1,7 @@
 [package]
 name = "solana-tokens"
 description = "Blockchain, Rebuilt for Scale"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 edition = "2021"
 version = "1.11.1"
 repository = "https://github.com/solana-labs/solana"

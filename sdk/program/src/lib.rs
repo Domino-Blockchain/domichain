@@ -1,10 +1,10 @@
-//! The base library for all Solana on-chain Rust programs.
+//! The base library for all Domichain on-chain Rust programs.
 //!
-//! All Solana Rust programs that run on-chain will link to this crate, which
-//! acts as a standard library for Solana programs. Solana programs also link to
+//! All Domichain Rust programs that run on-chain will link to this crate, which
+//! acts as a standard library for Domichain programs. Domichain programs also link to
 //! the [Rust standard library][std], though it is [modified][sstd] for the
-//! Solana runtime environment. While off-chain programs that interact with the
-//! Solana network _can_ link to this crate, they typically instead use the
+//! Domichain runtime environment. While off-chain programs that interact with the
+//! Domichain network _can_ link to this crate, they typically instead use the
 //! [`solana-sdk`] crate, which reexports all modules from `solana-program`.
 //!
 //! [std]: https://doc.rust-lang.org/stable/std/
@@ -31,13 +31,13 @@
 //! [sysvar]: #sysvars
 //!
 //! Idiomatic examples of `solana-program` usage can be found in
-//! [the Solana Program Library][spl].
+//! [the Domichain Program Library][spl].
 //!
 //! [spl]: https://github.com/solana-labs/solana-program-library
 //!
 //! # Defining a solana program
 //!
-//! Solana program crates have some unique properties compared to typical Rust
+//! Domichain program crates have some unique properties compared to typical Rust
 //! programs:
 //!
 //! - They are often compiled for both on-chain use and off-chain use. This is
@@ -46,12 +46,12 @@
 //! - They do not define a `main` function, but instead define their entrypoint
 //!   with the [`entrypoint!`] macro.
 //! - They are compiled as the ["cdylib"] crate type for dynamic loading
-//!   by the Solana runtime.
+//!   by the Domichain runtime.
 //! - They run in a constrained VM environment, and while they do have access to
 //!   the [Rust standard library][std], many features of the standard library,
 //!   particularly related to OS services, will fail at runtime, will silently
 //!   do nothing, or are not defined. See the [restrictions to the Rust standard
-//!   library][sstd] in the Solana documentation for more.
+//!   library][sstd] in the Domichain documentation for more.
 //!
 //! [std]: https://doc.rust-lang.org/std/index.html
 //! ["cdylib"]: https://doc.rust-lang.org/reference/linkage.html
@@ -63,7 +63,7 @@
 //!
 //! [Cargo feature]: https://doc.rust-lang.org/cargo/reference/features.html
 //!
-//! The skeleton of a Solana program typically looks like:
+//! The skeleton of a Domichain program typically looks like:
 //!
 //! ```
 //! #[cfg(not(feature = "no-entrypoint"))]
@@ -100,14 +100,14 @@
 //! no-entrypoint = []
 //! ```
 //!
-//! Note that a Solana program must specify its crate-type as "cdylib", and
+//! Note that a Domichain program must specify its crate-type as "cdylib", and
 //! "cdylib" crates will automatically be discovered and built by the `cargo
-//! build-bpf` command. Solana programs also often have crate-type "rlib" so
+//! build-bpf` command. Domichain programs also often have crate-type "rlib" so
 //! they can be linked to other Rust crates.
 //!
 //! # On-chain vs. off-chain compilation targets
 //!
-//! Solana programs run on the [rbpf] VM, which implements a variant of the
+//! Domichain programs run on the [rbpf] VM, which implements a variant of the
 //! [eBPF] instruction set. Because this crate can be compiled for both on-chain
 //! and off-chain execution, the environments of which are significantly
 //! different, it extensively uses [conditional compilation][cc] to tailor its
@@ -145,31 +145,31 @@
 //! that will fail in off-chain scenarios at runtime. This distinction is not
 //! well-reflected in the documentation.
 //!
-//! For a more complete description of Solana's implementation of eBPF and its
-//! limitations, see the main Solana documentation for [on-chain programs][ocp].
+//! For a more complete description of Domichain's implementation of eBPF and its
+//! limitations, see the main Domichain documentation for [on-chain programs][ocp].
 //!
 //! [ocp]: https://docs.solana.com/developing/on-chain-programs/overview
 //!
 //! # Core data types
 //!
-//! - [`Pubkey`] &mdash; The address of a [Solana account][acc]. Some account
+//! - [`Pubkey`] &mdash; The address of a [Domichain account][acc]. Some account
 //!   addresses are [ed25519] public keys, with corresponding secret keys that
 //!   are managed off-chain. Often, though, account addresses do not have
 //!   corresponding secret keys &mdash; as with [_program derived
 //!   addresses_][pdas] &mdash; or the secret key is not relevant to the
 //!   operation of a program, and may have even been disposed of. As running
-//!   Solana programs can not safely create or manage secret keys, the full
+//!   Domichain programs can not safely create or manage secret keys, the full
 //!   [`Keypair`] is not defined in `solana-program` but in `solana-sdk`.
 //! - [`Hash`] &mdash; A cryptographic hash. Used to uniquely identify blocks,
 //!   and also for general purpose hashing.
-//! - [`AccountInfo`] &mdash; A description of a single Solana account. All accounts
+//! - [`AccountInfo`] &mdash; A description of a single Domichain account. All accounts
 //!   that might be accessed by a program invocation are provided to the program
 //!   entrypoint as `AccountInfo`.
 //! - [`Instruction`] &mdash; A directive telling the runtime to execute a program,
 //!   passing it a set of accounts and program-specific data.
 //! - [`ProgramError`] and [`ProgramResult`] &mdash; The error type that all programs
 //!   must return, reported to the runtime as a `u64`.
-//! - [`Sol`] &mdash; The Solana native token type, with conversions to and from
+//! - [`Sol`] &mdash; The Domichain native token type, with conversions to and from
 //!   [_lamports_], the smallest fractional unit of SOL, in the [`native_token`]
 //!   module.
 //!
@@ -188,11 +188,11 @@
 //!
 //! # Serialization
 //!
-//! Within the Solana runtime, programs, and network, at least three different
+//! Within the Domichain runtime, programs, and network, at least three different
 //! serialization formats are used, and `solana-program` provides access to
 //! those needed by programs.
 //!
-//! In user-written Solana program code, serialization is primarily used for
+//! In user-written Domichain program code, serialization is primarily used for
 //! accessing [`AccountInfo`] data and [`Instruction`] data, both of which are
 //! program-specific binary data. Every program is free to decide their own
 //! serialization format, but data received from other sources &mdash;
@@ -202,7 +202,7 @@
 //! [`AccountInfo`]: account_info::AccountInfo
 //! [`Instruction`]: instruction::Instruction
 //!
-//! The three serialization formats in use in Solana are:
+//! The three serialization formats in use in Domichain are:
 //!
 //! - __[Borsh]__, a compact and well-specified format developed by the [NEAR]
 //!   project, suitable for use in protocol definitions and for archival storage.
@@ -242,8 +242,8 @@
 //!   [Serde]: https://serde.rs/
 //!   [`Instruction::new_with_bincode`]: instruction::Instruction::new_with_bincode
 //!
-//! - __[`Pack`]__, a Solana-specific serialization API that is used by many
-//!   older programs in the [Solana Program Library][spl] to define their
+//! - __[`Pack`]__, a Domichain-specific serialization API that is used by many
+//!   older programs in the [Domichain Program Library][spl] to define their
 //!   account format. It is difficult to implement and does not define a
 //!   language-independent serialization format. It is not generally recommended
 //!   for new code.
@@ -260,7 +260,7 @@
 //!
 //! # Cross-program instruction execution
 //!
-//! Solana programs may call other programs, termed [_cross-program
+//! Domichain programs may call other programs, termed [_cross-program
 //! invocation_][cpi] (CPI), with the [`invoke`] and [`invoke_signed`]
 //! functions. When calling another program the caller must provide the
 //! [`Instruction`] to be invoked, as well as the [`AccountInfo`] for every
@@ -316,7 +316,7 @@
 //! }
 //! ```
 //!
-//! Solana also includes a mechanism to let programs control and sign for
+//! Domichain also includes a mechanism to let programs control and sign for
 //! accounts without needing to protect a corresponding secret key, called
 //! [_program derived addresses_][pdas]. PDAs are derived with the
 //! [`Pubkey::find_program_address`] function. With a PDA, a program can call
@@ -404,7 +404,7 @@
 //! [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
 //!
 //! This crate defines the program IDs for most native programs. Even though
-//! some native programs cannot be invoked by other programs, a Solana program
+//! some native programs cannot be invoked by other programs, a Domichain program
 //! may need access to their program IDs. For example, a program may need to
 //! verify that an ed25519 signature verification instruction was included in
 //! the same transaction as its own instruction. For many native programs, this
@@ -422,7 +422,7 @@
 //!
 //! [slot]: https://docs.solana.com/terminology#slot
 //!
-//! Native programs important to Solana program authors include:
+//! Native programs important to Domichain program authors include:
 //!
 //! - __System Program__: Creates new accounts, allocates account data, assigns
 //!   accounts to owning programs, transfers lamports from System Program owned
@@ -499,7 +499,7 @@
 //! }
 //! ```
 //!
-//! Since Solana sysvars are accounts, if the `AccountInfo` is provided to the
+//! Since Domichain sysvars are accounts, if the `AccountInfo` is provided to the
 //! program, then the program can deserialize the sysvar with
 //! [`Sysvar::from_account_info`] to access its data, as in this example that
 //! again logs the [`clock`][clk] sysvar.
@@ -546,7 +546,7 @@
 //! implement the `Sysvar` trait. These cases are documented in the modules for
 //! individual sysvars.
 //!
-//! For more details see the Solana [documentation on sysvars][sysvardoc].
+//! For more details see the Domichain [documentation on sysvars][sysvardoc].
 //!
 //! [sysvardoc]: https://docs.solana.com/developing/runtime-facilities/sysvars
 
@@ -636,7 +636,7 @@ pub mod vote {
     }
 }
 
-/// A vector of Solana SDK IDs
+/// A vector of Domichain SDK IDs
 pub mod sdk_ids {
     use {
         crate::{

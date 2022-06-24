@@ -1,8 +1,8 @@
 [package]
 name = "solana-clap-v3-utils"
 version = "1.11.1"
-description = "Solana utilities for the clap v3"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain utilities for the clap v3"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"

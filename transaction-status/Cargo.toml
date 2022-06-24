@@ -1,8 +1,8 @@
 [package]
 name = "solana-transaction-status"
 version = "1.11.1"
-description = "Solana transaction status types"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain transaction status types"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-transaction-status"

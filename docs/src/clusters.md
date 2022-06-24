@@ -1,11 +1,11 @@
 ---
-title: Solana Clusters
+title: Domichain Clusters
 ---
 
-Solana maintains several different clusters with different purposes.
+Domichain maintains several different clusters with different purposes.
 
 Before you begin make sure you have first
-[installed the Solana command line tools](cli/install-solana-cli-tools.md)
+[installed the Domichain command line tools](cli/install-solana-cli-tools.md)
 
 Explorers:
 
@@ -14,7 +14,7 @@ Explorers:
 
 ## Devnet
 
-- Devnet serves as a playground for anyone who wants to take Solana for a
+- Devnet serves as a playground for anyone who wants to take Domichain for a
   test drive, as a user, token holder, app developer, or validator.
 - Application developers should target Devnet.
 - Potential validators should first target Devnet.
@@ -64,11 +64,11 @@ $ solana-validator \
 ```
 
 The [`--known-validator`s](running-validator/validator-start.md#known-validators)
-are operated by Solana Labs
+are operated by Domichain Labs
 
 ## Testnet
 
-- Testnet is where the Solana core contributors stress test recent release features on a live
+- Testnet is where the Domichain core contributors stress test recent release features on a live
   cluster, particularly focused on network performance, stability and validator
   behavior.
 - Testnet tokens are **not real**
@@ -117,7 +117,7 @@ $ solana-validator \
 The identities of the
 [`--known-validator`s](running-validator/validator-start.md#known-validators) are:
 
-- `5D1fNXzvv5NjV1ysLjirC4WY92RNsVH18vjmcszZd8on` - Solana Labs
+- `5D1fNXzvv5NjV1ysLjirC4WY92RNsVH18vjmcszZd8on` - Domichain Labs
 - `dDzy5SR3AXdYWVqbDEkVFdvSPCtS9ihF5kJkHCtXoFs` - MonkeDAO
 - `Ft5fbkqNa76vnsjYNwjDZUXoTWpP7VYm3mtsaQckQADN` - Certus One
 - `eoKpUABi59aT4rR9HGS3LcMecfut9x7zJyodWWP43YQ` - SerGo
@@ -125,7 +125,7 @@ The identities of the
 
 ## Mainnet Beta
 
-A permissionless, persistent cluster for Solana users, builders, validators and token holders.
+A permissionless, persistent cluster for Domichain users, builders, validators and token holders.
 
 - Tokens that are issued on Mainnet Beta are **real** SOL
 - Gossip entrypoint for Mainnet Beta: `entrypoint.mainnet-beta.solana.com:8001`
@@ -169,4 +169,4 @@ $ solana-validator \
 ```
 
 All four [`--known-validator`s](running-validator/validator-start.md#known-validators)
-are operated by Solana Labs
+are operated by Domichain Labs

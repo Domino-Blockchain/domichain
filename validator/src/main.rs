@@ -1511,7 +1511,7 @@ pub fn main() {
         .arg(
             Arg::with_name("snapshot_archive_format")
                 .long("snapshot-archive-format")
-                .alias("snapshot-compression") // Legacy name used by Solana v1.5.x and older
+                .alias("snapshot-compression") // Legacy name used by Domichain v1.5.x and older
                 .possible_values(SUPPORTED_ARCHIVE_COMPRESSION)
                 .default_value(DEFAULT_ARCHIVE_COMPRESSION)
                 .value_name("ARCHIVE_TYPE")

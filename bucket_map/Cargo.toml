@@ -6,7 +6,7 @@ homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-bucket-map"
 readme = "../README.md"
 repository = "https://github.com/solana-labs/solana"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 license = "Apache-2.0"
 edition = "2021"
 

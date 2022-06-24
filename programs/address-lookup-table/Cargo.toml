@@ -1,8 +1,8 @@
 [package]
 name = "solana-address-lookup-table-program"
 version = "1.11.1"
-description = "Solana address lookup table program"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+description = "Domichain address lookup table program"
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solana.com/"

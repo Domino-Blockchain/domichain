@@ -1,4 +1,4 @@
-//! Solana builtin helper macros
+//! Domichain builtin helper macros
 
 #[rustversion::since(1.46.0)]
 #[macro_export]

@@ -1,22 +1,22 @@
 ---
-title: Install the Solana Tool Suite
+title: Install the Domichain Tool Suite
 ---
 
-There are multiple ways to install the Solana tools on your computer
+There are multiple ways to install the Domichain tools on your computer
 depending on your preferred workflow:
 
-- [Use Solana's Install Tool (Simplest option)](#use-solanas-install-tool)
+- [Use Domichain's Install Tool (Simplest option)](#use-solanas-install-tool)
 - [Download Prebuilt Binaries](#download-prebuilt-binaries)
 - [Build from Source](#build-from-source)
 - [Use Homebrew](#use-homebrew)
 
-## Use Solana's Install Tool
+## Use Domichain's Install Tool
 
 ### MacOS & Linux
 
 - Open your favorite Terminal application
 
-- Install the Solana release
+- Install the Domichain release
   [LATEST_SOLANA_RELEASE_VERSION](https://github.com/solana-labs/solana/releases/tag/LATEST_SOLANA_RELEASE_VERSION) on your
   machine by running:
 
@@ -55,7 +55,7 @@ solana --version
 ```
 
 - After a successful install, `solana-install update` may be used to easily
-  update the Solana software to a newer version at any time.
+  update the Domichain software to a newer version at any time.
 
 ---
 
@@ -68,7 +68,7 @@ solana --version
     If you are prompted by a pop-up window asking “Do you want to allow this app to
     make changes to your device?”, click Yes.
 
-- Copy and paste the following command, then press Enter to download the Solana
+- Copy and paste the following command, then press Enter to download the Domichain
   installer into a temporary directory:
 
 ```bash
@@ -76,7 +76,7 @@ curl https://release.solana.com/LATEST_SOLANA_RELEASE_VERSION/solana-install-ini
 ```
 
 - Copy and paste the following command, then press Enter to install the latest
-  version of Solana. If you see a security pop-up by your system, please select
+  version of Domichain. If you see a security pop-up by your system, please select
   to allow the program to run.
 
 ```bash
@@ -96,7 +96,7 @@ solana --version
 ```
 
 - After a successful install, `solana-install update` may be used to easily
-  update the Solana software to a newer version at any time.
+  update the Domichain software to a newer version at any time.
 
 ## Download Prebuilt Binaries
 

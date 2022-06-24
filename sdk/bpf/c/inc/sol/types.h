@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana types for BPF programs
+ * @brief Domichain types for BPF programs
  */
 
 #ifdef __cplusplus

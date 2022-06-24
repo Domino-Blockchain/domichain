@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Basic empirical ABI system test - can validators on all supported versions of
-# Solana talk to each other?
+# Domichain talk to each other?
 #
 
 set -e

@@ -20,7 +20,7 @@ export function TokenRegistryProvider({ children }: ProviderProps) {
 
   React.useEffect(() => {
     new TokenListProvider()
-      .resolve(Strategy.Solana)
+      .resolve(Strategy.Domichain)
       .then((tokens: TokenListContainer) => {
         const tokenList =
           cluster === Cluster.Custom

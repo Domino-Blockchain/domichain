@@ -1,7 +1,7 @@
-//! Logging utilities for Rust-based Solana programs.
+//! Logging utilities for Rust-based Domichain programs.
 //!
 //! Logging is the main mechanism for getting debugging information out of
-//! running Solana programs, and there are several functions available for doing
+//! running Domichain programs, and there are several functions available for doing
 //! so efficiently, depending on the type of data being logged.
 //!
 //! The most common way to emit logs is through the [`msg!`] macro, which logs
@@ -66,7 +66,7 @@ macro_rules! info {
 /// [`format!`]: https://doc.rust-lang.org/std/fmt/fn.format.html
 ///
 /// Note that Rust's formatting machinery is relatively CPU-intensive
-/// for constrained environments like the Solana VM.
+/// for constrained environments like the Domichain VM.
 ///
 /// # Examples
 ///

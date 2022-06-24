@@ -2,12 +2,12 @@
 title: Connecting to a Cluster
 ---
 
-See [Solana Clusters](../clusters.md) for general information about the
+See [Domichain Clusters](../clusters.md) for general information about the
 available clusters.
 
 ## Configure the command-line tool
 
-You can check what cluster the Solana command-line tool (CLI) is currently targeting by
+You can check what cluster the Domichain command-line tool (CLI) is currently targeting by
 running the following command:
 
 ```bash

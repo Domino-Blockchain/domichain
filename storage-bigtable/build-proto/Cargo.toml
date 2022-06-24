@@ -1,5 +1,5 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.com>"]
+authors = ["Domichain Maintainers <maintainers@solana.com>"]
 description = "Blockchain, Rebuilt for Scale"
 edition = "2021"
 homepage = "https://solana.com/"

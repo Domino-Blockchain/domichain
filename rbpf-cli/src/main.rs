@@ -53,9 +53,9 @@ fn load_accounts(path: &Path) -> Result<Input> {
 
 fn main() {
     solana_logger::setup();
-    let matches = Command::new("Solana BPF CLI")
+    let matches = Command::new("Domichain BPF CLI")
         .version(crate_version!())
-        .author("Solana Maintainers <maintainers@solana.foundation>")
+        .author("Domichain Maintainers <maintainers@solana.foundation>")
         .about(
             r##"CLI to test and analyze eBPF programs.
 

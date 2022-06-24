@@ -2,7 +2,7 @@
 name = "rbpf-cli"
 version = "1.11.1"
 description = "CLI to test and analyze eBPF programs"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/rbpf"
 homepage = "https://solana.com/"
 keywords = ["BPF", "eBPF", "interpreter", "JIT"]

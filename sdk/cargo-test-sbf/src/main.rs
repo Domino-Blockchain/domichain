@@ -232,7 +232,7 @@ fn main() {
                 .long("sbf-sdk")
                 .value_name("PATH")
                 .takes_value(true)
-                .help("Path to the Solana SBF SDK"),
+                .help("Path to the Domichain SBF SDK"),
         )
         .arg(
             Arg::new("features")
