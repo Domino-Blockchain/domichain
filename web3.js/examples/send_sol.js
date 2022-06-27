@@ -1,4 +1,4 @@
-import * as web3 from '@solana/web3.js';
+import * as web3 from '@domichain/web3.js';
 
 (async () => {
   // Connect to cluster

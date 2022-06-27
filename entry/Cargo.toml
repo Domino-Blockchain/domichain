@@ -1,12 +1,12 @@
 [package]
-name = "solana-entry"
+name = "domichain-entry"
 version = "1.11.1"
-description = "Solana Entry"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain Entry"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-poh"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-poh"
 edition = "2021"
 
 [dependencies]
@@ -19,20 +19,20 @@ log = "0.4.17"
 rand = "0.7.0"
 rayon = "1.5.3"
 serde = "1.0.137"
-solana-measure = { path = "../measure", version = "=1.11.1" }
-solana-merkle-tree = { path = "../merkle-tree", version = "=1.11.1" }
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
-solana-perf = { path = "../perf", version = "=1.11.1" }
-solana-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-measure = { path = "../measure", version = "=1.11.1" }
+domichain-merkle-tree = { path = "../merkle-tree", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-perf = { path = "../perf", version = "=1.11.1" }
+domichain-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [dev-dependencies]
 matches = "0.1.9"
-solana-logger = { path = "../logger", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "solana_entry"
+name = "domichain_entry"
 
 [[bench]]
 name = "entry_sigverify"

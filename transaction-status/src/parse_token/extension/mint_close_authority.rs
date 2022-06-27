@@ -24,8 +24,8 @@ mod test {
         super::*,
         crate::parse_token::test::*,
         serde_json::Value,
-        solana_sdk::pubkey::Pubkey,
-        spl_token_2022::{instruction::*, solana_program::message::Message},
+        domichain_sdk::pubkey::Pubkey,
+        spl_token_2022::{instruction::*, domichain_program::message::Message},
     };
 
     #[test]

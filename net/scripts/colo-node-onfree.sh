@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 # These variable must be set before the main body is called
-SOLANA_LOCK_FILE="${SOLANA_LOCK_FILE:?}"
+DOMICHAIN_LOCK_FILE="${DOMICHAIN_LOCK_FILE:?}"
 SECONDARY_DISK_MOUNT_POINT="${SECONDARY_DISK_MOUNT_POINT:?}"
 SSH_AUTHORIZED_KEYS="${SSH_AUTHORIZED_KEYS:?}"
 FORCE_DELETE="${FORCE_DELETE}"
 
 RC=false
-if [[ -f "${SOLANA_LOCK_FILE}" ]]; then
-  exec 9<>"${SOLANA_LOCK_FILE}"
+if [[ -f "${DOMICHAIN_LOCK_FILE}" ]]; then
+  exec 9<>"${DOMICHAIN_LOCK_FILE}"
   flock -x -n 9 || ( echo "Failed to acquire lock!" 1>&2 && exit 1 )
   # shellcheck disable=SC1090
-  . "${SOLANA_LOCK_FILE}"
-  if [[ "${SOLANA_LOCK_USER}" = "${SOLANA_USER}"  || -n "${FORCE_DELETE}" ]]; then
+  . "${DOMICHAIN_LOCK_FILE}"
+  if [[ "${DOMICHAIN_LOCK_USER}" = "${DOMICHAIN_USER}"  || -n "${FORCE_DELETE}" ]]; then
     # Begin running process cleanup
     CLEANUP_PID=$$
     CLEANUP_PIDS=()
@@ -94,7 +94,7 @@ if [[ -f "${SOLANA_LOCK_FILE}" ]]; then
 
     # Begin filesystem cleanup
     git clean -qxdff
-    rm -f /solana-scratch/* /solana-scratch/.[^.]*
+    rm -f /domichain-scratch/* /domichain-scratch/.[^.]*
     cat > "${HOME}/.ssh/authorized_keys" <<EOAK
 ${SSH_AUTHORIZED_KEYS}
 EOAK
@@ -105,7 +105,7 @@ EOAK
     # End filesystem cleanup
     RC=true
   else
-    echo "Invalid user: expected \"${SOLANA_LOCK_USER}\" got \"${SOLANA_USER}\"" 1>&2
+    echo "Invalid user: expected \"${DOMICHAIN_LOCK_USER}\" got \"${DOMICHAIN_USER}\"" 1>&2
   fi
   exec 9>&-
 fi

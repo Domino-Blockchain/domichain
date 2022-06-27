@@ -1,7 +1,7 @@
 use {
     super::Bank,
-    solana_address_lookup_table_program::error::AddressLookupError,
-    solana_sdk::{
+    domichain_address_lookup_table_program::error::AddressLookupError,
+    domichain_sdk::{
         message::v0::{LoadedAddresses, MessageAddressTableLookup},
         transaction::{AddressLoader, Result as TransactionResult, TransactionError},
     },

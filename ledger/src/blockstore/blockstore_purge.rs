@@ -1,4 +1,4 @@
-use {super::*, solana_sdk::message::AccountKeys, std::time::Instant};
+use {super::*, domichain_sdk::message::AccountKeys, std::time::Instant};
 
 #[derive(Default)]
 pub struct PurgeStats {
@@ -440,8 +440,8 @@ pub mod tests {
             blockstore::tests::make_slot_entries_with_transactions, get_tmp_ledger_path_auto_delete,
         },
         bincode::serialize,
-        solana_entry::entry::next_entry_mut,
-        solana_sdk::{
+        domichain_entry::entry::next_entry_mut,
+        domichain_sdk::{
             hash::{hash, Hash},
             message::Message,
             transaction::Transaction,

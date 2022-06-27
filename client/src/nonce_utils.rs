@@ -2,7 +2,7 @@
 
 use {
     crate::rpc_client::RpcClient,
-    solana_sdk::{
+    domichain_sdk::{
         account::{Account, ReadableAccount},
         account_utils::StateMut,
         commitment_config::CommitmentConfig,
@@ -96,11 +96,11 @@ pub fn account_identity_ok<T: ReadableAccount>(account: &T) -> Result<(), Error>
 /// Determine if a nonce account is initialized:
 ///
 /// ```no_run
-/// use solana_client::{
+/// use domichain_client::{
 ///     rpc_client::RpcClient,
 ///     nonce_utils,
 /// };
-/// use solana_sdk::{
+/// use domichain_sdk::{
 ///     nonce::State,
 ///     pubkey::Pubkey,
 /// };
@@ -146,11 +146,11 @@ pub fn state_from_account<T: ReadableAccount + StateMut<Versions>>(
 /// Create and sign a transaction with a durable nonce:
 ///
 /// ```no_run
-/// use solana_client::{
+/// use domichain_client::{
 ///     rpc_client::RpcClient,
 ///     nonce_utils,
 /// };
-/// use solana_sdk::{
+/// use domichain_sdk::{
 ///     message::Message,
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},

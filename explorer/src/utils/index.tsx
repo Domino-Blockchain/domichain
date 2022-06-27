@@ -3,7 +3,7 @@ import {
   HumanizeDuration,
   HumanizeDurationLanguage,
 } from "humanize-duration-ts";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@domichain/web3.js";
 
 // Switch to web3 constant when web3 updates superstruct
 export const LAMPORTS_PER_SOL = 1_000_000_000;

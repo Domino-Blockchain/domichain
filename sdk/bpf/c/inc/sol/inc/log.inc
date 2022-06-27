@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana logging utilities
+ * @brief Domichain logging utilities
  */
 
 #include <sol/types.h>

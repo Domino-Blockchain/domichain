@@ -1,12 +1,12 @@
 [package]
-name = "solana-perf"
+name = "domichain-perf"
 version = "1.11.1"
-description = "Solana Performance APIs"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain Performance APIs"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-perf"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-perf"
 edition = "2021"
 
 [dependencies]
@@ -22,10 +22,10 @@ log = "0.4.17"
 rand = "0.7.0"
 rayon = "1.5.3"
 serde = "1.0.137"
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
-solana-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-vote-program = { path = "../programs/vote", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-vote-program = { path = "../programs/vote", version = "=1.11.1" }
 
 [target."cfg(target_os = \"linux\")".dependencies]
 caps = "0.5.3"
@@ -33,11 +33,11 @@ libc = "0.2.126"
 nix = "0.24.0"
 
 [lib]
-name = "solana_perf"
+name = "domichain_perf"
 
 [dev-dependencies]
 matches = "0.1.9"
-solana-logger = { path = "../logger", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
 
 [[bench]]
 name = "sigverify"

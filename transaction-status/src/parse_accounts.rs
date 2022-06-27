@@ -1,4 +1,4 @@
-use solana_sdk::message::{v0::LoadedMessage, Message};
+use domichain_sdk::message::{v0::LoadedMessage, Message};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -36,7 +36,7 @@ pub fn parse_static_accounts(message: &LoadedMessage) -> Vec<ParsedAccount> {
 mod test {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             message::{v0, v0::LoadedAddresses, MessageHeader},
             pubkey::Pubkey,
         },

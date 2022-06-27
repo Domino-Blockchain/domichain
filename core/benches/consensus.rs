@@ -1,14 +1,14 @@
 #![feature(test)]
 
-extern crate solana_core;
+extern crate domichain_core;
 extern crate test;
 
 use {
-    solana_core::{
+    domichain_core::{
         consensus::Tower, tower_storage::FileTowerStorage, vote_simulator::VoteSimulator,
     },
-    solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },

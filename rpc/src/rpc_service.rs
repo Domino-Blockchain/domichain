@@ -1,4 +1,4 @@
-//! The `rpc_service` module implements the Solana JSON RPC service.
+//! The `rpc_service` module implements the Domichain JSON RPC service.
 
 use {
     crate::{
@@ -18,27 +18,27 @@ use {
         RequestMiddlewareAction, ServerBuilder,
     },
     regex::Regex,
-    solana_client::{connection_cache::ConnectionCache, rpc_cache::LargestAccountsCache},
-    solana_gossip::cluster_info::ClusterInfo,
-    solana_ledger::{
+    domichain_client::{connection_cache::ConnectionCache, rpc_cache::LargestAccountsCache},
+    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_ledger::{
         bigtable_upload::ConfirmedBlockUploadConfig,
         bigtable_upload_service::BigTableUploadService, blockstore::Blockstore,
         leader_schedule_cache::LeaderScheduleCache,
     },
-    solana_metrics::inc_new_counter_info,
-    solana_perf::thread::renice_this_thread,
-    solana_poh::poh_recorder::PohRecorder,
-    solana_runtime::{
+    domichain_metrics::inc_new_counter_info,
+    domichain_perf::thread::renice_this_thread,
+    domichain_poh::poh_recorder::PohRecorder,
+    domichain_runtime::{
         bank_forks::BankForks, commitment::BlockCommitmentCache,
         snapshot_archive_info::SnapshotArchiveInfoGetter, snapshot_config::SnapshotConfig,
         snapshot_utils,
     },
-    solana_sdk::{
+    domichain_sdk::{
         exit::Exit, genesis_config::DEFAULT_GENESIS_DOWNLOAD_PATH, hash::Hash,
         native_token::lamports_to_sol, pubkey::Pubkey,
     },
-    solana_send_transaction_service::send_transaction_service::{self, SendTransactionService},
-    solana_storage_bigtable::CredentialType,
+    domichain_send_transaction_service::send_transaction_service::{self, SendTransactionService},
+    domichain_storage_bigtable::CredentialType,
     std::{
         collections::HashSet,
         net::SocketAddr,
@@ -315,7 +315,7 @@ fn process_rest(bank_forks: &Arc<RwLock<BankForks>>, path: &str) -> Option<Strin
             let bank = bank_forks.read().unwrap().root_bank();
             let total_supply = bank.capitalization();
             let non_circulating_supply =
-                solana_runtime::non_circulating_supply::calculate_non_circulating_supply(&bank)
+                domichain_runtime::non_circulating_supply::calculate_non_circulating_supply(&bank)
                     .expect("Scan should not error on root banks")
                     .lamports;
             Some(format!(
@@ -399,7 +399,7 @@ impl JsonRpcService {
                 timeout,
             }) = config.rpc_bigtable_config
             {
-                let bigtable_config = solana_storage_bigtable::LedgerStorageConfig {
+                let bigtable_config = domichain_storage_bigtable::LedgerStorageConfig {
                     read_only: !enable_bigtable_ledger_upload,
                     timeout,
                     credential_type: CredentialType::Filepath(None),
@@ -407,7 +407,7 @@ impl JsonRpcService {
                     app_profile_id: bigtable_app_profile_id.clone(),
                 };
                 runtime
-                    .block_on(solana_storage_bigtable::LedgerStorage::new_with_config(
+                    .block_on(domichain_storage_bigtable::LedgerStorage::new_with_config(
                         bigtable_config,
                     ))
                     .map(|bigtable_ledger_storage| {
@@ -478,7 +478,7 @@ impl JsonRpcService {
 
         let (close_handle_sender, close_handle_receiver) = unbounded();
         let thread_hdl = Builder::new()
-            .name("solana-jsonrpc".to_string())
+            .name("domichain-jsonrpc".to_string())
             .spawn(move || {
                 renice_this_thread(rpc_niceness_adj).unwrap();
 
@@ -563,23 +563,23 @@ mod tests {
     use {
         super::*,
         crate::rpc::create_validator_exit,
-        solana_client::rpc_config::RpcContextConfig,
-        solana_gossip::{
+        domichain_client::rpc_config::RpcContextConfig,
+        domichain_gossip::{
             contact_info::ContactInfo,
             crds::GossipRoute,
             crds_value::{CrdsData, CrdsValue, SnapshotHashes},
         },
-        solana_ledger::{
+        domichain_ledger::{
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
             get_tmp_ledger_path,
         },
-        solana_runtime::bank::Bank,
-        solana_sdk::{
+        domichain_runtime::bank::Bank,
+        domichain_sdk::{
             genesis_config::{ClusterType, DEFAULT_GENESIS_ARCHIVE},
             signature::Signer,
             signer::keypair::Keypair,
         },
-        solana_streamer::socket::SocketAddrSpace,
+        domichain_streamer::socket::SocketAddrSpace,
         std::{
             io::Write,
             net::{IpAddr, Ipv4Addr},
@@ -605,7 +605,7 @@ mod tests {
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let rpc_addr = SocketAddr::new(
             ip_addr,
-            solana_net_utils::find_available_port_in_range(ip_addr, (10000, 65535)).unwrap(),
+            domichain_net_utils::find_available_port_in_range(ip_addr, (10000, 65535)).unwrap(),
         );
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
         let ledger_path = get_tmp_ledger_path!();
@@ -640,7 +640,7 @@ mod tests {
             Arc::new(AtomicU64::default()),
         );
         let thread = rpc_service.thread_hdl.thread();
-        assert_eq!(thread.name().unwrap(), "solana-jsonrpc");
+        assert_eq!(thread.name().unwrap(), "domichain-jsonrpc");
 
         assert_eq!(
             10_000,
@@ -827,9 +827,9 @@ mod tests {
         let health_check_slot_distance = 123;
         let override_health_check = Arc::new(AtomicBool::new(false));
         let known_validators = vec![
-            solana_sdk::pubkey::new_rand(),
-            solana_sdk::pubkey::new_rand(),
-            solana_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
         ];
 
         let health = Arc::new(RpcHealth::new(

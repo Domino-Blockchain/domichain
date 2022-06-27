@@ -5,8 +5,8 @@
 
 use {
     crate::instructions::*,
-    solana_bpf_rust_invoked::instructions::*,
-    solana_program::{
+    domichain_bpf_rust_invoked::instructions::*,
+    domichain_program::{
         account_info::AccountInfo,
         entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},
         instruction::Instruction,
@@ -59,7 +59,7 @@ fn do_nested_invokes(num_nested_invokes: u64, accounts: &[AccountInfo]) -> Progr
     Ok(())
 }
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -78,7 +78,7 @@ fn process_instruction(
                 let from_lamports = accounts[FROM_INDEX].lamports();
                 let to_lamports = accounts[DERIVED_KEY1_INDEX].lamports();
                 assert_eq!(accounts[DERIVED_KEY1_INDEX].data_len(), 0);
-                assert!(solana_program::system_program::check_id(
+                assert!(domichain_program::system_program::check_id(
                     accounts[DERIVED_KEY1_INDEX].owner
                 ));
 

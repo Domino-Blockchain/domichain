@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana return data system calls
+ * @brief Domichain return data system calls
 **/
 
 #include <sol/types.h>

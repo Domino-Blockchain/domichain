@@ -1,4 +1,4 @@
-//! Solana precompiled programs
+//! Domichain precompiled programs
 
 #![cfg(feature = "full")]
 

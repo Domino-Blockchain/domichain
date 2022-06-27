@@ -1,8 +1,8 @@
 //! Example Rust-based SBF noop program
 
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use domichain_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 fn process_instruction(
     _program_id: &Pubkey,
     _accounts: &[AccountInfo],

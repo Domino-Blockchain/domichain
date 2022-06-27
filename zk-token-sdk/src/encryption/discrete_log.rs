@@ -1,4 +1,4 @@
-#![cfg(not(target_os = "solana"))]
+#![cfg(not(target_os = "domichain"))]
 
 use {
     crate::errors::ProofError,

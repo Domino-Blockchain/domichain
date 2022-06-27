@@ -15,10 +15,10 @@ $path-to-fonts: "/fonts" !default;
 @import '~bootstrap/scss/functions';
 
 // Custom variables
-@import 'solana-variables-dark';
+@import 'domichain-variables-dark';
 
 // Custom variables
-@import 'solana-variables';
+@import 'domichain-variables';
 
 // Dark mode variables
 @import 'dashkit/dark/variables-dark';
@@ -36,7 +36,7 @@ $path-to-fonts: "/fonts" !default;
 @import 'dashkit/dark/overrides-dark';
 
 // Custom core
-@import 'solana';
+@import 'domichain';
 
 // Dark mode overrides
-@import 'solana-dark-overrides';
+@import 'domichain-dark-overrides';

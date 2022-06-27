@@ -1,5 +1,5 @@
 import React from "react";
-import { BlockResponse, PublicKey } from "@solana/web3.js";
+import { BlockResponse, PublicKey } from "@domichain/web3.js";
 import { Address } from "components/common/Address";
 import { Link } from "react-router-dom";
 import { clusterPath } from "utils/url";

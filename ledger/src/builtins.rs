@@ -1,4 +1,4 @@
-use solana_runtime::builtins::{Builtin, BuiltinFeatureTransition, Builtins};
+use domichain_runtime::builtins::{Builtin, BuiltinFeatureTransition, Builtins};
 
 macro_rules! to_builtin {
     ($b:expr) => {
@@ -20,16 +20,16 @@ fn genesis_builtins(bpf_jit: bool) -> Vec<Builtin> {
     };
 
     vec![
-        to_builtin!(solana_bpf_loader_deprecated_program!()),
+        to_builtin!(domichain_bpf_loader_deprecated_program!()),
         if bpf_jit {
-            to_builtin!(solana_bpf_loader_program_with_jit!())
+            to_builtin!(domichain_bpf_loader_program_with_jit!())
         } else {
-            to_builtin!(solana_bpf_loader_program!())
+            to_builtin!(domichain_bpf_loader_program!())
         },
         if bpf_jit {
-            to_builtin!(solana_bpf_loader_upgradeable_program_with_jit!())
+            to_builtin!(domichain_bpf_loader_upgradeable_program_with_jit!())
         } else {
-            to_builtin!(solana_bpf_loader_upgradeable_program!())
+            to_builtin!(domichain_bpf_loader_upgradeable_program!())
         },
     ]
 }

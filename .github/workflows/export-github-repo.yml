@@ -23,5 +23,5 @@ jobs:
       - name: cmd
         run: |
           chmod +x ./ci/export-github-repo.sh
-          ./ci/export-github-repo.sh web3.js/ solana-web3.js
+          ./ci/export-github-repo.sh web3.js/ domichain-web3.js
         shell: bash

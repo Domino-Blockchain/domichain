@@ -13,9 +13,9 @@ use {
     quinn::{
         ClientConfig, Endpoint, EndpointConfig, IdleTimeout, NewConnection, VarInt, WriteError,
     },
-    solana_measure::measure::Measure,
-    solana_net_utils::VALIDATOR_PORT_RANGE,
-    solana_sdk::quic::{
+    domichain_measure::measure::Measure,
+    domichain_net_utils::VALIDATOR_PORT_RANGE,
+    domichain_sdk::quic::{
         QUIC_KEEP_ALIVE_MS, QUIC_MAX_TIMEOUT_MS, QUIC_MAX_UNSTAKED_CONCURRENT_STREAMS,
     },
     std::{
@@ -62,7 +62,7 @@ impl QuicLazyInitializedEndpoint {
     }
 
     fn create_endpoint() -> Endpoint {
-        let (_, client_socket) = solana_net_utils::bind_in_range(
+        let (_, client_socket) = domichain_net_utils::bind_in_range(
             IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
             VALIDATOR_PORT_RANGE,
         )

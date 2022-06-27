@@ -1,10 +1,10 @@
 //! Secp256k1Recover Syscall test
 
-extern crate solana_program;
-use solana_program::{custom_heap_default, custom_panic_default, msg};
+extern crate domichain_program;
+use domichain_program::{custom_heap_default, custom_panic_default, msg};
 
 fn test_secp256k1_recover() {
-    use solana_program::secp256k1_recover::secp256k1_recover;
+    use domichain_program::secp256k1_recover::secp256k1_recover;
 
     let expected: [u8; 64] = [
         0x42, 0xcd, 0x27, 0xe4, 0x0f, 0xdf, 0x7c, 0x97, 0x0a, 0xa2, 0xca, 0x0b, 0x88, 0x5b, 0x96,

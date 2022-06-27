@@ -1,8 +1,8 @@
 use {
     assert_matches::assert_matches,
     rand::thread_rng,
-    solana_program_test::*,
-    solana_sdk::{
+    domichain_program_test::*,
+    domichain_sdk::{
         ed25519_instruction::new_ed25519_instruction,
         feature_set,
         signature::Signer,

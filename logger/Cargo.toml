@@ -1,12 +1,12 @@
 [package]
-name = "solana-logger"
+name = "domichain-logger"
 version = "1.11.1"
-description = "Solana Logger"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain Logger"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-logger"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-logger"
 edition = "2021"
 
 [dependencies]
@@ -15,7 +15,7 @@ lazy_static = "1.4.0"
 log = "0.4.17"
 
 [lib]
-name = "solana_logger"
+name = "domichain_logger"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

@@ -18,7 +18,7 @@ usage: $0 [cluster_rpc_url] [identity_pubkey]
  Also report the system account balance for that same key.
 
  Required arguments:
-   cluster_rpc_url  - RPC URL and port for a running Solana cluster (ex: http://34.83.146.144:8899)
+   cluster_rpc_url  - RPC URL and port for a running Domichain cluster (ex: http://34.83.146.144:8899)
    identity_pubkey  - Base58 pubkey that is an authorized staker for at least one stake account on the cluster.
 EOF
   exit $exitcode
@@ -29,7 +29,7 @@ function parse_stake_account_data_to_file {
   filter_key="$2"
   csvfile="$3"
 
-  account_data="$(solana --url "$url" show-stake-account "$account_key")"
+  account_data="$(domichain --url "$url" show-stake-account "$account_key")"
   staker="$(echo "$account_data" | grep -i 'authorized staker' | cut -f3 -d " ")"
   lockup_epoch="$(echo "$account_data" | grep -i 'lockup epoch' | cut -f3 -d " ")"
   if [[ "$staker" == "$filter_key" ]] ; then

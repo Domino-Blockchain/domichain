@@ -4,17 +4,17 @@ extern crate test;
 
 use {
     rand::{seq::SliceRandom, Rng},
-    solana_core::{
+    domichain_core::{
         cluster_nodes::{make_test_cluster, new_cluster_nodes, ClusterNodes},
         retransmit_stage::RetransmitStage,
     },
-    solana_gossip::contact_info::ContactInfo,
-    solana_ledger::{
+    domichain_gossip::contact_info::ContactInfo,
+    domichain_ledger::{
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         shred::{Shred, ShredFlags},
     },
-    solana_runtime::bank::Bank,
-    solana_sdk::{clock::Slot, pubkey::Pubkey},
+    domichain_runtime::bank::Bank,
+    domichain_sdk::{clock::Slot, pubkey::Pubkey},
     test::Bencher,
 };
 
@@ -53,7 +53,7 @@ fn get_retransmit_peers_deterministic(
             *slot_leader,
             &shred,
             root_bank,
-            solana_gossip::cluster_info::DATA_PLANE_FANOUT,
+            domichain_gossip::cluster_info::DATA_PLANE_FANOUT,
         );
     }
 }

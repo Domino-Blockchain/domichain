@@ -15,8 +15,8 @@ use {
     jsonrpc_core::{Error, ErrorCode, Result},
     jsonrpc_derive::rpc,
     jsonrpc_pubsub::{typed::Subscriber, SubscriptionId as PubSubSubscriptionId},
-    solana_account_decoder::{UiAccount, UiAccountEncoding},
-    solana_client::{
+    domichain_account_decoder::{UiAccount, UiAccountEncoding},
+    domichain_client::{
         rpc_config::{
             RpcAccountInfoConfig, RpcBlockSubscribeConfig, RpcBlockSubscribeFilter,
             RpcProgramAccountsConfig, RpcSignatureSubscribeConfig, RpcTransactionLogsConfig,
@@ -27,8 +27,8 @@ use {
             RpcSignatureResult, RpcVote, SlotInfo, SlotUpdate,
         },
     },
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
-    solana_transaction_status::UiTransactionEncoding,
+    domichain_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
+    domichain_transaction_status::UiTransactionEncoding,
     std::{str::FromStr, sync::Arc},
 };
 
@@ -588,11 +588,11 @@ mod tests {
         },
         jsonrpc_core::{IoHandler, Response},
         serial_test::serial,
-        solana_account_decoder::{parse_account_data::parse_account_data, UiAccountEncoding},
-        solana_client::rpc_response::{
+        domichain_account_decoder::{parse_account_data::parse_account_data, UiAccountEncoding},
+        domichain_client::rpc_response::{
             ProcessedSignatureResult, ReceivedSignatureResult, RpcSignatureResult, SlotInfo,
         },
-        solana_runtime::{
+        domichain_runtime::{
             bank::Bank,
             bank_forks::BankForks,
             commitment::{BlockCommitmentCache, CommitmentSlots},
@@ -602,7 +602,7 @@ mod tests {
             },
             vote_transaction::VoteTransaction,
         },
-        solana_sdk::{
+        domichain_sdk::{
             account::ReadableAccount,
             clock::Slot,
             commitment_config::CommitmentConfig,
@@ -618,8 +618,8 @@ mod tests {
             system_instruction, system_program, system_transaction,
             transaction::{self, Transaction},
         },
-        solana_stake_program::stake_state,
-        solana_vote_program::vote_state::Vote,
+        domichain_stake_program::stake_state,
+        domichain_vote_program::vote_state::Vote,
         std::{
             sync::{
                 atomic::{AtomicBool, AtomicU64},
@@ -786,7 +786,7 @@ mod tests {
             mint_keypair: alice,
             ..
         } = create_genesis_config(10_000);
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let bank = Bank::new_for_tests(&genesis_config);
         let blockhash = bank.last_blockhash();
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
@@ -838,7 +838,7 @@ mod tests {
         genesis_config.rent = Rent::default();
         activate_all_features(&mut genesis_config);
 
-        let new_stake_authority = solana_sdk::pubkey::new_rand();
+        let new_stake_authority = domichain_sdk::pubkey::new_rand();
         let stake_authority = Keypair::new();
         let from = Keypair::new();
         let stake_account = Keypair::new();
@@ -1063,7 +1063,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_account_unsubscribe() {
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
 
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10_000);
         let bank_forks = Arc::new(RwLock::new(BankForks::new(Bank::new_for_tests(

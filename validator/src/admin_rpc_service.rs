@@ -6,12 +6,12 @@ use {
     jsonrpc_server_utils::tokio,
     log::*,
     serde::{Deserialize, Serialize},
-    solana_core::{
+    domichain_core::{
         consensus::Tower, tower_storage::TowerStorage, validator::ValidatorStartProgress,
     },
-    solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
-    solana_runtime::bank_forks::BankForks,
-    solana_sdk::{
+    domichain_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
+    domichain_runtime::bank_forks::BankForks,
+    domichain_sdk::{
         exit::Exit,
         pubkey::Pubkey,
         signature::{read_keypair_file, Keypair, Signer},
@@ -200,7 +200,7 @@ impl AdminRpc for AdminRpcImpl {
 
     fn set_log_filter(&self, filter: String) -> Result<()> {
         debug!("set_log_filter admin rpc request received");
-        solana_logger::setup_with(&filter);
+        domichain_logger::setup_with(&filter);
         Ok(())
     }
 
@@ -268,7 +268,7 @@ impl AdminRpc for AdminRpcImpl {
                     })?;
             }
 
-            solana_metrics::set_host_id(identity_keypair.pubkey().to_string());
+            domichain_metrics::set_host_id(identity_keypair.pubkey().to_string());
             post_init
                 .cluster_info
                 .set_keypair(Arc::new(identity_keypair));
@@ -294,7 +294,7 @@ pub fn run(ledger_path: &Path, metadata: AdminRpcRequestMetadata) {
         .unwrap();
 
     Builder::new()
-        .name("solana-adminrpc".to_string())
+        .name("domichain-adminrpc".to_string())
         .spawn(move || {
             let mut io = MetaIoHandler::default();
             io.extend_with(AdminRpcImpl.to_delegate());

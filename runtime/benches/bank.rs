@@ -5,13 +5,13 @@ extern crate test;
 
 use {
     log::*,
-    solana_program_runtime::invoke_context::InvokeContext,
-    solana_runtime::{
+    domichain_program_runtime::invoke_context::InvokeContext,
+    domichain_runtime::{
         bank::{test_utils::goto_end_of_slot, *},
         bank_client::BankClient,
         loader_utils::create_invoke_instruction,
     },
-    solana_sdk::{
+    domichain_sdk::{
         client::{AsyncClient, SyncClient},
         clock::MAX_RECENT_BLOCKHASHES,
         genesis_config::create_genesis_config,
@@ -124,7 +124,7 @@ fn do_bench_transactions(
     bench_work: &dyn Fn(&Arc<Bank>, &BankClient, &[Transaction]),
     create_transactions: &dyn Fn(&BankClient, &Keypair) -> Vec<Transaction>,
 ) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let ns_per_s = 1_000_000_000;
     let (mut genesis_config, mint_keypair) = create_genesis_config(100_000_000_000_000);
     genesis_config.ticks_per_slot = 100;
@@ -139,7 +139,7 @@ fn do_bench_transactions(
         &Pubkey::new(&BUILTIN_PROGRAM_ID),
         process_instruction,
     );
-    bank.add_builtin_account("solana_noop_program", &Pubkey::new(&NOOP_PROGRAM_ID), false);
+    bank.add_builtin_account("domichain_noop_program", &Pubkey::new(&NOOP_PROGRAM_ID), false);
     let bank = Arc::new(bank);
     let bank_client = BankClient::new_shared(&bank);
     let transactions = create_transactions(&bank_client, &mint_keypair);

@@ -4,7 +4,7 @@ use {
     },
     bincode::deserialize,
     serde_json::json,
-    solana_sdk::{
+    domichain_sdk::{
         instruction::CompiledInstruction, loader_instruction::LoaderInstruction,
         loader_upgradeable_instruction::UpgradeableLoaderInstruction, message::AccountKeys,
     },
@@ -169,7 +169,7 @@ mod test {
     use {
         super::*,
         serde_json::Value,
-        solana_sdk::{
+        domichain_sdk::{
             bpf_loader_upgradeable,
             message::Message,
             pubkey::{self, Pubkey},
@@ -187,7 +187,7 @@ mod test {
         let account_keys = vec![fee_payer, account_pubkey];
         let missing_account_keys = vec![account_pubkey];
 
-        let instruction = solana_sdk::loader_instruction::write(
+        let instruction = domichain_sdk::loader_instruction::write(
             &account_pubkey,
             &program_id,
             offset,
@@ -221,7 +221,7 @@ mod test {
         )
         .is_err());
 
-        let instruction = solana_sdk::loader_instruction::finalize(&account_pubkey, &program_id);
+        let instruction = domichain_sdk::loader_instruction::finalize(&account_pubkey, &program_id);
         let mut message = Message::new(&[instruction], Some(&fee_payer));
         assert_eq!(
             parse_bpf_loader(

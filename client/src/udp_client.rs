@@ -4,8 +4,8 @@
 use {
     crate::{connection_cache::ConnectionCacheStats, tpu_connection::TpuConnection},
     core::iter::repeat,
-    solana_sdk::transport::Result as TransportResult,
-    solana_streamer::sendmmsg::batch_send,
+    domichain_sdk::transport::Result as TransportResult,
+    domichain_streamer::sendmmsg::batch_send,
     std::{
         net::{SocketAddr, UdpSocket},
         sync::Arc,

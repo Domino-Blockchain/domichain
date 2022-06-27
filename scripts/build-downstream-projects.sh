@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Builds known downstream projects against local solana source
+# Builds known downstream projects against local domichain source
 #
 
 set -e
@@ -9,11 +9,11 @@ source ci/_
 source scripts/patch-crates.sh
 source scripts/read-cargo-variable.sh
 
-solana_ver=$(readCargoVariable version sdk/Cargo.toml)
-solana_dir=$PWD
-cargo="$solana_dir"/cargo
-cargo_build_bpf="$solana_dir"/cargo-build-bpf
-cargo_test_bpf="$solana_dir"/cargo-test-bpf
+domichain_ver=$(readCargoVariable version sdk/Cargo.toml)
+domichain_dir=$PWD
+cargo="$domichain_dir"/cargo
+cargo_build_bpf="$domichain_dir"/cargo-build-bpf
+cargo_test_bpf="$domichain_dir"/cargo-test-bpf
 
 mkdir -p target/downstream-projects
 cd target/downstream-projects
@@ -22,11 +22,11 @@ example_helloworld() {
   (
     set -x
     rm -rf example-helloworld
-    git clone https://github.com/solana-labs/example-helloworld.git
+    git clone https://Domino-Blockchain/example-helloworld.git
     cd example-helloworld
 
-    update_solana_dependencies src/program-rust "$solana_ver"
-    patch_crates_io_solana src/program-rust/Cargo.toml "$solana_dir"
+    update_domichain_dependencies src/program-rust "$domichain_ver"
+    patch_crates_io_domichain src/program-rust/Cargo.toml "$domichain_dir"
     echo "[workspace]" >> src/program-rust/Cargo.toml
 
     $cargo_build_bpf \
@@ -53,10 +53,10 @@ spl() {
       )
     set -x
     rm -rf spl
-    git clone https://github.com/solana-labs/solana-program-library.git spl
+    git clone https://Domino-Blockchain/domichain-program-library.git spl
     cd spl
 
-    ./patch.crates-io.sh "$solana_dir"
+    ./patch.crates-io.sh "$domichain_dir"
 
     for program in "${PROGRAMS[@]}"; do
       $cargo_test_bpf --manifest-path "$program"/Cargo.toml
@@ -77,9 +77,9 @@ serum_dex() {
     git clone https://github.com/project-serum/serum-dex.git
     cd serum-dex
 
-    update_solana_dependencies . "$solana_ver"
-    patch_crates_io_solana Cargo.toml "$solana_dir"
-    patch_crates_io_solana dex/Cargo.toml "$solana_dir"
+    update_domichain_dependencies . "$domichain_ver"
+    patch_crates_io_domichain Cargo.toml "$domichain_dir"
+    patch_crates_io_domichain dex/Cargo.toml "$domichain_dir"
     cat >> dex/Cargo.toml <<EOF
 [workspace]
 exclude = [

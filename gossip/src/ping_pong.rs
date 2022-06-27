@@ -3,7 +3,7 @@ use {
     lru::LruCache,
     rand::{AsByteSliceMut, CryptoRng, Rng},
     serde::Serialize,
-    solana_sdk::{
+    domichain_sdk::{
         hash::{self, Hash},
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},

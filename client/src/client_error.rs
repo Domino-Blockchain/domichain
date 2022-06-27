@@ -2,8 +2,8 @@ pub use reqwest;
 use {
     crate::{rpc_request, rpc_response},
     quinn::{ConnectError, WriteError},
-    solana_faucet::faucet::FaucetError,
-    solana_sdk::{
+    domichain_faucet::faucet::FaucetError,
+    domichain_sdk::{
         signature::SignerError, transaction::TransactionError, transport::TransportError,
     },
     std::io,

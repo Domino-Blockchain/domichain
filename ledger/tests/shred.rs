@@ -1,11 +1,11 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    solana_entry::entry::Entry,
-    solana_ledger::shred::{
+    domichain_entry::entry::Entry,
+    domichain_ledger::shred::{
         max_entries_per_n_shred, verify_test_data_shred, Shred, Shredder,
         LEGACY_SHRED_DATA_CAPACITY, MAX_DATA_SHREDS_PER_FEC_BLOCK,
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         hash::Hash,
         signature::{Keypair, Signer},

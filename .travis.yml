@@ -22,7 +22,7 @@ jobs:
       git:
         depth: false
       script:
-        - .travis/export-github-repo.sh web3.js/ solana-web3.js
+        - .travis/export-github-repo.sh web3.js/ domichain-web3.js
 
     - &release-artifacts
       if: type IN (api, cron) OR tag IS present
@@ -47,7 +47,7 @@ jobs:
         - provider: s3
           access_key_id: $AWS_ACCESS_KEY_ID
           secret_access_key: $AWS_SECRET_ACCESS_KEY
-          bucket: release.solana.com
+          bucket: release.domichain.com
           region: us-west-1
           skip_cleanup: true
           acl: public_read

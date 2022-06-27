@@ -8,7 +8,7 @@ use {
         accounts_db::FoundStoredAccount,
         append_vec::{AppendVec, StoredAccountMeta},
     },
-    solana_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
+    domichain_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
 };
 
 /// a set of accounts need to be stored.
@@ -116,7 +116,7 @@ pub mod tests {
             accounts_db::{get_temp_accounts_paths, AppendVecId},
             append_vec::{AccountMeta, StoredMeta},
         },
-        solana_sdk::account::{AccountSharedData, ReadableAccount},
+        domichain_sdk::account::{AccountSharedData, ReadableAccount},
     };
 
     #[test]

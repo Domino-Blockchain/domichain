@@ -2,15 +2,15 @@
 
 extern crate test;
 use {
-    solana_ledger::{
+    domichain_ledger::{
         shred::{Shred, ShredFlags, LEGACY_SHRED_DATA_CAPACITY},
         sigverify_shreds::{sign_shreds_cpu, sign_shreds_gpu, sign_shreds_gpu_pinned_keypair},
     },
-    solana_perf::{
+    domichain_perf::{
         packet::{Packet, PacketBatch},
         recycler_cache::RecyclerCache,
     },
-    solana_sdk::signature::Keypair,
+    domichain_sdk::signature::Keypair,
     std::sync::Arc,
     test::Bencher,
 };

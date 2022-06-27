@@ -1,32 +1,32 @@
 #![feature(test)]
 
-extern crate solana_core;
+extern crate domichain_core;
 extern crate test;
 
 use {
     crossbeam_channel::unbounded,
     log::*,
-    solana_core::retransmit_stage::retransmitter,
-    solana_entry::entry::Entry,
-    solana_gossip::{
+    domichain_core::retransmit_stage::retransmitter,
+    domichain_entry::entry::Entry,
+    domichain_gossip::{
         cluster_info::{ClusterInfo, Node},
         contact_info::ContactInfo,
     },
-    solana_ledger::{
+    domichain_ledger::{
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         leader_schedule_cache::LeaderScheduleCache,
         shred::Shredder,
     },
-    solana_measure::measure::Measure,
-    solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{
+    domichain_measure::measure::Measure,
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         system_transaction,
         timing::timestamp,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         net::UdpSocket,
         sync::{
@@ -42,14 +42,14 @@ use {
 // TODO: The benchmark is ignored as it currently may indefinitely block.
 // The code incorrectly expects that the node receiving the shred on tvu socket
 // retransmits that to other nodes in its neighborhood. But that is no longer
-// the case since https://github.com/solana-labs/solana/pull/17716.
+// the case since https://Domino-Blockchain/domichain/pull/17716.
 // So depending on shred seed, peers may not receive packets and the receive
 // threads loop indefinitely.
 #[ignore]
 #[bench]
 #[allow(clippy::same_item_push)]
 fn bench_retransmitter(bencher: &mut Bencher) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let cluster_info = ClusterInfo::new(
         Node::new_localhost().info,
         Arc::new(Keypair::new()),
@@ -114,7 +114,7 @@ fn bench_retransmitter(bencher: &mut Bencher) {
         leader_schedule_cache,
         cluster_info,
         shreds_receiver,
-        Arc::default(), // solana_rpc::max_slots::MaxSlots
+        Arc::default(), // domichain_rpc::max_slots::MaxSlots
         None,
     );
 

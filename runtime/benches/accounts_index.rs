@@ -4,13 +4,13 @@ extern crate test;
 
 use {
     rand::{thread_rng, Rng},
-    solana_runtime::{
+    domichain_runtime::{
         account_info::AccountInfo,
         accounts_index::{
             AccountSecondaryIndexes, AccountsIndex, ACCOUNTS_INDEX_CONFIG_FOR_BENCHMARKS,
         },
     },
-    solana_sdk::{account::AccountSharedData, pubkey},
+    domichain_sdk::{account::AccountSharedData, pubkey},
     test::Bencher,
 };
 

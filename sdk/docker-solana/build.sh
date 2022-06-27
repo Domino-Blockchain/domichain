@@ -21,16 +21,16 @@ fi
 cd "$(dirname "$0")"
 rm -rf usr/
 ../../ci/docker-run.sh "$rust_stable_docker_image" \
-  scripts/cargo-install-all.sh sdk/docker-solana/usr
+  scripts/cargo-install-all.sh sdk/docker-domichain/usr
 
-cp -f ../../scripts/run.sh usr/bin/solana-run.sh
+cp -f ../../scripts/run.sh usr/bin/domichain-run.sh
 cp -f ../../fetch-spl.sh usr/bin/
 (
   cd usr/bin
   ./fetch-spl.sh
 )
 
-docker build -t solanalabs/solana:"$CHANNEL_OR_TAG" .
+docker build -t domichainlabs/domichain:"$CHANNEL_OR_TAG" .
 
 maybeEcho=
 if [[ -z $CI ]]; then
@@ -44,4 +44,4 @@ else
     fi
   )
 fi
-$maybeEcho docker push solanalabs/solana:"$CHANNEL_OR_TAG"
+$maybeEcho docker push domichainlabs/domichain:"$CHANNEL_OR_TAG"

@@ -1,4 +1,4 @@
-use solana_sdk::{pubkey::Pubkey, signature::Signer};
+use domichain_sdk::{pubkey::Pubkey, signature::Signer};
 
 pub struct SenderStakeArgs {
     pub stake_account_address: Pubkey,

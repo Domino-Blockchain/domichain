@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana string and memory system calls and utilities
+ * @brief Domichain string and memory system calls and utilities
  */
 
 #include <sol/types.h>

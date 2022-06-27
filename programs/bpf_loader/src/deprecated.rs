@@ -1,6 +1,6 @@
-solana_sdk::declare_builtin!(
-    solana_sdk::bpf_loader_deprecated::ID,
-    solana_bpf_loader_deprecated_program,
-    solana_bpf_loader_program::process_instruction,
+domichain_sdk::declare_builtin!(
+    domichain_sdk::bpf_loader_deprecated::ID,
+    domichain_bpf_loader_deprecated_program,
+    domichain_bpf_loader_program::process_instruction,
     deprecated::id
 );

@@ -2,7 +2,7 @@
 
 use {
     crate::{bucket_api::BucketApi, bucket_stats::BucketMapStats, MaxSearch, RefCount},
-    solana_sdk::pubkey::Pubkey,
+    domichain_sdk::pubkey::Pubkey,
     std::{convert::TryInto, fmt::Debug, fs, path::PathBuf, sync::Arc},
     tempfile::TempDir,
 };
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn bucket_map_test_update_to_0_len() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let key = Pubkey::new_unique();
         let config = BucketMapConfig::new(1 << 1);
         let index = BucketMap::new(config);
@@ -364,7 +364,7 @@ mod tests {
     #[test]
     fn hashmap_compare() {
         use std::sync::Mutex;
-        solana_logger::setup();
+        domichain_logger::setup();
         let maps = (0..2)
             .into_iter()
             .map(|max_buckets_pow2| {
@@ -440,7 +440,7 @@ mod tests {
             }
             if initial > 0 || thread_rng().gen_range(0, 5) == 0 {
                 // insert
-                let k = solana_sdk::pubkey::new_rand();
+                let k = domichain_sdk::pubkey::new_rand();
                 let v = gen_rand_value();
                 hash_map.write().unwrap().insert(k, v.clone());
                 let insert = thread_rng().gen_range(0, 2) == 0;

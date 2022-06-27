@@ -23,7 +23,7 @@ upload-s3-artifact() {
       --rm
       --env AWS_ACCESS_KEY_ID
       --env AWS_SECRET_ACCESS_KEY
-      --volume "$PWD:/solana"
+      --volume "$PWD:/domichain"
 
     )
     if [[ $(uname -m) = arm64 ]]; then

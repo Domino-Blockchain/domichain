@@ -6,7 +6,7 @@ use {
         bank::{Bank, PartitionIndex, Rewrites},
         rent_collector::{RentCollector, RentResult},
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         clock::{Epoch, Slot},
         epoch_schedule::EpochSchedule,
@@ -395,7 +395,7 @@ impl ExpectedRentCollection {
         find_unskipped_slot: impl Fn(Slot) -> Option<Slot>,
         filler_account_suffix: Option<&Pubkey>,
     ) -> Option<Hash> {
-        use solana_measure::measure::Measure;
+        use domichain_measure::measure::Measure;
         let mut m = Measure::start("rehash_calc_us");
         let expected = ExpectedRentCollection::new(
             pubkey,
@@ -571,7 +571,7 @@ impl ExpectedRentCollection {
 pub mod tests {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             account::{AccountSharedData, WritableAccount},
             genesis_config::GenesisConfig,
         },
@@ -579,9 +579,9 @@ pub mod tests {
 
     #[test]
     fn test_expected_rent_collection() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let pubkey = Pubkey::new(&[5; 32]);
-        let owner = solana_sdk::pubkey::new_rand();
+        let owner = domichain_sdk::pubkey::new_rand();
         let mut account = AccountSharedData::new(1, 0, &owner);
         let max_slot_in_storages_inclusive = 0;
         let epoch_schedule = EpochSchedule::default();
@@ -954,9 +954,9 @@ pub mod tests {
 
     #[test]
     fn test_simplified_rent_collection() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let pubkey = Pubkey::new(&[5; 32]);
-        let owner = solana_sdk::pubkey::new_rand();
+        let owner = domichain_sdk::pubkey::new_rand();
         let mut account = AccountSharedData::new(1, 0, &owner);
         let mut epoch_schedule = EpochSchedule {
             first_normal_epoch: 0,
@@ -1147,9 +1147,9 @@ pub mod tests {
 
     #[test]
     fn test_get_corrected_rent_epoch_on_load() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let pubkey = Pubkey::new(&[5; 32]);
-        let owner = solana_sdk::pubkey::new_rand();
+        let owner = domichain_sdk::pubkey::new_rand();
         let mut account = AccountSharedData::new(1, 0, &owner);
         let mut epoch_schedule = EpochSchedule {
             first_normal_epoch: 0,

@@ -8,7 +8,7 @@ use {
         account::{AccountSharedData, ReadableAccount},
         account_utils::{State, StateMut},
     },
-    solana_program::{clock::Epoch, instruction::InstructionError, pubkey::Pubkey},
+    domichain_program::{clock::Epoch, instruction::InstructionError, pubkey::Pubkey},
     std::{
         cell::{Ref, RefCell, RefMut},
         iter::FromIterator,

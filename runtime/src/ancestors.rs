@@ -1,7 +1,7 @@
 use {
     crate::rolling_bit_field::RollingBitField,
     core::fmt::{Debug, Formatter},
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::collections::HashMap,
 };
 
@@ -96,7 +96,7 @@ impl Ancestors {
 #[cfg(test)]
 pub mod tests {
     use {
-        super::*, crate::contains::Contains, log::*, solana_measure::measure::Measure,
+        super::*, crate::contains::Contains, log::*, domichain_measure::measure::Measure,
         std::collections::HashSet,
     };
 
@@ -126,7 +126,7 @@ pub mod tests {
 
     #[test]
     fn test_ancestors_permutations() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut ancestors = Ancestors::default();
         let mut hash = HashMap::new();
 
@@ -191,7 +191,7 @@ pub mod tests {
 
     #[test]
     fn test_ancestors_smaller() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         for width in 0..34 {
             let mut hash = HashSet::new();

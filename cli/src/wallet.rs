@@ -9,8 +9,8 @@ use {
         spend_utils::{resolve_spend_tx_and_check_account_balances, SpendAmount},
     },
     clap::{value_t_or_exit, App, Arg, ArgMatches, SubCommand},
-    solana_account_decoder::{UiAccount, UiAccountEncoding},
-    solana_clap_utils::{
+    domichain_account_decoder::{UiAccount, UiAccountEncoding},
+    domichain_clap_utils::{
         fee_payer::*,
         input_parsers::*,
         input_validators::*,
@@ -19,17 +19,17 @@ use {
         nonce::*,
         offline::*,
     },
-    solana_cli_output::{
+    domichain_cli_output::{
         display::build_balance_message, return_signers_with_config, CliAccount,
         CliSignatureVerificationStatus, CliTransaction, CliTransactionConfirmation, OutputFormat,
         ReturnSignersConfig,
     },
-    solana_client::{
+    domichain_client::{
         blockhash_query::BlockhashQuery, nonce_utils, rpc_client::RpcClient,
         rpc_config::RpcTransactionConfig, rpc_response::RpcKeyedAccount,
     },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_sdk::{
+    domichain_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         message::Message,
         pubkey::Pubkey,
@@ -39,7 +39,7 @@ use {
         system_program,
         transaction::{Transaction, VersionedTransaction},
     },
-    solana_transaction_status::{
+    domichain_transaction_status::{
         EncodableWithMeta, EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         TransactionBinaryEncoding, UiTransactionEncoding,
     },
@@ -281,7 +281,7 @@ fn resolve_derived_address_program_id(matches: &ArgMatches<'_>, arg_name: &str) 
         match upper.as_str() {
             "NONCE" | "SYSTEM" => Some(system_program::id()),
             "STAKE" => Some(stake::program::id()),
-            "VOTE" => Some(solana_vote_program::id()),
+            "VOTE" => Some(domichain_vote_program::id()),
             _ => pubkey_of(matches, arg_name),
         }
     })
@@ -521,7 +521,7 @@ pub fn process_airdrop(
 
         if current_balance < pre_balance.saturating_add(lamports) {
             println!("Balance unchanged");
-            println!("Run `solana confirm -v {:?}` for more info", signature);
+            println!("Run `domichain confirm -v {:?}` for more info", signature);
             Ok("".to_string())
         } else {
             Ok(build_balance_message(current_balance, false, true))

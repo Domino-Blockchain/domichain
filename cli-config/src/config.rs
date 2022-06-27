@@ -10,7 +10,7 @@ lazy_static! {
     ///
     /// This is a [lazy_static] of `Option<String>`, the value of which is
     ///
-    /// > `~/.config/solana/cli/config.yml`
+    /// > `~/.config/domichain/cli/config.yml`
     ///
     /// It will only be `None` if it is unable to identify the user's home
     /// directory, which should not happen under typical OS environments.
@@ -18,23 +18,23 @@ lazy_static! {
     /// [lazy_static]: https://docs.rs/lazy_static
     pub static ref CONFIG_FILE: Option<String> = {
         dirs_next::home_dir().map(|mut path| {
-            path.extend(&[".config", "solana", "cli", "config.yml"]);
+            path.extend(&[".config", "domichain", "cli", "config.yml"]);
             path.to_str().unwrap().to_string()
         })
     };
 }
 
-/// The Solana CLI configuration.
+/// The Domichain CLI configuration.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Config {
-    /// The RPC address of a Solana validator node.
+    /// The RPC address of a Domichain validator node.
     ///
     /// Typical values for mainnet, devnet, and testnet are [described in the
-    /// Solana documentation][rpcdocs].
+    /// Domichain documentation][rpcdocs].
     ///
     /// For local testing, the typical value is `http://localhost:8899`.
     ///
-    /// [rpcdocs]: https://docs.solana.com/cluster/rpc-endpoints
+    /// [rpcdocs]: https://docs.domichain.com/cluster/rpc-endpoints
     pub json_rpc_url: String,
     /// The address to connect to for receiving event notifications.
     ///
@@ -45,15 +45,15 @@ pub struct Config {
     pub websocket_url: String,
     /// The default signing source, which may be a keypair file, but may also
     /// represent several other types of signers, as described in the
-    /// documentation for `solana_clap_utils::keypair::signer_from_path`.
+    /// documentation for `domichain_clap_utils::keypair::signer_from_path`.
     /// Because it represents sources other than a simple path, the name
     /// `keypair_path` is misleading, and exists for backwards compatibility
     /// reasons.
     ///
     /// The signing source can be loaded with either the `signer_from_path`
-    /// function, or with `solana_clap_utils::keypair::DefaultSigner`.
+    /// function, or with `domichain_clap_utils::keypair::DefaultSigner`.
     pub keypair_path: String,
-    /// A mapping from Solana addresses to human-readable names.
+    /// A mapping from Domichain addresses to human-readable names.
     ///
     /// By default the only value in this map is the system program.
     #[serde(default)]
@@ -61,7 +61,7 @@ pub struct Config {
     /// The default commitment level.
     ///
     /// By default the value is "confirmed", as defined by
-    /// `solana_sdk::commitment_config::CommitmentLevel::Confirmed`.
+    /// `domichain_sdk::commitment_config::CommitmentLevel::Confirmed`.
     #[serde(default)]
     pub commitment: String,
 }
@@ -70,10 +70,10 @@ impl Default for Config {
     fn default() -> Self {
         let keypair_path = {
             let mut keypair_path = dirs_next::home_dir().expect("home directory");
-            keypair_path.extend(&[".config", "solana", "id.json"]);
+            keypair_path.extend(&[".config", "domichain", "id.json"]);
             keypair_path.to_str().unwrap().to_string()
         };
-        let json_rpc_url = "https://api.mainnet-beta.solana.com".to_string();
+        let json_rpc_url = "https://api.mainnet-beta.domichain.com".to_string();
 
         // Empty websocket_url string indicates the client should
         // `Config::compute_websocket_url(&json_rpc_url)`
@@ -177,13 +177,13 @@ mod test {
     #[test]
     fn compute_websocket_url() {
         assert_eq!(
-            Config::compute_websocket_url("http://api.devnet.solana.com"),
-            "ws://api.devnet.solana.com/".to_string()
+            Config::compute_websocket_url("http://api.devnet.domichain.com"),
+            "ws://api.devnet.domichain.com/".to_string()
         );
 
         assert_eq!(
-            Config::compute_websocket_url("https://api.devnet.solana.com"),
-            "wss://api.devnet.solana.com/".to_string()
+            Config::compute_websocket_url("https://api.devnet.domichain.com"),
+            "wss://api.devnet.domichain.com/".to_string()
         );
 
         assert_eq!(

@@ -1,12 +1,12 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.com>"]
+authors = ["Domichain Maintainers <maintainers@domichain.com>"]
 description = "Blockchain, Rebuilt for Scale"
 edition = "2021"
-homepage = "https://solana.com/"
+homepage = "https://domichain.com/"
 license = "Apache-2.0"
 name = "proto"
 publish = false
-repository = "https://github.com/solana-labs/solana"
+repository = "https://Domino-Blockchain/domichain"
 version = "1.11.1"
 
 [workspace]

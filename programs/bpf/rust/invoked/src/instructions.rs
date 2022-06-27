@@ -1,6 +1,6 @@
 //! Example Rust-based BPF program that issues a cross-program-invocation
 
-use solana_program::{
+use domichain_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };

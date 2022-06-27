@@ -1,6 +1,6 @@
 pub use target_arch::*;
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 mod target_arch {
     use {
         crate::{encryption::elgamal::ElGamalCiphertext, zk_token_elgamal::pod},
@@ -89,7 +89,7 @@ mod target_arch {
     }
 }
 
-#[cfg(target_os = "solana")]
+#[cfg(target_os = "domichain")]
 #[allow(unused_variables)]
 mod target_arch {
     use crate::{

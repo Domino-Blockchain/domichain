@@ -42,11 +42,11 @@ skip)
 esac
 
 case $clientToRun in
-solana-bench-tps)
+domichain-bench-tps)
   net/scripts/rsync-retry.sh -vPrc \
-    "$entrypointIp":~/solana/config/bench-tps"$clientIndex".yml ./client-accounts.yml
+    "$entrypointIp":~/domichain/config/bench-tps"$clientIndex".yml ./client-accounts.yml
   clientCommand="\
-    solana-bench-tps \
+    domichain-bench-tps \
       --entrypoint $entrypointIp:8001 \
       --duration 7500 \
       --sustained \
@@ -58,7 +58,7 @@ solana-bench-tps)
 idle)
   # Add the faucet keypair to idle clients for convenience
   net/scripts/rsync-retry.sh -vPrc \
-    "$entrypointIp":~/solana/config/faucet.json ~/solana/
+    "$entrypointIp":~/domichain/config/faucet.json ~/domichain/
   exit 0
   ;;
 *)
@@ -67,9 +67,9 @@ idle)
 esac
 
 
-cat > ~/solana/on-reboot <<EOF
+cat > ~/domichain/on-reboot <<EOF
 #!/usr/bin/env bash
-cd ~/solana
+cd ~/domichain
 
 PATH="$HOME"/.cargo/bin:"$PATH"
 export USE_INSTALL=1
@@ -77,7 +77,7 @@ export USE_INSTALL=1
 echo "$(date) | $0 $*" >> client.log
 
 (
-  sudo SOLANA_METRICS_CONFIG="$SOLANA_METRICS_CONFIG" scripts/oom-monitor.sh
+  sudo DOMICHAIN_METRICS_CONFIG="$DOMICHAIN_METRICS_CONFIG" scripts/oom-monitor.sh
 ) > oom-monitor.log 2>&1 &
 echo \$! > oom-monitor.pid
 scripts/fd-monitor.sh > fd-monitor.log 2>&1 &
@@ -96,10 +96,10 @@ tmux new -s "$clientToRun" -d "
   done
 "
 EOF
-chmod +x ~/solana/on-reboot
-echo "@reboot ~/solana/on-reboot" | crontab -
+chmod +x ~/domichain/on-reboot
+echo "@reboot ~/domichain/on-reboot" | crontab -
 
-~/solana/on-reboot
+~/domichain/on-reboot
 
 sleep 1
 tmux capture-pane -t "$clientToRun" -p -S -100

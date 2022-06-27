@@ -1,7 +1,7 @@
 #![cfg_attr(RUSTC_WITH_SPECIALIZATION, feature(min_specialization))]
 #![allow(clippy::integer_arithmetic)]
 #[macro_use]
-extern crate solana_bpf_loader_program;
+extern crate domichain_bpf_loader_program;
 
 pub mod bank_forks_utils;
 pub mod bigtable_delete;
@@ -30,7 +30,7 @@ pub mod slot_stats;
 mod staking_utils;
 
 #[macro_use]
-extern crate solana_metrics;
+extern crate domichain_metrics;
 
 #[macro_use]
 extern crate log;
@@ -39,4 +39,4 @@ extern crate log;
 extern crate lazy_static;
 
 #[macro_use]
-extern crate solana_frozen_abi_macro;
+extern crate domichain_frozen_abi_macro;

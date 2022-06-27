@@ -1,7 +1,7 @@
 import React from "react";
 import { Cluster, clusterSlug, useCluster } from "providers/cluster";
 import { fetch } from "cross-fetch";
-import { useStatsProvider } from "providers/stats/solanaClusterStats";
+import { useStatsProvider } from "providers/stats/domichainClusterStats";
 
 const FETCH_PING_INTERVAL = 60 * 1000;
 
@@ -12,7 +12,7 @@ function getPingUrl(cluster: Cluster) {
     return undefined;
   }
 
-  return `https://ping.solana.com/${slug}/last6hours`;
+  return `https://ping.domichain.com/${slug}/last6hours`;
 }
 
 export type PingMetric = {
@@ -74,7 +74,7 @@ function downsample(points: PingInfo[], bucketSize: number): PingInfo[] {
   return buckets;
 }
 
-export function SolanaPingProvider({ children }: Props) {
+export function DomichainPingProvider({ children }: Props) {
   const { cluster } = useCluster();
   const { active } = useStatsProvider();
   const [rollup, setRollup] = React.useState<PingRollupInfo | undefined>({
@@ -153,7 +153,7 @@ export function SolanaPingProvider({ children }: Props) {
   return <PingContext.Provider value={rollup}>{children}</PingContext.Provider>;
 }
 
-export function useSolanaPingInfo() {
+export function useDomichainPingInfo() {
   const context = React.useContext(PingContext);
   if (!context) {
     throw new Error(`useContext must be used within a StatsProvider`);

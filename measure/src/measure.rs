@@ -1,5 +1,5 @@
 use {
-    solana_sdk::timing::duration_as_ns,
+    domichain_sdk::timing::duration_as_ns,
     std::{
         fmt,
         time::{Duration, Instant},

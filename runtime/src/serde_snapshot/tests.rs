@@ -11,7 +11,7 @@ use {
     },
     bincode::serialize_into,
     rand::{thread_rng, Rng},
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::Slot,
         feature_set::disable_fee_calculator,
@@ -135,7 +135,7 @@ where
 }
 
 fn test_accounts_serialize_style(serde_style: SerdeStyle) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let (_accounts_dir, paths) = get_temp_accounts_paths(4).unwrap();
     let accounts = Accounts::new_with_config_for_tests(
         paths,
@@ -190,7 +190,7 @@ fn test_bank_serialize_style(
     reserialize_accounts_hash: bool,
     update_accounts_hash: bool,
 ) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let (genesis_config, _) = create_genesis_config(500);
     let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
     let bank1 = Bank::new_from_parent(&bank0, &Pubkey::default(), 1);
@@ -368,7 +368,7 @@ fn test_bank_serialize_newer() {
 
 #[test]
 fn test_extra_fields_eof() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let (mut genesis_config, _) = create_genesis_config(500);
     activate_feature(&mut genesis_config, disable_fee_calculator::id());
 
@@ -429,7 +429,7 @@ fn test_extra_fields_eof() {
 
 #[test]
 fn test_extra_fields_full_snapshot_archive() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let (mut genesis_config, _) = create_genesis_config(500);
     activate_all_features(&mut genesis_config);
@@ -490,7 +490,7 @@ fn test_extra_fields_full_snapshot_archive() {
 
 #[test]
 fn test_blank_extra_fields() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let (mut genesis_config, _) = create_genesis_config(500);
     activate_feature(&mut genesis_config, disable_fee_calculator::id());
 

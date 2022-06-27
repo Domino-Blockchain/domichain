@@ -245,7 +245,7 @@ describe('VoteProgram', () => {
       );
 
       // The authorized Withdrawer may sign to authorize a new Voter, see
-      // https://github.com/solana-labs/solana/issues/22521
+      // https://Domino-Blockchain/domichain/issues/22521
       authorize = VoteProgram.authorize({
         votePubkey: newVoteAccount.publicKey,
         authorizedPubkey: newAuthorizedWithdrawer.publicKey,

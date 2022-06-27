@@ -1,4 +1,4 @@
-use {solana_sdk::pubkey::Pubkey, std::collections::HashSet};
+use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
 
 #[derive(Default)]
 pub struct VoteStakeTracker {
@@ -48,14 +48,14 @@ impl VoteStakeTracker {
 
 #[cfg(test)]
 mod test {
-    use {super::*, solana_runtime::commitment::VOTE_THRESHOLD_SIZE};
+    use {super::*, domichain_runtime::commitment::VOTE_THRESHOLD_SIZE};
 
     #[test]
     fn test_add_vote_pubkey() {
         let total_epoch_stake = 10;
         let mut vote_stake_tracker = VoteStakeTracker::default();
         for i in 0..10 {
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = domichain_sdk::pubkey::new_rand();
             let (is_confirmed_thresholds, is_new) = vote_stake_tracker.add_vote_pubkey(
                 pubkey,
                 1,

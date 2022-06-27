@@ -1,17 +1,17 @@
 [package]
-name = "solana-merkle-tree"
+name = "domichain-merkle-tree"
 version = "1.11.1"
-description = "Solana Merkle Tree"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain Merkle Tree"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-merkle-tree"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-merkle-tree"
 edition = "2021"
 
 [dependencies]
 fast-math = "0.1"
-solana-program = { path = "../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../sdk/program", version = "=1.11.1" }
 
 # This can go once the BPF toolchain target Rust 1.42.0+
 [target.bpfel-unknown-unknown.dependencies]
@@ -22,7 +22,7 @@ hex = "0.4.3"
 
 [lib]
 crate-type = ["lib"]
-name = "solana_merkle_tree"
+name = "domichain_merkle_tree"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

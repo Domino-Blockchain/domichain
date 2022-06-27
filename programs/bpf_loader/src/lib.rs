@@ -10,7 +10,7 @@ pub mod upgradeable_with_jit;
 pub mod with_jit;
 
 #[macro_use]
-extern crate solana_metrics;
+extern crate domichain_metrics;
 
 use {
     crate::{
@@ -18,25 +18,15 @@ use {
         syscalls::SyscallError,
     },
     log::{log_enabled, trace, Level::Trace},
-    solana_measure::measure::Measure,
-    solana_program_runtime::{
+    domichain_measure::measure::Measure,
+    domichain_program_runtime::{
         ic_logger_msg, ic_msg,
         invoke_context::{ComputeMeter, Executor, InvokeContext},
         log_collector::LogCollector,
         stable_log,
         sysvar_cache::get_sysvar_with_account_check,
     },
-    solana_rbpf::{
-        aligned_memory::AlignedMemory,
-        ebpf::{HOST_ALIGN, MM_INPUT_START},
-        elf::Executable,
-        error::{EbpfError, UserDefinedError},
-        memory_region::MemoryRegion,
-        static_analysis::Analysis,
-        verifier::{RequisiteVerifier, VerifierError},
-        vm::{Config, EbpfVm, InstructionMeter, VerifiedExecutable},
-    },
-    solana_sdk::{
+    domichain_sdk::{
         bpf_loader, bpf_loader_deprecated,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
         entrypoint::{HEAP_LENGTH, SUCCESS},
@@ -56,14 +46,24 @@ use {
         system_instruction::{self, MAX_PERMITTED_DATA_LENGTH},
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
+    solana_rbpf::{
+        aligned_memory::AlignedMemory,
+        ebpf::{HOST_ALIGN, MM_INPUT_START},
+        elf::Executable,
+        error::{EbpfError, UserDefinedError},
+        memory_region::MemoryRegion,
+        static_analysis::Analysis,
+        verifier::{RequisiteVerifier, VerifierError},
+        vm::{Config, EbpfVm, InstructionMeter, VerifiedExecutable},
+    },
     std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc},
     thiserror::Error,
 };
 
-solana_sdk::declare_builtin!(
-    solana_sdk::bpf_loader::ID,
-    solana_bpf_loader_program,
-    solana_bpf_loader_program::process_instruction
+domichain_sdk::declare_builtin!(
+    domichain_sdk::bpf_loader::ID,
+    domichain_bpf_loader_program,
+    domichain_bpf_loader_program::process_instruction
 );
 
 /// Errors returned by functions the BPF Loader registers with the VM
@@ -659,7 +659,7 @@ fn process_loader_upgradeable_instruction(
             let signers = [&[new_program_id.as_ref(), &[bump_seed]]]
                 .iter()
                 .map(|seeds| Pubkey::create_program_address(*seeds, caller_program_id))
-                .collect::<Result<Vec<Pubkey>, solana_sdk::pubkey::PubkeyError>>()?;
+                .collect::<Result<Vec<Pubkey>, domichain_sdk::pubkey::PubkeyError>>()?;
             invoke_context.native_invoke(instruction, signers.as_slice())?;
 
             // Load and verify the program bits
@@ -1328,10 +1328,9 @@ mod tests {
     use {
         super::*,
         rand::Rng,
-        solana_program_runtime::invoke_context::mock_process_instruction,
-        solana_rbpf::{verifier::Verifier, vm::SyscallRegistry},
-        solana_runtime::{bank::Bank, bank_client::BankClient},
-        solana_sdk::{
+        domichain_program_runtime::invoke_context::mock_process_instruction,
+        domichain_runtime::{bank::Bank, bank_client::BankClient},
+        domichain_sdk::{
             account::{
                 create_account_shared_data_for_test as create_account_for_test, AccountSharedData,
                 ReadableAccount, WritableAccount,
@@ -1350,6 +1349,7 @@ mod tests {
             system_program, sysvar,
             transaction::TransactionError,
         },
+        solana_rbpf::{verifier::Verifier, vm::SyscallRegistry},
         std::{fs::File, io::Read, ops::Range, sync::Arc},
     };
 
@@ -2071,7 +2071,7 @@ mod tests {
         let mut bank = Bank::new_for_tests(&genesis_config);
         bank.feature_set = Arc::new(FeatureSet::all_enabled());
         bank.add_builtin(
-            "solana_bpf_loader_upgradeable_program",
+            "domichain_bpf_loader_upgradeable_program",
             &bpf_loader_upgradeable::id(),
             super::process_instruction,
         );

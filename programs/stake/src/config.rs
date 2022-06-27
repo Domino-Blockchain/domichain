@@ -2,13 +2,13 @@
 //!  carries variables that the stake program cares about
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solana_sdk::stake::config` or `solana_program::stake::config` instead"
+    note = "Please use `domichain_sdk::stake::config` or `domichain_program::stake::config` instead"
 )]
-pub use solana_sdk::stake::config::*;
+pub use domichain_sdk::stake::config::*;
 use {
     bincode::deserialize,
-    solana_config_program::{create_config_account, get_config_data},
-    solana_sdk::{
+    domichain_config_program::{create_config_account, get_config_data},
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         genesis_config::GenesisConfig,
         stake::config::{self, Config},

@@ -18,8 +18,8 @@ use {
         iter::{IntoParallelIterator, ParallelIterator},
         ThreadPool,
     },
-    solana_measure::measure::Measure,
-    solana_sdk::{
+    domichain_measure::measure::Measure,
+    domichain_sdk::{
         account::ReadableAccount,
         clock::{BankId, Slot},
         pubkey::Pubkey,
@@ -1941,7 +1941,7 @@ pub mod tests {
     use {
         super::*,
         crate::inline_spl_token::*,
-        solana_sdk::{
+        domichain_sdk::{
             account::{AccountSharedData, WritableAccount},
             pubkey::PUBKEY_BYTES,
             signature::{Keypair, Signer},
@@ -2753,7 +2753,7 @@ pub mod tests {
         let root_slot = 0;
 
         let mut pubkeys: Vec<Pubkey> = std::iter::repeat_with(|| {
-            let new_pubkey = solana_sdk::pubkey::new_rand();
+            let new_pubkey = domichain_sdk::pubkey::new_rand();
             index.upsert(
                 root_slot,
                 root_slot,
@@ -2917,7 +2917,7 @@ pub mod tests {
         index.upsert(
             0,
             0,
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             &AccountSharedData::default(),
             &AccountSecondaryIndexes::default(),
             true,
@@ -3092,7 +3092,7 @@ pub mod tests {
 
     #[test]
     fn test_update_new_slot() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let key = Keypair::new();
         let index = AccountsIndex::<bool>::default_for_tests();
         let ancestors = vec![(0, 0)].into_iter().collect();

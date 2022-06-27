@@ -2,7 +2,7 @@ use {
     futures_util::StreamExt,
     serde_json::{json, Value},
     serial_test::serial,
-    solana_client::{
+    domichain_client::{
         nonblocking,
         pubsub_client::PubsubClient,
         rpc_client::RpcClient,
@@ -12,20 +12,20 @@ use {
         },
         rpc_response::SlotInfo,
     },
-    solana_ledger::{blockstore::Blockstore, get_tmp_ledger_path},
-    solana_rpc::{
+    domichain_ledger::{blockstore::Blockstore, get_tmp_ledger_path},
+    domichain_rpc::{
         optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
         rpc::{create_test_transaction_entries, populate_blockstore_for_tests},
         rpc_pubsub_service::{PubSubConfig, PubSubService},
         rpc_subscriptions::RpcSubscriptions,
     },
-    solana_runtime::{
+    domichain_runtime::{
         bank::Bank,
         bank_forks::BankForks,
         commitment::{BlockCommitmentCache, CommitmentSlots},
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         commitment_config::{CommitmentConfig, CommitmentLevel},
         native_token::sol_to_lamports,
@@ -34,9 +34,9 @@ use {
         signature::{Keypair, Signer},
         system_program, system_transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
-    solana_transaction_status::{
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
+    domichain_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, TransactionDetails, UiTransactionEncoding,
     },
     std::{
@@ -54,19 +54,19 @@ use {
 
 #[test]
 fn test_rpc_client() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let alice = Keypair::new();
     let test_validator =
         TestValidator::with_no_fees(alice.pubkey(), None, SocketAddrSpace::Unspecified);
 
-    let bob_pubkey = solana_sdk::pubkey::new_rand();
+    let bob_pubkey = domichain_sdk::pubkey::new_rand();
 
     let client = RpcClient::new(test_validator.rpc_url());
 
     assert_eq!(
-        client.get_version().unwrap().solana_core,
-        solana_version::semver!()
+        client.get_version().unwrap().domichain_core,
+        domichain_version::semver!()
     );
 
     assert!(client.get_account(&bob_pubkey).is_err());

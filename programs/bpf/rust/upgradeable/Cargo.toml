@@ -1,19 +1,19 @@
 [package]
-name = "solana-bpf-rust-upgradeable"
+name = "domichain-bpf-rust-upgradeable"
 version = "1.11.1"
-description = "Solana BPF test program written in Rust"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain BPF test program written in Rust"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bpf-rust-upgradeable"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bpf-rust-upgradeable"
 edition = "2021"
 
 [dependencies]
-solana-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
 
 [lib]
-name = "solana_bpf_rust_upgradeable"
+name = "domichain_bpf_rust_upgradeable"
 crate-type = ["cdylib"]
 
 [package.metadata.docs.rs]

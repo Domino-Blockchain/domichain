@@ -4,9 +4,9 @@ title: "Examples"
 
 ## Helloworld
 
-Hello World is a project that demonstrates how to use the Solana Javascript API
+Hello World is a project that demonstrates how to use the Domichain Javascript API
 and both Rust and C programs to build, deploy, and interact with programs on the
-Solana blockchain.
+Domichain blockchain.
 
 The project comprises of:
 
@@ -19,18 +19,18 @@ The project comprises of:
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/solana-labs/example-helloworld.git
+$ git clone https://Domino-Blockchain/example-helloworld.git
 $ cd example-helloworld
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/solana-labs/example-helloworld/blob/master/README.md).
+[README](https://Domino-Blockchain/example-helloworld/blob/master/README.md).
 
 ## Break
 
-[Break](https://break.solana.com/) is a React app that gives users a visceral
-feeling for just how fast and high-performance the Solana network really is. Can
-you _break_ the Solana blockchain? During a 15 second play-though, each click of
+[Break](https://break.domichain.com/) is a React app that gives users a visceral
+feeling for just how fast and high-performance the Domichain network really is. Can
+you _break_ the Domichain blockchain? During a 15 second play-though, each click of
 a button or keystroke sends a new transaction to the cluster. Smash the keyboard
 as fast as you can and watch your transactions get finalized in real time while
 the network takes it all in stride!
@@ -41,19 +41,19 @@ Mainnet Beta, users pay to play 0.08 SOL per game. The session account can be
 funded by a local keystore wallet or by scanning a QR code from Trust Wallet to
 transfer the tokens.
 
-[Click here to play Break](https://break.solana.com/)
+[Click here to play Break](https://break.domichain.com/)
 
 ### Build and Run
 
 First fetch the latest version of the example code:
 
 ```bash
-$ git clone https://github.com/solana-labs/break.git
+$ git clone https://Domino-Blockchain/break.git
 $ cd break
 ```
 
 Next, follow the steps in the git repository's
-[README](https://github.com/solana-labs/break/blob/master/README.md).
+[README](https://Domino-Blockchain/break/blob/master/README.md).
 
 ## Language Specific
 

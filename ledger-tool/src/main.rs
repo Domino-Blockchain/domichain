@@ -12,15 +12,15 @@ use {
     regex::Regex,
     serde::Serialize,
     serde_json::json,
-    solana_clap_utils::{
+    domichain_clap_utils::{
         input_parsers::{cluster_type_of, pubkey_of, pubkeys_of},
         input_validators::{
             is_parsable, is_pow2, is_pubkey, is_pubkey_or_keypair, is_slot, is_valid_percentage,
         },
     },
-    solana_core::system_monitor_service::SystemMonitorService,
-    solana_entry::entry::Entry,
-    solana_ledger::{
+    domichain_core::system_monitor_service::SystemMonitorService,
+    domichain_entry::entry::Entry,
+    domichain_ledger::{
         ancestor_iterator::AncestorIterator,
         bank_forks_utils,
         blockstore::{create_new_ledger, Blockstore, PurgeType},
@@ -31,8 +31,8 @@ use {
         blockstore_processor::{BlockstoreProcessorError, ProcessOptions},
         shred::Shred,
     },
-    solana_measure::{measure, measure::Measure},
-    solana_runtime::{
+    domichain_measure::{measure, measure::Measure},
+    domichain_runtime::{
         accounts_db::{AccountsDbConfig, FillerAccountsConfig},
         accounts_index::{AccountsIndexConfig, IndexLimitMb, ScanConfig},
         bank::{Bank, RewardCalculationEvent},
@@ -51,7 +51,7 @@ use {
             DEFAULT_MAX_INCREMENTAL_SNAPSHOT_ARCHIVES_TO_RETAIN, SUPPORTED_ARCHIVE_COMPRESSION,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
         clock::{Epoch, Slot},
@@ -68,8 +68,8 @@ use {
         system_program,
         transaction::{MessageHash, SanitizedTransaction, SimpleAddressLoader},
     },
-    solana_stake_program::stake_state::{self, PointValue},
-    solana_vote_program::{
+    domichain_stake_program::stake_state::{self, PointValue},
+    domichain_vote_program::{
         self,
         vote_state::{self, VoteState},
     },
@@ -163,7 +163,7 @@ fn output_entry(
                     })
                     .map(|meta| meta.into());
 
-                solana_cli_output::display::println_transaction(
+                domichain_cli_output::display::println_transaction(
                     &transaction,
                     tx_status_meta.as_ref(),
                     "      ",
@@ -629,7 +629,7 @@ fn graph_forks(bank_forks: &BankForks, include_all_votes: bool) -> String {
 }
 
 fn analyze_column<
-    C: solana_ledger::blockstore_db::Column + solana_ledger::blockstore_db::ColumnName,
+    C: domichain_ledger::blockstore_db::Column + domichain_ledger::blockstore_db::ColumnName,
 >(
     db: &Database,
     name: &str,
@@ -966,7 +966,7 @@ fn main() {
     const DEFAULT_ROOT_COUNT: &str = "1";
     const DEFAULT_LATEST_OPTIMISTIC_SLOTS_COUNT: &str = "1";
     const DEFAULT_MAX_SLOTS_ROOT_REPAIR: &str = "2000";
-    solana_logger::setup_with_default("solana=info");
+    domichain_logger::setup_with_default("domichain=info");
 
     let starting_slot_arg = Arg::with_name("starting_slot")
         .long("starting-slot")
@@ -1158,7 +1158,7 @@ fn main() {
 
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .setting(AppSettings::InferSubcommands)
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::VersionlessSubcommands)
@@ -1852,7 +1852,7 @@ fn main() {
         )
         .get_matches();
 
-    info!("{} {}", crate_name!(), solana_version::version!());
+    info!("{} {}", crate_name!(), domichain_version::version!());
 
     let ledger_path = parse_ledger_path(&matches, "ledger_path");
 
@@ -1943,7 +1943,7 @@ fn main() {
 
                 if let Some(hashes_per_tick) = arg_matches.value_of("hashes_per_tick") {
                     genesis_config.poh_config.hashes_per_tick = match hashes_per_tick {
-                        // Note: Unlike `solana-genesis`, "auto" is not supported here.
+                        // Note: Unlike `domichain-genesis`, "auto" is not supported here.
                         "sleep" => None,
                         _ => Some(value_t_or_exit!(arg_matches, "hashes_per_tick", u64)),
                     }
@@ -1952,7 +1952,7 @@ fn main() {
                 create_new_ledger(
                     &output_directory,
                     &genesis_config,
-                    solana_runtime::hardened_unpack::MAX_GENESIS_ARCHIVE_UNPACKED_SIZE,
+                    domichain_runtime::hardened_unpack::MAX_GENESIS_ARCHIVE_UNPACKED_SIZE,
                     LedgerColumnOptions::default(),
                 )
                 .unwrap_or_else(|err| {
@@ -2539,7 +2539,7 @@ fn main() {
 
                             if let Some(hashes_per_tick) = hashes_per_tick {
                                 child_bank.set_hashes_per_tick(match hashes_per_tick {
-                                    // Note: Unlike `solana-genesis`, "auto" is not supported here.
+                                    // Note: Unlike `domichain-genesis`, "auto" is not supported here.
                                     "sleep" => None,
                                     _ => {
                                         Some(value_t_or_exit!(arg_matches, "hashes_per_tick", u64))
@@ -2622,7 +2622,7 @@ fn main() {
                             // Delete existing vote accounts
                             for (address, mut account) in bank
                                 .get_program_accounts(
-                                    &solana_vote_program::id(),
+                                    &domichain_vote_program::id(),
                                     &ScanConfig::default(),
                                 )
                                 .unwrap()
@@ -2852,7 +2852,7 @@ fn main() {
                     .unwrap()
                     .into_iter()
                     .filter(|(pubkey, _account, _slot)| {
-                        include_sysvars || !solana_sdk::sysvar::is_sysvar_id(pubkey)
+                        include_sysvars || !domichain_sdk::sysvar::is_sysvar_id(pubkey)
                     })
                     .map(|(pubkey, account, slot)| (pubkey, (account, slot)))
                     .collect();
@@ -3051,7 +3051,7 @@ fn main() {
                                 new_credits_observed: Option<u64>,
                                 skipped_reasons: String,
                             }
-                            use solana_stake_program::stake_state::InflationPointCalculationEvent;
+                            use domichain_stake_program::stake_state::InflationPointCalculationEvent;
                             let stake_calculation_details: DashMap<Pubkey, CalculationDetail> =
                                 DashMap::new();
                             let last_point_value = Arc::new(RwLock::new(None));
@@ -3221,7 +3221,7 @@ fn main() {
                             for (pubkey, warped_account) in all_accounts {
                                 // Don't output sysvars; it's always updated but not related to
                                 // inflation.
-                                if solana_sdk::sysvar::is_sysvar_id(&pubkey) {
+                                if domichain_sdk::sysvar::is_sysvar_id(&pubkey) {
                                     continue;
                                 }
 

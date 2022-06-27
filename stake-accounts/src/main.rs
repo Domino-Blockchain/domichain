@@ -10,9 +10,9 @@ use {
             resolve_command, AuthorizeArgs, Command, MoveArgs, NewArgs, RebaseArgs, SetLockupArgs,
         },
     },
-    solana_cli_config::Config,
-    solana_client::{client_error::ClientError, rpc_client::RpcClient},
-    solana_sdk::{
+    domichain_cli_config::Config,
+    domichain_client::{client_error::ClientError, rpc_client::RpcClient},
+    domichain_sdk::{
         message::Message,
         native_token::lamports_to_sol,
         pubkey::Pubkey,
@@ -21,7 +21,7 @@ use {
         stake::{instruction::LockupArgs, state::Lockup},
         transaction::Transaction,
     },
-    solana_stake_program::stake_state,
+    domichain_stake_program::stake_state,
     std::{env, error::Error},
 };
 

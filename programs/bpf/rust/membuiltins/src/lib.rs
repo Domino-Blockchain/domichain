@@ -1,12 +1,12 @@
 //! Test builtin mem functions
 
-#![cfg(target_os = "solana")]
+#![cfg(target_os = "domichain")]
 #![feature(rustc_private)]
 
 extern crate compiler_builtins;
 use {
-    solana_bpf_rust_mem::{run_mem_tests, MemOps},
-    solana_program::{custom_heap_default, custom_panic_default, entrypoint::SUCCESS},
+    domichain_bpf_rust_mem::{run_mem_tests, MemOps},
+    domichain_program::{custom_heap_default, custom_panic_default, entrypoint::SUCCESS},
 };
 
 #[no_mangle]

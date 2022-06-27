@@ -1,7 +1,7 @@
 use {
     crate::shred::{Shred, ShredType},
     serde::{Deserialize, Deserializer, Serialize, Serializer},
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         hash::Hash,
     },

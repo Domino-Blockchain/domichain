@@ -5,30 +5,30 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_client::connection_cache::{ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE},
-    solana_core::banking_stage::BankingStage,
-    solana_gossip::cluster_info::{ClusterInfo, Node},
-    solana_ledger::{
+    domichain_client::connection_cache::{ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE},
+    domichain_core::banking_stage::BankingStage,
+    domichain_gossip::cluster_info::{ClusterInfo, Node},
+    domichain_ledger::{
         blockstore::Blockstore,
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         get_tmp_ledger_path,
         leader_schedule_cache::LeaderScheduleCache,
     },
-    solana_measure::measure::Measure,
-    solana_perf::packet::{to_packet_batches, PacketBatch},
-    solana_poh::poh_recorder::{create_test_recorder, PohRecorder, WorkingBankEntry},
-    solana_runtime::{
+    domichain_measure::measure::Measure,
+    domichain_perf::packet::{to_packet_batches, PacketBatch},
+    domichain_poh::poh_recorder::{create_test_recorder, PohRecorder, WorkingBankEntry},
+    domichain_runtime::{
         accounts_background_service::AbsRequestSender, bank::Bank, bank_forks::BankForks,
         cost_model::CostModel,
     },
-    solana_sdk::{
+    domichain_sdk::{
         hash::Hash,
         signature::{Keypair, Signature},
         system_transaction,
         timing::{duration_as_us, timestamp},
         transaction::Transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         sync::{atomic::Ordering, Arc, Mutex, RwLock},
         thread::sleep,
@@ -97,7 +97,7 @@ fn make_accounts_txs(
     hash: Hash,
     contention: WriteLockContention,
 ) -> Vec<Transaction> {
-    use solana_sdk::pubkey;
+    use domichain_sdk::pubkey;
     let to_pubkey = pubkey::new_rand();
     let chunk_pubkeys: Vec<pubkey::Pubkey> = (0..total_num_transactions / packets_per_batch)
         .map(|_| pubkey::new_rand())
@@ -163,11 +163,11 @@ impl PacketsPerIteration {
 
 #[allow(clippy::cognitive_complexity)]
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let matches = Command::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::new("iterations")
                 .long("iterations")
@@ -369,7 +369,7 @@ fn main() {
         let base_tx_count = bank.transaction_count();
         let mut txs_processed = 0;
         let mut root = 1;
-        let collector = solana_sdk::pubkey::new_rand();
+        let collector = domichain_sdk::pubkey::new_rand();
         let mut total_sent = 0;
         for current_iteration_index in 0..iterations {
             trace!("RUNNING ITERATION {}", current_iteration_index);

@@ -8,10 +8,10 @@ use {
         galois_8::Field,
         Error::{InvalidIndex, TooFewDataShards, TooFewShardsPresent},
     },
-    solana_entry::entry::Entry,
-    solana_measure::measure::Measure,
-    solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::{clock::Slot, signature::Keypair},
+    domichain_entry::entry::Entry,
+    domichain_measure::measure::Measure,
+    domichain_rayon_threadlimit::get_thread_count,
+    domichain_sdk::{clock::Slot, signature::Keypair},
     std::fmt::Debug,
 };
 
@@ -364,7 +364,7 @@ mod tests {
         bincode::serialized_size,
         matches::assert_matches,
         rand::{seq::SliceRandom, Rng},
-        solana_sdk::{
+        domichain_sdk::{
             hash::{self, hash, Hash},
             pubkey::Pubkey,
             shred_version,
@@ -832,13 +832,13 @@ mod tests {
         let mut rng = rand::thread_rng();
         let txs = repeat_with(|| {
             let from_pubkey = Pubkey::new_unique();
-            let instruction = solana_sdk::system_instruction::transfer(
+            let instruction = domichain_sdk::system_instruction::transfer(
                 &from_pubkey,
                 &Pubkey::new_unique(), // to
                 rng.gen(),             // lamports
             );
-            let message = solana_sdk::message::Message::new(&[instruction], Some(&from_pubkey));
-            let mut tx = solana_sdk::transaction::Transaction::new_unsigned(message);
+            let message = domichain_sdk::message::Message::new(&[instruction], Some(&from_pubkey));
+            let mut tx = domichain_sdk::transaction::Transaction::new_unsigned(message);
             // Also randomize the signatre bytes.
             let mut signature = [0u8; 64];
             rng.fill(&mut signature[..]);

@@ -1,20 +1,20 @@
 [package]
-name = "solana-upload-perf"
+name = "domichain-upload-perf"
 version = "1.11.1"
 description = "Metrics Upload Utility"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
 edition = "2021"
-homepage = "https://solana.com/"
+homepage = "https://domichain.com/"
 publish = false
 
 [dependencies]
 serde_json = "1.0.81"
-solana-metrics = { path = "../metrics", version = "=1.11.1" }
+domichain-metrics = { path = "../metrics", version = "=1.11.1" }
 
 [[bin]]
-name = "solana-upload-perf"
+name = "domichain-upload-perf"
 path = "src/upload-perf.rs"
 
 [package.metadata.docs.rs]

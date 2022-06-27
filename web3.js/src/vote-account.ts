@@ -1,4 +1,4 @@
-import * as BufferLayout from '@solana/buffer-layout';
+import * as BufferLayout from '@domichain/buffer-layout';
 import type {Buffer} from 'buffer';
 
 import * as Layout from './layout';
@@ -70,7 +70,7 @@ type VoteAccountData = Readonly<{
 }>;
 
 /**
- * See https://github.com/solana-labs/solana/blob/8a12ed029cfa38d4a45400916c2463fb82bbec8c/programs/vote_api/src/vote_state.rs#L68-L88
+ * See https://Domino-Blockchain/domichain/blob/8a12ed029cfa38d4a45400916c2463fb82bbec8c/programs/vote_api/src/vote_state.rs#L68-L88
  *
  * @internal
  */

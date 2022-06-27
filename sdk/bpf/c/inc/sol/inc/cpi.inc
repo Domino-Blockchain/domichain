@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana Cross-Program Invocation
+ * @brief Domichain Cross-Program Invocation
  */
 
 #include <sol/types.h>

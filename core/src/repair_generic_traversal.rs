@@ -3,8 +3,8 @@ use {
         heaviest_subtree_fork_choice::HeaviestSubtreeForkChoice, repair_service::RepairService,
         serve_repair::ShredRepairType, tree_diff::TreeDiff,
     },
-    solana_ledger::{blockstore::Blockstore, blockstore_meta::SlotMeta},
-    solana_sdk::{clock::Slot, hash::Hash},
+    domichain_ledger::{blockstore::Blockstore, blockstore_meta::SlotMeta},
+    domichain_sdk::{clock::Slot, hash::Hash},
     std::collections::{HashMap, HashSet},
 };
 
@@ -195,11 +195,11 @@ pub fn get_closest_completion(
 pub mod test {
     use {
         super::*,
-        solana_ledger::{
+        domichain_ledger::{
             blockstore::{Blockstore, MAX_TURBINE_PROPAGATION_IN_MS},
             get_tmp_ledger_path,
         },
-        solana_sdk::hash::Hash,
+        domichain_sdk::hash::Hash,
         std::{thread::sleep, time::Duration},
         trees::{tr, Tree, TreeWalk},
     };
@@ -294,14 +294,14 @@ pub mod test {
                     // `is_orphan == true`
                     .and_then(|parent| blockhashes.get(&parent))
                     .unwrap_or(&starting_hash);
-                let entries = solana_entry::entry::create_ticks(
+                let entries = domichain_entry::entry::create_ticks(
                     num_ticks * (std::cmp::max(1, slot - parent.unwrap_or(slot))),
                     0,
                     *parent_hash,
                 );
                 blockhashes.insert(slot, entries.last().unwrap().hash);
 
-                let mut shreds = solana_ledger::blockstore::entries_to_test_shreds(
+                let mut shreds = domichain_ledger::blockstore::entries_to_test_shreds(
                     &entries,
                     slot,
                     parent.unwrap_or(slot),

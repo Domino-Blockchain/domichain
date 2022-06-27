@@ -1,11 +1,11 @@
 [package]
-name = "solana-sdk"
+name = "domichain-sdk"
 version = "1.11.1"
-description = "Solana SDK"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-sdk"
+description = "Domichain SDK"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-sdk"
 readme = "README.md"
 license = "Apache-2.0"
 edition = "2021"
@@ -13,7 +13,7 @@ edition = "2021"
 [features]
 # "program" feature is a legacy feature retained to support v1.3 and older
 # programs.  New development should not use this feature.  Instead use the
-# solana-program crate
+# domichain-program crate
 program = []
 
 default = [
@@ -30,7 +30,7 @@ full = [
     "serde_json",
     "ed25519-dalek",
     "ed25519-dalek-bip32",
-    "solana-logger",
+    "domichain-logger",
     "libsecp256k1",
     "sha3",
     "digest",
@@ -71,11 +71,11 @@ serde_derive = "1.0.103"
 serde_json = { version = "1.0.81", optional = true }
 sha2 = "0.10.2"
 sha3 = { version = "0.10.1", optional = true }
-solana-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-solana-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-solana-logger = { path = "../logger", version = "=1.11.1", optional = true }
-solana-program = { path = "program", version = "=1.11.1" }
-solana-sdk-macro = { path = "macro", version = "=1.11.1" }
+domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1", optional = true }
+domichain-program = { path = "program", version = "=1.11.1" }
+domichain-sdk-macro = { path = "macro", version = "=1.11.1" }
 thiserror = "1.0"
 uriparse = "0.6.4"
 wasm-bindgen = "0.2"

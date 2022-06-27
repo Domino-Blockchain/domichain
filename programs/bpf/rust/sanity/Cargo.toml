@@ -1,24 +1,24 @@
 [package]
-name = "solana-bpf-rust-sanity"
+name = "domichain-bpf-rust-sanity"
 version = "1.11.1"
-description = "Solana BPF test program written in Rust"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain BPF test program written in Rust"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bpf-rust-sanity"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bpf-rust-sanity"
 edition = "2021"
 
 [features]
 test-bpf = []
 
 [dependencies]
-solana-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
 
 [dev-dependencies]
-solana-program-runtime = { path = "../../../../program-runtime", version = "=1.11.1" }
-solana-program-test = { path = "../../../../program-test", version = "=1.11.1" }
-solana-sdk = { path = "../../../../sdk", version = "=1.11.1" }
+domichain-program-runtime = { path = "../../../../program-runtime", version = "=1.11.1" }
+domichain-program-test = { path = "../../../../program-test", version = "=1.11.1" }
+domichain-sdk = { path = "../../../../sdk", version = "=1.11.1" }
 
 [lib]
 crate-type = ["cdylib", "lib"]

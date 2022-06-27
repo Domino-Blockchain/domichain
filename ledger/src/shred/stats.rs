@@ -1,6 +1,6 @@
 use {
     crate::shred::MAX_DATA_SHREDS_PER_FEC_BLOCK,
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::{
         ops::AddAssign,
         time::{Duration, Instant},

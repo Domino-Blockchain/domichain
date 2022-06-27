@@ -6,8 +6,8 @@ use {
             LOOKUP_TABLE_MAX_ADDRESSES, LOOKUP_TABLE_META_SIZE,
         },
     },
-    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
-    solana_sdk::{
+    domichain_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    domichain_sdk::{
         clock::Slot,
         instruction::InstructionError,
         program_utils::limited_deserialize,

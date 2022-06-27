@@ -3,11 +3,11 @@ extern crate test;
 
 use {
     rand::{thread_rng, Rng},
-    solana_runtime::append_vec::{
+    domichain_runtime::append_vec::{
         test_utils::{create_test_account, get_append_vec_path},
         AppendVec,
     },
-    solana_sdk::{account::ReadableAccount, hash::Hash},
+    domichain_sdk::{account::ReadableAccount, hash::Hash},
     std::{
         sync::{Arc, Mutex},
         thread::{sleep, spawn},

@@ -1,9 +1,9 @@
 use {
     crossbeam_channel::{Receiver, RecvTimeoutError, Sender},
-    solana_measure::measure::Measure,
-    solana_perf::packet::PacketBatch,
-    solana_sdk::timing::timestamp,
-    solana_streamer::streamer::{self, StakedNodes, StreamerError},
+    domichain_measure::measure::Measure,
+    domichain_perf::packet::PacketBatch,
+    domichain_sdk::timing::timestamp,
+    domichain_streamer::streamer::{self, StakedNodes, StreamerError},
     std::{
         collections::HashMap,
         net::IpAddr,
@@ -92,7 +92,7 @@ impl FindPacketSenderStakeStage {
 
                         let mut discard_random_time =
                             Measure::start("findpacketsenderstake_discard_random_time");
-                        let non_discarded_packets = solana_perf::discard::discard_batches_randomly(
+                        let non_discarded_packets = domichain_perf::discard::discard_batches_randomly(
                             &mut batches,
                             MAX_FINDPACKETSENDERSTAKE_BATCH,
                             num_packets,

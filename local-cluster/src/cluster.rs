@@ -1,9 +1,9 @@
 use {
-    solana_client::thin_client::ThinClient,
-    solana_core::validator::{Validator, ValidatorConfig},
-    solana_gossip::{cluster_info::Node, contact_info::ContactInfo},
-    solana_sdk::{pubkey::Pubkey, signature::Keypair},
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_client::thin_client::ThinClient,
+    domichain_core::validator::{Validator, ValidatorConfig},
+    domichain_gossip::{cluster_info::Node, contact_info::ContactInfo},
+    domichain_sdk::{pubkey::Pubkey, signature::Keypair},
+    domichain_streamer::socket::SocketAddrSpace,
     std::{path::PathBuf, sync::Arc},
 };
 

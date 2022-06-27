@@ -2,8 +2,8 @@
 
 #![allow(unreachable_code)]
 
-extern crate solana_program;
-use solana_program::{
+extern crate domichain_program;
+use domichain_program::{
     account_info::AccountInfo, bpf_loader, entrypoint_deprecated::ProgramResult, log::*, msg,
     pubkey::Pubkey,
 };
@@ -26,7 +26,7 @@ fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     msg!(&format!("{}", info));
 }
 
-solana_program::entrypoint_deprecated!(process_instruction);
+domichain_program::entrypoint_deprecated!(process_instruction);
 #[allow(clippy::unnecessary_wraps)]
 fn process_instruction(
     program_id: &Pubkey,
@@ -64,7 +64,7 @@ fn process_instruction(
 
     {
         // Test - arch config
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         panic!();
     }
 

@@ -5,9 +5,9 @@
 // set and halt the node if a mismatch is detected.
 
 use {
-    solana_gossip::cluster_info::{ClusterInfo, MAX_SNAPSHOT_HASHES},
-    solana_measure::measure::Measure,
-    solana_runtime::{
+    domichain_gossip::cluster_info::{ClusterInfo, MAX_SNAPSHOT_HASHES},
+    domichain_measure::measure::Measure,
+    domichain_runtime::{
         accounts_hash::{CalcAccountsHashConfig, HashStats},
         snapshot_config::SnapshotConfig,
         snapshot_package::{
@@ -16,7 +16,7 @@ use {
         },
         sorted_storages::SortedStorages,
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Slot, SLOT_MS},
         hash::Hash,
         pubkey::Pubkey,
@@ -50,7 +50,7 @@ impl AccountsHashVerifier {
         let exit = exit.clone();
         let cluster_info = cluster_info.clone();
         let t_accounts_hash_verifier = Builder::new()
-            .name("solana-hash-accounts".to_string())
+            .name("domichain-hash-accounts".to_string())
             .spawn(move || {
                 let mut hashes = vec![];
                 loop {
@@ -161,7 +161,7 @@ impl AccountsHashVerifier {
         };
 
         measure_hash.stop();
-        solana_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
+        domichain_runtime::serde_snapshot::reserialize_bank_with_new_accounts_hash(
             accounts_package.snapshot_links.path(),
             accounts_package.slot,
             &accounts_hash,
@@ -189,7 +189,7 @@ impl AccountsHashVerifier {
             // For testing, publish an invalid hash to gossip.
             use {
                 rand::{thread_rng, Rng},
-                solana_sdk::hash::extend_and_hash,
+                domichain_sdk::hash::extend_and_hash,
             };
             warn!("inserting fault at slot: {}", accounts_package.slot);
             let rand = thread_rng().gen_range(0, 10);
@@ -306,18 +306,18 @@ impl AccountsHashVerifier {
 mod tests {
     use {
         super::*,
-        solana_gossip::{cluster_info::make_accounts_hashes_message, contact_info::ContactInfo},
-        solana_runtime::{
+        domichain_gossip::{cluster_info::make_accounts_hashes_message, contact_info::ContactInfo},
+        domichain_runtime::{
             rent_collector::RentCollector,
             snapshot_utils::{ArchiveFormat, SnapshotVersion},
         },
-        solana_sdk::{
+        domichain_sdk::{
             genesis_config::ClusterType,
             hash::hash,
             signature::{Keypair, Signer},
             sysvar::epoch_schedule::EpochSchedule,
         },
-        solana_streamer::socket::SocketAddrSpace,
+        domichain_streamer::socket::SocketAddrSpace,
         std::str::FromStr,
     };
 
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_max_hashes() {
-        solana_logger::setup();
+        domichain_logger::setup();
         use {std::path::PathBuf, tempfile::TempDir};
         let keypair = Keypair::new();
 
@@ -381,7 +381,7 @@ mod tests {
             incremental_snapshot_archive_interval_slots: Slot::MAX,
             ..SnapshotConfig::default()
         };
-        let accounts = Arc::new(solana_runtime::accounts::Accounts::default_for_tests());
+        let accounts = Arc::new(domichain_runtime::accounts::Accounts::default_for_tests());
         let expected_hash = Hash::from_str("GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn").unwrap();
         for i in 0..MAX_SNAPSHOT_HASHES + 1 {
             let accounts_package = AccountsPackage {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Message } from "@solana/web3.js";
+import { Message } from "@domichain/web3.js";
 import type { TransactionData } from "./InspectorPage";
 import { useQuery } from "utils/url";
 import { useHistory, useLocation } from "react-router";

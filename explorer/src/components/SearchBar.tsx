@@ -12,8 +12,8 @@ import {
 } from "utils/tx";
 import { Cluster, useCluster } from "providers/cluster";
 import { useTokenRegistry } from "providers/mints/token-registry";
-import { TokenInfoMap } from "@solana/spl-token-registry";
-import { Connection } from "@solana/web3.js";
+import { TokenInfoMap } from "@domichain/spl-token-registry";
+import { Connection } from "@domichain/web3.js";
 import { getDomainInfo, hasDomainSyntax } from "utils/name-service";
 
 interface SearchOptions {

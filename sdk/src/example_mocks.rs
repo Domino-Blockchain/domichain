@@ -13,7 +13,7 @@
 #![doc(hidden)]
 #![cfg(feature = "full")]
 
-pub mod solana_client {
+pub mod domichain_client {
     pub mod client_error {
         use thiserror::Error;
 

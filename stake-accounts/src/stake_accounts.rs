@@ -1,4 +1,4 @@
-use solana_sdk::{
+use domichain_sdk::{
     clock::SECONDS_PER_DAY,
     instruction::Instruction,
     message::Message,
@@ -283,15 +283,15 @@ pub(crate) fn move_stake_accounts(
 mod tests {
     use {
         super::*,
-        solana_runtime::{bank::Bank, bank_client::BankClient},
-        solana_sdk::{
+        domichain_runtime::{bank::Bank, bank_client::BankClient},
+        domichain_sdk::{
             account::{AccountSharedData, ReadableAccount},
             client::SyncClient,
             genesis_config::create_genesis_config,
             signature::{Keypair, Signer},
             stake::state::StakeState,
         },
-        solana_stake_program::stake_state,
+        domichain_stake_program::stake_state,
     };
 
     fn create_bank(lamports: u64) -> (Bank, Keypair, u64, u64) {
@@ -362,8 +362,8 @@ mod tests {
         let base_keypair = Keypair::new();
         let base_pubkey = base_keypair.pubkey();
         let lamports = stake_rent + 1;
-        let stake_authority_pubkey = solana_sdk::pubkey::new_rand();
-        let withdraw_authority_pubkey = solana_sdk::pubkey::new_rand();
+        let stake_authority_pubkey = domichain_sdk::pubkey::new_rand();
+        let withdraw_authority_pubkey = domichain_sdk::pubkey::new_rand();
 
         let message = new_stake_account(
             &fee_payer_pubkey,
@@ -421,8 +421,8 @@ mod tests {
             .send_and_confirm_message(&signers, message)
             .unwrap();
 
-        let new_stake_authority_pubkey = solana_sdk::pubkey::new_rand();
-        let new_withdraw_authority_pubkey = solana_sdk::pubkey::new_rand();
+        let new_stake_authority_pubkey = domichain_sdk::pubkey::new_rand();
+        let new_withdraw_authority_pubkey = domichain_sdk::pubkey::new_rand();
         let messages = authorize_stake_accounts(
             &fee_payer_pubkey,
             &base_pubkey,
@@ -640,8 +640,8 @@ mod tests {
 
         let new_base_keypair = Keypair::new();
         let new_base_pubkey = new_base_keypair.pubkey();
-        let new_stake_authority_pubkey = solana_sdk::pubkey::new_rand();
-        let new_withdraw_authority_pubkey = solana_sdk::pubkey::new_rand();
+        let new_stake_authority_pubkey = domichain_sdk::pubkey::new_rand();
+        let new_withdraw_authority_pubkey = domichain_sdk::pubkey::new_rand();
         let balances = get_balances(&bank_client, &base_pubkey, num_accounts);
         let messages = move_stake_accounts(
             &fee_payer_pubkey,

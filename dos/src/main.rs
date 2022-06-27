@@ -18,24 +18,24 @@
 //! 1. Without blockhash or payer:
 //! 1.1 With invalid signatures
 //! ```bash
-//! solana-dos $COMMON --num-signatures 8
+//! domichain-dos $COMMON --num-signatures 8
 //! ```
 //! 1.2 With valid signatures
 //! ```bash
-//! solana-dos $COMMON --valid-signatures --num-signatures 8
+//! domichain-dos $COMMON --valid-signatures --num-signatures 8
 //! ```
 //! 2. With blockhash and payer:
 //! 2.1 Single-instruction transaction
 //! ```bash
-//! solana-dos $COMMON --valid-blockhash --transaction-type transfer --num-instructions 1
+//! domichain-dos $COMMON --valid-blockhash --transaction-type transfer --num-instructions 1
 //! ```
 //! 2.2 Multi-instruction transaction
 //! ```bash
-//! solana-dos $COMMON --valid-blockhash --transaction-type transfer --num-instructions 8
+//! domichain-dos $COMMON --valid-blockhash --transaction-type transfer --num-instructions 8
 //! ```
 //! 2.3 Account-creation transaction
 //! ```bash
-//! solana-dos $COMMON --valid-blockhash --transaction-type account-creation
+//! domichain-dos $COMMON --valid-blockhash --transaction-type account-creation
 //! ```
 //!
 #![allow(clippy::integer_arithmetic)]
@@ -43,19 +43,19 @@ use {
     itertools::Itertools,
     log::*,
     rand::{thread_rng, Rng},
-    solana_bench_tps::{bench::generate_and_fund_keypairs, bench_tps_client::BenchTpsClient},
-    solana_client::{
+    domichain_bench_tps::{bench::generate_and_fund_keypairs, bench_tps_client::BenchTpsClient},
+    domichain_client::{
         connection_cache::{ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE},
         rpc_client::RpcClient,
         tpu_connection::TpuConnection,
     },
-    solana_core::serve_repair::RepairProtocol,
-    solana_dos::cli::*,
-    solana_gossip::{
+    domichain_core::serve_repair::RepairProtocol,
+    domichain_dos::cli::*,
+    domichain_gossip::{
         contact_info::ContactInfo,
         gossip_service::{discover, get_multi_client},
     },
-    solana_sdk::{
+    domichain_sdk::{
         hash::Hash,
         instruction::CompiledInstruction,
         message::Message,
@@ -66,7 +66,7 @@ use {
         system_program,
         transaction::Transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         cmp::min,
         net::{SocketAddr, UdpSocket},
@@ -84,7 +84,7 @@ fn compute_rate_per_second(count: usize) -> usize {
 fn get_repair_contact(nodes: &[ContactInfo]) -> ContactInfo {
     let source = thread_rng().gen_range(0, nodes.len());
     let mut contact = nodes[source].clone();
-    contact.id = solana_sdk::pubkey::new_rand();
+    contact.id = domichain_sdk::pubkey::new_rand();
     contact
 }
 
@@ -597,7 +597,7 @@ fn run_dos<T: 'static + BenchTpsClient + Send + Sync>(
 }
 
 fn main() {
-    solana_logger::setup_with_default("solana=info");
+    domichain_logger::setup_with_default("domichain=info");
     let cmd_params = build_cli_parameters();
 
     let (nodes, client) = if !cmd_params.skip_gossip {
@@ -651,16 +651,16 @@ fn main() {
 pub mod test {
     use {
         super::*,
-        solana_client::thin_client::ThinClient,
-        solana_core::validator::ValidatorConfig,
-        solana_faucet::faucet::run_local_faucet,
-        solana_local_cluster::{
+        domichain_client::thin_client::ThinClient,
+        domichain_core::validator::ValidatorConfig,
+        domichain_faucet::faucet::run_local_faucet,
+        domichain_local_cluster::{
             cluster::Cluster,
             local_cluster::{ClusterConfig, LocalCluster},
             validator_configs::make_identical_validator_configs,
         },
-        solana_rpc::rpc::JsonRpcConfig,
-        solana_sdk::timing::timestamp,
+        domichain_rpc::rpc::JsonRpcConfig,
+        domichain_sdk::timing::timestamp,
     };
 
     // thin wrapper for the run_dos function
@@ -672,7 +672,7 @@ pub mod test {
     #[test]
     fn test_dos() {
         let nodes = [ContactInfo::new_localhost(
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             timestamp(),
         )];
         let entrypoint_addr = nodes[0].gossip;
@@ -744,7 +744,7 @@ pub mod test {
 
     #[test]
     fn test_dos_random() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let num_nodes = 1;
         let cluster =
             LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
@@ -775,7 +775,7 @@ pub mod test {
 
     #[test]
     fn test_dos_without_blockhash() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let num_nodes = 1;
         let cluster =
             LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
@@ -868,7 +868,7 @@ pub mod test {
     }
 
     fn run_dos_with_blockhash_and_payer(tpu_use_quic: bool) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         // 1. Create faucet thread
         let faucet_keypair = Keypair::new();

@@ -1,17 +1,17 @@
 extern crate log;
 use {
     clap::{crate_description, crate_name, value_t, App, Arg},
-    solana_measure::measure::Measure,
-    solana_runtime::accounts_hash::AccountsHash,
-    solana_sdk::{hash::Hash, pubkey::Pubkey},
+    domichain_measure::measure::Measure,
+    domichain_runtime::accounts_hash::AccountsHash,
+    domichain_sdk::{hash::Hash, pubkey::Pubkey},
 };
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("num_accounts")
                 .long("num_accounts")

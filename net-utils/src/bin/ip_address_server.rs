@@ -4,9 +4,9 @@ use {
 };
 
 fn main() {
-    solana_logger::setup();
-    let matches = Command::new("solana-ip-address-server")
-        .version(solana_version::version!())
+    domichain_logger::setup();
+    let matches = Command::new("domichain-ip-address-server")
+        .version(domichain_version::version!())
         .arg(
             Arg::new("port")
                 .index(1)
@@ -21,7 +21,7 @@ fn main() {
         .unwrap_or_else(|_| panic!("Unable to parse {}", port));
     let bind_addr = SocketAddr::from(([0, 0, 0, 0], port));
     let tcp_listener = TcpListener::bind(bind_addr).expect("unable to start tcp listener");
-    let _runtime = solana_net_utils::ip_echo_server(tcp_listener, /*shred_version=*/ None);
+    let _runtime = domichain_net_utils::ip_echo_server(tcp_listener, /*shred_version=*/ None);
     loop {
         std::thread::park();
     }

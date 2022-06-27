@@ -1,17 +1,17 @@
 use {
     log::*,
     rand::{seq::SliceRandom, thread_rng, Rng},
-    solana_client::rpc_client::RpcClient,
-    solana_core::validator::{ValidatorConfig, ValidatorStartProgress},
-    solana_download_utils::{download_snapshot_archive, DownloadProgressRecord},
-    solana_genesis_utils::download_then_check_genesis_hash,
-    solana_gossip::{
+    domichain_client::rpc_client::RpcClient,
+    domichain_core::validator::{ValidatorConfig, ValidatorStartProgress},
+    domichain_download_utils::{download_snapshot_archive, DownloadProgressRecord},
+    domichain_genesis_utils::download_then_check_genesis_hash,
+    domichain_gossip::{
         cluster_info::{ClusterInfo, Node},
         contact_info::ContactInfo,
         crds_value,
         gossip_service::GossipService,
     },
-    solana_runtime::{
+    domichain_runtime::{
         snapshot_archive_info::SnapshotArchiveInfoGetter,
         snapshot_package::SnapshotType,
         snapshot_utils::{
@@ -19,14 +19,14 @@ use {
             DEFAULT_MAX_INCREMENTAL_SNAPSHOT_ARCHIVES_TO_RETAIN,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         collections::{HashMap, HashSet},
         net::{SocketAddr, TcpListener, UdpSocket},
@@ -192,7 +192,7 @@ fn verify_reachable_ports(
         tcp_listeners.push((ip_echo.local_addr().unwrap().port(), ip_echo));
     }
 
-    solana_net_utils::verify_reachable_ports(
+    domichain_net_utils::verify_reachable_ports(
         &cluster_entrypoint.gossip,
         tcp_listeners,
         &udp_sockets,
@@ -335,7 +335,7 @@ fn check_vote_account(
         .value
         .ok_or_else(|| format!("vote account does not exist: {}", vote_account_address))?;
 
-    if vote_account.owner != solana_vote_program::id() {
+    if vote_account.owner != domichain_vote_program::id() {
         return Err(format!(
             "not a vote account (owned by {}): {}",
             vote_account.owner, vote_account_address
@@ -348,7 +348,7 @@ fn check_vote_account(
         .value
         .ok_or_else(|| format!("identity account does not exist: {}", identity_pubkey))?;
 
-    let vote_state = solana_vote_program::vote_state::VoteState::from(&vote_account);
+    let vote_state = domichain_vote_program::vote_state::VoteState::from(&vote_account);
     if let Some(vote_state) = vote_state {
         if vote_state.authorized_voters().is_empty() {
             return Err("Vote account not yet initialized".to_string());
@@ -450,7 +450,7 @@ mod without_incremental_snapshots {
 
             let result = match rpc_client.get_version() {
             Ok(rpc_version) => {
-                info!("RPC node version: {}", rpc_version.solana_core);
+                info!("RPC node version: {}", rpc_version.domichain_core);
                 Ok(())
             }
             Err(err) => Err(format!("Failed to get RPC node version: {}", err)),
@@ -605,7 +605,7 @@ mod without_incremental_snapshots {
                 )
                 .unwrap_or_else(|err| {
                     // Consider failures here to be more likely due to user error (eg,
-                    // incorrect `solana-validator` command-line arguments) rather than the
+                    // incorrect `domichain-validator` command-line arguments) rather than the
                     // RPC node failing.
                     //
                     // Power users can always use the `--no-check-vote-account` option to
@@ -874,7 +874,7 @@ mod with_incremental_snapshots {
 
             let result = match rpc_client.get_version() {
                 Ok(rpc_version) => {
-                    info!("RPC node version: {}", rpc_version.solana_core);
+                    info!("RPC node version: {}", rpc_version.domichain_core);
                     Ok(())
                 }
                 Err(err) => Err(format!("Failed to get RPC node version: {}", err)),
@@ -953,7 +953,7 @@ mod with_incremental_snapshots {
                     )
                     .unwrap_or_else(|err| {
                         // Consider failures here to be more likely due to user error (eg,
-                        // incorrect `solana-validator` command-line arguments) rather than the
+                        // incorrect `domichain-validator` command-line arguments) rather than the
                         // RPC node failing.
                         //
                         // Power users can always use the `--no-check-vote-account` option to

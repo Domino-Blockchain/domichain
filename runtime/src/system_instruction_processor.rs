@@ -4,10 +4,10 @@ use {
         withdraw_nonce_account,
     },
     log::*,
-    solana_program_runtime::{
+    domichain_program_runtime::{
         ic_msg, invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,
         feature_set,
@@ -570,7 +570,7 @@ pub enum SystemAccountKind {
 }
 
 pub fn get_system_account_kind(account: &AccountSharedData) -> Option<SystemAccountKind> {
-    use solana_sdk::account::ReadableAccount;
+    use domichain_sdk::account::ReadableAccount;
     if system_program::check_id(account.owner()) {
         if account.data().is_empty() {
             Some(SystemAccountKind::System)
@@ -591,7 +591,7 @@ pub fn get_system_account_kind(account: &AccountSharedData) -> Option<SystemAcco
 #[cfg(test)]
 mod tests {
     #[allow(deprecated)]
-    use solana_sdk::{
+    use domichain_sdk::{
         account::{self, Account, AccountSharedData, ReadableAccount},
         client::SyncClient,
         fee_calculator::FeeCalculator,
@@ -617,7 +617,7 @@ mod tests {
         super::*,
         crate::{bank::Bank, bank_client::BankClient},
         bincode::serialize,
-        solana_program_runtime::invoke_context::{
+        domichain_program_runtime::invoke_context::{
             mock_process_instruction, InvokeContext, ProcessInstructionWithContext,
         },
         std::sync::Arc,
@@ -1597,7 +1597,7 @@ mod tests {
     where
         F: Fn(&Bank),
     {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let alice_keypair = Keypair::new();
         let bob_keypair = Keypair::new();
@@ -1853,7 +1853,7 @@ mod tests {
         let blockhash = hash(&serialize(&0).unwrap());
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![IterItem(0u64, &blockhash, 0); sysvar::recent_blockhashes::MAX_ENTRIES]
                     .into_iter(),
             );
@@ -2158,7 +2158,7 @@ mod tests {
         let blockhash_id = sysvar::recent_blockhashes::id();
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![].into_iter(),
             );
         process_instruction(
@@ -2226,7 +2226,7 @@ mod tests {
         );
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![].into_iter(),
             );
         process_instruction(

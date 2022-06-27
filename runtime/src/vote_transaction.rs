@@ -1,9 +1,9 @@
 use {
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         hash::Hash,
     },
-    solana_vote_program::vote_state::{Vote, VoteStateUpdate},
+    domichain_vote_program::vote_state::{Vote, VoteStateUpdate},
 };
 
 #[derive(Debug, PartialEq, Eq)]

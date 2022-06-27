@@ -1,13 +1,13 @@
-//! The original and current Solana message format.
+//! The original and current Domichain message format.
 //!
 //! This crate defines two versions of `Message` in their own modules:
-//! [`legacy`] and [`v0`]. `legacy` is the current version as of Solana 1.10.0.
+//! [`legacy`] and [`v0`]. `legacy` is the current version as of Domichain 1.10.0.
 //! `v0` is a [future message format] that encodes more account keys into a
 //! transaction than the legacy format.
 //!
 //! [`legacy`]: crate::message::legacy
 //! [`v0`]: crate::message::v0
-//! [future message format]: https://docs.solana.com/proposals/transactions-v2
+//! [future message format]: https://docs.domichain.com/proposals/transactions-v2
 
 #![allow(clippy::integer_arithmetic)]
 
@@ -87,7 +87,7 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Pubkey]) -> Vec<CompiledIns
     ixs.iter().map(|ix| compile_instruction(ix, keys)).collect()
 }
 
-/// A Solana transaction message (legacy).
+/// A Domichain transaction message (legacy).
 ///
 /// See the [`message`] module documentation for further description.
 ///
@@ -169,19 +169,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
-    /// [`solana_client`]: https://docs.rs/solana-client
+    /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
+    /// [`domichain_client`]: https://docs.rs/domichain-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
-    /// # use solana_program::example_mocks::solana_client;
+    /// # use domichain_program::example_mocks::domichain_sdk;
+    /// # use domichain_program::example_mocks::domichain_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solana_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
     ///     pubkey::Pubkey,
@@ -240,19 +240,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
-    /// [`solana_client`]: https://docs.rs/solana-client
+    /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
+    /// [`domichain_client`]: https://docs.rs/domichain-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
-    /// # use solana_program::example_mocks::solana_client;
+    /// # use domichain_program::example_mocks::domichain_sdk;
+    /// # use domichain_program::example_mocks::domichain_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solana_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
     ///     pubkey::Pubkey,
@@ -328,7 +328,7 @@ impl Message {
 
     /// Create a new message for a [nonced transaction].
     ///
-    /// [nonced transaction]: https://docs.solana.com/implemented-proposals/durable-tx-nonces
+    /// [nonced transaction]: https://docs.domichain.com/implemented-proposals/durable-tx-nonces
     ///
     /// In this type of transaction, the blockhash is replaced with a _durable
     /// transaction nonce_, allowing for extended time to pass between the
@@ -336,19 +336,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
-    /// [`solana_client`]: https://docs.rs/solana-client
+    /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
+    /// [`domichain_client`]: https://docs.rs/domichain-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
-    /// # use solana_program::example_mocks::solana_client;
+    /// # use domichain_program::example_mocks::domichain_sdk;
+    /// # use domichain_program::example_mocks::domichain_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solana_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_sdk::{
     ///     hash::Hash,
     ///     instruction::Instruction,
     ///     message::Message,
@@ -465,18 +465,18 @@ impl Message {
     }
 
     /// Compute the blake3 hash of this transaction's message.
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     pub fn hash(&self) -> Hash {
         let message_bytes = self.serialize();
         Self::hash_raw_message(&message_bytes)
     }
 
     /// Compute the blake3 hash of a raw transaction message.
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     pub fn hash_raw_message(message_bytes: &[u8]) -> Hash {
         use blake3::traits::digest::Digest;
         let mut hasher = blake3::Hasher::new();
-        hasher.update(b"solana-tx-message-v1");
+        hasher.update(b"domichain-tx-message-v1");
         hasher.update(message_bytes);
         Hash(<[u8; crate::hash::HASH_BYTES]>::try_from(hasher.finalize().as_slice()).unwrap())
     }
@@ -849,7 +849,7 @@ mod tests {
     #[test]
     fn test_message_hash() {
         // when this test fails, it's most likely due to a new serialized format of a message.
-        // in this case, the domain prefix `solana-tx-message-v1` should be updated.
+        // in this case, the domain prefix `domichain-tx-message-v1` should be updated.
         let program_id0 = Pubkey::from_str("4uQeVj5tqViQh7yWWGStvkEG1Zmhx6uasJtWCJziofM").unwrap();
         let program_id1 = Pubkey::from_str("8opHzTAnfzRpPEx21XtnrVTX28YQuCpAjcn1PczScKh").unwrap();
         let id0 = Pubkey::from_str("CiDwVBFgWV9E5MvXWoLgnEgn2hK7rJikbvfWavzAQz3").unwrap();

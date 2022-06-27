@@ -9,15 +9,15 @@ use {
     bip39::{Language, Mnemonic, MnemonicType, Seed},
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     log::*,
-    solana_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
-    solana_bpf_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
-    solana_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
-    solana_cli_output::{
+    domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
+    domichain_bpf_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
+    domichain_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
+    domichain_cli_output::{
         CliProgram, CliProgramAccountType, CliProgramAuthority, CliProgramBuffer, CliProgramId,
         CliUpgradeableBuffer, CliUpgradeableBuffers, CliUpgradeableProgram,
         CliUpgradeableProgramClosed, CliUpgradeablePrograms,
     },
-    solana_client::{
+    domichain_client::{
         client_error::ClientErrorKind,
         connection_cache::ConnectionCache,
         rpc_client::RpcClient,
@@ -25,14 +25,9 @@ use {
         rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    solana_program_runtime::invoke_context::InvokeContext,
-    solana_rbpf::{
-        elf::Executable,
-        verifier::RequisiteVerifier,
-        vm::{Config, VerifiedExecutable},
-    },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_sdk::{
+    domichain_program_runtime::invoke_context::InvokeContext,
+    domichain_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_sdk::{
         account::Account,
         account_utils::StateMut,
         bpf_loader, bpf_loader_deprecated,
@@ -48,6 +43,11 @@ use {
         system_program,
         transaction::{Transaction, TransactionError},
         transaction_context::TransactionContext,
+    },
+    solana_rbpf::{
+        elf::Executable,
+        verifier::RequisiteVerifier,
+        vm::{Config, VerifiedExecutable},
     },
     std::{
         fs::File,
@@ -2290,15 +2290,15 @@ fn report_ephemeral_mnemonic(words: usize, mnemonic: bip39::Mnemonic) {
         divider
     );
     eprintln!(
-        "`solana-keygen recover` and the following {}-word seed phrase:",
+        "`domichain-keygen recover` and the following {}-word seed phrase:",
         words
     );
     eprintln!("{}\n{}\n{}", divider, phrase, divider);
     eprintln!("To resume a deploy, pass the recovered keypair as the");
-    eprintln!("[BUFFER_SIGNER] to `solana program deploy` or `solana program write-buffer'.");
+    eprintln!("[BUFFER_SIGNER] to `domichain program deploy` or `domichain program write-buffer'.");
     eprintln!("Or to recover the account's lamports, pass it as the");
     eprintln!(
-        "[BUFFER_ACCOUNT_ADDRESS] argument to `solana program close`.\n{}",
+        "[BUFFER_ACCOUNT_ADDRESS] argument to `domichain program close`.\n{}",
         divider
     );
 }
@@ -2312,8 +2312,8 @@ mod tests {
             cli::{parse_command, process_command},
         },
         serde_json::Value,
-        solana_cli_output::OutputFormat,
-        solana_sdk::signature::write_keypair_file,
+        domichain_cli_output::OutputFormat,
+        domichain_sdk::signature::write_keypair_file,
     };
 
     fn make_tmp_path(name: &str) -> String {
@@ -3100,7 +3100,7 @@ mod tests {
 
     #[test]
     fn test_cli_keypair_file() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let default_keypair = Keypair::new();
         let program_pubkey = Keypair::new();

@@ -1,15 +1,15 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    solana_cli::cli::{process_command, CliCommand, CliConfig},
-    solana_client::rpc_client::RpcClient,
-    solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_cli::cli::{process_command, CliCommand, CliConfig},
+    domichain_client::rpc_client::RpcClient,
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         native_token::sol_to_lamports,
         signature::{Keypair, Signer},
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
 };
 
 #[test]

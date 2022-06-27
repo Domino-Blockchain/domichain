@@ -3,7 +3,7 @@ use {
         stakes::{create_and_add_stakes, StakerInfo},
         unlocks::UnlockInfo,
     },
-    solana_sdk::{genesis_config::GenesisConfig, native_token::LAMPORTS_PER_SOL},
+    domichain_sdk::{genesis_config::GenesisConfig, native_token::LAMPORTS_PER_SOL},
 };
 
 // 9 month schedule is 100% after 9 months

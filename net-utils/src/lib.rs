@@ -458,7 +458,7 @@ pub fn multi_bind_in_range(
     mut num: usize,
 ) -> io::Result<(u16, Vec<UdpSocket>)> {
     if cfg!(windows) && num != 1 {
-        // See https://github.com/solana-labs/solana/issues/4607
+        // See https://Domino-Blockchain/domichain/issues/4607
         warn!(
             "multi_bind_in_range() only supports 1 socket in windows ({} requested)",
             num
@@ -731,7 +731,7 @@ mod tests {
 
     #[test]
     fn test_get_public_ip_addr_none() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let (_server_port, (server_udp_socket, server_tcp_listener)) =
             bind_common_in_range(ip_addr, (3200, 3250)).unwrap();
@@ -749,7 +749,7 @@ mod tests {
 
     #[test]
     fn test_get_public_ip_addr_reachable() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let (_server_port, (server_udp_socket, server_tcp_listener)) =
             bind_common_in_range(ip_addr, (3200, 3250)).unwrap();
@@ -773,7 +773,7 @@ mod tests {
 
     #[test]
     fn test_get_public_ip_addr_tcp_unreachable() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let (_server_port, (server_udp_socket, _server_tcp_listener)) =
             bind_common_in_range(ip_addr, (3200, 3250)).unwrap();
@@ -796,7 +796,7 @@ mod tests {
 
     #[test]
     fn test_get_public_ip_addr_udp_unreachable() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         let (_server_port, (server_udp_socket, _server_tcp_listener)) =
             bind_common_in_range(ip_addr, (3200, 3250)).unwrap();
@@ -819,7 +819,7 @@ mod tests {
 
     #[test]
     fn test_bind_two_consecutive_in_range() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let ip_addr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
         if let Ok(((port1, _), (port2, _))) = bind_two_consecutive_in_range(ip_addr, (1024, 65535))
         {

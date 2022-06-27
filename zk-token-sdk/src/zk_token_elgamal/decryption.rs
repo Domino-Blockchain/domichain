@@ -1,10 +1,10 @@
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use crate::{
     encryption::elgamal::{ElGamalCiphertext, ElGamalSecretKey},
     zk_token_elgamal::pod,
 };
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl pod::ElGamalCiphertext {
     pub fn decrypt(self, secret_key: &ElGamalSecretKey) -> Option<u64> {
         let deserialized_ciphertext: Option<ElGamalCiphertext> = self.try_into().ok();

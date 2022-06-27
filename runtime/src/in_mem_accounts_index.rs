@@ -9,9 +9,9 @@ use {
         waitable_condvar::WaitableCondvar,
     },
     rand::{thread_rng, Rng},
-    solana_bucket_map::bucket_api::BucketApi,
-    solana_measure::measure::Measure,
-    solana_sdk::{clock::Slot, pubkey::Pubkey},
+    domichain_bucket_map::bucket_api::BucketApi,
+    domichain_measure::measure::Measure,
+    domichain_sdk::{clock::Slot, pubkey::Pubkey},
     std::{
         collections::{
             hash_map::{Entry, VacantEntry},
@@ -1452,7 +1452,7 @@ mod tests {
 
     #[test]
     fn test_should_evict_from_mem() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let bucket = new_for_test::<u64>();
         let mut startup = false;
         let mut current_age = 0;
@@ -1651,7 +1651,7 @@ mod tests {
 
     #[test]
     fn test_age() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let test = new_for_test::<u64>();
         assert!(test.get_should_age(test.storage.current_age()));
         assert_eq!(test.storage.count_buckets_flushed(), 0);
@@ -1674,7 +1674,7 @@ mod tests {
 
     #[test]
     fn test_update_slot_list_other() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let previous_slot_entry_was_cached = false;
         let new_slot = 0;
         let info = 1;

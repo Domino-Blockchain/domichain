@@ -88,7 +88,7 @@ if [[ -n ${positional_args[0]} ]]; then
   stake_sol=${positional_args[0]}
 fi
 
-VALIDATOR_KEYS_DIR=$SOLANA_CONFIG_DIR/validator$label
+VALIDATOR_KEYS_DIR=$DOMICHAIN_CONFIG_DIR/validator$label
 vote_account="${vote_account:-$VALIDATOR_KEYS_DIR/vote-account.json}"
 stake_account="${stake_account:-$VALIDATOR_KEYS_DIR/stake-account.json}"
 
@@ -102,8 +102,8 @@ if ((airdrops_enabled)); then
     echo "--keypair argument must be provided"
     exit 1
   fi
-  $solana_cli \
-    "${common_args[@]}" --keypair "$SOLANA_CONFIG_DIR/faucet.json" \
+  $domichain_cli \
+    "${common_args[@]}" --keypair "$DOMICHAIN_CONFIG_DIR/faucet.json" \
     transfer --allow-unfunded-recipient "$keypair" "$stake_sol"
 fi
 
@@ -112,16 +112,16 @@ if [[ -n $keypair ]]; then
 fi
 
 if ! [[ -f "$stake_account" ]]; then
-  $solana_keygen new --no-passphrase -so "$stake_account"
+  $domichain_keygen new --no-passphrase -so "$stake_account"
 else
   echo "$stake_account already exists! Using it"
 fi
 
 set -x
-$solana_cli "${common_args[@]}" \
+$domichain_cli "${common_args[@]}" \
   vote-account "$vote_account"
-$solana_cli "${common_args[@]}" \
+$domichain_cli "${common_args[@]}" \
   create-stake-account "$stake_account" "$stake_sol"
-$solana_cli "${common_args[@]}" \
+$domichain_cli "${common_args[@]}" \
   delegate-stake $maybe_force "$stake_account" "$vote_account"
-$solana_cli "${common_args[@]}" stakes "$stake_account"
+$domichain_cli "${common_args[@]}" stakes "$stake_account"

@@ -65,9 +65,9 @@ jobs:
         if: ${{ matrix.platform == 'android' }}
         with:
           command: ndk
-          args: --target ${{ matrix.target }} build -p solana-client
+          args: --target ${{ matrix.target }} build -p domichain-client
       - uses: actions-rs/cargo@v1
         if: ${{ matrix.platform == 'ios' }}
         with:
           command: build
-          args: -p solana-client --target ${{ matrix.target }}
+          args: -p domichain-client --target ${{ matrix.target }}

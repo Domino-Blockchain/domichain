@@ -1,16 +1,16 @@
 [package]
-name = "solana-bpf-rust-get-minimum-delegation"
+name = "domichain-bpf-rust-get-minimum-delegation"
 version = "1.11.1"
-description = "Solana BPF test program written in Rust"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain BPF test program written in Rust"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-bpf-rust-get-minimum-delegation"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-bpf-rust-get-minimum-delegation"
 edition = "2021"
 
 [dependencies]
-solana-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
 
 [lib]
 crate-type = ["cdylib"]

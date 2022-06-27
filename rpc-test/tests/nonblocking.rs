@@ -1,10 +1,10 @@
 use {
-    solana_client::{
+    domichain_client::{
         nonblocking::tpu_client::{LeaderTpuService, TpuClient},
         tpu_client::TpuClientConfig,
     },
-    solana_sdk::{clock::DEFAULT_MS_PER_SLOT, pubkey::Pubkey, system_transaction},
-    solana_test_validator::TestValidatorGenesis,
+    domichain_sdk::{clock::DEFAULT_MS_PER_SLOT, pubkey::Pubkey, system_transaction},
+    domichain_test_validator::TestValidatorGenesis,
     std::sync::{
         atomic::{AtomicBool, Ordering},
         Arc,

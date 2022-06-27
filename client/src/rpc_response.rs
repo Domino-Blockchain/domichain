@@ -1,8 +1,8 @@
 use {
     crate::client_error,
     serde::{Deserialize, Deserializer, Serialize, Serializer},
-    solana_account_decoder::{parse_token::UiTokenAmount, UiAccount},
-    solana_sdk::{
+    domichain_account_decoder::{parse_token::UiTokenAmount, UiAccount},
+    domichain_sdk::{
         clock::{Epoch, Slot, UnixTimestamp},
         fee_calculator::{FeeCalculator, FeeRateGovernor},
         hash::Hash,
@@ -10,7 +10,7 @@ use {
         transaction::{Result, TransactionError},
         transaction_context::TransactionReturnData,
     },
-    solana_transaction_status::{
+    domichain_transaction_status::{
         ConfirmedTransactionStatusWithSignature, TransactionConfirmationStatus, UiConfirmedBlock,
     },
     std::{collections::HashMap, fmt, net::SocketAddr, str::FromStr},
@@ -39,7 +39,7 @@ impl std::ops::Deref for RpcApiVersion {
 
 impl Default for RpcApiVersion {
     fn default() -> Self {
-        Self(solana_version::Version::default().as_semver_version())
+        Self(domichain_version::Version::default().as_semver_version())
     }
 }
 
@@ -308,25 +308,25 @@ pub struct RpcBlockProduction {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct RpcVersionInfo {
-    /// The current version of solana-core
-    pub solana_core: String,
+    /// The current version of domichain-core
+    pub domichain_core: String,
     /// first 4 bytes of the FeatureSet identifier
     pub feature_set: Option<u32>,
 }
 
 impl fmt::Debug for RpcVersionInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.solana_core)
+        write!(f, "{}", self.domichain_core)
     }
 }
 
 impl fmt::Display for RpcVersionInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(version) = self.solana_core.split_whitespace().next() {
+        if let Some(version) = self.domichain_core.split_whitespace().next() {
             // Display just the semver if possible
             write!(f, "{}", version)
         } else {
-            write!(f, "{}", self.solana_core)
+            write!(f, "{}", self.domichain_core)
         }
     }
 }

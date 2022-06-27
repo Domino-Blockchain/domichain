@@ -9,7 +9,7 @@ use {
         },
     },
     serde_derive::{Deserialize, Serialize},
-    solana_sdk::{
+    domichain_sdk::{
         hash::Hash,
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,

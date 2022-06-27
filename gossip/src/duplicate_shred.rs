@@ -1,11 +1,11 @@
 use {
     crate::crds_value::sanitize_wallclock,
     itertools::Itertools,
-    solana_ledger::{
+    domichain_ledger::{
         blockstore_meta::DuplicateSlotProof,
         shred::{self, Shred, ShredType},
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
@@ -283,9 +283,9 @@ pub(crate) mod tests {
     use {
         super::*,
         rand::Rng,
-        solana_entry::entry::Entry,
-        solana_ledger::shred::Shredder,
-        solana_sdk::{
+        domichain_entry::entry::Entry,
+        domichain_ledger::shred::Shredder,
+        domichain_sdk::{
             hash,
             signature::{Keypair, Signer},
             system_transaction,

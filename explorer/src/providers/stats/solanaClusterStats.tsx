@@ -1,16 +1,16 @@
 import React from "react";
-import { Connection } from "@solana/web3.js";
+import { Connection } from "@domichain/web3.js";
 import { useCluster, Cluster } from "providers/cluster";
 import {
   DashboardInfo,
   DashboardInfoActionType,
   dashboardInfoReducer,
-} from "./solanaDashboardInfo";
+} from "./domichainDashboardInfo";
 import {
   PerformanceInfo,
   PerformanceInfoActionType,
   performanceInfoReducer,
-} from "./solanaPerformanceInfo";
+} from "./domichainPerformanceInfo";
 import { reportError } from "utils/sentry";
 
 export const PERF_UPDATE_SEC = 5;
@@ -81,7 +81,7 @@ function getConnection(url: string): Connection | undefined {
   } catch (error) {}
 }
 
-export function SolanaClusterStatsProvider({ children }: Props) {
+export function DomichainClusterStatsProvider({ children }: Props) {
   const { cluster, url } = useCluster();
   const [active, setActive] = React.useState(false);
   const [dashboardInfo, dispatchDashboardInfo] = React.useReducer(

@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 use {
-    solana_address_lookup_table_program::{
+    domichain_address_lookup_table_program::{
         id,
         processor::process_instruction,
         state::{AddressLookupTable, LookupTableMeta},
     },
-    solana_program_test::*,
-    solana_sdk::{
+    domichain_program_test::*,
+    domichain_sdk::{
         account::AccountSharedData,
         clock::Slot,
         hash::Hash,
@@ -83,7 +83,7 @@ pub async fn add_lookup_table_account(
     let mut account = AccountSharedData::new(
         rent_exempt_balance,
         data.len(),
-        &solana_address_lookup_table_program::id(),
+        &domichain_address_lookup_table_program::id(),
     );
     account.set_data(data);
     context.set_account(&account_address, &account);

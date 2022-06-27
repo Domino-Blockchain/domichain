@@ -6,10 +6,10 @@ use {
     },
     log::*,
     rayon::prelude::*,
-    solana_core::gen_keys::GenKeys,
-    solana_measure::measure::Measure,
-    solana_metrics::{self, datapoint_info},
-    solana_sdk::{
+    domichain_core::gen_keys::GenKeys,
+    domichain_measure::measure::Measure,
+    domichain_metrics::{self, datapoint_info},
+    domichain_sdk::{
         clock::{DEFAULT_MS_PER_SLOT, DEFAULT_S_PER_SLOT, MAX_PROCESSING_AGE},
         commitment_config::CommitmentConfig,
         hash::Hash,
@@ -92,7 +92,7 @@ where
     let maxes = maxes.clone();
     let client = client.clone();
     Builder::new()
-        .name("solana-client-sample".to_string())
+        .name("domichain-client-sample".to_string())
         .spawn(move || {
             sample_txs(&exit_signal, &maxes, sample_period, &client);
         })
@@ -186,7 +186,7 @@ where
             let total_tx_sent_count = total_tx_sent_count.clone();
             let client = client.clone();
             Builder::new()
-                .name("solana-client-sender".to_string())
+                .name("domichain-client-sender".to_string())
                 .spawn(move || {
                     do_tx_transfers(
                         &exit_signal,
@@ -256,7 +256,7 @@ where
         let client = client.clone();
         let id = id.pubkey();
         Builder::new()
-            .name("solana-blockhash-poller".to_string())
+            .name("domichain-blockhash-poller".to_string())
             .spawn(move || {
                 poll_blockhash(&exit_signal, &blockhash, &client, &id);
             })
@@ -890,7 +890,7 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
     let rent = client.get_minimum_balance_for_rent_exemption(0)?;
     info!("Get lamports...");
 
-    // Sample the first keypair, to prevent lamport loss on repeated solana-bench-tps executions
+    // Sample the first keypair, to prevent lamport loss on repeated domichain-bench-tps executions
     let first_key = keypairs[0].pubkey();
     let first_keypair_balance = client.get_balance(&first_key).unwrap_or(0);
 
@@ -959,8 +959,8 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
 mod tests {
     use {
         super::*,
-        solana_runtime::{bank::Bank, bank_client::BankClient},
-        solana_sdk::{
+        domichain_runtime::{bank::Bank, bank_client::BankClient},
+        domichain_sdk::{
             fee_calculator::FeeRateGovernor, genesis_config::create_genesis_config,
             native_token::sol_to_lamports,
         },

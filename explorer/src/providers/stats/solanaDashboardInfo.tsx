@@ -1,5 +1,5 @@
-import { EpochInfo, PerfSample } from "@solana/web3.js";
-import { ClusterStatsStatus } from "./solanaClusterStats";
+import { EpochInfo, PerfSample } from "@domichain/web3.js";
+import { ClusterStatsStatus } from "./domichainClusterStats";
 
 export type DashboardInfo = {
   status: ClusterStatsStatus;

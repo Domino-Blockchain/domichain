@@ -1,20 +1,20 @@
 #![allow(clippy::integer_arithmetic)]
 #![allow(clippy::redundant_closure)]
 use {
-    solana_cli::{
+    domichain_cli::{
         check_balance,
         cli::{process_command, request_and_confirm_airdrop, CliCommand, CliConfig},
         spend_utils::SpendAmount,
         test_utils::check_ready,
     },
-    solana_cli_output::{parse_sign_only_reply_string, OutputFormat},
-    solana_client::{
+    domichain_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    domichain_client::{
         blockhash_query::{self, BlockhashQuery},
         nonce_utils,
         rpc_client::RpcClient,
     },
-    solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         fee::FeeStructure,
         native_token::sol_to_lamports,
@@ -23,13 +23,13 @@ use {
         signature::{keypair_from_seed, Keypair, NullSigner, Signer},
         stake,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
 };
 
 #[test]
 fn test_transfer() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let fee_one_sig = FeeStructure::default().get_max_fee(1, 0);
     let fee_two_sig = FeeStructure::default().get_max_fee(2, 0);
     let mint_keypair = Keypair::new();
@@ -318,7 +318,7 @@ fn test_transfer() {
 
 #[test]
 fn test_transfer_multisession_signing() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let fee = FeeStructure::default().get_max_fee(2, 0);
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -467,7 +467,7 @@ fn test_transfer_multisession_signing() {
 
 #[test]
 fn test_transfer_all() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let fee = FeeStructure::default().get_max_fee(1, 0);
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
@@ -521,7 +521,7 @@ fn test_transfer_all() {
 
 #[test]
 fn test_transfer_unfunded_recipient() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();
     let faucet_addr = run_local_faucet(mint_keypair, None);
@@ -574,7 +574,7 @@ fn test_transfer_unfunded_recipient() {
 
 #[test]
 fn test_transfer_with_seed() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let fee = FeeStructure::default().get_max_fee(1, 0);
     let mint_keypair = Keypair::new();
     let mint_pubkey = mint_keypair.pubkey();

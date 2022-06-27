@@ -11,13 +11,13 @@ use {
     num_derive::ToPrimitive,
     num_traits::ToPrimitive,
     rayon::{prelude::*, ThreadPool},
-    solana_sdk::{
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::{Epoch, Slot},
         pubkey::Pubkey,
         stake::state::{Delegation, StakeActivationStatus},
     },
-    solana_vote_program::vote_state::VoteState,
+    domichain_vote_program::vote_state::VoteState,
     std::{
         collections::HashMap,
         ops::Add,
@@ -76,22 +76,22 @@ impl StakesCache {
         // TODO: If the account is already cached as a vote or stake account
         // but the owner changes, then this needs to evict the account from
         // the cache. see:
-        // https://github.com/solana-labs/solana/pull/24200#discussion_r849935444
+        // https://Domino-Blockchain/domichain/pull/24200#discussion_r849935444
         let owner = account.owner();
         // Zero lamport accounts are not stored in accounts-db
         // and so should be removed from cache as well.
         if account.lamports() == 0 {
-            if solana_vote_program::check_id(owner) {
+            if domichain_vote_program::check_id(owner) {
                 let mut stakes = self.0.write().unwrap();
                 stakes.remove_vote_account(pubkey);
-            } else if solana_stake_program::check_id(owner) {
+            } else if domichain_stake_program::check_id(owner) {
                 let mut stakes = self.0.write().unwrap();
                 stakes.remove_stake_delegation(pubkey);
             }
             return;
         }
         debug_assert_ne!(account.lamports(), 0u64);
-        if solana_vote_program::check_id(owner) {
+        if domichain_vote_program::check_id(owner) {
             if VoteState::is_correct_size_and_initialized(account.data()) {
                 match VoteAccount::try_from(account.clone()) {
                     Ok(vote_account) => {
@@ -111,7 +111,7 @@ impl StakesCache {
                 let mut stakes = self.0.write().unwrap();
                 stakes.remove_vote_account(pubkey)
             };
-        } else if solana_stake_program::check_id(owner) {
+        } else if domichain_stake_program::check_id(owner) {
             match StakeAccount::try_from(account.clone()) {
                 Ok(stake_account) => {
                     let mut stakes = self.0.write().unwrap();
@@ -486,18 +486,18 @@ pub mod tests {
         super::*,
         rand::Rng,
         rayon::ThreadPoolBuilder,
-        solana_sdk::{account::WritableAccount, pubkey::Pubkey, rent::Rent, stake},
-        solana_stake_program::stake_state,
-        solana_vote_program::vote_state::{self, VoteState, VoteStateVersions},
+        domichain_sdk::{account::WritableAccount, pubkey::Pubkey, rent::Rent, stake},
+        domichain_stake_program::stake_state,
+        domichain_vote_program::vote_state::{self, VoteState, VoteStateVersions},
     };
 
     //  set up some dummies for a staked node     ((     vote      )  (     stake     ))
     pub fn create_staked_node_accounts(
         stake: u64,
     ) -> ((Pubkey, AccountSharedData), (Pubkey, AccountSharedData)) {
-        let vote_pubkey = solana_sdk::pubkey::new_rand();
+        let vote_pubkey = domichain_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_pubkey, &solana_sdk::pubkey::new_rand(), 0, 1);
+            vote_state::create_account(&vote_pubkey, &domichain_sdk::pubkey::new_rand(), 0, 1);
         (
             (vote_pubkey, vote_account),
             create_stake_account(stake, &vote_pubkey),
@@ -506,13 +506,13 @@ pub mod tests {
 
     //   add stake to a vote_pubkey                               (   stake    )
     pub fn create_stake_account(stake: u64, vote_pubkey: &Pubkey) -> (Pubkey, AccountSharedData) {
-        let stake_pubkey = solana_sdk::pubkey::new_rand();
+        let stake_pubkey = domichain_sdk::pubkey::new_rand();
         (
             stake_pubkey,
             stake_state::create_account(
                 &stake_pubkey,
                 vote_pubkey,
-                &vote_state::create_account(vote_pubkey, &solana_sdk::pubkey::new_rand(), 0, 1),
+                &vote_state::create_account(vote_pubkey, &domichain_sdk::pubkey::new_rand(), 0, 1),
                 &Rent::free(),
                 stake,
             ),
@@ -523,9 +523,9 @@ pub mod tests {
         stake: u64,
         epoch: Epoch,
     ) -> ((Pubkey, AccountSharedData), (Pubkey, AccountSharedData)) {
-        let vote_pubkey = solana_sdk::pubkey::new_rand();
+        let vote_pubkey = domichain_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_pubkey, &solana_sdk::pubkey::new_rand(), 0, 1);
+            vote_state::create_account(&vote_pubkey, &domichain_sdk::pubkey::new_rand(), 0, 1);
         (
             (vote_pubkey, vote_account),
             create_warming_stake_account(stake, epoch, &vote_pubkey),
@@ -538,13 +538,13 @@ pub mod tests {
         epoch: Epoch,
         vote_pubkey: &Pubkey,
     ) -> (Pubkey, AccountSharedData) {
-        let stake_pubkey = solana_sdk::pubkey::new_rand();
+        let stake_pubkey = domichain_sdk::pubkey::new_rand();
         (
             stake_pubkey,
             stake_state::create_account_with_activation_epoch(
                 &stake_pubkey,
                 vote_pubkey,
-                &vote_state::create_account(vote_pubkey, &solana_sdk::pubkey::new_rand(), 0, 1),
+                &vote_state::create_account(vote_pubkey, &domichain_sdk::pubkey::new_rand(), 0, 1),
                 &Rent::free(),
                 stake,
                 epoch,
@@ -910,16 +910,16 @@ pub mod tests {
             ..Stakes::default()
         });
         for _ in 0..rng.gen_range(5usize, 10) {
-            let vote_pubkey = solana_sdk::pubkey::new_rand();
+            let vote_pubkey = domichain_sdk::pubkey::new_rand();
             let vote_account = vote_state::create_account(
                 &vote_pubkey,
-                &solana_sdk::pubkey::new_rand(), // node_pubkey
+                &domichain_sdk::pubkey::new_rand(), // node_pubkey
                 rng.gen_range(0, 101),           // commission
                 rng.gen_range(0, 1_000_000),     // lamports
             );
             stakes_cache.check_and_store(&vote_pubkey, &vote_account);
             for _ in 0..rng.gen_range(10usize, 20) {
-                let stake_pubkey = solana_sdk::pubkey::new_rand();
+                let stake_pubkey = domichain_sdk::pubkey::new_rand();
                 let rent = Rent::with_slots_per_epoch(rng.gen());
                 let stake_account = stake_state::create_account(
                     &stake_pubkey, // authorized

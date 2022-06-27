@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Fetches the latest SPL programs and produces the solana-genesis command-line
+# Fetches the latest SPL programs and produces the domichain-genesis command-line
 # arguments needed to install them
 #
 
@@ -20,8 +20,8 @@ fetch_program() {
     return
   fi
 
-  if [[ -r ~/.cache/solana-spl/$so ]]; then
-    cp ~/.cache/solana-spl/"$so" "$so"
+  if [[ -r ~/.cache/domichain-spl/$so ]]; then
+    cp ~/.cache/domichain-spl/"$so" "$so"
   else
     echo "Downloading $name $version"
     so_name="spl_${name//-/_}.so"
@@ -29,11 +29,11 @@ fetch_program() {
       set -x
       curl -L --retry 5 --retry-delay 2 --retry-connrefused \
         -o "$so" \
-        "https://github.com/solana-labs/solana-program-library/releases/download/$name-v$version/$so_name"
+        "https://Domino-Blockchain/domichain-program-library/releases/download/$name-v$version/$so_name"
     )
 
-    mkdir -p ~/.cache/solana-spl
-    cp "$so" ~/.cache/solana-spl/"$so"
+    mkdir -p ~/.cache/domichain-spl
+    cp "$so" ~/.cache/domichain-spl/"$so"
   fi
 
 }
@@ -51,5 +51,5 @@ echo "Available SPL programs:"
 ls -l spl_*.so
 
 echo
-echo "solana-genesis command-line arguments (spl-genesis-args.sh):"
+echo "domichain-genesis command-line arguments (spl-genesis-args.sh):"
 cat spl-genesis-args.sh

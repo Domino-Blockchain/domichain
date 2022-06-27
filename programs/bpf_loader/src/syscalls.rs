@@ -1,22 +1,13 @@
 #[allow(deprecated)]
 use {
     crate::{allocator_bump::BpfAllocator, BpfError},
-    solana_program_runtime::{
+    domichain_program_runtime::{
         ic_logger_msg, ic_msg,
         invoke_context::{ComputeMeter, InvokeContext},
         stable_log,
         timings::ExecuteTimings,
     },
-    solana_rbpf::{
-        aligned_memory::AlignedMemory,
-        ebpf,
-        error::EbpfError,
-        memory_region::{AccessType, MemoryMapping},
-        question_mark,
-        verifier::RequisiteVerifier,
-        vm::{EbpfVm, SyscallObject, SyscallRegistry},
-    },
-    solana_sdk::{
+    domichain_sdk::{
         account::WritableAccount,
         account_info::AccountInfo,
         blake3, bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
@@ -44,6 +35,15 @@ use {
         },
         sysvar::{Sysvar, SysvarId},
         transaction_context::InstructionAccount,
+    },
+    solana_rbpf::{
+        aligned_memory::AlignedMemory,
+        ebpf,
+        error::EbpfError,
+        memory_region::{AccessType, MemoryMapping},
+        question_mark,
+        verifier::RequisiteVerifier,
+        vm::{EbpfVm, SyscallObject, SyscallRegistry},
     },
     std::{
         alloc::Layout,
@@ -1724,7 +1724,7 @@ declare_syscall!(
         memory_mapping: &mut MemoryMapping,
         result: &mut Result<u64, EbpfError<BpfError>>,
     ) {
-        use solana_zk_token_sdk::zk_token_elgamal::{ops, pod};
+        use domichain_zk_token_sdk::zk_token_elgamal::{ops, pod};
 
         let invoke_context = question_mark!(
             self.invoke_context
@@ -1784,7 +1784,7 @@ declare_syscall!(
         memory_mapping: &mut MemoryMapping,
         result: &mut Result<u64, EbpfError<BpfError>>,
     ) {
-        use solana_zk_token_sdk::zk_token_elgamal::{ops, pod};
+        use domichain_zk_token_sdk::zk_token_elgamal::{ops, pod};
 
         let invoke_context = question_mark!(
             self.invoke_context
@@ -1852,7 +1852,7 @@ declare_syscall!(
         memory_mapping: &mut MemoryMapping,
         result: &mut Result<u64, EbpfError<BpfError>>,
     ) {
-        use solana_zk_token_sdk::zk_token_elgamal::{ops, pod};
+        use domichain_zk_token_sdk::zk_token_elgamal::{ops, pod};
 
         let invoke_context = question_mark!(
             self.invoke_context
@@ -1907,7 +1907,7 @@ declare_syscall!(
         memory_mapping: &mut MemoryMapping,
         result: &mut Result<u64, EbpfError<BpfError>>,
     ) {
-        use solana_zk_token_sdk::curve25519::{curve_syscall_traits::*, edwards, ristretto};
+        use domichain_zk_token_sdk::curve25519::{curve_syscall_traits::*, edwards, ristretto};
 
         let invoke_context = question_mark!(
             self.invoke_context
@@ -1981,7 +1981,7 @@ declare_syscall!(
         memory_mapping: &mut MemoryMapping,
         result: &mut Result<u64, EbpfError<BpfError>>,
     ) {
-        use solana_zk_token_sdk::curve25519::{
+        use domichain_zk_token_sdk::curve25519::{
             curve_syscall_traits::*, edwards, ristretto, scalar,
         };
 
@@ -3642,14 +3642,11 @@ declare_syscall!(
 #[cfg(test)]
 mod tests {
     #[allow(deprecated)]
-    use solana_sdk::sysvar::fees::Fees;
+    use domichain_sdk::sysvar::fees::Fees;
     use {
         super::*,
-        solana_program_runtime::{invoke_context::InvokeContext, sysvar_cache::SysvarCache},
-        solana_rbpf::{
-            ebpf::HOST_ALIGN, memory_region::MemoryRegion, user_error::UserError, vm::Config,
-        },
-        solana_sdk::{
+        domichain_program_runtime::{invoke_context::InvokeContext, sysvar_cache::SysvarCache},
+        domichain_sdk::{
             account::AccountSharedData,
             bpf_loader,
             fee_calculator::FeeCalculator,
@@ -3657,6 +3654,9 @@ mod tests {
             program::check_type_assumptions,
             sysvar::{clock::Clock, epoch_schedule::EpochSchedule, rent::Rent},
             transaction_context::TransactionContext,
+        },
+        solana_rbpf::{
+            ebpf::HOST_ALIGN, memory_region::MemoryRegion, user_error::UserError, vm::Config,
         },
         std::{borrow::Cow, str::FromStr},
     };
@@ -3747,7 +3747,7 @@ mod tests {
     #[test]
     fn test_translate_type() {
         // Pubkey
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let addr = &pubkey as *const _ as u64;
         let config = Config::default();
         let memory_mapping = MemoryMapping::new::<UserError>(
@@ -3770,9 +3770,9 @@ mod tests {
 
         // Instruction
         let instruction = Instruction::new_with_bincode(
-            solana_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
             &"foobar",
-            vec![AccountMeta::new(solana_sdk::pubkey::new_rand(), false)],
+            vec![AccountMeta::new(domichain_sdk::pubkey::new_rand(), false)],
         );
         let addr = &instruction as *const _ as u64;
         let mut memory_region = MemoryRegion {
@@ -3889,7 +3889,7 @@ mod tests {
         );
 
         // Pubkeys
-        let mut data = vec![solana_sdk::pubkey::new_rand(); 5];
+        let mut data = vec![domichain_sdk::pubkey::new_rand(); 5];
         let addr = data.as_ptr() as *const _ as u64;
         let memory_mapping = MemoryMapping::new::<UserError>(
             vec![
@@ -3909,7 +3909,7 @@ mod tests {
             translate_slice::<Pubkey>(&memory_mapping, 0x100000000, data.len() as u64, true, true)
                 .unwrap();
         assert_eq!(data, translated_data);
-        *data.first_mut().unwrap() = solana_sdk::pubkey::new_rand(); // Both should point to same place
+        *data.first_mut().unwrap() = domichain_sdk::pubkey::new_rand(); // Both should point to same place
         assert_eq!(data, translated_data);
     }
 
@@ -4909,7 +4909,7 @@ mod tests {
 
     #[test]
     fn test_create_program_address() {
-        // These tests duplicate the direct tests in solana_program::pubkey
+        // These tests duplicate the direct tests in domichain_program::pubkey
 
         prepare_mockup!(
             invoke_context,

@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana keccak system call
+ * @brief Domichain keccak system call
 **/
 
 #include <sol/types.h>

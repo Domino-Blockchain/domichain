@@ -510,21 +510,21 @@ pub fn create_nonce_account_with_seed(
 /// This function produces a vector of [`Instruction`]s which must be submitted
 /// in a [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// A [durable transaction nonce][dtn] is a special account that enables
 /// execution of transactions that have been signed in the past.
 ///
-/// Standard Solana transactions include a [recent blockhash][rbh] (sometimes
-/// referred to as a _[nonce]_). During execution the Solana runtime verifies
+/// Standard Domichain transactions include a [recent blockhash][rbh] (sometimes
+/// referred to as a _[nonce]_). During execution the Domichain runtime verifies
 /// the recent blockhash is approximately less than two minutes old, and that in
 /// those two minutes no other identical transaction with the same blockhash has
 /// been executed. These checks prevent accidental replay of transactions.
 /// Consequently, it is not possible to sign a transaction, wait more than two
 /// minutes, then successfully execute that transaction.
 ///
-/// [dtn]: https://docs.solana.com/implemented-proposals/durable-tx-nonces
+/// [dtn]: https://docs.domichain.com/implemented-proposals/durable-tx-nonces
 /// [rbh]: crate::message::Message::recent_blockhash
 /// [nonce]: https://en.wikipedia.org/wiki/Cryptographic_nonce
 ///
@@ -571,10 +571,10 @@ pub fn create_nonce_account_with_seed(
 /// Create a nonce account from an off-chain client:
 ///
 /// ```
-/// # use solana_program::example_mocks::solana_sdk;
-/// # use solana_program::example_mocks::solana_client;
-/// use solana_client::rpc_client::RpcClient;
-/// use solana_sdk::{
+/// # use domichain_program::example_mocks::domichain_sdk;
+/// # use domichain_program::example_mocks::domichain_client;
+/// use domichain_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
 /// #   pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
 ///     system_instruction,
@@ -646,13 +646,13 @@ pub fn create_nonce_account(
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// Every transaction that relies on a durable transaction nonce must contain a
 /// [`SystemInstruction::AdvanceNonceAccount`] instruction as the first
 /// instruction in the [`Message`], as created by this function. When included
-/// in the first position, the Solana runtime recognizes the transaction as one
+/// in the first position, the Domichain runtime recognizes the transaction as one
 /// that relies on a durable transaction nonce and processes it accordingly. The
 /// [`Message::new_with_nonce`] function can be used to construct a `Message` in
 /// the correct format without calling `advance_nonce_account` directly.
@@ -662,7 +662,7 @@ pub fn create_nonce_account(
 /// setting it to a recent blockhash, the value of the nonce must be retreived
 /// and deserialized from the nonce account, and that value specified as the
 /// "recent blockhash". A nonce account can be deserialized with the
-/// [`solana_client::nonce_utils::data_from_account`][dfa] function.
+/// [`domichain_client::nonce_utils::data_from_account`][dfa] function.
 ///
 /// For further description of durable transaction nonces see
 /// [`create_nonce_account`].
@@ -670,7 +670,7 @@ pub fn create_nonce_account(
 /// [`Message`]: crate::message::Message
 /// [`Message::new_with_nonce`]: crate::message::Message::new_with_nonce
 /// [`recent_blockhash`]: crate::message::Message::recent_blockhash
-/// [dfa]: https://docs.rs/solana-client/latest/solana_client/nonce_utils/fn.data_from_account.html
+/// [dfa]: https://docs.rs/domichain-client/latest/domichain_client/nonce_utils/fn.data_from_account.html
 ///
 /// # Required signers
 ///
@@ -681,20 +681,20 @@ pub fn create_nonce_account(
 /// Create and sign a transaction with a durable nonce:
 ///
 /// ```
-/// # use solana_program::example_mocks::solana_sdk;
-/// # use solana_program::example_mocks::solana_client;
-/// use solana_client::{
+/// # use domichain_program::example_mocks::domichain_sdk;
+/// # use domichain_program::example_mocks::domichain_client;
+/// use domichain_client::{
 ///     rpc_client::RpcClient,
 ///     nonce_utils,
 /// };
-/// use solana_sdk::{
+/// use domichain_sdk::{
 ///     message::Message,
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
 ///     system_instruction,
 ///     transaction::Transaction,
 /// };
-/// # use solana_sdk::account::Account;
+/// # use domichain_sdk::account::Account;
 /// use std::path::Path;
 /// use anyhow::Result;
 /// # use anyhow::anyhow;
@@ -737,7 +737,7 @@ pub fn create_nonce_account(
 ///     # client.set_get_account_response(*nonce_account_pubkey, Account {
 ///     #   lamports: 1,
 ///     #   data: vec![0],
-///     #   owner: solana_sdk::system_program::ID,
+///     #   owner: domichain_sdk::system_program::ID,
 ///     #   executable: false,
 ///     #   rent_epoch: 1,
 ///     # });
@@ -784,7 +784,7 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// Withdrawing the entire balance of a nonce account will cause the runtime to
@@ -795,7 +795,7 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 /// would leave the nonce account with a balance less than required for rent
 /// exemption, but also greater than zero, then the transaction will fail.
 ///
-/// [rent exemption]: https://docs.solana.com/developing/programming-model/accounts#rent-exemption
+/// [rent exemption]: https://docs.domichain.com/developing/programming-model/accounts#rent-exemption
 ///
 /// This constructor creates a [`SystemInstruction::WithdrawNonceAccount`]
 /// instruction.
@@ -807,10 +807,10 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 /// # Examples
 ///
 /// ```
-/// # use solana_program::example_mocks::solana_sdk;
-/// # use solana_program::example_mocks::solana_client;
-/// use solana_client::rpc_client::RpcClient;
-/// use solana_sdk::{
+/// # use domichain_program::example_mocks::domichain_sdk;
+/// # use domichain_program::example_mocks::domichain_client;
+/// use domichain_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
 ///     system_instruction,
@@ -876,7 +876,7 @@ pub fn withdraw_nonce_account(
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// This constructor creates a [`SystemInstruction::AuthorizeNonceAccount`]
@@ -889,10 +889,10 @@ pub fn withdraw_nonce_account(
 /// # Examples
 ///
 /// ```
-/// # use solana_program::example_mocks::solana_sdk;
-/// # use solana_program::example_mocks::solana_client;
-/// use solana_client::rpc_client::RpcClient;
-/// use solana_sdk::{
+/// # use domichain_program::example_mocks::domichain_sdk;
+/// # use domichain_program::example_mocks::domichain_client;
+/// use domichain_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
 ///     system_instruction,

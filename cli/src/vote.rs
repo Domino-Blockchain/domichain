@@ -11,7 +11,7 @@ use {
         stake::check_current_authority,
     },
     clap::{value_t_or_exit, App, Arg, ArgMatches, SubCommand},
-    solana_clap_utils::{
+    domichain_clap_utils::{
         fee_payer::{fee_payer_arg, FEE_PAYER_ARG},
         input_parsers::*,
         input_validators::*,
@@ -20,21 +20,21 @@ use {
         nonce::*,
         offline::*,
     },
-    solana_cli_output::{
+    domichain_cli_output::{
         return_signers_with_config, CliEpochVotingHistory, CliLockout, CliVoteAccount,
         ReturnSignersConfig,
     },
-    solana_client::{
+    domichain_client::{
         blockhash_query::BlockhashQuery, nonce_utils, rpc_client::RpcClient,
         rpc_config::RpcGetVoteAccountsConfig,
     },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_sdk::{
+    domichain_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_sdk::{
         account::Account, commitment_config::CommitmentConfig, message::Message,
         native_token::lamports_to_sol, pubkey::Pubkey, system_instruction::SystemError,
         transaction::Transaction,
     },
-    solana_vote_program::{
+    domichain_vote_program::{
         vote_error::VoteError,
         vote_instruction::{self, withdraw},
         vote_state::{VoteAuthorize, VoteInit, VoteState},
@@ -753,7 +753,7 @@ pub fn process_create_vote_account(
     let vote_account = config.signers[vote_account];
     let vote_account_pubkey = vote_account.pubkey();
     let vote_account_address = if let Some(seed) = seed {
-        Pubkey::create_with_seed(&vote_account_pubkey, seed, &solana_vote_program::id())?
+        Pubkey::create_with_seed(&vote_account_pubkey, seed, &domichain_vote_program::id())?
     } else {
         vote_account_pubkey
     };
@@ -834,7 +834,7 @@ pub fn process_create_vote_account(
             rpc_client.get_account_with_commitment(&vote_account_address, config.commitment)
         {
             if let Some(vote_account) = response.value {
-                let err_msg = if vote_account.owner == solana_vote_program::id() {
+                let err_msg = if vote_account.owner == domichain_vote_program::id() {
                     format!("Vote account {} already exists", vote_account_address)
                 } else {
                     format!(
@@ -1152,7 +1152,7 @@ pub(crate) fn get_vote_account(
             CliError::RpcRequestError(format!("{:?} account does not exist", vote_account_pubkey))
         })?;
 
-    if vote_account.owner != solana_vote_program::id() {
+    if vote_account.owner != domichain_vote_program::id() {
         return Err(CliError::RpcRequestError(format!(
             "{:?} is not a vote account",
             vote_account_pubkey
@@ -1391,8 +1391,8 @@ mod tests {
     use {
         super::*,
         crate::{clap_app::get_clap_app, cli::parse_command},
-        solana_client::blockhash_query,
-        solana_sdk::{
+        domichain_client::blockhash_query,
+        domichain_sdk::{
             hash::Hash,
             signature::{read_keypair_file, write_keypair, Keypair, Signer},
             signer::presigner::Presigner,
@@ -1820,7 +1820,7 @@ mod tests {
         );
 
         // test init with an authed voter
-        let authed = solana_sdk::pubkey::new_rand();
+        let authed = domichain_sdk::pubkey::new_rand();
         let (keypair_file, mut tmp_file) = make_tmp_file();
         let keypair = Keypair::new();
         write_keypair(&keypair, tmp_file.as_file_mut()).unwrap();

@@ -1,14 +1,14 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     serde_json::Value,
-    solana_cli::{
+    domichain_cli::{
         cli::{process_command, CliCommand, CliConfig},
         program::ProgramCliCommand,
     },
-    solana_cli_output::OutputFormat,
-    solana_client::rpc_client::RpcClient,
-    solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_cli_output::OutputFormat,
+    domichain_client::rpc_client::RpcClient,
+    domichain_faucet::faucet::run_local_faucet,
+    domichain_sdk::{
         account_utils::StateMut,
         bpf_loader,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -16,14 +16,14 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_test_validator::TestValidator,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_test_validator::TestValidator,
     std::{env, fs::File, io::Read, path::PathBuf, str::FromStr},
 };
 
 #[test]
 fn test_cli_program_deploy_non_upgradeable() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -144,7 +144,7 @@ fn test_cli_program_deploy_non_upgradeable() {
 
 #[test]
 fn test_cli_program_deploy_no_authority() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -230,7 +230,7 @@ fn test_cli_program_deploy_no_authority() {
 
 #[test]
 fn test_cli_program_deploy_with_authority() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -569,7 +569,7 @@ fn test_cli_program_deploy_with_authority() {
 
 #[test]
 fn test_cli_program_close_program() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -652,7 +652,7 @@ fn test_cli_program_close_program() {
 
 #[test]
 fn test_cli_program_write_buffer() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -982,7 +982,7 @@ fn test_cli_program_write_buffer() {
 
 #[test]
 fn test_cli_program_set_buffer_authority() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -1097,7 +1097,7 @@ fn test_cli_program_set_buffer_authority() {
 
 #[test]
 fn test_cli_program_mismatch_buffer_authority() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -1190,7 +1190,7 @@ fn test_cli_program_mismatch_buffer_authority() {
 
 #[test]
 fn test_cli_program_show() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");
@@ -1377,7 +1377,7 @@ fn test_cli_program_show() {
 
 #[test]
 fn test_cli_program_dump() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut noop_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     noop_path.push("tests");

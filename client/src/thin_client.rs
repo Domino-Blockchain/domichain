@@ -10,7 +10,7 @@ use {
         tpu_connection::TpuConnection,
     },
     log::*,
-    solana_sdk::{
+    domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
         clock::{Slot, MAX_PROCESSING_AGE},
@@ -633,7 +633,7 @@ mod tests {
 
     #[test]
     fn test_client_optimizer() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         const NUM_CLIENTS: usize = 5;
         let optimizer = ClientOptimizer::new(NUM_CLIENTS);

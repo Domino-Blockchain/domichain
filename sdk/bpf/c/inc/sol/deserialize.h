@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana BPF loader deserializer to be used when deploying
+ * @brief Domichain BPF loader deserializer to be used when deploying
  * a program with `BPFLoader2111111111111111111111111111111111` or
  * `BPFLoaderUpgradeab1e11111111111111111111111`
  */

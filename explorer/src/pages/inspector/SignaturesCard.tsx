@@ -1,7 +1,7 @@
 import React from "react";
 import bs58 from "bs58";
 import * as nacl from "tweetnacl";
-import { Message, PublicKey } from "@solana/web3.js";
+import { Message, PublicKey } from "@domichain/web3.js";
 import { Signature } from "components/common/Signature";
 import { Address } from "components/common/Address";
 

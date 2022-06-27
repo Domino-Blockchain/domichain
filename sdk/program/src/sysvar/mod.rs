@@ -1,8 +1,8 @@
 //! Access to special accounts with dynamically-updated data.
 //!
-//! For more details see the Solana [documentation on sysvars][sysvardoc].
+//! For more details see the Domichain [documentation on sysvars][sysvardoc].
 //!
-//! [sysvardoc]: https://docs.solana.com/developing/runtime-facilities/sysvars
+//! [sysvardoc]: https://docs.domichain.com/developing/runtime-facilities/sysvars
 
 use {
     crate::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
@@ -136,10 +136,10 @@ macro_rules! impl_sysvar_get {
             let mut var = Self::default();
             let var_addr = &mut var as *mut _ as *mut u8;
 
-            #[cfg(target_os = "solana")]
+            #[cfg(target_os = "domichain")]
             let result = unsafe { $crate::syscalls::$syscall_name(var_addr) };
 
-            #[cfg(not(target_os = "solana"))]
+            #[cfg(not(target_os = "domichain"))]
             let result = $crate::program_stubs::$syscall_name(var_addr);
 
             match result {

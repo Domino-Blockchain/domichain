@@ -20,13 +20,13 @@ usage: $0 [cluster_rpc_url]
    CONFIG
 
  Required arguments:
-   cluster_rpc_url  - RPC URL and port for a running Solana cluster (ex: http://34.83.146.144:8899)
+   cluster_rpc_url  - RPC URL and port for a running Domichain cluster (ex: http://34.83.146.144:8899)
 EOF
   exit $exitcode
 }
 
 function get_cluster_version {
-  clusterVersion="$(curl -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' "$url" | jq '.result | ."solana-core" ')"
+  clusterVersion="$(curl -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' "$url" | jq '.result | ."domichain-core" ')"
   echo Cluster software version: "$clusterVersion"
 }
 

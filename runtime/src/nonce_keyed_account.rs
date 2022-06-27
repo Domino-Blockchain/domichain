@@ -1,6 +1,6 @@
 use {
-    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
-    solana_sdk::{
+    domichain_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    domichain_sdk::{
         feature_set::{self, nonce_must_be_writable},
         instruction::{checked_add, InstructionError},
         nonce::{
@@ -310,8 +310,8 @@ mod test {
     use {
         super::*,
         assert_matches::assert_matches,
-        solana_program_runtime::invoke_context::InvokeContext,
-        solana_sdk::{
+        domichain_program_runtime::invoke_context::InvokeContext,
+        domichain_sdk::{
             account::AccountSharedData,
             hash::{hash, Hash},
             nonce::{self, State},

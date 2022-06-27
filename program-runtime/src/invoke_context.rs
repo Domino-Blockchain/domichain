@@ -1,5 +1,5 @@
 #[allow(deprecated)]
-use solana_sdk::keyed_account::{create_keyed_accounts_unified, KeyedAccount};
+use domichain_sdk::keyed_account::{create_keyed_accounts_unified, KeyedAccount};
 use {
     crate::{
         accounts_data_meter::AccountsDataMeter,
@@ -11,8 +11,8 @@ use {
         sysvar_cache::SysvarCache,
         timings::{ExecuteDetailsTimings, ExecuteTimings},
     },
-    solana_measure::measure::Measure,
-    solana_sdk::{
+    domichain_measure::measure::Measure,
+    domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
         feature_set::{
@@ -454,7 +454,7 @@ impl<'a> InvokeContext<'a> {
     }
 
     /// Current height of the invocation stack, top level instructions are height
-    /// `solana_sdk::instruction::TRANSACTION_LEVEL_STACK_HEIGHT`
+    /// `domichain_sdk::instruction::TRANSACTION_LEVEL_STACK_HEIGHT`
     pub fn get_stack_height(&self) -> usize {
         self.transaction_context
             .get_instruction_context_stack_height()
@@ -940,7 +940,7 @@ impl<'a> InvokeContext<'a> {
                 .try_borrow_program_account(self.transaction_context, 0)
                 .map_err(|_| InstructionError::UnsupportedProgramId)?;
             let owner_id = borrowed_root_account.get_owner();
-            if solana_sdk::native_loader::check_id(owner_id) {
+            if domichain_sdk::native_loader::check_id(owner_id) {
                 (1, *borrowed_root_account.get_key())
             } else {
                 (0, *owner_id)
@@ -1145,7 +1145,7 @@ pub fn with_mock_invoke_context<R, F: FnMut(&mut InvokeContext) -> R>(
     let transaction_accounts = vec![
         (
             loader_id,
-            AccountSharedData::new(0, 0, &solana_sdk::native_loader::id()),
+            AccountSharedData::new(0, 0, &domichain_sdk::native_loader::id()),
         ),
         (
             Pubkey::new_unique(),
@@ -1189,7 +1189,7 @@ pub fn mock_process_instruction(
     program_indices.insert(0, transaction_accounts.len());
     let mut preparation =
         prepare_mock_invoke_context(transaction_accounts, instruction_accounts, &program_indices);
-    let processor_account = AccountSharedData::new(0, 0, &solana_sdk::native_loader::id());
+    let processor_account = AccountSharedData::new(0, 0, &domichain_sdk::native_loader::id());
     preparation
         .transaction_accounts
         .push((*loader_id, processor_account));
@@ -1225,7 +1225,7 @@ mod tests {
         super::*,
         crate::compute_budget,
         serde::{Deserialize, Serialize},
-        solana_sdk::account::{ReadableAccount, WritableAccount},
+        domichain_sdk::account::{ReadableAccount, WritableAccount},
     };
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -1262,11 +1262,11 @@ mod tests {
         }
         let builtin_programs = &[
             BuiltinProgram {
-                program_id: solana_sdk::pubkey::new_rand(),
+                program_id: domichain_sdk::pubkey::new_rand(),
                 process_instruction: mock_process_instruction,
             },
             BuiltinProgram {
-                program_id: solana_sdk::pubkey::new_rand(),
+                program_id: domichain_sdk::pubkey::new_rand(),
                 process_instruction: mock_ix_processor,
             },
         ];
@@ -1342,9 +1342,9 @@ mod tests {
         let mut accounts = vec![];
         let mut instruction_accounts = vec![];
         for index in 0..MAX_DEPTH {
-            invoke_stack.push(solana_sdk::pubkey::new_rand());
+            invoke_stack.push(domichain_sdk::pubkey::new_rand());
             accounts.push((
-                solana_sdk::pubkey::new_rand(),
+                domichain_sdk::pubkey::new_rand(),
                 AccountSharedData::new(index as u64, 1, invoke_stack.get(index).unwrap()),
             ));
             instruction_accounts.push(InstructionAccount {
@@ -1358,7 +1358,7 @@ mod tests {
         for (index, program_id) in invoke_stack.iter().enumerate() {
             accounts.push((
                 *program_id,
-                AccountSharedData::new(1, 1, &solana_sdk::pubkey::Pubkey::default()),
+                AccountSharedData::new(1, 1, &domichain_sdk::pubkey::Pubkey::default()),
             ));
             instruction_accounts.push(InstructionAccount {
                 index_in_transaction: index,
@@ -1474,7 +1474,7 @@ mod tests {
 
     #[test]
     fn test_invoke_context_verify() {
-        let accounts = vec![(solana_sdk::pubkey::new_rand(), AccountSharedData::default())];
+        let accounts = vec![(domichain_sdk::pubkey::new_rand(), AccountSharedData::default())];
         let instruction_accounts = vec![];
         let program_indices = vec![0];
         let mut transaction_context = TransactionContext::new(accounts, 1, 1);
@@ -1489,24 +1489,24 @@ mod tests {
 
     #[test]
     fn test_process_instruction() {
-        let callee_program_id = solana_sdk::pubkey::new_rand();
+        let callee_program_id = domichain_sdk::pubkey::new_rand();
         let builtin_programs = &[BuiltinProgram {
             program_id: callee_program_id,
             process_instruction: mock_process_instruction,
         }];
 
         let owned_account = AccountSharedData::new(42, 1, &callee_program_id);
-        let not_owned_account = AccountSharedData::new(84, 1, &solana_sdk::pubkey::new_rand());
-        let readonly_account = AccountSharedData::new(168, 1, &solana_sdk::pubkey::new_rand());
+        let not_owned_account = AccountSharedData::new(84, 1, &domichain_sdk::pubkey::new_rand());
+        let readonly_account = AccountSharedData::new(168, 1, &domichain_sdk::pubkey::new_rand());
         let loader_account = AccountSharedData::new(0, 0, &native_loader::id());
         let mut program_account = AccountSharedData::new(1, 0, &native_loader::id());
         program_account.set_executable(true);
         let accounts = vec![
-            (solana_sdk::pubkey::new_rand(), owned_account),
-            (solana_sdk::pubkey::new_rand(), not_owned_account),
-            (solana_sdk::pubkey::new_rand(), readonly_account),
+            (domichain_sdk::pubkey::new_rand(), owned_account),
+            (domichain_sdk::pubkey::new_rand(), not_owned_account),
+            (domichain_sdk::pubkey::new_rand(), readonly_account),
             (callee_program_id, program_account),
-            (solana_sdk::pubkey::new_rand(), loader_account),
+            (domichain_sdk::pubkey::new_rand(), loader_account),
         ];
         let metas = vec![
             AccountMeta::new(accounts.get(0).unwrap().0, false),
@@ -1652,7 +1652,7 @@ mod tests {
 
     #[test]
     fn test_invoke_context_compute_budget() {
-        let accounts = vec![(solana_sdk::pubkey::new_rand(), AccountSharedData::default())];
+        let accounts = vec![(domichain_sdk::pubkey::new_rand(), AccountSharedData::default())];
 
         let mut transaction_context = TransactionContext::new(accounts, 1, 3);
         let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
@@ -1669,7 +1669,7 @@ mod tests {
 
     #[test]
     fn test_process_instruction_accounts_data_meter() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let program_key = Pubkey::new_unique();
         let user_account_data_len = 123;
@@ -1770,7 +1770,7 @@ mod tests {
             assert!(result.is_err());
             assert!(matches!(
                 result,
-                Err(solana_sdk::instruction::InstructionError::MaxAccountsDataSizeExceeded)
+                Err(domichain_sdk::instruction::InstructionError::MaxAccountsDataSizeExceeded)
             ));
             assert_eq!(invoke_context.accounts_data_meter.remaining(), 0);
         }

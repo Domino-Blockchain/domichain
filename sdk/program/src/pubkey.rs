@@ -1,4 +1,4 @@
-//! Solana account addresses.
+//! Domichain account addresses.
 
 #![allow(clippy::integer_arithmetic)]
 use {
@@ -50,20 +50,20 @@ impl From<u64> for PubkeyError {
     }
 }
 
-/// The address of a [Solana account][acc].
+/// The address of a [Domichain account][acc].
 ///
 /// Some account addresses are [ed25519] public keys, with corresponding secret
 /// keys that are managed off-chain. Often, though, account addresses do not
 /// have corresponding secret keys &mdash; as with [_program derived
 /// addresses_][pdas] &mdash; or the secret key is not relevant to the operation
-/// of a program, and may have even been disposed of. As running Solana programs
+/// of a program, and may have even been disposed of. As running Domichain programs
 /// can not safely create or manage secret keys, the full [`Keypair`] is not
-/// defined in `solana-program` but in `solana-sdk`.
+/// defined in `domichain-program` but in `domichain-sdk`.
 ///
-/// [acc]: https://docs.solana.com/developing/programming-model/accounts
+/// [acc]: https://docs.domichain.com/developing/programming-model/accounts
 /// [ed25519]: https://ed25519.cr.yp.to/
-/// [pdas]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
-/// [`Keypair`]: https://docs.rs/solana-sdk/latest/solana_sdk/signer/keypair/struct.Keypair.html
+/// [pdas]: https://docs.domichain.com/developing/programming-model/calling-between-programs#program-derived-addresses
+/// [`Keypair`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/signer/keypair/struct.Keypair.html
 #[wasm_bindgen]
 #[repr(transparent)]
 #[derive(
@@ -140,13 +140,13 @@ impl TryFrom<&str> for Pubkey {
 }
 
 pub fn bytes_are_curve_point<T: AsRef<[u8]>>(_bytes: T) -> bool {
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     {
         curve25519_dalek::edwards::CompressedEdwardsY::from_slice(_bytes.as_ref())
             .decompress()
             .is_some()
     }
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     unimplemented!();
 }
 
@@ -163,7 +163,7 @@ impl Pubkey {
     }
 
     #[deprecated(since = "1.3.9", note = "Please use 'Pubkey::new_unique' instead")]
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     pub fn new_rand() -> Self {
         // Consider removing Pubkey::new_rand() entirely in the v1.5 or v1.6 timeframe
         Pubkey::new(&rand::random::<[u8; 32]>())
@@ -204,11 +204,11 @@ impl Pubkey {
 
     /// Find a valid [program derived address][pda] and its corresponding bump seed.
     ///
-    /// [pda]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
+    /// [pda]: https://docs.domichain.com/developing/programming-model/calling-between-programs#program-derived-addresses
     ///
     /// Program derived addresses (PDAs) are account keys that only the program,
     /// `program_id`, has the authority to sign. The address is of the same form
-    /// as a Solana `Pubkey`, except they are ensured to not be on the ed25519
+    /// as a Domichain `Pubkey`, except they are ensured to not be on the ed25519
     /// curve and thus have no associated private key. When performing
     /// cross-program invocations the program can "sign" for the key by calling
     /// [`invoke_signed`] and passing the same seeds used to generate the
@@ -240,7 +240,7 @@ impl Pubkey {
     /// there is a chance that the program's budget may be occasionally
     /// and unpredictably exceeded.
     ///
-    /// As all account addresses accessed by an on-chain Solana program must be
+    /// As all account addresses accessed by an on-chain Domichain program must be
     /// explicitly passed to the program, it is typical for the PDAs to be
     /// derived in off-chain client programs, avoiding the compute cost of
     /// generating the address on-chain. The address may or may not then be
@@ -278,20 +278,20 @@ impl Pubkey {
     /// This example illustrates a simple case of creating a "vault" account
     /// which is derived from the payer account, but owned by an on-chain
     /// program. The program derived address is derived in an off-chain client
-    /// program, which invokes an on-chain Solana program that uses the address
+    /// program, which invokes an on-chain Domichain program that uses the address
     /// to create a new account owned and controlled by the program itself.
     ///
     /// By convention, the on-chain program will be compiled for use in two
     /// different contexts: both on-chain, to interpret a custom program
-    /// instruction as a Solana transaction; and off-chain, as a library, so
+    /// instruction as a Domichain transaction; and off-chain, as a library, so
     /// that clients can share the instruction data structure, constructors, and
     /// other common code.
     ///
-    /// First the on-chain Solana program:
+    /// First the on-chain Domichain program:
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// # use solana_program::{
+    /// # use domichain_program::{
     /// #     pubkey::Pubkey,
     /// #     entrypoint::ProgramResult,
     /// #     program::invoke_signed,
@@ -370,20 +370,20 @@ impl Pubkey {
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// # use solana_program::example_mocks::{solana_sdk, solana_client};
-    /// # use solana_program::{
+    /// # use domichain_program::example_mocks::{domichain_sdk, domichain_client};
+    /// # use domichain_program::{
     /// #     pubkey::Pubkey,
     /// #     instruction::Instruction,
     /// #     hash::Hash,
     /// #     instruction::AccountMeta,
     /// #     system_program,
     /// # };
-    /// # use solana_sdk::{
+    /// # use domichain_sdk::{
     /// #     signature::Keypair,
     /// #     signature::{Signer, Signature},
     /// #     transaction::Transaction,
     /// # };
-    /// # use solana_client::rpc_client::RpcClient;
+    /// # use domichain_client::rpc_client::RpcClient;
     /// # use std::convert::TryFrom;
     /// # use anyhow::Result;
     /// #
@@ -460,7 +460,7 @@ impl Pubkey {
 
     /// Find a valid [program derived address][pda] and its corresponding bump seed.
     ///
-    /// [pda]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
+    /// [pda]: https://docs.domichain.com/developing/programming-model/calling-between-programs#program-derived-addresses
     ///
     /// The only difference between this method and [`find_program_address`]
     /// is that this one returns `None` in the statistically improbable event
@@ -474,7 +474,7 @@ impl Pubkey {
     pub fn try_find_program_address(seeds: &[&[u8]], program_id: &Pubkey) -> Option<(Pubkey, u8)> {
         // Perform the calculation inline, calling this from within a program is
         // not supported
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         {
             let mut bump_seed = [std::u8::MAX];
             for _ in 0..std::u8::MAX {
@@ -492,7 +492,7 @@ impl Pubkey {
             None
         }
         // Call via a system call to perform the calculation
-        #[cfg(target_os = "solana")]
+        #[cfg(target_os = "domichain")]
         {
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
@@ -514,7 +514,7 @@ impl Pubkey {
 
     /// Create a valid [program derived address][pda] without searching for a bump seed.
     ///
-    /// [pda]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
+    /// [pda]: https://docs.domichain.com/developing/programming-model/calling-between-programs#program-derived-addresses
     ///
     /// Because this function does not create a bump seed, it may unpredictably
     /// return an error for any given set of seeds and is not generally suitable
@@ -547,7 +547,7 @@ impl Pubkey {
     /// that the returned `Pubkey` has the expected value.
     ///
     /// ```
-    /// # use solana_program::pubkey::Pubkey;
+    /// # use domichain_program::pubkey::Pubkey;
     /// # let program_id = Pubkey::new_unique();
     /// let (expected_pda, bump_seed) = Pubkey::find_program_address(&[b"vault"], &program_id);
     /// let actual_pda = Pubkey::create_program_address(&[b"vault", &[bump_seed]], &program_id)?;
@@ -569,7 +569,7 @@ impl Pubkey {
 
         // Perform the calculation inline, calling this from within a program is
         // not supported
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         {
             let mut hasher = crate::hash::Hasher::default();
             for seed in seeds.iter() {
@@ -585,7 +585,7 @@ impl Pubkey {
             Ok(Pubkey::new(hash.as_ref()))
         }
         // Call via a system call to perform the calculation
-        #[cfg(target_os = "solana")]
+        #[cfg(target_os = "domichain")]
         {
             let mut bytes = [0; 32];
             let result = unsafe {
@@ -613,12 +613,12 @@ impl Pubkey {
 
     /// Log a `Pubkey` from a program
     pub fn log(&self) {
-        #[cfg(target_os = "solana")]
+        #[cfg(target_os = "domichain")]
         unsafe {
             crate::syscalls::sol_log_pubkey(self.as_ref() as *const _ as *const u8)
         };
 
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         crate::program_stubs::sol_log(&self.to_string());
     }
 }

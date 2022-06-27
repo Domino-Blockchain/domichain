@@ -1,4 +1,4 @@
-use {super::Bank, solana_program_runtime::sysvar_cache::SysvarCache};
+use {super::Bank, domichain_program_runtime::sysvar_cache::SysvarCache};
 
 impl Bank {
     pub(crate) fn fill_missing_sysvar_cache_entries(&self) {
@@ -20,7 +20,7 @@ impl Bank {
 mod tests {
     use {
         super::*,
-        solana_sdk::{genesis_config::create_genesis_config, pubkey::Pubkey},
+        domichain_sdk::{genesis_config::create_genesis_config, pubkey::Pubkey},
         std::sync::Arc,
     };
 

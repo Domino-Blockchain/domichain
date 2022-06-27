@@ -1,6 +1,6 @@
 use {
-    solana_client::rpc_client::RpcClient,
-    solana_sdk::{clock::DEFAULT_MS_PER_SLOT, commitment_config::CommitmentConfig},
+    domichain_client::rpc_client::RpcClient,
+    domichain_sdk::{clock::DEFAULT_MS_PER_SLOT, commitment_config::CommitmentConfig},
     std::{thread::sleep, time::Duration},
 };
 

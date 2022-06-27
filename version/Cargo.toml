@@ -1,12 +1,12 @@
 [package]
-name = "solana-version"
+name = "domichain-version"
 version = "1.11.1"
-description = "Solana Version"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana"
+description = "Domichain Version"
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
-documentation = "https://docs.rs/solana-version"
+homepage = "https://domichain.com/"
+documentation = "https://docs.rs/domichain-version"
 edition = "2021"
 
 [dependencies]
@@ -14,12 +14,12 @@ log = "0.4.17"
 semver = "1.0.9"
 serde = "1.0.137"
 serde_derive = "1.0.103"
-solana-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-solana-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 
 [lib]
-name = "solana_version"
+name = "domichain_version"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

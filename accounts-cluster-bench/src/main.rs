@@ -4,13 +4,13 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_account_decoder::parse_token::spl_token_pubkey,
-    solana_clap_utils::input_parsers::pubkey_of,
-    solana_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
-    solana_faucet::faucet::{request_airdrop_transaction, FAUCET_PORT},
-    solana_gossip::gossip_service::discover,
-    solana_runtime::inline_spl_token,
-    solana_sdk::{
+    domichain_account_decoder::parse_token::spl_token_pubkey,
+    domichain_clap_utils::input_parsers::pubkey_of,
+    domichain_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
+    domichain_faucet::faucet::{request_airdrop_transaction, FAUCET_PORT},
+    domichain_gossip::gossip_service::discover,
+    domichain_runtime::inline_spl_token,
+    domichain_sdk::{
         commitment_config::CommitmentConfig,
         instruction::{AccountMeta, Instruction},
         message::Message,
@@ -20,8 +20,8 @@ use {
         system_instruction, system_program,
         transaction::Transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_transaction_status::parse_token::spl_token_instruction,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_transaction_status::parse_token::spl_token_instruction,
     std::{
         cmp::min,
         net::SocketAddr,
@@ -475,10 +475,10 @@ fn run_accounts_bench(
 }
 
 fn main() {
-    solana_logger::setup_with_default("solana=info");
+    domichain_logger::setup_with_default("domichain=info");
     let matches = App::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("entrypoint")
                 .long("entrypoint")
@@ -573,14 +573,14 @@ fn main() {
     let port = if skip_gossip { DEFAULT_RPC_PORT } else { 8001 };
     let mut entrypoint_addr = SocketAddr::from(([127, 0, 0, 1], port));
     if let Some(addr) = matches.value_of("entrypoint") {
-        entrypoint_addr = solana_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
+        entrypoint_addr = domichain_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
             eprintln!("failed to parse entrypoint address: {}", e);
             exit(1)
         });
     }
     let mut faucet_addr = SocketAddr::from(([127, 0, 0, 1], FAUCET_PORT));
     if let Some(addr) = matches.value_of("faucet_addr") {
-        faucet_addr = solana_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
+        faucet_addr = domichain_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
             eprintln!("failed to parse entrypoint address: {}", e);
             exit(1)
         });
@@ -655,15 +655,15 @@ fn main() {
 pub mod test {
     use {
         super::*,
-        solana_core::validator::ValidatorConfig,
-        solana_faucet::faucet::run_local_faucet,
-        solana_local_cluster::{
+        domichain_core::validator::ValidatorConfig,
+        domichain_faucet::faucet::run_local_faucet,
+        domichain_local_cluster::{
             local_cluster::{ClusterConfig, LocalCluster},
             validator_configs::make_identical_validator_configs,
         },
-        solana_measure::measure::Measure,
-        solana_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
-        solana_test_validator::TestValidator,
+        domichain_measure::measure::Measure,
+        domichain_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
+        domichain_test_validator::TestValidator,
         spl_token::{
             solana_program::program_pack::Pack,
             state::{Account, Mint},
@@ -672,7 +672,7 @@ pub mod test {
 
     #[test]
     fn test_accounts_cluster_bench() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let validator_config = ValidatorConfig::default_for_test();
         let num_nodes = 1;
         let mut config = ClusterConfig {
@@ -711,7 +711,7 @@ pub mod test {
 
     #[test]
     fn test_create_then_reclaim_spl_token_accounts() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let mint_keypair = Keypair::new();
         let mint_pubkey = mint_keypair.pubkey();
         let faucet_addr = run_local_faucet(mint_keypair, None);

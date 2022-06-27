@@ -16,23 +16,23 @@ use {
     crossbeam_channel::{unbounded, Receiver, RecvTimeoutError, Sender},
     lru::LruCache,
     rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
-    solana_client::rpc_response::SlotUpdate,
-    solana_gossip::{
+    domichain_client::rpc_response::SlotUpdate,
+    domichain_gossip::{
         cluster_info::{ClusterInfo, DATA_PLANE_FANOUT},
         contact_info::ContactInfo,
     },
-    solana_ledger::{
+    domichain_ledger::{
         blockstore::Blockstore,
         leader_schedule_cache::LeaderScheduleCache,
         shred::{Shred, ShredId},
     },
-    solana_measure::measure::Measure,
-    solana_perf::packet::PacketBatch,
-    solana_rayon_threadlimit::get_thread_count,
-    solana_rpc::{max_slots::MaxSlots, rpc_subscriptions::RpcSubscriptions},
-    solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{clock::Slot, epoch_schedule::EpochSchedule, pubkey::Pubkey, timing::timestamp},
-    solana_streamer::sendmmsg::{multi_target_send, SendPktsError},
+    domichain_measure::measure::Measure,
+    domichain_perf::packet::PacketBatch,
+    domichain_rayon_threadlimit::get_thread_count,
+    domichain_rpc::{max_slots::MaxSlots, rpc_subscriptions::RpcSubscriptions},
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{clock::Slot, epoch_schedule::EpochSchedule, pubkey::Pubkey, timing::timestamp},
+    domichain_streamer::sendmmsg::{multi_target_send, SendPktsError},
     std::{
         collections::{HashMap, HashSet},
         net::UdpSocket,
@@ -324,7 +324,7 @@ pub fn retransmitter(
         .build()
         .unwrap();
     Builder::new()
-        .name("solana-retransmitter".to_string())
+        .name("domichain-retransmitter".to_string())
         .spawn(move || {
             trace!("retransmitter started");
             loop {
@@ -594,7 +594,7 @@ impl RetransmitSlotStats {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, solana_ledger::shred::ShredFlags};
+    use {super::*, domichain_ledger::shred::ShredFlags};
 
     #[test]
     fn test_already_received() {

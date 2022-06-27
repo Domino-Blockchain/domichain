@@ -26,19 +26,19 @@ use {
         warm_quic_cache_service::WarmQuicCacheService,
     },
     crossbeam_channel::{unbounded, Receiver},
-    solana_client::connection_cache::ConnectionCache,
-    solana_geyser_plugin_manager::block_metadata_notifier_interface::BlockMetadataNotifierLock,
-    solana_gossip::cluster_info::ClusterInfo,
-    solana_ledger::{
+    domichain_client::connection_cache::ConnectionCache,
+    domichain_geyser_plugin_manager::block_metadata_notifier_interface::BlockMetadataNotifierLock,
+    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_ledger::{
         blockstore::Blockstore, blockstore_processor::TransactionStatusSender,
         leader_schedule_cache::LeaderScheduleCache,
     },
-    solana_poh::poh_recorder::PohRecorder,
-    solana_rpc::{
+    domichain_poh::poh_recorder::PohRecorder,
+    domichain_rpc::{
         max_slots::MaxSlots, optimistically_confirmed_bank_tracker::BankNotificationSender,
         rpc_subscriptions::RpcSubscriptions,
     },
-    solana_runtime::{
+    domichain_runtime::{
         accounts_background_service::AbsRequestSender,
         bank_forks::BankForks,
         commitment::BlockCommitmentCache,
@@ -48,7 +48,7 @@ use {
         },
         vote_sender_types::ReplayVoteSender,
     },
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Keypair},
+    domichain_sdk::{clock::Slot, pubkey::Pubkey, signature::Keypair},
     std::{
         collections::HashSet,
         net::UdpSocket,
@@ -325,18 +325,18 @@ pub mod tests {
     use {
         super::*,
         serial_test::serial,
-        solana_gossip::cluster_info::{ClusterInfo, Node},
-        solana_ledger::{
+        domichain_gossip::cluster_info::{ClusterInfo, Node},
+        domichain_ledger::{
             blockstore::BlockstoreSignals,
             blockstore_options::BlockstoreOptions,
             create_new_tmp_ledger,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
         },
-        solana_poh::poh_recorder::create_test_recorder,
-        solana_rpc::optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
-        solana_runtime::bank::Bank,
-        solana_sdk::signature::{Keypair, Signer},
-        solana_streamer::socket::SocketAddrSpace,
+        domichain_poh::poh_recorder::create_test_recorder,
+        domichain_rpc::optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
+        domichain_runtime::bank::Bank,
+        domichain_sdk::signature::{Keypair, Signer},
+        domichain_streamer::socket::SocketAddrSpace,
         std::sync::atomic::{AtomicU64, Ordering},
     };
 
@@ -344,7 +344,7 @@ pub mod tests {
     #[test]
     #[serial]
     fn test_tvu_exit() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let leader = Node::new_localhost();
         let target1_keypair = Keypair::new();
         let target1 = Node::new_localhost_with_pubkey(&target1_keypair.pubkey());

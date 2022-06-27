@@ -1,4 +1,4 @@
-use solana_sdk::clock::Slot;
+use domichain_sdk::clock::Slot;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, AbiExample, AbiEnumVisitor)]
 enum CompressionType {

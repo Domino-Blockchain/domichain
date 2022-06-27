@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @brief Solana Blake3 system call
+ * @brief Domichain Blake3 system call
  */
 
 #include <sol/types.h>

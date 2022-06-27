@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import * as BufferLayout from '@solana/buffer-layout';
+import * as BufferLayout from '@domichain/buffer-layout';
 import secp256k1 from 'secp256k1';
 import sha3 from 'js-sha3';
 

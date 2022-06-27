@@ -4,12 +4,12 @@ use {
         commands::{get_fees_for_messages, Allocation, Error, FundingSource},
     },
     console::style,
-    solana_account_decoder::parse_token::{
+    domichain_account_decoder::parse_token::{
         pubkey_from_spl_token, real_number_string, real_number_string_trimmed, spl_token_pubkey,
     },
-    solana_client::rpc_client::RpcClient,
-    solana_sdk::{instruction::Instruction, message::Message, native_token::lamports_to_sol},
-    solana_transaction_status::parse_token::spl_token_instruction,
+    domichain_client::rpc_client::RpcClient,
+    domichain_sdk::{instruction::Instruction, message::Message, native_token::lamports_to_sol},
+    domichain_transaction_status::parse_token::spl_token_instruction,
     spl_associated_token_account::{
         get_associated_token_address, instruction::create_associated_token_account,
     },
@@ -163,8 +163,8 @@ pub fn print_token_balances(
 #[cfg(test)]
 mod tests {
     // The following unit tests were written for v1.4 using the ProgramTest framework, passing its
-    // BanksClient into the `solana-tokens` methods. With the revert to RpcClient in this module
-    // (https://github.com/solana-labs/solana/pull/13623), that approach was no longer viable.
+    // BanksClient into the `domichain-tokens` methods. With the revert to RpcClient in this module
+    // (https://Domino-Blockchain/domichain/pull/13623), that approach was no longer viable.
     // These tests were removed rather than rewritten to avoid accruing technical debt. Once a new
     // rpc/client framework is implemented, they should be restored.
     //
@@ -172,5 +172,5 @@ mod tests {
     // async fn test_process_spl_token_transfer_amount_allocations()
     // async fn test_check_spl_token_balances()
     //
-    // https://github.com/solana-labs/solana/blob/5511d52c6284013a24ced10966d11d8f4585799e/tokens/src/spl_token.rs#L490-L685
+    // https://Domino-Blockchain/domichain/blob/5511d52c6284013a24ced10966d11d8f4585799e/tokens/src/spl_token.rs#L490-L685
 }

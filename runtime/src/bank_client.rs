@@ -1,7 +1,7 @@
 use {
     crate::bank::Bank,
     crossbeam_channel::{unbounded, Receiver, Sender},
-    solana_sdk::{
+    domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
         commitment_config::CommitmentConfig,
@@ -193,7 +193,7 @@ impl SyncClient for BankClient {
         signature: &Signature,
         min_confirmed_blocks: usize,
     ) -> Result<usize> {
-        // https://github.com/solana-labs/solana/issues/7199
+        // https://Domino-Blockchain/domichain/issues/7199
         assert_eq!(min_confirmed_blocks, 1, "BankClient cannot observe the passage of multiple blocks, so min_confirmed_blocks must be 1");
         let now = Instant::now();
         let confirmed_blocks;
@@ -312,7 +312,7 @@ impl BankClient {
         let thread_bank = bank.clone();
         let bank = bank.clone();
         Builder::new()
-            .name("solana-bank-client".to_string())
+            .name("domichain-bank-client".to_string())
             .spawn(move || Self::run(&thread_bank, transaction_receiver))
             .unwrap();
         Self {
@@ -330,7 +330,7 @@ impl BankClient {
 mod tests {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             genesis_config::create_genesis_config, instruction::AccountMeta,
             native_token::sol_to_lamports,
         },
@@ -348,7 +348,7 @@ mod tests {
         let amount = genesis_config.rent.minimum_balance(0);
 
         // Create 2-2 Multisig Transfer instruction.
-        let bob_pubkey = solana_sdk::pubkey::new_rand();
+        let bob_pubkey = domichain_sdk::pubkey::new_rand();
         let mut transfer_instruction =
             system_instruction::transfer(&john_pubkey, &bob_pubkey, amount);
         transfer_instruction

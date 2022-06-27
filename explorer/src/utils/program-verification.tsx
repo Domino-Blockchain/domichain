@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@domichain/web3.js";
 import { useEffect, useState } from "react";
 
 export type VerifiableBuild =

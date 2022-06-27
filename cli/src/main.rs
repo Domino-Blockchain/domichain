@@ -1,22 +1,22 @@
 use {
     clap::{crate_description, crate_name, value_t_or_exit, ArgMatches},
     console::style,
-    solana_clap_utils::{
+    domichain_clap_utils::{
         input_validators::normalize_to_url_if_moniker,
         keypair::{CliSigners, DefaultSigner},
         DisplayError,
     },
-    solana_cli::{
+    domichain_cli::{
         clap_app::get_clap_app,
         cli::{parse_command, process_command, CliCommandInfo, CliConfig},
     },
-    solana_cli_config::{Config, ConfigInput},
-    solana_cli_output::{
+    domichain_cli_config::{Config, ConfigInput},
+    domichain_cli_output::{
         display::{println_name_value, println_name_value_or},
         OutputFormat,
     },
-    solana_client::rpc_config::RpcSendTransactionConfig,
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_client::rpc_config::RpcSendTransactionConfig,
+    domichain_remote_wallet::remote_wallet::RemoteWalletManager,
     std::{collections::HashMap, error, path::PathBuf, sync::Arc, time::Duration},
 };
 
@@ -226,11 +226,11 @@ pub fn parse_args<'a>(
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-    solana_logger::setup_with_default("off");
+    domichain_logger::setup_with_default("off");
     let matches = get_clap_app(
         crate_name!(),
         crate_description!(),
-        solana_version::version!(),
+        domichain_version::version!(),
     )
     .get_matches();
 

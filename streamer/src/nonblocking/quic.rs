@@ -9,8 +9,8 @@ use {
     quinn::{
         Connecting, Endpoint, EndpointConfig, Incoming, IncomingUniStreams, NewConnection, VarInt,
     },
-    solana_perf::packet::PacketBatch,
-    solana_sdk::{
+    domichain_perf::packet::PacketBatch,
+    domichain_sdk::{
         packet::{Packet, PACKET_DATA_SIZE},
         quic::QUIC_MAX_UNSTAKED_CONCURRENT_STREAMS,
         signature::Keypair,
@@ -474,7 +474,7 @@ pub mod test {
         crate::quic::{MAX_STAKED_CONNECTIONS, MAX_UNSTAKED_CONNECTIONS},
         crossbeam_channel::{unbounded, Receiver},
         quinn::{ClientConfig, IdleTimeout, VarInt},
-        solana_sdk::{
+        domichain_sdk::{
             quic::{QUIC_KEEP_ALIVE_MS, QUIC_MAX_TIMEOUT_MS},
             signature::Keypair,
         },
@@ -696,7 +696,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_timeout() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let (t, exit, receiver, server_address, _stats) = setup_quic_server();
         check_timeout(receiver, server_address).await;
         exit.store(true, Ordering::Relaxed);
@@ -705,7 +705,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_stream_timeout() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let (t, exit, _receiver, server_address, stats) = setup_quic_server();
 
         let conn1 = make_client_endpoint(&server_address).await;
@@ -737,7 +737,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_server_block_multiple_connections() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let (t, exit, _receiver, server_address, _stats) = setup_quic_server();
         check_block_multiple_connections(server_address).await;
         exit.store(true, Ordering::Relaxed);
@@ -746,7 +746,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_server_multiple_writes() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let (t, exit, receiver, server_address, _stats) = setup_quic_server();
         check_multiple_writes(receiver, server_address).await;
         exit.store(true, Ordering::Relaxed);
@@ -755,7 +755,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_server_unstaked_node_connect_failure() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let s = UdpSocket::bind("127.0.0.1:0").unwrap();
         let exit = Arc::new(AtomicBool::new(false));
         let (sender, _) = unbounded();
@@ -785,7 +785,7 @@ pub mod test {
 
     #[tokio::test]
     async fn test_quic_server_multiple_streams() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let s = UdpSocket::bind("127.0.0.1:0").unwrap();
         let exit = Arc::new(AtomicBool::new(false));
         let (sender, receiver) = unbounded();
@@ -816,7 +816,7 @@ pub mod test {
     #[test]
     fn test_prune_table() {
         use std::net::Ipv4Addr;
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut table = ConnectionTable::default();
         let mut num_entries = 5;
         let max_connections_per_ip = 10;
@@ -853,7 +853,7 @@ pub mod test {
     #[test]
     fn test_remove_connections() {
         use std::net::Ipv4Addr;
-        solana_logger::setup();
+        domichain_logger::setup();
         let mut table = ConnectionTable::default();
         let num_ips = 5;
         let max_connections_per_ip = 10;

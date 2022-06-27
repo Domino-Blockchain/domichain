@@ -5,7 +5,7 @@ import {
   AccountMeta,
   PublicKey,
   TransactionInstruction,
-} from "@solana/web3.js";
+} from "@domichain/web3.js";
 import { enums, number, type, Infer, create } from "superstruct";
 import { BigNumFromString } from "validators/bignum";
 

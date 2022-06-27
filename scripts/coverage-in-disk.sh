@@ -27,7 +27,7 @@ cargo="$(readlink -f "./cargo")"
 reportName="lcov-${CI_COMMIT:0:9}"
 
 if [[ -z $1 ]]; then
-  packages=(--lib --all --exclude solana-local-cluster)
+  packages=(--lib --all --exclude domichain-local-cluster)
 else
   packages=("$@")
 fi
@@ -47,7 +47,7 @@ export RUSTFLAGS="${coverageFlags[*]} $RUSTFLAGS"
 export CARGO_INCREMENTAL=0
 export RUST_BACKTRACE=1
 export RUST_MIN_STACK=8388608
-export SOLANA_TEST_ACCOUNTS_INDEX_MEMORY_LIMIT_MB=10000 
+export DOMICHAIN_TEST_ACCOUNTS_INDEX_MEMORY_LIMIT_MB=10000 
 
 echo "--- remove old coverage results"
 if [[ -d target/cov ]]; then
@@ -79,8 +79,8 @@ fi
 NPROC=$(nproc)
 JOBS=$((JOBS>NPROC ? NPROC : JOBS))
 
-RUST_LOG=solana=trace _ "$cargo" nightly test --jobs "$JOBS" --target-dir target/cov --no-run "${packages[@]}"
-if RUST_LOG=solana=trace _ "$cargo" nightly test --jobs "$JOBS" --target-dir target/cov "${packages[@]}" 2> target/cov/coverage-stderr.log; then
+RUST_LOG=domichain=trace _ "$cargo" nightly test --jobs "$JOBS" --target-dir target/cov --no-run "${packages[@]}"
+if RUST_LOG=domichain=trace _ "$cargo" nightly test --jobs "$JOBS" --target-dir target/cov "${packages[@]}" 2> target/cov/coverage-stderr.log; then
   test_status=0
 else
   test_status=$?

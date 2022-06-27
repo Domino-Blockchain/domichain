@@ -9,15 +9,15 @@ fi
 CONFIG_FILE=vercel.json
 
 if [[ -n $CI_TAG ]]; then
-  PROJECT_NAME=docs-solana-com
+  PROJECT_NAME=docs-domichain-com
 else
   eval "$(../ci/channel-info.sh)"
   case $CHANNEL in
   edge)
-    PROJECT_NAME=edge-docs-solana-com
+    PROJECT_NAME=edge-docs-domichain-com
     ;;
   beta)
-    PROJECT_NAME=beta-docs-solana-com
+    PROJECT_NAME=beta-docs-domichain-com
     ;;
   *)
     PROJECT_NAME=docs
@@ -28,7 +28,7 @@ fi
 cat > "$CONFIG_FILE" <<EOF
 {
   "name": "$PROJECT_NAME",
-  "scope": "solana-labs",
+  "scope": "domichain-labs",
   "redirects": [
     { "source": "/apps", "destination": "/developing/programming-model/overview" },
     { "source": "/apps/bakcwards-compatibility", "destination": "/developing/backwards-compatibility" },

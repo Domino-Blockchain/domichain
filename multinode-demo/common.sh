@@ -18,30 +18,30 @@ fi
 if [[ $(uname) != Linux ]]; then
   # Protect against unsupported configurations to prevent non-obvious errors
   # later. Arguably these should be fatal errors but for now prefer tolerance.
-  if [[ -n $SOLANA_CUDA ]]; then
+  if [[ -n $DOMICHAIN_CUDA ]]; then
     echo "Warning: CUDA is not supported on $(uname)"
-    SOLANA_CUDA=
+    DOMICHAIN_CUDA=
   fi
 fi
 
-if [[ -n $USE_INSTALL || ! -f "$SOLANA_ROOT"/Cargo.toml ]]; then
-  solana_program() {
+if [[ -n $USE_INSTALL || ! -f "$DOMICHAIN_ROOT"/Cargo.toml ]]; then
+  domichain_program() {
     declare program="$1"
     if [[ -z $program ]]; then
-      printf "solana"
+      printf "domichain"
     else
-      printf "solana-%s" "$program"
+      printf "domichain-%s" "$program"
     fi
   }
 else
-  solana_program() {
+  domichain_program() {
     declare program="$1"
     declare crate="$program"
     if [[ -z $program ]]; then
       crate="cli"
-      program="solana"
+      program="domichain"
     else
-      program="solana-$program"
+      program="domichain-$program"
     fi
 
     if [[ -n $NDEBUG ]]; then
@@ -61,15 +61,15 @@ else
   }
 fi
 
-solana_bench_tps=$(solana_program bench-tps)
-solana_faucet=$(solana_program faucet)
-solana_validator=$(solana_program validator)
-solana_validator_cuda="$solana_validator --cuda"
-solana_genesis=$(solana_program genesis)
-solana_gossip=$(solana_program gossip)
-solana_keygen=$(solana_program keygen)
-solana_ledger_tool=$(solana_program ledger-tool)
-solana_cli=$(solana_program)
+domichain_bench_tps=$(domichain_program bench-tps)
+domichain_faucet=$(domichain_program faucet)
+domichain_validator=$(domichain_program validator)
+domichain_validator_cuda="$domichain_validator --cuda"
+domichain_genesis=$(domichain_program genesis)
+domichain_gossip=$(domichain_program gossip)
+domichain_keygen=$(domichain_program keygen)
+domichain_ledger_tool=$(domichain_program ledger-tool)
+domichain_cli=$(domichain_program)
 
 export RUST_BACKTRACE=1
 

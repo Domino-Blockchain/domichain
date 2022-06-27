@@ -10,16 +10,16 @@ use {
     core::time::Duration,
     crossbeam_channel::{RecvTimeoutError, SendError},
     itertools::Itertools,
-    solana_measure::measure::Measure,
-    solana_perf::{
+    domichain_measure::measure::Measure,
+    domichain_perf::{
         packet::{Packet, PacketBatch},
         sigverify::{
             count_discarded_packets, count_packets_in_batches, count_valid_packets, shrink_batches,
             Deduper,
         },
     },
-    solana_sdk::timing,
-    solana_streamer::streamer::{self, StreamerError},
+    domichain_sdk::timing,
+    domichain_streamer::streamer::{self, StreamerError},
     std::{
         thread::{self, Builder, JoinHandle},
         time::Instant,
@@ -305,7 +305,7 @@ impl SigVerifyStage {
         );
 
         let mut discard_random_time = Measure::start("sigverify_discard_random_time");
-        let non_discarded_packets = solana_perf::discard::discard_batches_randomly(
+        let non_discarded_packets = domichain_perf::discard::discard_batches_randomly(
             &mut batches,
             MAX_DEDUP_BATCH,
             num_packets,
@@ -412,7 +412,7 @@ impl SigVerifyStage {
         const MAX_DEDUPER_AGE: Duration = Duration::from_secs(2);
         const MAX_DEDUPER_ITEMS: u32 = 1_000_000;
         Builder::new()
-            .name("solana-verifier".to_string())
+            .name("domichain-verifier".to_string())
             .spawn(move || {
                 let mut deduper = Deduper::new(MAX_DEDUPER_ITEMS, MAX_DEDUPER_AGE);
                 loop {
@@ -462,11 +462,11 @@ mod tests {
         super::*,
         crate::{sigverify::TransactionSigVerifier, sigverify_stage::timing::duration_as_ms},
         crossbeam_channel::unbounded,
-        solana_perf::{
+        domichain_perf::{
             packet::{to_packet_batches, Packet},
             test_tx::test_tx,
         },
-        solana_sdk::packet::PacketFlags,
+        domichain_sdk::packet::PacketFlags,
     };
 
     fn count_non_discard(packet_batches: &[PacketBatch]) -> usize {
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_packet_discard() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let batch_size = 10;
         let mut batch = PacketBatch::with_capacity(batch_size);
         let mut tracer_packet = Packet::default();
@@ -533,7 +533,7 @@ mod tests {
 
     #[test]
     fn test_sigverify_stage() {
-        solana_logger::setup();
+        domichain_logger::setup();
         trace!("start");
         let (packet_s, packet_r) = unbounded();
         let (verified_s, verified_r) = unbounded();

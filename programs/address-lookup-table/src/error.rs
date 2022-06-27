@@ -1,5 +1,5 @@
-#[cfg(not(target_os = "solana"))]
-use solana_sdk::transaction::TransactionError;
+#[cfg(not(target_os = "domichain"))]
+use domichain_sdk::transaction::TransactionError;
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
@@ -21,7 +21,7 @@ pub enum AddressLookupError {
     InvalidLookupIndex,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl From<AddressLookupError> for TransactionError {
     fn from(err: AddressLookupError) -> Self {
         match err {

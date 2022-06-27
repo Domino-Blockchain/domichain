@@ -2,13 +2,13 @@
 mod tests {
     use {
         crossbeam_channel::unbounded,
-        solana_client::{
+        domichain_client::{
             connection_cache::ConnectionCacheStats,
             nonblocking::quic_client::QuicLazyInitializedEndpoint, quic_client::QuicTpuConnection,
             tpu_connection::TpuConnection,
         },
-        solana_sdk::{packet::PACKET_DATA_SIZE, signature::Keypair},
-        solana_streamer::{
+        domichain_sdk::{packet::PACKET_DATA_SIZE, signature::Keypair},
+        domichain_streamer::{
             quic::{spawn_server, StreamStats},
             streamer::StakedNodes,
         },
@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_quic_client_multiple_writes() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let s = UdpSocket::bind("127.0.0.1:0").unwrap();
         let exit = Arc::new(AtomicBool::new(false));
         let (sender, receiver) = unbounded();

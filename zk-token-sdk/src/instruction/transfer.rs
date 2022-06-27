@@ -2,7 +2,7 @@ use {
     crate::zk_token_elgamal::pod,
     bytemuck::{Pod, Zeroable},
 };
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::{
@@ -24,16 +24,16 @@ use {
     std::convert::TryInto,
 };
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 const TRANSFER_SOURCE_AMOUNT_BITS: usize = 64;
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 const TRANSFER_AMOUNT_LO_BITS: usize = 16;
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 const TRANSFER_AMOUNT_LO_NEGATED_BITS: usize = 16;
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 const TRANSFER_AMOUNT_HI_BITS: usize = 32;
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 lazy_static::lazy_static! {
     pub static ref COMMITMENT_MAX: PedersenCommitment = Pedersen::encode((1_u64 <<
                                                                          TRANSFER_AMOUNT_LO_NEGATED_BITS) - 1);
@@ -58,7 +58,7 @@ pub struct TransferData {
     pub proof: TransferProof,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TransferData {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -195,7 +195,7 @@ impl TransferData {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl Verifiable for TransferData {
     fn verify(&self) -> Result<(), ProofError> {
         // generate transcript and append all public inputs
@@ -239,7 +239,7 @@ pub struct TransferProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TransferProof {
     fn transcript_new(
         transfer_pubkeys: &pod::TransferPubkeys,
@@ -430,14 +430,14 @@ impl TransferProof {
 /// The ElGamal public keys needed for a transfer
 #[derive(Clone)]
 #[repr(C)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 pub struct TransferPubkeys {
     pub source_pubkey: ElGamalPubkey,
     pub destination_pubkey: ElGamalPubkey,
     pub auditor_pubkey: ElGamalPubkey,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TransferPubkeys {
     // TODO: use constructor instead
     pub fn to_bytes(&self) -> [u8; 96] {
@@ -469,7 +469,7 @@ impl TransferPubkeys {
 
 #[derive(Clone)]
 #[repr(C)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 pub struct TransferAmountEncryption {
     pub commitment: PedersenCommitment,
     pub source_handle: DecryptHandle,
@@ -477,7 +477,7 @@ pub struct TransferAmountEncryption {
     pub auditor_handle: DecryptHandle,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TransferAmountEncryption {
     pub fn new(
         amount: u64,

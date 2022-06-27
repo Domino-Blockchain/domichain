@@ -6,8 +6,8 @@ mod tests {
     use {
         crossbeam_channel::unbounded,
         log::*,
-        solana_core::ledger_cleanup_service::LedgerCleanupService,
-        solana_ledger::{
+        domichain_core::ledger_cleanup_service::LedgerCleanupService,
+        domichain_ledger::{
             blockstore::{make_many_slot_shreds, Blockstore},
             blockstore_options::{
                 BlockstoreOptions, BlockstoreRocksFifoOptions, LedgerColumnOptions,
@@ -15,7 +15,7 @@ mod tests {
             },
             get_tmp_ledger_path,
         },
-        solana_measure::measure::Measure,
+        domichain_measure::measure::Measure,
         std::{
             collections::VecDeque,
             str::FromStr,
@@ -343,7 +343,7 @@ mod tests {
     /// -- --exact --nocapture
     #[test]
     fn test_ledger_cleanup_compaction() {
-        solana_logger::setup_with("error,ledger_cleanup::tests=info");
+        domichain_logger::setup_with("error,ledger_cleanup::tests=info");
 
         let ledger_path = get_tmp_ledger_path!();
         let config = get_benchmark_config();

@@ -1,11 +1,11 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 edition = "2021"
-name = "solana-transaction-dos"
+name = "domichain-transaction-dos"
 version = "1.11.1"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
-homepage = "https://solana.com/"
+homepage = "https://domichain.com/"
 publish = false
 
 [dependencies]
@@ -14,23 +14,23 @@ clap = "2.33.1"
 log = "0.4.17"
 rand = "0.7.0"
 rayon = "1.5.3"
-solana-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
-solana-cli = { path = "../cli", version = "=1.11.1" }
-solana-client = { path = "../client", version = "=1.11.1" }
-solana-core = { path = "../core", version = "=1.11.1" }
-solana-faucet = { path = "../faucet", version = "=1.11.1" }
-solana-gossip = { path = "../gossip", version = "=1.11.1" }
-solana-logger = { path = "../logger", version = "=1.11.1" }
-solana-measure = { path = "../measure", version = "=1.11.1" }
-solana-net-utils = { path = "../net-utils", version = "=1.11.1" }
-solana-runtime = { path = "../runtime", version = "=1.11.1" }
-solana-sdk = { path = "../sdk", version = "=1.11.1" }
-solana-streamer = { path = "../streamer", version = "=1.11.1" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.11.1" }
-solana-version = { path = "../version", version = "=1.11.1" }
+domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
+domichain-cli = { path = "../cli", version = "=1.11.1" }
+domichain-client = { path = "../client", version = "=1.11.1" }
+domichain-core = { path = "../core", version = "=1.11.1" }
+domichain-faucet = { path = "../faucet", version = "=1.11.1" }
+domichain-gossip = { path = "../gossip", version = "=1.11.1" }
+domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-measure = { path = "../measure", version = "=1.11.1" }
+domichain-net-utils = { path = "../net-utils", version = "=1.11.1" }
+domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+domichain-streamer = { path = "../streamer", version = "=1.11.1" }
+domichain-transaction-status = { path = "../transaction-status", version = "=1.11.1" }
+domichain-version = { path = "../version", version = "=1.11.1" }
 
 [dev-dependencies]
-solana-local-cluster = { path = "../local-cluster", version = "=1.11.1" }
+domichain-local-cluster = { path = "../local-cluster", version = "=1.11.1" }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

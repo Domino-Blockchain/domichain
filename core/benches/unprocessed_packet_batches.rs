@@ -5,10 +5,10 @@ extern crate test;
 
 use {
     rand::distributions::{Distribution, Uniform},
-    solana_core::unprocessed_packet_batches::*,
-    solana_measure::measure::Measure,
-    solana_perf::packet::{Packet, PacketBatch},
-    solana_sdk::{hash::Hash, signature::Keypair, system_transaction},
+    domichain_core::unprocessed_packet_batches::*,
+    domichain_measure::measure::Measure,
+    domichain_perf::packet::{Packet, PacketBatch},
+    domichain_sdk::{hash::Hash, signature::Keypair, system_transaction},
     test::Bencher,
 };
 
@@ -18,7 +18,7 @@ fn build_packet_batch(packet_per_batch_count: usize) -> (PacketBatch, Vec<usize>
             .map(|sender_stake| {
                 let tx = system_transaction::transfer(
                     &Keypair::new(),
-                    &solana_sdk::pubkey::new_rand(),
+                    &domichain_sdk::pubkey::new_rand(),
                     1,
                     Hash::new_unique(),
                 );
@@ -42,7 +42,7 @@ fn build_randomized_packet_batch(packet_per_batch_count: usize) -> (PacketBatch,
             .map(|_| {
                 let tx = system_transaction::transfer(
                     &Keypair::new(),
-                    &solana_sdk::pubkey::new_rand(),
+                    &domichain_sdk::pubkey::new_rand(),
                     1,
                     Hash::new_unique(),
                 );
@@ -64,7 +64,7 @@ fn insert_packet_batches(
     packet_per_batch_count: usize,
     randomize: bool,
 ) {
-    solana_logger::setup();
+    domichain_logger::setup();
     let mut unprocessed_packet_batches = UnprocessedPacketBatches::with_capacity(buffer_max_size);
 
     let mut timer = Measure::start("insert_batch");

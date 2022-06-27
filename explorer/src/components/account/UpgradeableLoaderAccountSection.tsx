@@ -183,7 +183,7 @@ function SecurityLabel() {
       <a
         rel="noopener noreferrer"
         target="_blank"
-        href="https://github.com/neodyme-labs/solana-security-txt"
+        href="https://github.com/neodyme-labs/domichain-security-txt"
       >
         <span className="security-txt-link-color-hack-reee">Security.txt</span>
         <span className="fe fe-external-link ms-2"></span>

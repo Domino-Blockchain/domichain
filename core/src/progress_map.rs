@@ -5,10 +5,10 @@ use {
         consensus::{Stake, VotedStakes},
         replay_stage::SUPERMINORITY_THRESHOLD,
     },
-    solana_ledger::blockstore_processor::{ConfirmationProgress, ConfirmationTiming},
-    solana_program_runtime::timings::ExecuteTimingType,
-    solana_runtime::{bank::Bank, bank_forks::BankForks, vote_account::VoteAccountsHashMap},
-    solana_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
+    domichain_ledger::blockstore_processor::{ConfirmationProgress, ConfirmationTiming},
+    domichain_program_runtime::timings::ExecuteTimingType,
+    domichain_runtime::{bank::Bank, bank_forks::BankForks, vote_account::VoteAccountsHashMap},
+    domichain_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
     std::{
         collections::{BTreeMap, HashMap, HashSet},
         ops::Index,
@@ -702,11 +702,11 @@ impl ProgressMap {
 
 #[cfg(test)]
 mod test {
-    use {super::*, solana_runtime::vote_account::VoteAccount, solana_sdk::account::Account};
+    use {super::*, domichain_runtime::vote_account::VoteAccount, domichain_sdk::account::Account};
 
     fn new_test_vote_account() -> VoteAccount {
         let account = Account {
-            owner: solana_vote_program::id(),
+            owner: domichain_vote_program::id(),
             ..Account::default()
         };
         VoteAccount::try_from(account).unwrap()
@@ -715,7 +715,7 @@ mod test {
     #[test]
     fn test_add_vote_pubkey() {
         let mut stats = PropagatedStats::default();
-        let mut vote_pubkey = solana_sdk::pubkey::new_rand();
+        let mut vote_pubkey = domichain_sdk::pubkey::new_rand();
 
         // Add a vote pubkey, the number of references in all_pubkeys
         // should be 2
@@ -729,7 +729,7 @@ mod test {
         assert_eq!(stats.propagated_validators_stake, 1);
 
         // Adding another pubkey should succeed
-        vote_pubkey = solana_sdk::pubkey::new_rand();
+        vote_pubkey = domichain_sdk::pubkey::new_rand();
         stats.add_vote_pubkey(vote_pubkey, 2);
         assert!(stats.propagated_validators.contains(&vote_pubkey));
         assert_eq!(stats.propagated_validators_stake, 3);
@@ -739,7 +739,7 @@ mod test {
     fn test_add_node_pubkey_internal() {
         let num_vote_accounts = 10;
         let staked_vote_accounts = 5;
-        let vote_account_pubkeys: Vec<_> = std::iter::repeat_with(solana_sdk::pubkey::new_rand)
+        let vote_account_pubkeys: Vec<_> = std::iter::repeat_with(domichain_sdk::pubkey::new_rand)
             .take(num_vote_accounts)
             .collect();
         let epoch_vote_accounts: HashMap<_, _> = vote_account_pubkeys
@@ -749,7 +749,7 @@ mod test {
             .collect();
 
         let mut stats = PropagatedStats::default();
-        let mut node_pubkey = solana_sdk::pubkey::new_rand();
+        let mut node_pubkey = domichain_sdk::pubkey::new_rand();
 
         // Add a vote pubkey, the number of references in all_pubkeys
         // should be 2
@@ -770,7 +770,7 @@ mod test {
 
         // Adding another pubkey with same vote accounts should succeed, but stake
         // shouldn't increase
-        node_pubkey = solana_sdk::pubkey::new_rand();
+        node_pubkey = domichain_sdk::pubkey::new_rand();
         stats.add_node_pubkey_internal(&node_pubkey, &vote_account_pubkeys, &epoch_vote_accounts);
         assert!(stats.propagated_node_ids.contains(&node_pubkey));
         assert_eq!(
@@ -780,8 +780,8 @@ mod test {
 
         // Adding another pubkey with different vote accounts should succeed
         // and increase stake
-        node_pubkey = solana_sdk::pubkey::new_rand();
-        let vote_account_pubkeys: Vec<_> = std::iter::repeat_with(solana_sdk::pubkey::new_rand)
+        node_pubkey = domichain_sdk::pubkey::new_rand();
+        let vote_account_pubkeys: Vec<_> = std::iter::repeat_with(domichain_sdk::pubkey::new_rand)
             .take(num_vote_accounts)
             .collect();
         let epoch_vote_accounts: HashMap<_, _> = vote_account_pubkeys

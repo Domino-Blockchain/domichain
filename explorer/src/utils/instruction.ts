@@ -10,7 +10,7 @@ import {
   ParsedConfirmedTransaction,
   ParsedInstruction,
   PartiallyDecodedInstruction,
-} from "@solana/web3.js";
+} from "@domichain/web3.js";
 import { intoTransactionInstruction } from "utils/tx";
 import {
   isTokenSwapInstruction,

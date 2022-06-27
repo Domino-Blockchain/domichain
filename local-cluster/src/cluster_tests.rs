@@ -6,18 +6,18 @@ use log::*;
 use {
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
-    solana_core::consensus::VOTE_THRESHOLD_DEPTH,
-    solana_entry::entry::{Entry, EntrySlice},
-    solana_gossip::{
+    domichain_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
+    domichain_core::consensus::VOTE_THRESHOLD_DEPTH,
+    domichain_entry::entry::{Entry, EntrySlice},
+    domichain_gossip::{
         cluster_info,
         contact_info::ContactInfo,
         crds_value::{self, CrdsData, CrdsValue},
         gossip_error::GossipError,
         gossip_service::discover_cluster,
     },
-    solana_ledger::blockstore::Blockstore,
-    solana_sdk::{
+    domichain_ledger::blockstore::Blockstore,
+    domichain_sdk::{
         client::SyncClient,
         clock::{self, Slot, NUM_CONSECUTIVE_LEADER_SLOTS},
         commitment_config::CommitmentConfig,
@@ -31,8 +31,8 @@ use {
         timing::{duration_as_ms, timestamp},
         transport::TransportError,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_vote_program::vote_transaction,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_vote_program::vote_transaction,
     std::{
         collections::{HashMap, HashSet},
         net::SocketAddr,
