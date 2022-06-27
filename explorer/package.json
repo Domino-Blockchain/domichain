@@ -16,7 +16,7 @@
     "@domichain/buffer-layout": "^3.0.0",
     "@domichain/spl-token-registry": "^0.2.3736",
     "@domichain/web3.js": "^1.43.1",
-    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
     "@testing-library/user-event": "^13.5.0",
     "@types/bn.js": "^5.1.0",
