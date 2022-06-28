@@ -4,7 +4,6 @@ use {
     },
     std::{
         ffi::CString,
-        io::Result,
         os::raw::c_uchar,
     },
 };
@@ -18,14 +17,9 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Vec<u8> {
     let mut proof_vec : Vec<c_uchar> = vec![0; proof_len];
     let proof_vec_slice = proof_vec.as_mut_slice();
 
-    let skpk_len = 64 + 32;
-    let skpk_vec : Vec<c_uchar> = vec![0; skpk_len];
+    // let skpk_len = 64 + 32;
+    let skpk_vec = keypair.to_bytes().to_vec();
     let skpk_vec_slice = skpk_vec.as_slice();
-
-    let pubkey = keypair.public.to_bytes();
-    let secret = keypair.secret().to_bytes();
-    skpk_vec[0..secret.len()].copy_from_slice(&secret);
-    skpk_vec[secret.len()..].copy_from_slice(&pubkey);
 
     unsafe {
         // int vrf_prove(
