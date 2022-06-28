@@ -82,7 +82,7 @@ mod test {
         spl_associated_token_account::{
             get_associated_token_address,
             instruction::create_associated_token_account,
-            domichain_program::{
+            solana_program::{
                 instruction::CompiledInstruction as SplAssociatedTokenCompiledInstruction,
                 message::Message, pubkey::Pubkey as SplAssociatedTokenPubkey, sysvar,
             },
