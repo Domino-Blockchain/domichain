@@ -31,8 +31,14 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Vec<u8> {
         let proof_vec_ptr = proof_vec_slice.as_mut_ptr();
         let skpk_vec_ptr = skpk_vec_slice.as_ptr();
         let c_message_ptr = c_message_slice.as_ptr();
+        let c_message_len = message.len().try_into().unwrap();
 
-        let res = libvrf_sys::vrf_prove(proof_vec_ptr, skpk_vec_ptr, c_message_ptr, message.len().try_into().unwrap());
+        let res = libvrf_sys::vrf_prove(
+            proof_vec_ptr,
+            skpk_vec_ptr,
+            c_message_ptr,
+            c_message_len,
+        );
 
         println!("vrf_prove result code: {}", res);
     }
