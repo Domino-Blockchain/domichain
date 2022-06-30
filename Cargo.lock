@@ -4180,6 +4180,7 @@ version = "0.1.0"
 dependencies = [
  "domichain-sdk",
  "libvrf-sys",
+ "log",
 ]
 
 [[package]]

@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 libvrf-sys = { path = "../libvrf-sys", version = "=0.1.0" }
 domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+log = "0.4.17"

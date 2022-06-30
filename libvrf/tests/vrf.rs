@@ -4,11 +4,7 @@ use {
         pubkey::Pubkey,
         signature::{Keypair},
     },
-    std::{
-        fs::File,
-        fs::metadata,
-        io::Read,
-    },
+    std::fs::read,
 };
 
 #[test]
@@ -28,7 +24,7 @@ fn test_vrf_prove() {
 
     let proof = vrf_prove(&message, &keypair);
 
-    assert_eq!(proof, expected_proof);
+    assert_eq!(proof, Ok(expected_proof));
 }
 
 #[test]
@@ -39,6 +35,7 @@ fn test_vrf_verify() {
 
     let proof = read_file("./tests/pi");
     assert_eq!(proof.len(), 80);
+    let proof = proof.as_slice().try_into().unwrap();
 
     let alpha = read_file("./tests/alpha");
     let message = String::from_utf8_lossy(&alpha[..1]);
@@ -46,29 +43,24 @@ fn test_vrf_verify() {
 
     let expected_hash = read_file("./tests/beta");
 
-    let hash = vrf_verify(&message, &pubkey, proof.as_slice().try_into().unwrap());
+    let hash = vrf_verify(&message, &pubkey, proof);
 
-    assert_eq!(hash, expected_hash);
+    assert_eq!(hash, Ok(expected_hash));
 }
 
 #[test]
 fn test_vrf_proof_to_hash() {
     let proof = read_file("./tests/pi");
     assert_eq!(proof.len(), 80);
+    let proof = proof.as_slice().try_into().unwrap();
 
     let expected_hash = read_file("./tests/beta");
 
-    let hash = vrf_proof_to_hash(proof.as_slice().try_into().unwrap());
+    let hash = vrf_proof_to_hash(proof);
 
-    assert_eq!(hash, expected_hash);
+    assert_eq!(hash, Ok(expected_hash));
 }
 
 fn read_file(filename: &str) -> Vec<u8> {
-    let mut file = File::open(&filename).expect("no file found");
-
-    let metadata = metadata(&filename).expect("unable to read metadata");
-    let mut buffer = vec![0; metadata.len() as usize];
-    file.read(&mut buffer).expect("buffer overflow");
-
-    buffer
+    read(filename).expect("unable to read file")
 }
