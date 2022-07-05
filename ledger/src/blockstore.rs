@@ -1974,6 +1974,7 @@ impl Blockstore {
                 // case, these fields will be `None`.
                 let block_time = self.blocktime_cf.get(slot)?;
                 let block_height = self.block_height_cf.get(slot)?;
+                let block_seed = self.block_seed_cf.get(slot)?;
 
                 let block = VersionedConfirmedBlock {
                     previous_blockhash: previous_blockhash.to_string(),
@@ -1986,7 +1987,7 @@ impl Blockstore {
                     rewards,
                     block_time,
                     block_height,
-                    seed: Box::new([0; 32]),
+                    seed: block_seed.unwrap(),
                 };
                 return Ok(block);
             }
