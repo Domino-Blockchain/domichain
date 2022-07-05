@@ -842,6 +842,7 @@ mod tests {
             rewards,
             block_time,
             block_height,
+            seed,
         } = confirmed_block;
 
         generated::ConfirmedBlock {
@@ -852,6 +853,7 @@ mod tests {
             rewards: rewards.into_iter().map(|r| r.into()).collect(),
             block_time: block_time.map(|timestamp| generated::UnixTimestamp { timestamp }),
             block_height: block_height.map(|block_height| generated::BlockHeight { block_height }),
+            seed: seed.to_vec(),
         }
     }
 
@@ -884,6 +886,7 @@ mod tests {
             rewards: vec![],
             block_time: Some(1_234_567_890),
             block_height: Some(1),
+            seed: Box::new([0; 32]),
         };
         let bincode_block = compress_best(
             &bincode::serialize::<StoredConfirmedBlock>(&expected_block.clone().into()).unwrap(),

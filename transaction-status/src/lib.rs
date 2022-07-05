@@ -488,6 +488,7 @@ pub struct ConfirmedBlock {
     pub rewards: Rewards,
     pub block_time: Option<UnixTimestamp>,
     pub block_height: Option<u64>,
+    pub seed: Box<[u8; 32]>,
 }
 
 // Confirmed block with type guarantees that transaction metadata
@@ -501,6 +502,7 @@ pub struct VersionedConfirmedBlock {
     pub rewards: Rewards,
     pub block_time: Option<UnixTimestamp>,
     pub block_height: Option<u64>,
+    pub seed: Box<[u8; 32]>,
 }
 
 impl From<VersionedConfirmedBlock> for ConfirmedBlock {
@@ -517,6 +519,7 @@ impl From<VersionedConfirmedBlock> for ConfirmedBlock {
             rewards: block.rewards,
             block_time: block.block_time,
             block_height: block.block_height,
+            seed: block.seed,
         }
     }
 }

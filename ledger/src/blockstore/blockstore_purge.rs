@@ -336,6 +336,10 @@ impl Blockstore {
             && self
                 .optimistic_slots_cf
                 .compact_range(from_slot, to_slot)
+                .unwrap_or(false)
+            && self
+                .block_seed_cf
+                .compact_range(from_slot, to_slot)
                 .unwrap_or(false);
         compact_timer.stop();
         if !result {
