@@ -119,6 +119,7 @@ struct StoredConfirmedBlock {
     block_time: Option<UnixTimestamp>,
     #[serde(deserialize_with = "default_on_eof")]
     block_height: Option<u64>,
+    pub seed: Box<[u8; 32]>,
 }
 
 #[cfg(test)]
@@ -132,6 +133,7 @@ impl From<ConfirmedBlock> for StoredConfirmedBlock {
             rewards,
             block_time,
             block_height,
+            seed,
         } = confirmed_block;
 
         Self {
@@ -142,6 +144,7 @@ impl From<ConfirmedBlock> for StoredConfirmedBlock {
             rewards: rewards.into_iter().map(|reward| reward.into()).collect(),
             block_time,
             block_height,
+            seed,
         }
     }
 }
@@ -156,6 +159,7 @@ impl From<StoredConfirmedBlock> for ConfirmedBlock {
             rewards,
             block_time,
             block_height,
+            seed,
         } = confirmed_block;
 
         Self {
@@ -166,6 +170,7 @@ impl From<StoredConfirmedBlock> for ConfirmedBlock {
             rewards: rewards.into_iter().map(|reward| reward.into()).collect(),
             block_time,
             block_height,
+            seed,
         }
     }
 }

@@ -92,6 +92,8 @@ const BLOCK_HEIGHT_CF: &str = "block_height";
 const PROGRAM_COSTS_CF: &str = "program_costs";
 /// Column family for optimistic slots
 const OPTIMISTIC_SLOTS_CF: &str = "optimistic_slots";
+/// Column family for block seed
+const BLOCK_SEED_CF: &str = "block_seed";
 
 // 1 day is chosen for the same reasoning of DEFAULT_COMPACTION_SLOT_INTERVAL
 const PERIODIC_COMPACTION_SECONDS: u64 = 60 * 60 * 24;
@@ -213,6 +215,10 @@ pub mod columns {
     #[derive(Debug)]
     /// The optimistic slot column
     pub struct OptimisticSlots;
+
+    #[derive(Debug)]
+    /// The block seed
+    pub struct BlockSeed;
 
     // When adding a new column ...
     // - Add struct below and implement `Column` and `ColumnName` traits
@@ -397,6 +403,7 @@ impl Rocks {
             new_cf_descriptor::<BlockHeight>(options, oldest_slot),
             new_cf_descriptor::<ProgramCosts>(options, oldest_slot),
             new_cf_descriptor::<OptimisticSlots>(options, oldest_slot),
+            new_cf_descriptor::<BlockSeed>(options, oldest_slot),
         ]
     }
 
@@ -424,6 +431,7 @@ impl Rocks {
             BlockHeight::NAME,
             ProgramCosts::NAME,
             OptimisticSlots::NAME,
+            BlockSeed::NAME,
         ]
     }
 
@@ -936,6 +944,14 @@ impl ColumnName for columns::OptimisticSlots {
 }
 impl TypedColumn for columns::OptimisticSlots {
     type Type = blockstore_meta::OptimisticSlotMetaVersioned;
+}
+
+impl SlotColumn for columns::BlockSeed {}
+impl ColumnName for columns::BlockSeed {
+    const NAME: &'static str = BLOCK_SEED_CF;
+}
+impl TypedColumn for columns::BlockSeed {
+    type Type = Box<[u8; 32]>;
 }
 
 #[derive(Debug)]

@@ -172,6 +172,7 @@ pub struct Blockstore {
     program_costs_cf: LedgerColumn<cf::ProgramCosts>,
     bank_hash_cf: LedgerColumn<cf::BankHash>,
     optimistic_slots_cf: LedgerColumn<cf::OptimisticSlots>,
+    block_seed_cf: LedgerColumn<cf::BlockSeed>,
     last_root: RwLock<Slot>,
     insert_shreds_lock: Mutex<()>,
     new_shreds_signals: Mutex<Vec<Sender<bool>>>,
@@ -283,6 +284,7 @@ impl Blockstore {
         let program_costs_cf = db.column();
         let bank_hash_cf = db.column();
         let optimistic_slots_cf = db.column();
+        let block_seed_cf = db.column();
 
         let db = Arc::new(db);
 
@@ -335,6 +337,7 @@ impl Blockstore {
             program_costs_cf,
             bank_hash_cf,
             optimistic_slots_cf,
+            block_seed_cf,
             new_shreds_signals: Mutex::default(),
             completed_slots_senders: Mutex::default(),
             shred_timing_point_sender: None,
@@ -678,6 +681,7 @@ impl Blockstore {
         self.program_costs_cf.submit_rocksdb_cf_metrics();
         self.bank_hash_cf.submit_rocksdb_cf_metrics();
         self.optimistic_slots_cf.submit_rocksdb_cf_metrics();
+        self.block_seed_cf.submit_rocksdb_cf_metrics();
     }
 
     fn try_shred_recovery(
@@ -1865,6 +1869,16 @@ impl Blockstore {
         self.block_height_cf.put(slot, &block_height)
     }
 
+    pub fn get_block_seed(&self, slot: Slot) -> Result<Option<Box<[u8; 32]>>> {
+        datapoint_info!("blockstore-rpc-api", ("method", "get_block_seed", String));
+        let _lock = self.check_lowest_cleanup_slot(slot)?;
+        self.block_seed_cf.get(slot)
+    }
+
+    pub fn cache_block_seed(&self, slot: Slot, block_seed: Box<[u8; 32]>) -> Result<()> {
+        self.block_seed_cf.put(slot, &block_seed)
+    }
+
     /// The first complete block that is available in the Blockstore ledger
     pub fn get_first_available_block(&self) -> Result<Slot> {
         let mut root_iterator = self.rooted_slot_iterator(self.lowest_slot_with_genesis())?;
@@ -1960,6 +1974,7 @@ impl Blockstore {
                 // case, these fields will be `None`.
                 let block_time = self.blocktime_cf.get(slot)?;
                 let block_height = self.block_height_cf.get(slot)?;
+                let block_seed = self.block_seed_cf.get(slot)?;
 
                 let block = VersionedConfirmedBlock {
                     previous_blockhash: previous_blockhash.to_string(),
@@ -1972,6 +1987,7 @@ impl Blockstore {
                     rewards,
                     block_time,
                     block_height,
+                    seed: block_seed.unwrap(),
                 };
                 return Ok(block);
             }
@@ -6498,6 +6514,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
+            seed: Box::new([0; 32]),
         };
         assert_eq!(confirmed_block, expected_block);
 
@@ -6512,6 +6529,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
+            seed: Box::new([0; 32]),
         };
         assert_eq!(confirmed_block, expected_block);
 
@@ -6529,6 +6547,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
+            seed: Box::new([0; 32]),
         };
         assert_eq!(complete_block, expected_complete_block);
 
