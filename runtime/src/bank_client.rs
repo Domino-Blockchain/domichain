@@ -67,7 +67,7 @@ impl SyncClient for BankClient {
         keypair: &Keypair,
         instruction: Instruction,
     ) -> Result<Signature> {
-        let message = Message::new(&[instruction], Some(&keypair.pubkey()));
+        let message = Message::new(&[instruction], Some(&keypair.pubkey()), vec![]);
         self.send_and_confirm_message(&[keypair], message)
     }
 

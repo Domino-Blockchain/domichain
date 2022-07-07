@@ -268,6 +268,7 @@ impl From<LegacyMessage> for generated::Message {
                 .collect(),
             versioned: false,
             address_table_lookups: vec![],
+            proof: message.proof,
         }
     }
 }
@@ -295,6 +296,7 @@ impl From<VersionedMessage> for generated::Message {
                     .into_iter()
                     .map(|lookup| lookup.into())
                     .collect(),
+                proof: message.proof,
             },
         }
     }
@@ -315,6 +317,7 @@ impl From<generated::Message> for VersionedMessage {
             .into_iter()
             .map(|lookup| lookup.into())
             .collect();
+        let proof = value.proof;
 
         if !value.versioned {
             Self::Legacy(LegacyMessage {
@@ -322,6 +325,7 @@ impl From<generated::Message> for VersionedMessage {
                 account_keys,
                 recent_blockhash,
                 instructions,
+                proof,
             })
         } else {
             Self::V0(v0::Message {
@@ -330,6 +334,7 @@ impl From<generated::Message> for VersionedMessage {
                 recent_blockhash,
                 instructions,
                 address_table_lookups,
+                proof,
             })
         }
     }

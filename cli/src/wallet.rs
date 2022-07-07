@@ -716,9 +716,10 @@ pub fn process_transfer(
                 Some(&fee_payer.pubkey()),
                 nonce_account,
                 &nonce_authority.pubkey(),
+                vec![],
             )
         } else {
-            Message::new(&ixs, Some(&fee_payer.pubkey()))
+            Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
         }
     };
 

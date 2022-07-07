@@ -111,7 +111,7 @@ fn make_create_message(
         &program_id,
     )];
 
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()), vec![])
 }
 
 fn make_dos_message(
@@ -129,7 +129,7 @@ fn make_dos_message(
         })
         .collect();
 
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()), vec![])
 }
 
 /// creates large transactions that all touch the same set of accounts,
@@ -194,6 +194,7 @@ fn run_transactions_dos(
         ],
         None,
         &blockhash,
+        vec![],
     );
 
     let mut latest_blockhash = Instant::now();

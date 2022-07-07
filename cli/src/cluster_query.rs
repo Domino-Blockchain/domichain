@@ -1443,7 +1443,7 @@ pub fn process_ping(
                     *compute_unit_price,
                 ));
             }
-            Message::new(&ixs, Some(&config.signers[0].pubkey()))
+            Message::new(&ixs, Some(&config.signers[0].pubkey()), vec![])
         };
         let (message, _) = resolve_spend_tx_and_check_account_balance(
             rpc_client,

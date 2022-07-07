@@ -30,6 +30,7 @@ message Message {
     repeated CompiledInstruction instructions = 4;
     bool versioned = 5;
     repeated MessageAddressTableLookup address_table_lookups = 6;
+    bytes proof = 7;
 }
 
 message MessageHeader {

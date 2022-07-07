@@ -1149,6 +1149,7 @@ fn process_set_authority(
                 new_authority.as_ref(),
             )],
             Some(&config.signers[0].pubkey()),
+            vec![],
         ))
     } else if let Some(pubkey) = buffer_pubkey {
         if let Some(ref new_authority) = new_authority {
@@ -1159,6 +1160,7 @@ fn process_set_authority(
                     new_authority,
                 )],
                 Some(&config.signers[0].pubkey()),
+                vec![],
             ))
         } else {
             return Err("Buffer authority cannot be None".into());
@@ -1527,6 +1529,7 @@ fn close(
             program_pubkey,
         )],
         Some(&config.signers[0].pubkey()),
+        vec![],
     ));
 
     tx.try_sign(&[config.signers[0], authority_signer], blockhash)?;
@@ -1819,6 +1822,7 @@ fn do_process_program_write_and_deploy(
                     &initial_instructions,
                     Some(&config.signers[0].pubkey()),
                     &blockhash,
+                    vec![],
                 ))
             } else {
                 None
@@ -1838,7 +1842,7 @@ fn do_process_program_write_and_deploy(
                 } else {
                     loader_instruction::write(buffer_pubkey, loader_id, offset, bytes)
                 };
-                Message::new_with_blockhash(&[instruction], Some(&payer_pubkey), &blockhash)
+                Message::new_with_blockhash(&[instruction], Some(&payer_pubkey), &blockhash, vec![])
             };
 
             let mut write_messages = vec![];
@@ -1880,12 +1884,14 @@ fn do_process_program_write_and_deploy(
                 )?,
                 Some(&config.signers[0].pubkey()),
                 &blockhash,
+                vec![],
             )
         } else {
             Message::new_with_blockhash(
                 &[loader_instruction::finalize(buffer_pubkey, loader_id)],
                 Some(&config.signers[0].pubkey()),
                 &blockhash,
+                vec![],
             )
         };
         Some(message)
@@ -1985,6 +1991,7 @@ fn do_process_program_upgrade(
                     &initial_instructions,
                     Some(&config.signers[0].pubkey()),
                     &blockhash,
+                    vec![],
                 ))
             } else {
                 None
@@ -2000,7 +2007,7 @@ fn do_process_program_upgrade(
                     offset,
                     bytes,
                 );
-                Message::new_with_blockhash(&[instruction], Some(&payer_pubkey), &blockhash)
+                Message::new_with_blockhash(&[instruction], Some(&payer_pubkey), &blockhash, vec![])
             };
 
             // Create and add write messages
@@ -2036,6 +2043,7 @@ fn do_process_program_upgrade(
         )],
         Some(&config.signers[0].pubkey()),
         &blockhash,
+        vec![],
     );
     messages.push(&final_message);
     let final_message = Some(final_message);

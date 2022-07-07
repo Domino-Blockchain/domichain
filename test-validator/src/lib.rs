@@ -789,6 +789,7 @@ impl TestValidator {
                 vec![AccountMeta::new(Pubkey::new_unique(), true)],
             )],
             None,
+            vec![],
         );
         const MAX_TRIES: u64 = 10;
         let mut num_tries = 0;

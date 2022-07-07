@@ -231,19 +231,19 @@ pub mod domichain_sdk {
                 _recent_blockhash: Hash,
             ) -> Transaction {
                 Transaction {
-                    message: Message::new(&[], None),
+                    message: Message::new(&[], None, Vec::new()),
                 }
             }
 
             pub fn new_unsigned(_message: Message) -> Self {
                 Transaction {
-                    message: Message::new(&[], None),
+                    message: Message::new(&[], None, Vec::new()),
                 }
             }
 
             pub fn new_with_payer(_instructions: &[Instruction], _payer: Option<&Pubkey>) -> Self {
                 Transaction {
-                    message: Message::new(&[], None),
+                    message: Message::new(&[], None, Vec::new()),
                 }
             }
 
@@ -253,7 +253,7 @@ pub mod domichain_sdk {
                 signing_keypairs: &T,
                 recent_blockhash: Hash,
             ) -> Self {
-                let message = Message::new(instructions, payer);
+                let message = Message::new(instructions, payer, Vec::new());
                 Self::new(signing_keypairs, message, recent_blockhash)
             }
 

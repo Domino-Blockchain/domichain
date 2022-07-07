@@ -4517,7 +4517,7 @@ impl RpcClient {
     /// Returns the stake minimum delegation, in lamports.
     pub async fn get_stake_minimum_delegation(&self) -> ClientResult<u64> {
         let instruction = domichain_sdk::stake::instruction::get_minimum_delegation();
-        let transaction = Transaction::new_with_payer(&[instruction], None);
+        let transaction = Transaction::new_with_payer(&[instruction], None, vec![]);
         let response = self.simulate_transaction(&transaction).await?;
         let RpcTransactionReturnData {
             program_id,

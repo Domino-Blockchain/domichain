@@ -65,6 +65,7 @@ use {
         transaction::Transaction,
     },
     domichain_vote_program::vote_state::VoteTransaction,
+    libvrf::vrf::vrf_prove,
     std::{
         collections::{HashMap, HashSet},
         result,
@@ -678,6 +679,9 @@ impl ReplayStage {
                     let mut voting_time = Measure::start("voting_time");
                     // Vote on a fork
                     if let Some((ref vote_bank, ref switch_fork_decision)) = vote_bank {
+
+                        
+
                         if let Some(votable_leader) =
                             leader_schedule_cache.slot_leader_at(vote_bank.slot(), Some(vote_bank))
                         {
@@ -1776,7 +1780,7 @@ impl ReplayStage {
         progress: &mut ProgressMap,
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
-        authorized_voter_keypairs: &[Arc<Keypair>],
+        authorized_voter_keypairs: &[Arc<Keypair>], // Keys
         blockstore: &Arc<Blockstore>,
         leader_schedule_cache: &Arc<LeaderScheduleCache>,
         lockouts_sender: &Sender<CommitmentAggregationData>,
@@ -1967,7 +1971,14 @@ impl ReplayStage {
             )
             .expect("Switch threshold failure should not lead to voting");
 
-        let mut vote_tx = Transaction::new_with_payer(&[vote_ix], Some(&node_keypair.pubkey()));
+        let seed = bank.last_seed();
+        let proof = vrf_prove(&seed, authorized_voter_keypair).unwrap();
+
+        let mut vote_tx = Transaction::new_with_payer(
+            &[vote_ix],
+            Some(&node_keypair.pubkey()),
+            proof,
+        );
 
         let blockhash = bank.last_blockhash();
         vote_tx.partial_sign(&[node_keypair], blockhash);
@@ -2094,6 +2105,7 @@ impl ReplayStage {
         replay_timing.generate_vote_us += generate_time.as_us();
         if let Some(vote_tx) = vote_tx {
             tower.refresh_last_vote_tx_blockhash(vote_tx.message.recent_blockhash);
+
 
             let saved_tower = SavedTower::new(tower, identity_keypair).unwrap_or_else(|err| {
                 error!("Unable to create saved tower: {:?}", err);

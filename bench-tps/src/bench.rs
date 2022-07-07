@@ -627,7 +627,7 @@ impl<'a> FundingTransactions<'a> for Vec<(&'a Keypair, Transaction)> {
             .par_iter()
             .map(|(k, t)| {
                 let instructions = system_instruction::transfer_many(&k.pubkey(), t);
-                let message = Message::new(&instructions, Some(&k.pubkey()));
+                let message = Message::new(&instructions, Some(&k.pubkey()), vec![]);
                 (*k, Transaction::new_unsigned(message))
             })
             .collect();
@@ -912,6 +912,7 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
             )],
             None,
             &client.get_latest_blockhash().unwrap(),
+            vec![],
         );
         let max_fee = client.get_fee_for_message(&single_sig_message).unwrap();
         let extra_fees = extra * max_fee;

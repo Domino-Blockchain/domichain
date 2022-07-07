@@ -330,7 +330,7 @@ pub fn process_set_validator_info(
                 keys,
                 &validator_info,
             )]);
-            Message::new(&instructions, Some(&config.signers[0].pubkey()))
+            Message::new(&instructions, Some(&config.signers[0].pubkey()), vec![])
         } else {
             println!(
                 "Updating Validator {:?} info at: {:?}",
@@ -343,7 +343,7 @@ pub fn process_set_validator_info(
                 keys,
                 &validator_info,
             )];
-            Message::new(&instructions, Some(&config.signers[0].pubkey()))
+            Message::new(&instructions, Some(&config.signers[0].pubkey()), vec![])
         }
     };
 

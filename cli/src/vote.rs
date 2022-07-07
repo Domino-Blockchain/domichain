@@ -810,9 +810,10 @@ pub fn process_create_vote_account(
                 Some(&fee_payer.pubkey()),
                 nonce_account,
                 &nonce_authority.pubkey(),
+                vec![],
             )
         } else {
-            Message::new(&ixs, Some(&fee_payer.pubkey()))
+            Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
         }
     };
 
@@ -963,9 +964,10 @@ pub fn process_vote_authorize(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -1037,9 +1039,10 @@ pub fn process_vote_update_validator(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -1105,9 +1108,10 @@ pub fn process_vote_update_commission(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
     if sign_only {
@@ -1265,9 +1269,10 @@ pub fn process_withdraw_from_vote_account(
                 Some(&fee_payer.pubkey()),
                 nonce_account,
                 &nonce_authority.pubkey(),
+                vec![],
             )
         } else {
-            Message::new(&ixs, Some(&fee_payer.pubkey()))
+            Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
         }
     };
 
@@ -1373,7 +1378,7 @@ pub fn process_close_vote_account(
     )]
     .with_memo(memo);
 
-    let message = Message::new(&ixs, Some(&fee_payer.pubkey()));
+    let message = Message::new(&ixs, Some(&fee_payer.pubkey()), vec![]);
     let mut tx = Transaction::new_unsigned(message);
     tx.try_sign(&config.signers, latest_blockhash)?;
     check_account_for_fee_with_commitment(

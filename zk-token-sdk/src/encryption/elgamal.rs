@@ -161,6 +161,7 @@ impl ElGamalKeypair {
                 vec![],
             )],
             Some(&signer.try_pubkey()?),
+            vec![],
         );
         let signature = signer.try_sign_message(&message.serialize())?;
 
@@ -329,6 +330,7 @@ impl ElGamalSecretKey {
                 vec![],
             )],
             Some(&signer.try_pubkey()?),
+            vec![],
         );
         let signature = signer.try_sign_message(&message.serialize())?;
 

@@ -344,7 +344,7 @@ impl SyncClient for ThinClient {
         keypair: &Keypair,
         instruction: Instruction,
     ) -> TransportResult<Signature> {
-        let message = Message::new(&[instruction], Some(&keypair.pubkey()));
+        let message = Message::new(&[instruction], Some(&keypair.pubkey()), vec![]);
         self.send_and_confirm_message(&[keypair], message)
     }
 

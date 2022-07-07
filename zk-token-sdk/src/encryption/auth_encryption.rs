@@ -66,6 +66,7 @@ impl AeKey {
         let message = Message::new(
             &[Instruction::new_with_bytes(*address, b"AeKey", vec![])],
             Some(&signer.try_pubkey()?),
+            vec![],
         );
         let signature = signer.try_sign_message(&message.serialize())?;
 

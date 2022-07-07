@@ -84,6 +84,9 @@ pub struct Message {
     /// for this transaction.
     #[serde(with = "short_vec")]
     pub address_table_lookups: Vec<MessageAddressTableLookup>,
+
+    #[serde(with = "short_vec")]
+    pub proof: Vec<u8>,
 }
 
 impl Message {
@@ -282,6 +285,7 @@ impl Message {
             recent_blockhash,
             instructions,
             address_table_lookups,
+            proof: vec![],
         })
     }
 

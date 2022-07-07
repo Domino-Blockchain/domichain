@@ -207,7 +207,7 @@ impl Faucet {
                             accounts: vec![],
                             data: memo.as_bytes().to_vec(),
                         };
-                        let message = Message::new(&[memo_instruction], Some(&mint_pubkey));
+                        let message = Message::new(&[memo_instruction], Some(&mint_pubkey), vec![]);
                         return Ok(FaucetTransaction::Memo((
                             Transaction::new(&[&self.faucet_keypair], message, blockhash),
                             memo,
@@ -221,7 +221,7 @@ impl Faucet {
 
                 let transfer_instruction =
                     system_instruction::transfer(&mint_pubkey, &to, lamports);
-                let message = Message::new(&[transfer_instruction], Some(&mint_pubkey));
+                let message = Message::new(&[transfer_instruction], Some(&mint_pubkey), vec![]);
                 Ok(FaucetTransaction::Airdrop(Transaction::new(
                     &[&self.faucet_keypair],
                     message,

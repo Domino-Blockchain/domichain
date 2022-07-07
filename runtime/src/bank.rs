@@ -3630,6 +3630,11 @@ impl Bank {
         self.hashes_per_tick = hashes_per_tick;
     }
 
+    /// Return the last block seed registered.
+    pub fn last_seed(&self) -> String {
+        todo!(); // TODO
+    }
+
     /// Return the last block hash registered.
     pub fn last_blockhash(&self) -> Hash {
         self.blockhash_queue.read().unwrap().last_hash()

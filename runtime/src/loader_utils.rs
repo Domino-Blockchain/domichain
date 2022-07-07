@@ -37,7 +37,7 @@ pub fn load_program<T: Client>(
     bank_client
         .send_and_confirm_message(
             &[from_keypair, &program_keypair],
-            Message::new(&[instruction], Some(&from_keypair.pubkey())),
+            Message::new(&[instruction], Some(&from_keypair.pubkey()), vec![]),
         )
         .unwrap();
 
@@ -46,7 +46,7 @@ pub fn load_program<T: Client>(
     for chunk in program.chunks(chunk_size) {
         let instruction =
             loader_instruction::write(&program_pubkey, loader_pubkey, offset, chunk.to_vec());
-        let message = Message::new(&[instruction], Some(&from_keypair.pubkey()));
+        let message = Message::new(&[instruction], Some(&from_keypair.pubkey()), vec![]);
         bank_client
             .send_and_confirm_message(&[from_keypair, &program_keypair], message)
             .unwrap();
@@ -54,7 +54,7 @@ pub fn load_program<T: Client>(
     }
 
     let instruction = loader_instruction::finalize(&program_pubkey, loader_pubkey);
-    let message = Message::new(&[instruction], Some(&from_keypair.pubkey()));
+    let message = Message::new(&[instruction], Some(&from_keypair.pubkey()), vec![]);
     bank_client
         .send_and_confirm_message(&[from_keypair, &program_keypair], message)
         .unwrap();
@@ -89,6 +89,7 @@ pub fn load_buffer_account<T: Client>(
                 )
                 .unwrap(),
                 Some(&from_keypair.pubkey()),
+                vec![]
             ),
         )
         .unwrap();
@@ -104,6 +105,7 @@ pub fn load_buffer_account<T: Client>(
                 chunk.to_vec(),
             )],
             Some(&from_keypair.pubkey()),
+            vec![],
         );
         bank_client
             .send_and_confirm_message(&[from_keypair, buffer_authority_keypair], message)
@@ -148,6 +150,7 @@ pub fn load_upgradeable_program<T: Client>(
         )
         .unwrap(),
         Some(&from_keypair.pubkey()),
+        vec![]
     );
     bank_client
         .send_and_confirm_message(
@@ -173,6 +176,7 @@ pub fn upgrade_program<T: Client>(
             spill_pubkey,
         )],
         Some(&from_keypair.pubkey()),
+        vec![],
     );
     bank_client
         .send_and_confirm_message(&[from_keypair, authority_keypair], message)
@@ -193,6 +197,7 @@ pub fn set_upgrade_authority<T: Client>(
             new_authority_pubkey,
         )],
         Some(&from_keypair.pubkey()),
+        vec![],
     );
     bank_client
         .send_and_confirm_message(&[from_keypair, current_authority_keypair], message)

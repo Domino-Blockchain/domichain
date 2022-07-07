@@ -621,7 +621,7 @@ impl LocalCluster {
                 },
                 amount,
             );
-            let message = Message::new(&instructions, Some(&from_account.pubkey()));
+            let message = Message::new(&instructions, Some(&from_account.pubkey()), vec![]);
             let mut transaction = Transaction::new(
                 &[from_account.as_ref(), vote_account],
                 message,
@@ -649,7 +649,7 @@ impl LocalCluster {
                 &Lockup::default(),
                 amount,
             );
-            let message = Message::new(&instructions, Some(&from_account.pubkey()));
+            let message = Message::new(&instructions, Some(&from_account.pubkey()), vec![]);
             let mut transaction = Transaction::new(
                 &[from_account.as_ref(), &stake_account_keypair],
                 message,

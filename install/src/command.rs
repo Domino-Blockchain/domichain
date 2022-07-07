@@ -231,7 +231,7 @@ fn new_update_manifest(
             lamports,
             vec![], // additional keys
         );
-        let message = Message::new(&instructions, Some(&from_keypair.pubkey()));
+        let message = Message::new(&instructions, Some(&from_keypair.pubkey()), vec![]);
         let signers = [from_keypair, update_manifest_keypair];
         let transaction = Transaction::new(&signers, message, recent_blockhash);
         rpc_client.send_and_confirm_transaction(&transaction)?;
@@ -256,7 +256,7 @@ fn store_update_manifest(
         update_manifest,
     );
 
-    let message = Message::new(&[instruction], Some(&from_keypair.pubkey()));
+    let message = Message::new(&[instruction], Some(&from_keypair.pubkey()), vec![]);
     let transaction = Transaction::new(&signers, message, recent_blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
     Ok(())

@@ -167,7 +167,7 @@ fn transfer<S: Signer>(
 ) -> ClientResult<Transaction> {
     let create_instruction =
         system_instruction::transfer(&sender_keypair.pubkey(), to_pubkey, lamports);
-    let message = Message::new(&[create_instruction], Some(&sender_keypair.pubkey()));
+    let message = Message::new(&[create_instruction], Some(&sender_keypair.pubkey()), vec![]);
     let recent_blockhash = client.get_latest_blockhash()?;
     Ok(Transaction::new(
         &[sender_keypair],
@@ -348,6 +348,7 @@ fn build_messages(
             &instructions,
             Some(&fee_payer_pubkey),
             &Hash::default(), // populated by a real blockhash for balance check and submission
+            vec![],
         );
         messages.push(message);
         stake_extras.push((new_stake_account_keypair, lockup_date));
@@ -1000,7 +1001,7 @@ pub fn test_process_create_stake_with_client(client: &RpcClient, sender_keypair:
         &lockup,
         sol_to_lamports(3000.0),
     );
-    let message = Message::new(&instructions, Some(&sender_keypair.pubkey()));
+    let message = Message::new(&instructions, Some(&sender_keypair.pubkey()), vec![]);
     let signers = [&sender_keypair, &stake_account_keypair];
     let blockhash = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new(&signers, message, blockhash);
@@ -1122,7 +1123,7 @@ pub fn test_process_distribute_stake_with_client(client: &RpcClient, sender_keyp
         &lockup,
         sol_to_lamports(3000.0),
     );
-    let message = Message::new(&instructions, Some(&sender_keypair.pubkey()));
+    let message = Message::new(&instructions, Some(&sender_keypair.pubkey()), vec![]);
     let signers = [&sender_keypair, &stake_account_keypair];
     let blockhash = client.get_latest_blockhash().unwrap();
     let transaction = Transaction::new(&signers, message, blockhash);

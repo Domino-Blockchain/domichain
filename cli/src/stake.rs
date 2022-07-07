@@ -1277,9 +1277,10 @@ pub fn process_create_stake_account(
                 Some(&fee_payer.pubkey()),
                 nonce_account,
                 &nonce_authority.pubkey(),
+                vec![],
             )
         } else {
-            Message::new(&ixs, Some(&fee_payer.pubkey()))
+            Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
         }
     };
 
@@ -1441,9 +1442,10 @@ pub fn process_stake_authorize(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -1585,9 +1587,10 @@ pub fn process_deactivate_stake_account(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -1669,9 +1672,10 @@ pub fn process_withdraw_stake(
                 Some(&fee_payer.pubkey()),
                 nonce_account,
                 &nonce_authority.pubkey(),
+                vec![],
             )
         } else {
-            Message::new(&ixs, Some(&fee_payer.pubkey()))
+            Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
         }
     };
 
@@ -1825,9 +1829,10 @@ pub fn process_split_stake(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -1930,9 +1935,10 @@ pub fn process_merge_stake(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -2024,9 +2030,10 @@ pub fn process_stake_set_lockup(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 
@@ -2465,9 +2472,10 @@ pub fn process_delegate_stake(
             Some(&fee_payer.pubkey()),
             nonce_account,
             &nonce_authority.pubkey(),
+            vec![],
         )
     } else {
-        Message::new(&ixs, Some(&fee_payer.pubkey()))
+        Message::new(&ixs, Some(&fee_payer.pubkey()), vec![])
     };
     let mut tx = Transaction::new_unsigned(message);
 

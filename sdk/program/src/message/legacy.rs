@@ -126,6 +126,10 @@ pub struct Message {
     #[wasm_bindgen(skip)]
     #[serde(with = "short_vec")]
     pub instructions: Vec<CompiledInstruction>,
+
+    #[wasm_bindgen(skip)]
+    #[serde(with = "short_vec")]
+    pub proof: Vec<u8>,
 }
 
 impl Sanitize for Message {
@@ -232,8 +236,8 @@ impl Message {
     /// #
     /// # Ok::<(), anyhow::Error>(())
     /// ```
-    pub fn new(instructions: &[Instruction], payer: Option<&Pubkey>) -> Self {
-        Self::new_with_blockhash(instructions, payer, &Hash::default())
+    pub fn new(instructions: &[Instruction], payer: Option<&Pubkey>, proof: Vec<u8>) -> Self {
+        Self::new_with_blockhash(instructions, payer, &Hash::default(), proof)
     }
 
     /// Create a new message while setting the blockhash.
@@ -310,6 +314,7 @@ impl Message {
         instructions: &[Instruction],
         payer: Option<&Pubkey>,
         blockhash: &Hash,
+        proof: Vec<u8>,
     ) -> Self {
         let compiled_keys = CompiledKeys::compile(instructions, payer.cloned());
         let (header, account_keys) = compiled_keys
@@ -323,6 +328,7 @@ impl Message {
             account_keys,
             *blockhash,
             instructions,
+            proof,
         )
     }
 
@@ -437,11 +443,12 @@ impl Message {
         payer: Option<&Pubkey>,
         nonce_account_pubkey: &Pubkey,
         nonce_authority_pubkey: &Pubkey,
+        proof: Vec<u8>,
     ) -> Self {
         let nonce_ix =
             system_instruction::advance_nonce_account(nonce_account_pubkey, nonce_authority_pubkey);
         instructions.insert(0, nonce_ix);
-        Self::new(&instructions, payer)
+        Self::new(&instructions, payer, proof)
     }
 
     pub fn new_with_compiled_instructions(
@@ -451,6 +458,7 @@ impl Message {
         account_keys: Vec<Pubkey>,
         recent_blockhash: Hash,
         instructions: Vec<CompiledInstruction>,
+        proof: Vec<u8>,
     ) -> Self {
         Self {
             header: MessageHeader {
@@ -461,6 +469,7 @@ impl Message {
             account_keys,
             recent_blockhash,
             instructions,
+            proof,
         }
     }
 

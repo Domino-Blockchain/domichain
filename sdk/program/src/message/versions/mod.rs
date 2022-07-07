@@ -245,6 +245,7 @@ impl<'de> Deserialize<'de> for VersionedMessage {
                             pub recent_blockhash: Hash,
                             #[serde(with = "short_vec")]
                             pub instructions: Vec<CompiledInstruction>,
+                            pub proof: Vec<u8>,
                         }
 
                         let message: RemainingLegacyMessage =
@@ -263,6 +264,7 @@ impl<'de> Deserialize<'de> for VersionedMessage {
                             account_keys: message.account_keys,
                             recent_blockhash: message.recent_blockhash,
                             instructions: message.instructions,
+                            proof: message.proof,
                         }))
                     }
                     MessagePrefix::Versioned(version) => {

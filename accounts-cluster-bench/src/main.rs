@@ -150,7 +150,7 @@ fn make_create_message(
         })
         .collect();
 
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()), vec![])
 }
 
 fn make_close_message(
@@ -202,7 +202,7 @@ fn make_close_message(
         })
         .collect();
 
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()), vec![])
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -271,6 +271,7 @@ fn run_accounts_bench(
             ),
         ],
         None,
+        vec![],
     );
 
     loop {

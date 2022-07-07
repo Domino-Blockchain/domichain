@@ -899,6 +899,7 @@ fn process_activate(
                     lamports,
                 ),
                 Some(&config.signers[0].pubkey()),
+                vec![],
             )
         },
         config.commitment,

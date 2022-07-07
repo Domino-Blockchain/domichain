@@ -49,6 +49,7 @@ pub fn test_multisig_tx() -> Transaction {
         blockhash,
         program_ids,
         instructions,
+        vec![],
     )
 }
 

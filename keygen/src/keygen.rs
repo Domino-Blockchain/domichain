@@ -782,6 +782,7 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
                     vec![AccountMeta::new(keypair.pubkey(), true)],
                 )],
                 Some(&keypair.pubkey()),
+                vec![],
             )
             .serialize();
             let signature = keypair.try_sign_message(&simple_message)?;

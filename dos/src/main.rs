@@ -168,7 +168,7 @@ impl TransactionGenerator {
         let to_transfer: u64 = 500_000_000; // specify amount which will cause error
         let to: Vec<(Pubkey, u64)> = to.iter().map(|to| (to.pubkey(), to_transfer)).collect();
         let instructions = system_instruction::transfer_many(&payer.pubkey(), to.as_slice());
-        let message = Message::new(&instructions, Some(&payer.pubkey()));
+        let message = Message::new(&instructions, Some(&payer.pubkey()), vec![]);
         let mut tx = Transaction::new_unsigned(message);
         tx.sign(&[payer], self.blockhash);
         tx
@@ -187,7 +187,7 @@ impl TransactionGenerator {
             &program_id,
         )];
 
-        let message = Message::new(&instructions, Some(&payer.pubkey()));
+        let message = Message::new(&instructions, Some(&payer.pubkey()), vec![]);
         let signers: Vec<&Keypair> = vec![payer, to];
         Transaction::new(&signers, message, self.blockhash)
     }
@@ -216,6 +216,7 @@ impl TransactionGenerator {
                 self.blockhash,
                 program_ids,
                 instructions,
+                vec![],
             )
         } else {
             // Since we provided invalid signatures
@@ -227,6 +228,7 @@ impl TransactionGenerator {
                 self.blockhash,
                 program_ids,
                 instructions,
+                vec![],
             );
             let num_signatures = self.transaction_params.num_signatures.unwrap();
             tx.signatures = vec![Signature::new_unique(); num_signatures];

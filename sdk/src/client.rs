@@ -222,7 +222,7 @@ pub trait AsyncClient {
         instruction: Instruction,
         recent_blockhash: Hash,
     ) -> Result<Signature> {
-        let message = Message::new(&[instruction], Some(&keypair.pubkey()));
+        let message = Message::new(&[instruction], Some(&keypair.pubkey()), Vec::new());
         self.async_send_message(&[keypair], message, recent_blockhash)
     }
 

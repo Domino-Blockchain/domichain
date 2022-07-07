@@ -421,8 +421,8 @@ impl Transaction {
     /// #
     /// # Ok::<(), anyhow::Error>(())
     /// ```
-    pub fn new_with_payer(instructions: &[Instruction], payer: Option<&Pubkey>) -> Self {
-        let message = Message::new(instructions, payer);
+    pub fn new_with_payer(instructions: &[Instruction], payer: Option<&Pubkey>, proof: Vec<u8>) -> Self {
+        let message = Message::new(instructions, payer, proof);
         Self::new_unsigned(message)
     }
 
@@ -506,8 +506,9 @@ impl Transaction {
         payer: Option<&Pubkey>,
         signing_keypairs: &T,
         recent_blockhash: Hash,
+        proof: Vec<u8>,
     ) -> Self {
-        let message = Message::new(instructions, payer);
+        let message = Message::new(instructions, payer, proof);
         Self::new(signing_keypairs, message, recent_blockhash)
     }
 
@@ -532,6 +533,7 @@ impl Transaction {
         recent_blockhash: Hash,
         program_ids: Vec<Pubkey>,
         instructions: Vec<CompiledInstruction>,
+        proof: Vec<u8>,
     ) -> Self {
         let mut account_keys = from_keypairs.pubkeys();
         let from_keypairs_len = account_keys.len();
@@ -544,6 +546,7 @@ impl Transaction {
             account_keys,
             Hash::default(),
             instructions,
+            proof,
         );
         Transaction::new(from_keypairs, message, recent_blockhash)
     }
