@@ -65,6 +65,7 @@ use {
         transaction::Transaction,
     },
     domichain_vote_program::vote_state::VoteTransaction,
+    libvrf::vrf::vrf_prove,
     std::{
         collections::{HashMap, HashSet},
         result,
@@ -1958,12 +1959,16 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
+        let seed = bank.last_seed();
+        let vrf_proof = vrf_prove(&seed, authorized_voter_keypair).unwrap();
+
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision
             .to_vote_instruction(
                 vote,
                 vote_account_pubkey,
                 &authorized_voter_keypair.pubkey(),
+                vrf_proof,
             )
             .expect("Switch threshold failure should not lead to voting");
 

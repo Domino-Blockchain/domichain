@@ -53,6 +53,7 @@ impl SwitchForkDecision {
         vote: VoteTransaction,
         vote_account_pubkey: &Pubkey,
         authorized_voter_pubkey: &Pubkey,
+        vrf_proof: Vec<u8>,
     ) -> Option<Instruction> {
         match (self, vote) {
             (SwitchForkDecision::FailedSwitchThreshold(_, total_stake), _) => {
@@ -76,6 +77,7 @@ impl SwitchForkDecision {
                     authorized_voter_pubkey,
                     v,
                     *switch_proof_hash,
+                    vrf_proof,
                 ))
             }
             (
