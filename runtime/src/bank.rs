@@ -3635,6 +3635,12 @@ impl Bank {
         self.blockhash_queue.read().unwrap().last_hash()
     }
 
+    /// TODO
+    pub fn last_seed(&self) -> String {
+        // todo!()
+        "TEST!".to_string()
+    }
+
     pub fn last_blockhash_and_lamports_per_signature(&self) -> (Hash, u64) {
         let blockhash_queue = self.blockhash_queue.read().unwrap();
         let last_hash = blockhash_queue.last_hash();

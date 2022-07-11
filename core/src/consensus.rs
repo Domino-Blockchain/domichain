@@ -72,7 +72,7 @@ impl SwitchForkDecision {
                 ))
             }
             (SwitchForkDecision::SwitchProof(switch_proof_hash), VoteTransaction::Vote(v)) => {
-                Some(vote_instruction::vote_switch(
+                Some(vote_instruction::vote_switch_vrf(
                     vote_account_pubkey,
                     authorized_voter_pubkey,
                     v,

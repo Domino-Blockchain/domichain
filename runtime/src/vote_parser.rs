@@ -26,7 +26,7 @@ pub(crate) fn is_simple_vote_transaction(transaction: &SanitizedTransaction) -> 
                 return matches!(
                     vote_instruction,
                     VoteInstruction::Vote(_)
-                        | VoteInstruction::VoteSwitch(_, _)
+                        | VoteInstruction::VoteSwitch(_, _, _)
                         | VoteInstruction::UpdateVoteState(_)
                         | VoteInstruction::UpdateVoteStateSwitch(_, _)
                 );
@@ -73,7 +73,7 @@ fn parse_vote_instruction_data(
 ) -> Option<(VoteTransaction, Option<Hash>)> {
     match limited_deserialize(vote_instruction_data).ok()? {
         VoteInstruction::Vote(vote) => Some((VoteTransaction::from(vote), None)),
-        VoteInstruction::VoteSwitch(vote, hash) => Some((VoteTransaction::from(vote), Some(hash))),
+        VoteInstruction::VoteSwitch(vote, hash, _) => Some((VoteTransaction::from(vote), Some(hash))),
         VoteInstruction::UpdateVoteState(vote_state_update) => {
             Some((VoteTransaction::from(vote_state_update), None))
         }

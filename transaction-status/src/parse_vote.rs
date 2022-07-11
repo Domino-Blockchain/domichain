@@ -173,7 +173,7 @@ pub fn parse_vote(
                 }),
             })
         }
-        VoteInstruction::VoteSwitch(vote, hash) => {
+        VoteInstruction::VoteSwitch(vote, hash, _) => {
             check_num_vote_accounts(&instruction.accounts, 4)?;
             let vote = json!({
                 "slots": vote.slots,
