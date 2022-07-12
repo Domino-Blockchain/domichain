@@ -12,4 +12,11 @@ fn main() {
         .include("include")
         .flag("-Wno-unused-parameter");
     build.compile("vrf");
+
+    println!("cargo:rerun-if-changed=src/vrf.c");
+    println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=src/bindings.rs");
+    println!("cargo:rerun-if-changed=include/vrf.h");
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=Cargo.toml");
 }

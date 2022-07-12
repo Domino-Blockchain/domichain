@@ -1961,6 +1961,12 @@ impl ReplayStage {
 
         let seed = bank.last_seed();
         let vrf_proof = vrf_prove(&seed, authorized_voter_keypair).unwrap();
+        info!(
+            "VRF Proof generated {:?} for seed {} and keypair {:?}",
+            vrf_proof,
+            seed,
+            authorized_voter_keypair,
+        );
 
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision

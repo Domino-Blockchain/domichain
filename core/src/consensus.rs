@@ -1434,7 +1434,8 @@ pub mod test {
             .to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default()
+                &Pubkey::default(),
+                vec![],
             )
             .is_none());
 
@@ -1443,7 +1444,8 @@ pub mod test {
             .to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default()
+                &Pubkey::default(),
+                vec![],
             )
             .is_none());
 
@@ -1452,7 +1454,8 @@ pub mod test {
             decision.to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default()
+                &Pubkey::default(),
+                vec![],
             ),
             Some(vote_instruction::vote(
                 &Pubkey::default(),
@@ -1466,7 +1469,8 @@ pub mod test {
             decision.to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default()
+                &Pubkey::default(),
+                vec![],
             ),
             Some(vote_instruction::vote_switch(
                 &Pubkey::default(),
