@@ -1963,11 +1963,19 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
-        let seed = blockstore.get_block_seed(bank.slot()).unwrap().unwrap();
-        let seed_message = from_utf8(&*seed).unwrap();
-        let vrf_proof = vrf_prove(seed_message, authorized_voter_keypair).unwrap();
+        let parent_slot = bank.parent_slot();
+        let seed_result = blockstore.get_block_seed(parent_slot);
+        info!("Last block seed for parent_slot {} is {:?}", parent_slot, seed_result);
+        let seed = match seed_result {
+            Ok(Some(ref seed)) => {
+                from_utf8(seed.as_ref()).unwrap()
+            },
+            Ok(None) => "TEST!",
+            Err(e) => panic!("{}", e),
+        };
+        let vrf_proof = vrf_prove(seed, authorized_voter_keypair).unwrap();
         info!(
-            "VRF Proof generated {:?} for seed {:?} and keypair {:?}",
+            "VRF Proof generated {:?} for seed {} and keypair {:?}",
             vrf_proof,
             seed,
             authorized_voter_keypair,

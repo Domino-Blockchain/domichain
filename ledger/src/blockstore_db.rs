@@ -26,6 +26,7 @@ use {
     domichain_runtime::hardened_unpack::UnpackError,
     domichain_sdk::{
         clock::{Slot, UnixTimestamp},
+        hash::Hash,
         pubkey::Pubkey,
         signature::Signature,
     },
@@ -951,7 +952,7 @@ impl ColumnName for columns::BlockSeed {
     const NAME: &'static str = BLOCK_SEED_CF;
 }
 impl TypedColumn for columns::BlockSeed {
-    type Type = Box<[u8; 32]>;
+    type Type = Hash;
 }
 
 #[derive(Debug)]

@@ -10,6 +10,7 @@ use {
     domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         commitment_config::CommitmentConfig,
+        hash::Hash,
         instruction::CompiledInstruction,
         message::{
             v0::{self, LoadedAddresses, LoadedMessage, MessageAddressTableLookup},
@@ -488,7 +489,7 @@ pub struct ConfirmedBlock {
     pub rewards: Rewards,
     pub block_time: Option<UnixTimestamp>,
     pub block_height: Option<u64>,
-    pub seed: Box<[u8; 32]>,
+    pub seed: Hash,
 }
 
 // Confirmed block with type guarantees that transaction metadata
@@ -502,7 +503,7 @@ pub struct VersionedConfirmedBlock {
     pub rewards: Rewards,
     pub block_time: Option<UnixTimestamp>,
     pub block_height: Option<u64>,
-    pub seed: Box<[u8; 32]>,
+    pub seed: Hash,
 }
 
 impl From<VersionedConfirmedBlock> for ConfirmedBlock {

@@ -975,6 +975,7 @@ pub(crate) struct BankFieldsToDeserialize {
     pub(crate) slot: Slot,
     pub(crate) epoch: Epoch,
     pub(crate) block_height: u64,
+    pub(crate) block_seed: Hash,
     pub(crate) collector_id: Pubkey,
     pub(crate) collector_fees: u64,
     pub(crate) fee_calculator: FeeCalculator,
@@ -1014,6 +1015,7 @@ pub(crate) struct BankFieldsToSerialize<'a> {
     pub(crate) slot: Slot,
     pub(crate) epoch: Epoch,
     pub(crate) block_height: u64,
+    pub(crate) block_seed: Hash,
     pub(crate) collector_id: Pubkey,
     pub(crate) collector_fees: u64,
     pub(crate) fee_calculator: FeeCalculator,
@@ -1060,6 +1062,7 @@ impl PartialEq for Bank {
             bank_id: _,
             epoch,
             block_height,
+            block_seed,
             collector_id,
             collector_fees,
             fee_calculator,
@@ -1117,6 +1120,7 @@ impl PartialEq for Bank {
             && slot == &other.slot
             && epoch == &other.epoch
             && block_height == &other.block_height
+            && block_seed == &other.block_seed
             && collector_id == &other.collector_id
             && collector_fees.load(Relaxed) == other.collector_fees.load(Relaxed)
             && fee_calculator == &other.fee_calculator
@@ -1275,6 +1279,9 @@ pub struct Bank {
 
     /// Bank block_height
     block_height: u64,
+
+    /// Bank block_seed
+    block_seed: Hash,
 
     /// The pubkey to send transactions fees to.
     collector_id: Pubkey,
@@ -1499,6 +1506,7 @@ impl Bank {
             bank_id: BankId::default(),
             epoch: Epoch::default(),
             block_height: u64::default(),
+            block_seed: Hash::default(),
             collector_id: Pubkey::default(),
             collector_fees: AtomicU64::default(),
             fee_calculator: FeeCalculator::default(),
@@ -1802,6 +1810,7 @@ impl Bank {
             rent_collector: Self::get_rent_collector_from(&parent.rent_collector, epoch),
             max_tick_height: (slot + 1) * parent.ticks_per_slot,
             block_height: parent.block_height + 1,
+            block_seed: parent.block_seed.clone(), // TODO
             fee_calculator,
             fee_rate_governor,
             capitalization: AtomicU64::new(parent.capitalization()),
@@ -2005,6 +2014,7 @@ impl Bank {
             "bank-new_from_parent-heights",
             ("slot", slot, i64),
             ("block_height", new.block_height, i64),
+            ("block_height", new.block_height, i64),
             ("parent_slot", parent.slot(), i64),
             ("bank_rc_creation_us", bank_rc_time.as_us(), i64),
             ("total_elapsed_us", time.as_us(), i64),
@@ -2160,6 +2170,7 @@ impl Bank {
             bank_id: 0,
             epoch: fields.epoch,
             block_height: fields.block_height,
+            block_seed: fields.block_seed,
             collector_id: fields.collector_id,
             collector_fees: AtomicU64::new(fields.collector_fees),
             fee_calculator: fields.fee_calculator,
@@ -2281,6 +2292,7 @@ impl Bank {
             slot: self.slot,
             epoch: self.epoch,
             block_height: self.block_height,
+            block_seed: self.block_seed.clone(),
             collector_id: self.collector_id,
             collector_fees: self.collector_fees.load(Relaxed),
             fee_calculator: self.fee_calculator,
@@ -7006,6 +7018,11 @@ impl Bank {
     /// Return the block_height of this bank
     pub fn block_height(&self) -> u64 {
         self.block_height
+    }
+
+    /// Return the block_seed of this bank
+    pub fn block_seed(&self) -> Hash {
+        self.block_seed.clone()
     }
 
     /// Return the number of slots per epoch for the given epoch

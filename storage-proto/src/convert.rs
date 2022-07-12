@@ -138,7 +138,7 @@ impl From<VersionedConfirmedBlock> for generated::ConfirmedBlock {
             rewards: rewards.into_iter().map(|r| r.into()).collect(),
             block_time: block_time.map(|timestamp| generated::UnixTimestamp { timestamp }),
             block_height: block_height.map(|block_height| generated::BlockHeight { block_height }),
-            seed: seed.to_vec(),
+            seed: seed.as_ref().to_vec(),
         }
     }
 }
@@ -170,7 +170,7 @@ impl TryFrom<generated::ConfirmedBlock> for ConfirmedBlock {
             rewards: rewards.into_iter().map(|r| r.into()).collect(),
             block_time: block_time.map(|generated::UnixTimestamp { timestamp }| timestamp),
             block_height: block_height.map(|generated::BlockHeight { block_height }| block_height),
-            seed: seed.into_boxed_slice().try_into().unwrap(),
+            seed: Hash::new(&seed),
         })
     }
 }
