@@ -73,6 +73,7 @@ use {
             atomic::{AtomicBool, Ordering},
             Arc, Mutex, RwLock,
         },
+        str::from_utf8,
         thread::{self, Builder, JoinHandle},
         time::{Duration, Instant},
     },
@@ -629,6 +630,7 @@ impl ReplayStage {
                                                     &vote_account,
                                                     &identity_keypair,
                                                     &authorized_voter_keypairs.read().unwrap(),
+                                                    &blockstore,
                                                     &mut voted_signatures,
                                                     has_new_vote_been_rooted, &mut
                                                     last_vote_refresh_time,
@@ -1875,6 +1877,7 @@ impl ReplayStage {
             vote_account_pubkey,
             identity_keypair,
             authorized_voter_keypairs,
+            blockstore,
             tower,
             switch_fork_decision,
             vote_signatures,
@@ -1890,6 +1893,7 @@ impl ReplayStage {
         bank: &Bank,
         vote_account_pubkey: &Pubkey,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        blockstore: &Arc<Blockstore>,
         vote: VoteTransaction,
         switch_fork_decision: &SwitchForkDecision,
         vote_signatures: &mut Vec<Signature>,
@@ -1959,10 +1963,11 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
-        let seed = bank.last_seed();
-        let vrf_proof = vrf_prove(&seed, authorized_voter_keypair).unwrap();
+        let seed = blockstore.get_block_seed(bank.slot()).unwrap().unwrap();
+        let seed_message = from_utf8(&*seed).unwrap();
+        let vrf_proof = vrf_prove(seed_message, authorized_voter_keypair).unwrap();
         info!(
-            "VRF Proof generated {:?} for seed {} and keypair {:?}",
+            "VRF Proof generated {:?} for seed {:?} and keypair {:?}",
             vrf_proof,
             seed,
             authorized_voter_keypair,
@@ -2004,6 +2009,7 @@ impl ReplayStage {
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        blockstore: &Arc<Blockstore>,
         vote_signatures: &mut Vec<Signature>,
         has_new_vote_been_rooted: bool,
         last_vote_refresh_time: &mut LastVoteRefreshTime,
@@ -2046,6 +2052,7 @@ impl ReplayStage {
             heaviest_bank_on_same_fork,
             vote_account_pubkey,
             authorized_voter_keypairs,
+            blockstore,
             tower.last_vote(),
             &SwitchForkDecision::SameFork,
             vote_signatures,
@@ -2081,6 +2088,7 @@ impl ReplayStage {
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        blockstore: &Arc<Blockstore>,
         tower: &mut Tower,
         switch_fork_decision: &SwitchForkDecision,
         vote_signatures: &mut Vec<Signature>,
@@ -2095,6 +2103,7 @@ impl ReplayStage {
             bank,
             vote_account_pubkey,
             authorized_voter_keypairs,
+            blockstore,
             tower.last_vote(),
             switch_fork_decision,
             vote_signatures,
