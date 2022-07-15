@@ -70,7 +70,7 @@ use {
         collections::{HashMap, HashSet},
         result,
         sync::{
-            atomic::{AtomicBool, Ordering},
+            atomic::{AtomicBool, AtomicUsize, Ordering},
             Arc, Mutex, RwLock,
         },
         thread::{self, Builder, JoinHandle},
@@ -85,6 +85,8 @@ pub const DUPLICATE_LIVENESS_THRESHOLD: f64 = 0.1;
 pub const DUPLICATE_THRESHOLD: f64 = 1.0 - SWITCH_FORK_THRESHOLD - DUPLICATE_LIVENESS_THRESHOLD;
 const MAX_VOTE_SIGNATURES: usize = 200;
 const MAX_VOTE_REFRESH_INTERVAL_MILLIS: usize = 5000;
+
+static VRF_TICK_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum HeaviestForkFailures {
@@ -680,6 +682,7 @@ impl ReplayStage {
                     let mut voting_time = Measure::start("voting_time");
                     // Vote on a fork
                     if let Some((ref vote_bank, ref switch_fork_decision)) = vote_bank {
+                        info!("switch_fork_decision: {:?}", switch_fork_decision);
                         if let Some(votable_leader) =
                             leader_schedule_cache.slot_leader_at(vote_bank.slot(), Some(vote_bank))
                         {
@@ -691,6 +694,7 @@ impl ReplayStage {
                             );
                         }
 
+                        // handle_votable_bank
                         Self::handle_votable_bank(
                             vote_bank,
                             switch_fork_decision,
@@ -1771,6 +1775,7 @@ impl ReplayStage {
 
     #[allow(clippy::too_many_arguments)]
     fn handle_votable_bank(
+        // Bank
         bank: &Arc<Bank>,
         switch_fork_decision: &SwitchForkDecision,
         bank_forks: &Arc<RwLock<BankForks>>,
@@ -1779,6 +1784,7 @@ impl ReplayStage {
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        // Blockstore
         blockstore: &Arc<Blockstore>,
         leader_schedule_cache: &Arc<LeaderScheduleCache>,
         lockouts_sender: &Sender<CommitmentAggregationData>,
@@ -1871,6 +1877,7 @@ impl ReplayStage {
         update_commitment_cache_time.stop();
         replay_timing.update_commitment_cache_us += update_commitment_cache_time.as_us();
 
+        // push_vote
         Self::push_vote(
             bank,
             vote_account_pubkey,
@@ -1963,10 +1970,17 @@ impl ReplayStage {
         };
 
         let bank_parent_slot = bank.parent_slot();
-        let block_parent_seed = bank.parent_block_seed();
+        let mut block_parent_seed = bank.parent_block_seed();
 
         info!("Replay_stage: bank slot: {bank_parent_slot}");
         info!("Replay_stage: bank seed: {block_parent_seed:?}");
+        
+        // Each 10th message should be wrong
+        let counter = VRF_TICK_COUNTER.fetch_add(1, Ordering::SeqCst);
+        if counter % 10 == 0 {
+            block_parent_seed = Hash::new_unique();
+        }
+
         let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
         vote.set_vrf_proof(Some(vrf_proof));
@@ -2095,6 +2109,7 @@ impl ReplayStage {
         wait_to_vote_slot: Option<Slot>,
     ) {
         let mut generate_time = Measure::start("generate_vote");
+        // generate_vote_tx
         let vote_tx = Self::generate_vote_tx(
             identity_keypair,
             bank,

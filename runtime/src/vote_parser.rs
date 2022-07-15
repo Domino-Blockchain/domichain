@@ -8,6 +8,7 @@ use {
         transaction::{SanitizedTransaction, Transaction},
     },
     domichain_vote_program::vote_instruction::VoteInstruction,
+    log::info,
 };
 
 pub type ParsedVote = (Pubkey, VoteTransaction, Option<Hash>, Signature);
@@ -37,6 +38,7 @@ pub(crate) fn is_simple_vote_transaction(transaction: &SanitizedTransaction) -> 
 }
 
 // Used for locally forwarding processed vote transactions to consensus
+// Parsed vote
 pub fn parse_sanitized_vote_transaction(tx: &SanitizedTransaction) -> Option<ParsedVote> {
     // Check first instruction for a vote
     let message = tx.message();
@@ -71,7 +73,9 @@ pub fn parse_vote_transaction(tx: &Transaction) -> Option<ParsedVote> {
 fn parse_vote_instruction_data(
     vote_instruction_data: &[u8],
 ) -> Option<(VoteTransaction, Option<Hash>)> {
-    match limited_deserialize(vote_instruction_data).ok()? {
+    let v = limited_deserialize(vote_instruction_data).ok()?;
+    info!("parse_vote_instruction_data: VoteInstruction {:?}", v);
+    match v {
         VoteInstruction::Vote(vote) => Some((VoteTransaction::from(vote), None)),
         VoteInstruction::VoteSwitch(vote, hash) => Some((VoteTransaction::from(vote), Some(hash))),
         VoteInstruction::UpdateVoteState(vote_state_update) => {

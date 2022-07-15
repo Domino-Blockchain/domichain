@@ -76,6 +76,7 @@ impl BlockhashQueue {
             .map(|age| self.last_hash_index - age.hash_index)
     }
 
+    // TODO
     pub fn genesis_hash(&mut self, hash: &Hash, lamports_per_signature: u64) {
         self.ages.insert(
             *hash,
