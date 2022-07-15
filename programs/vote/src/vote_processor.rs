@@ -138,7 +138,7 @@ pub fn process_instruction(
         VoteInstruction::UpdateCommission(commission) => {
             vote_state::update_commission(&mut me, commission, &signers)
         }
-        VoteInstruction::Vote(vote) | VoteInstruction::VoteSwitch(vote, _, _) => {
+        VoteInstruction::Vote(vote) | VoteInstruction::VoteSwitch(vote, _) => {
             let slot_hashes =
                 get_sysvar_with_account_check::slot_hashes(invoke_context, instruction_context, 1)?;
             let clock =

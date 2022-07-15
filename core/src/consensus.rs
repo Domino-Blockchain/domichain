@@ -53,7 +53,6 @@ impl SwitchForkDecision {
         vote: VoteTransaction,
         vote_account_pubkey: &Pubkey,
         authorized_voter_pubkey: &Pubkey,
-        vrf_proof: Vec<u8>,
     ) -> Option<Instruction> {
         match (self, vote) {
             (SwitchForkDecision::FailedSwitchThreshold(_, total_stake), _) => {
@@ -77,7 +76,6 @@ impl SwitchForkDecision {
                     authorized_voter_pubkey,
                     v,
                     *switch_proof_hash,
-                    vrf_proof,
                 ))
             }
             (
@@ -1435,7 +1433,6 @@ pub mod test {
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
                 &Pubkey::default(),
-                vec![],
             )
             .is_none());
 
@@ -1445,7 +1442,6 @@ pub mod test {
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
                 &Pubkey::default(),
-                vec![],
             )
             .is_none());
 
@@ -1455,7 +1451,6 @@ pub mod test {
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
                 &Pubkey::default(),
-                vec![],
             ),
             Some(vote_instruction::vote(
                 &Pubkey::default(),
@@ -1470,7 +1465,6 @@ pub mod test {
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
                 &Pubkey::default(),
-                vec![],
             ),
             Some(vote_instruction::vote_switch(
                 &Pubkey::default(),

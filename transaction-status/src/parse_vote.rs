@@ -88,6 +88,7 @@ pub fn parse_vote(
                 "slots": vote.slots,
                 "hash": vote.hash.to_string(),
                 "timestamp": vote.timestamp,
+                "vrf_proof": vote.vrf_proof,
             });
             Ok(ParsedInstructionEnum {
                 instruction_type: "vote".to_string(),
@@ -107,6 +108,7 @@ pub fn parse_vote(
                 "root": vote_state_update.root,
                 "hash": vote_state_update.hash.to_string(),
                 "timestamp": vote_state_update.timestamp,
+                "vrf_proof": vote_state_update.vrf_proof,
             });
             Ok(ParsedInstructionEnum {
                 instruction_type: "updatevotestate".to_string(),
@@ -173,12 +175,13 @@ pub fn parse_vote(
                 }),
             })
         }
-        VoteInstruction::VoteSwitch(vote, hash, _) => {
+        VoteInstruction::VoteSwitch(vote, hash) => {
             check_num_vote_accounts(&instruction.accounts, 4)?;
             let vote = json!({
                 "slots": vote.slots,
                 "hash": vote.hash.to_string(),
                 "timestamp": vote.timestamp,
+                "vrf_proof": vote.vrf_proof,
             });
             Ok(ParsedInstructionEnum {
                 instruction_type: "voteSwitch".to_string(),

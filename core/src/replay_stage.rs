@@ -73,7 +73,6 @@ use {
             atomic::{AtomicBool, Ordering},
             Arc, Mutex, RwLock,
         },
-        str::from_utf8,
         thread::{self, Builder, JoinHandle},
         time::{Duration, Instant},
     },
@@ -1893,8 +1892,8 @@ impl ReplayStage {
         bank: &Bank,
         vote_account_pubkey: &Pubkey,
         authorized_voter_keypairs: &[Arc<Keypair>],
-        blockstore: &Arc<Blockstore>,
-        vote: VoteTransaction,
+        _blockstore: &Arc<Blockstore>,
+        mut vote: VoteTransaction,
         switch_fork_decision: &SwitchForkDecision,
         vote_signatures: &mut Vec<Signature>,
         has_new_vote_been_rooted: bool,
@@ -1963,23 +1962,14 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
-        let parent_slot = bank.parent_slot();
-        let seed_result = blockstore.get_block_seed(parent_slot);
-        info!("Last block seed for parent_slot {} is {:?}", parent_slot, seed_result);
-        let seed = match seed_result {
-            Ok(Some(ref seed)) => {
-                from_utf8(seed.as_ref()).unwrap()
-            },
-            Ok(None) => "TEST!",
-            Err(e) => panic!("{}", e),
-        };
-        let vrf_proof = vrf_prove(seed, authorized_voter_keypair).unwrap();
-        info!(
-            "VRF Proof generated {:?} for seed {} and keypair {:?}",
-            vrf_proof,
-            seed,
-            authorized_voter_keypair,
-        );
+        let bank_parent_slot = bank.parent_slot();
+        let block_parent_seed = bank.parent_block_seed();
+
+        info!("Replay_stage: bank slot: {bank_parent_slot}");
+        info!("Replay_stage: bank seed: {block_parent_seed:?}");
+        let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
+        info!("Replay_stage: vrf_proof: {vrf_proof:?}");
+        vote.set_vrf_proof(Some(vrf_proof));
 
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision
@@ -1987,7 +1977,6 @@ impl ReplayStage {
                 vote,
                 vote_account_pubkey,
                 &authorized_voter_keypair.pubkey(),
-                vrf_proof,
             )
             .expect("Switch threshold failure should not lead to voting");
 

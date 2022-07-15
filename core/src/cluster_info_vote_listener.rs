@@ -42,6 +42,7 @@ use {
         slot_hashes,
         transaction::Transaction,
     },
+    libvrf::vrf::vrf_verify,
     std::{
         collections::{HashMap, HashSet},
         iter::repeat,
@@ -315,6 +316,21 @@ impl ClusterInfoVoteListener {
                     .epoch_stakes(epoch)?
                     .epoch_authorized_voters()
                     .get(&vote_account_key)?;
+
+                let parent_block_seed = bank_forks.read().unwrap()
+                    .get(slot)
+                    .map(|b| b.parent_block_seed());
+                let vrf_proof = vote.vrf_proof().unwrap_or_default().try_into().unwrap();
+                info!("TPU: last_voted_slot: {slot}");
+                info!("TPU: parent_block_seed: {parent_block_seed:?}");
+                info!("TPU: vrf_proof: {vrf_proof:?}");
+                let verify_result = vrf_verify(
+                    &parent_block_seed.unwrap().to_string(),
+                    authorized_voter,
+                    vrf_proof,
+                );
+                info!("TPU: verify_result: {verify_result:?}");
+
                 let mut keys = tx.message.account_keys.iter().enumerate();
                 if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
                     return None;

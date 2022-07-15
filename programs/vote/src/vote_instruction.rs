@@ -75,7 +75,7 @@ pub enum VoteInstruction {
     ///   1. `[]` Slot hashes sysvar
     ///   2. `[]` Clock sysvar
     ///   3. `[SIGNER]` Vote authority
-    VoteSwitch(Vote, Hash, Vec<u8>),
+    VoteSwitch(Vote, Hash),
 
     /// Authorize a key to send votes or issue a withdrawal
     ///
@@ -320,7 +320,6 @@ pub fn vote_switch_vrf(
     authorized_voter_pubkey: &Pubkey,
     vote: Vote,
     proof_hash: Hash,
-    vrf_proof: Vec<u8>,
 ) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(*vote_pubkey, false),
@@ -331,7 +330,7 @@ pub fn vote_switch_vrf(
 
     Instruction::new_with_bincode(
         id(),
-        &VoteInstruction::VoteSwitch(vote, proof_hash, vrf_proof),
+        &VoteInstruction::VoteSwitch(vote, proof_hash),
         account_metas,
     )
 }
@@ -347,7 +346,6 @@ pub fn vote_switch(
         authorized_voter_pubkey,
         vote,
         proof_hash,
-        vec![],
     )
 }
 
