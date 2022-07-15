@@ -71,7 +71,7 @@ impl SwitchForkDecision {
                 ))
             }
             (SwitchForkDecision::SwitchProof(switch_proof_hash), VoteTransaction::Vote(v)) => {
-                Some(vote_instruction::vote_switch_vrf(
+                Some(vote_instruction::vote_switch(
                     vote_account_pubkey,
                     authorized_voter_pubkey,
                     v,
@@ -1432,7 +1432,7 @@ pub mod test {
             .to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default(),
+                &Pubkey::default()
             )
             .is_none());
 
@@ -1441,7 +1441,7 @@ pub mod test {
             .to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default(),
+                &Pubkey::default()
             )
             .is_none());
 
@@ -1450,7 +1450,7 @@ pub mod test {
             decision.to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default(),
+                &Pubkey::default()
             ),
             Some(vote_instruction::vote(
                 &Pubkey::default(),
@@ -1464,7 +1464,7 @@ pub mod test {
             decision.to_vote_instruction(
                 VoteTransaction::from(vote.clone()),
                 &Pubkey::default(),
-                &Pubkey::default(),
+                &Pubkey::default()
             ),
             Some(vote_instruction::vote_switch(
                 &Pubkey::default(),

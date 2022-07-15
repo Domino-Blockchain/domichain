@@ -315,7 +315,7 @@ pub fn vote(vote_pubkey: &Pubkey, authorized_voter_pubkey: &Pubkey, vote: Vote) 
     Instruction::new_with_bincode(id(), &VoteInstruction::Vote(vote), account_metas)
 }
 
-pub fn vote_switch_vrf(
+pub fn vote_switch(
     vote_pubkey: &Pubkey,
     authorized_voter_pubkey: &Pubkey,
     vote: Vote,
@@ -332,20 +332,6 @@ pub fn vote_switch_vrf(
         id(),
         &VoteInstruction::VoteSwitch(vote, proof_hash),
         account_metas,
-    )
-}
-
-pub fn vote_switch(
-    vote_pubkey: &Pubkey,
-    authorized_voter_pubkey: &Pubkey,
-    vote: Vote,
-    proof_hash: Hash,
-) -> Instruction {
-    vote_switch_vrf(
-        vote_pubkey,
-        authorized_voter_pubkey,
-        vote,
-        proof_hash,
     )
 }
 
