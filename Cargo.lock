@@ -1724,6 +1724,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serial_test",
+ "sortition",
  "static_assertions",
  "sys-info",
  "sysctl",

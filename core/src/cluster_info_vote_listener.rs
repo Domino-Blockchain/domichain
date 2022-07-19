@@ -36,7 +36,7 @@ use {
     },
     domichain_sdk::{
         clock::{Slot, DEFAULT_MS_PER_SLOT, DEFAULT_TICKS_PER_SLOT},
-        hash::Hash,
+        hash::{hashv, Hash},
         pubkey::Pubkey,
         signature::Signature,
         slot_hashes,
@@ -320,19 +320,44 @@ impl ClusterInfoVoteListener {
                 let parent_block_seed = bank_forks.read().unwrap()
                     .get(slot)
                     .map(|b| b.parent_block_seed());
-                let vrf_proof = vote.vrf_proof().unwrap_or_default().try_into().unwrap();
+                let vrf_proof = vote.vrf_proof().unwrap_or_default().to_vec();
                 info!("TPU: last_voted_slot: {slot}");
                 info!("TPU: parent_block_seed: {parent_block_seed:?}");
                 info!("TPU: vrf_proof: {vrf_proof:?}");
                 let verify_result = vrf_verify(
                     &parent_block_seed.unwrap().to_string(),
                     authorized_voter,
-                    vrf_proof,
+                    vrf_proof.as_slice().try_into().unwrap(),
                 );
                 info!("TPU: verify_result: {verify_result:?}");
                 match verify_result {
                     Ok(vrf_hash) => {
                         // Use sortition
+
+                        let h = hashv(&[
+                            vrf_hash.as_slice(),
+                            &authorized_voter.to_bytes()
+                        ]);
+
+                        let weight = sortition::select(
+                            userMoney.Raw,                // ?
+                            m.TotalMoney.Raw,       // ?
+                            expectedSelection,    // ?
+                            h,
+                        );
+
+                        #[derive(Debug)]
+                        struct Credential {
+                            pub weight: u64,
+                            pub vrf_out: domichain_sdk::hash::Hash,
+                            pub vrf_proof: Vec<u8>,
+                        }
+
+                        let res = Credential {
+                            weight: weight,
+                            vrf_out: h,
+                            vrf_proof,
+                        };
                     },
                     Err(e) => {
                         error!("VRF verify error: {e}");
