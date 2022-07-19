@@ -330,6 +330,14 @@ impl ClusterInfoVoteListener {
                     vrf_proof,
                 );
                 info!("TPU: verify_result: {verify_result:?}");
+                match verify_result {
+                    Ok(vrf_hash) => {
+                        // Use sortition
+                    },
+                    Err(e) => {
+                        error!("VRF verify error: {e}");
+                    }
+                }
 
                 let mut keys = tx.message.account_keys.iter().enumerate();
                 if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
