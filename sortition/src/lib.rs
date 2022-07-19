@@ -1,8 +1,8 @@
-use num_bigint::{BigInt, Sign};
+use num_bigint::{BigInt, BigUint, Sign};
 use num_rational::BigRational;
 use num_traits::cast::ToPrimitive;
 use statrs::distribution::{Binomial, DiscreteCDF};
-use domichain_program::hash::{Hash, HASH_BYTES};
+use domichain_program::hash::Hash;
 
 pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: Hash) -> u64 {
     let binomial_p = expected_size / total_money as f64;
@@ -10,8 +10,8 @@ pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: Hash
     let t = BigInt::from_bytes_be(Sign::Plus, vrf_output.as_ref());
     let h = BigRational::from_integer(t);
 
-    let max_float = BigInt::parse_bytes(&[b'F'; HASH_BYTES * 2], 16).unwrap();
-    let cratio = (h / max_float).to_f64().unwrap();
+    let max_float = BigUint::from(2u8).pow(256) - 1u8;
+    let cratio = (h / BigInt::from(max_float)).to_f64().unwrap();
 
     sortition_binomial_cdf_walk(money, binomial_p, cratio, money)
 }
