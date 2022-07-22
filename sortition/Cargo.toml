@@ -6,16 +6,8 @@ edition = "2021"
 [dependencies]
 domichain-program = { path = "../sdk/program", version = "=1.11.1" }
 primitive-types = { version = "0.11.1", features = ["fp-conversion"] }
-cfg-if = "1.0.0"
-probability = { version = "0.18.0", optional = true }
-statrs = { version = "0.15.0", optional = true }
-binary-search = { version = "0.1.2", optional = true }
+probability = "0.18.0"
+# statrs = "0.15.0"
 
 [dev-dependencies]
 rand = "0.8.5"
-
-[features]
-default = ["inverse_cdf"]
-inverse_cdf = ["probability"]
-algorand_cdf_walk = ["statrs"]
-cdf_binary_search = ["statrs", "binary-search"]

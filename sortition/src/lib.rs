@@ -1,4 +1,6 @@
 use primitive_types::U256;
+use probability::distribution::{Binomial, Inverse};
+
 use domichain_program::hash::Hash;
 
 pub fn select(
@@ -20,33 +22,22 @@ fn get_cratio(vrf_output: Hash) -> f64 {
     t / max_float
 }
 
-#[cfg(feature = "inverse_cdf")]
-mod inverse_cdf {
-    use probability::distribution::{Binomial, Inverse};
-
-    pub fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
-        let boundary_money = Binomial::new(n as usize, p).inverse(ratio) as u64;
-        boundary_money.min(money)
-    }
+fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
+    let boundary_money = Binomial::new(n as usize, p).inverse(ratio) as u64;
+    boundary_money.min(money)
 }
 
-// Different implementations
-cfg_if::cfg_if! {
-    if #[cfg(feature = "inverse_cdf")] {
-        use inverse_cdf::sortition_binomial_cdf_walk;
-    } else if #[cfg(feature = "algorand_cdf_walk")] {
-        mod algorand_cdf_walk;
-        use algorand_cdf_walk::sortition_binomial_cdf_walk;
-    } else if #[cfg(feature = "cdf_binary_search")] {
-        mod cdf_binary_search;
-        use cdf_binary_search::sortition_binomial_cdf_walk;
-    } else {
-        compile_error!("One of the feature should be enabled");
-        fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
-            unimplemented!()
-        }
-    }
-}
+// fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
+//     use statrs::distribution::{Binomial, DiscreteCDF};
+//     let binomial = Binomial::new(p, n).unwrap();
+//     for j in 0..money {
+//         let boundary = binomial.cdf(j);
+//         if ratio <= boundary {
+//             return j;
+//         }
+//     }
+//     return money;
+// }
 
 #[cfg(test)]
 mod tests {
