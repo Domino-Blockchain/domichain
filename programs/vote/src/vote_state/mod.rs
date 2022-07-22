@@ -102,6 +102,20 @@ impl VoteTransaction {
         }
     }
 
+    pub fn vrf_proof(&self) -> Option<&[u8]> {
+        match self {
+            VoteTransaction::Vote(vote) => vote.vrf_proof.as_ref().map(|v| v.as_slice()),
+            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof.as_ref().map(|v| v.as_slice()),
+        }
+    }
+
+    pub fn set_vrf_proof(&mut self, vrf_proof: Option<Vec<u8>>) {
+        match self {
+            VoteTransaction::Vote(vote) => vote.vrf_proof = vrf_proof,
+            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof = vrf_proof,
+        }
+    }
+
     pub fn last_voted_slot(&self) -> Option<Slot> {
         match self {
             VoteTransaction::Vote(vote) => vote.slots.last().copied(),
@@ -137,6 +151,7 @@ pub struct Vote {
     pub hash: Hash,
     /// processing timestamp of last slot
     pub timestamp: Option<UnixTimestamp>,
+    pub vrf_proof: Option<Vec<u8>>,
 }
 
 impl Vote {
@@ -145,6 +160,7 @@ impl Vote {
             slots,
             hash,
             timestamp: None,
+            vrf_proof: None,
         }
     }
 }
@@ -191,6 +207,7 @@ pub struct VoteStateUpdate {
     pub hash: Hash,
     /// processing timestamp of last slot
     pub timestamp: Option<UnixTimestamp>,
+    pub vrf_proof: Option<Vec<u8>>,
 }
 
 impl From<Vec<(Slot, u32)>> for VoteStateUpdate {
@@ -207,6 +224,7 @@ impl From<Vec<(Slot, u32)>> for VoteStateUpdate {
             root: None,
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         }
     }
 }
@@ -218,6 +236,7 @@ impl VoteStateUpdate {
             root,
             hash,
             timestamp: None,
+            vrf_proof: None,
         }
     }
 

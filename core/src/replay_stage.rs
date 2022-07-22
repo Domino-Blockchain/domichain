@@ -65,6 +65,7 @@ use {
         transaction::Transaction,
     },
     domichain_vote_program::vote_state::VoteTransaction,
+    libvrf::vrf::vrf_prove,
     std::{
         collections::{HashMap, HashSet},
         result,
@@ -628,6 +629,7 @@ impl ReplayStage {
                                                     &vote_account,
                                                     &identity_keypair,
                                                     &authorized_voter_keypairs.read().unwrap(),
+                                                    &blockstore,
                                                     &mut voted_signatures,
                                                     has_new_vote_been_rooted, &mut
                                                     last_vote_refresh_time,
@@ -1874,6 +1876,7 @@ impl ReplayStage {
             vote_account_pubkey,
             identity_keypair,
             authorized_voter_keypairs,
+            blockstore,
             tower,
             switch_fork_decision,
             vote_signatures,
@@ -1889,7 +1892,8 @@ impl ReplayStage {
         bank: &Bank,
         vote_account_pubkey: &Pubkey,
         authorized_voter_keypairs: &[Arc<Keypair>],
-        vote: VoteTransaction,
+        _blockstore: &Arc<Blockstore>,
+        mut vote: VoteTransaction,
         switch_fork_decision: &SwitchForkDecision,
         vote_signatures: &mut Vec<Signature>,
         has_new_vote_been_rooted: bool,
@@ -1958,6 +1962,15 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
+        let bank_parent_slot = bank.parent_slot();
+        let block_parent_seed = bank.parent_block_seed();
+
+        info!("Replay_stage: bank slot: {bank_parent_slot}");
+        info!("Replay_stage: bank seed: {block_parent_seed:?}");
+        let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
+        info!("Replay_stage: vrf_proof: {vrf_proof:?}");
+        vote.set_vrf_proof(Some(vrf_proof));
+
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision
             .to_vote_instruction(
@@ -1993,6 +2006,7 @@ impl ReplayStage {
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        blockstore: &Arc<Blockstore>,
         vote_signatures: &mut Vec<Signature>,
         has_new_vote_been_rooted: bool,
         last_vote_refresh_time: &mut LastVoteRefreshTime,
@@ -2035,6 +2049,7 @@ impl ReplayStage {
             heaviest_bank_on_same_fork,
             vote_account_pubkey,
             authorized_voter_keypairs,
+            blockstore,
             tower.last_vote(),
             &SwitchForkDecision::SameFork,
             vote_signatures,
@@ -2070,6 +2085,7 @@ impl ReplayStage {
         vote_account_pubkey: &Pubkey,
         identity_keypair: &Keypair,
         authorized_voter_keypairs: &[Arc<Keypair>],
+        blockstore: &Arc<Blockstore>,
         tower: &mut Tower,
         switch_fork_decision: &SwitchForkDecision,
         vote_signatures: &mut Vec<Signature>,
@@ -2084,6 +2100,7 @@ impl ReplayStage {
             bank,
             vote_account_pubkey,
             authorized_voter_keypairs,
+            blockstore,
             tower.last_vote(),
             switch_fork_decision,
             vote_signatures,

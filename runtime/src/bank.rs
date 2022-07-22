@@ -115,7 +115,7 @@ use {
         fee_calculator::{FeeCalculator, FeeRateGovernor},
         genesis_config::{ClusterType, GenesisConfig},
         hard_forks::HardForks,
-        hash::{extend_and_hash, hashv, Hash},
+        hash::{extend_and_hash, hash, hashv, Hash},
         incinerator,
         inflation::Inflation,
         instruction::CompiledInstruction,
@@ -961,6 +961,7 @@ pub(crate) struct BankFieldsToDeserialize {
     pub(crate) hash: Hash,
     pub(crate) parent_hash: Hash,
     pub(crate) parent_slot: Slot,
+    pub(crate) parent_block_seed: Hash,
     pub(crate) hard_forks: HardForks,
     pub(crate) transaction_count: u64,
     pub(crate) tick_height: u64,
@@ -975,6 +976,7 @@ pub(crate) struct BankFieldsToDeserialize {
     pub(crate) slot: Slot,
     pub(crate) epoch: Epoch,
     pub(crate) block_height: u64,
+    pub(crate) block_seed: Hash,
     pub(crate) collector_id: Pubkey,
     pub(crate) collector_fees: u64,
     pub(crate) fee_calculator: FeeCalculator,
@@ -1000,6 +1002,7 @@ pub(crate) struct BankFieldsToSerialize<'a> {
     pub(crate) hash: Hash,
     pub(crate) parent_hash: Hash,
     pub(crate) parent_slot: Slot,
+    pub(crate) parent_block_seed: Hash,
     pub(crate) hard_forks: &'a RwLock<HardForks>,
     pub(crate) transaction_count: u64,
     pub(crate) tick_height: u64,
@@ -1014,6 +1017,7 @@ pub(crate) struct BankFieldsToSerialize<'a> {
     pub(crate) slot: Slot,
     pub(crate) epoch: Epoch,
     pub(crate) block_height: u64,
+    pub(crate) block_seed: Hash,
     pub(crate) collector_id: Pubkey,
     pub(crate) collector_fees: u64,
     pub(crate) fee_calculator: FeeCalculator,
@@ -1042,6 +1046,7 @@ impl PartialEq for Bank {
             hash,
             parent_hash,
             parent_slot,
+            parent_block_seed,
             hard_forks,
             transaction_count,
             transaction_error_count: _,
@@ -1060,6 +1065,7 @@ impl PartialEq for Bank {
             bank_id: _,
             epoch,
             block_height,
+            block_seed,
             collector_id,
             collector_fees,
             fee_calculator,
@@ -1103,6 +1109,7 @@ impl PartialEq for Bank {
             && *hash.read().unwrap() == *other.hash.read().unwrap()
             && parent_hash == &other.parent_hash
             && parent_slot == &other.parent_slot
+            && parent_block_seed == &other.parent_block_seed
             && *hard_forks.read().unwrap() == *other.hard_forks.read().unwrap()
             && transaction_count.load(Relaxed) == other.transaction_count.load(Relaxed)
             && tick_height.load(Relaxed) == other.tick_height.load(Relaxed)
@@ -1117,6 +1124,7 @@ impl PartialEq for Bank {
             && slot == &other.slot
             && epoch == &other.epoch
             && block_height == &other.block_height
+            && block_seed == &other.block_seed
             && collector_id == &other.collector_id
             && collector_fees.load(Relaxed) == other.collector_fees.load(Relaxed)
             && fee_calculator == &other.fee_calculator
@@ -1223,6 +1231,9 @@ pub struct Bank {
     /// parent's slot
     parent_slot: Slot,
 
+    /// parent's  block_seed
+    parent_block_seed: Hash,
+
     /// slots to hard fork at
     hard_forks: Arc<RwLock<HardForks>>,
 
@@ -1275,6 +1286,9 @@ pub struct Bank {
 
     /// Bank block_height
     block_height: u64,
+
+    /// Bank block_seed
+    block_seed: Hash,
 
     /// The pubkey to send transactions fees to.
     collector_id: Pubkey,
@@ -1481,6 +1495,7 @@ impl Bank {
             hash: RwLock::<Hash>::default(),
             parent_hash: Hash::default(),
             parent_slot: Slot::default(),
+            parent_block_seed: Hash::default(),
             hard_forks: Arc::<RwLock<HardForks>>::default(),
             transaction_count: AtomicU64::default(),
             transaction_error_count: AtomicU64::default(),
@@ -1499,6 +1514,7 @@ impl Bank {
             bank_id: BankId::default(),
             epoch: Epoch::default(),
             block_height: u64::default(),
+            block_seed: Hash::default(),
             collector_id: Pubkey::default(),
             collector_fees: AtomicU64::default(),
             fee_calculator: FeeCalculator::default(),
@@ -1802,6 +1818,7 @@ impl Bank {
             rent_collector: Self::get_rent_collector_from(&parent.rent_collector, epoch),
             max_tick_height: (slot + 1) * parent.ticks_per_slot,
             block_height: parent.block_height + 1,
+            block_seed: hash(parent.block_seed.as_ref()),
             fee_calculator,
             fee_rate_governor,
             capitalization: AtomicU64::new(parent.capitalization()),
@@ -1816,6 +1833,7 @@ impl Bank {
             epoch_stakes,
             parent_hash: parent.hash(),
             parent_slot: parent.slot(),
+            parent_block_seed: parent.block_seed(),
             collector_id: *collector_id,
             collector_fees: AtomicU64::new(0),
             ancestors: Ancestors::default(),
@@ -2005,6 +2023,7 @@ impl Bank {
             "bank-new_from_parent-heights",
             ("slot", slot, i64),
             ("block_height", new.block_height, i64),
+            ("block_height", new.block_height, i64),
             ("parent_slot", parent.slot(), i64),
             ("bank_rc_creation_us", bank_rc_time.as_us(), i64),
             ("total_elapsed_us", time.as_us(), i64),
@@ -2142,6 +2161,7 @@ impl Bank {
             hash: RwLock::new(fields.hash),
             parent_hash: fields.parent_hash,
             parent_slot: fields.parent_slot,
+            parent_block_seed: fields.parent_block_seed,
             hard_forks: Arc::new(RwLock::new(fields.hard_forks)),
             transaction_count: AtomicU64::new(fields.transaction_count),
             transaction_error_count: new(),
@@ -2160,6 +2180,7 @@ impl Bank {
             bank_id: 0,
             epoch: fields.epoch,
             block_height: fields.block_height,
+            block_seed: fields.block_seed,
             collector_id: fields.collector_id,
             collector_fees: AtomicU64::new(fields.collector_fees),
             fee_calculator: fields.fee_calculator,
@@ -2267,6 +2288,7 @@ impl Bank {
             hash: *self.hash.read().unwrap(),
             parent_hash: self.parent_hash,
             parent_slot: self.parent_slot,
+            parent_block_seed: self.parent_block_seed,
             hard_forks: &*self.hard_forks,
             transaction_count: self.transaction_count.load(Relaxed),
             tick_height: self.tick_height.load(Relaxed),
@@ -2281,6 +2303,7 @@ impl Bank {
             slot: self.slot,
             epoch: self.epoch,
             block_height: self.block_height,
+            block_seed: self.block_seed.clone(),
             collector_id: self.collector_id,
             collector_fees: self.collector_fees.load(Relaxed),
             fee_calculator: self.fee_calculator,
@@ -3454,6 +3477,10 @@ impl Bank {
         self.parent_slot
     }
 
+    pub fn parent_block_seed(&self) -> Hash {
+        self.parent_block_seed
+    }
+
     pub fn parent_hash(&self) -> Hash {
         self.parent_hash
     }
@@ -3492,8 +3519,10 @@ impl Bank {
             .highest_staked_node()
             .unwrap_or_default();
 
+        let genesis_hash = genesis_config.hash();
+        self.block_seed = genesis_hash;
         self.blockhash_queue.write().unwrap().genesis_hash(
-            &genesis_config.hash(),
+            &genesis_hash,
             self.fee_rate_governor.lamports_per_signature,
         );
 
@@ -7000,6 +7029,11 @@ impl Bank {
     /// Return the block_height of this bank
     pub fn block_height(&self) -> u64 {
         self.block_height
+    }
+
+    /// Return the block_seed of this bank
+    pub fn block_seed(&self) -> Hash {
+        self.block_seed.clone()
     }
 
     /// Return the number of slots per epoch for the given epoch

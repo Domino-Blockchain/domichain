@@ -153,16 +153,19 @@ nonce_generation(unsigned char k_scalar[32],
 }
 
 // Compare to vrf_prove in prove.c
-static void prove_helper(unsigned char pi[80], const unsigned char Y_point[32], const unsigned char x_scalar[32], const unsigned char truncated_hashed_sk_string[32], const unsigned char *alpha, const unsigned long long alphalen) {
+static int prove_helper(unsigned char pi[80], const unsigned char Y_point[32], const unsigned char x_scalar[32], const unsigned char truncated_hashed_sk_string[32], const unsigned char *alpha, const unsigned long long alphalen) {
 	unsigned char H_point[32], k_scalar[32], c_scalar[32], cx_scalar[32], Gamma_point[32], kB_point[32], kH_point[32];
 	// expand_sk already checked that Y was a valid point
 	hash_to_curve(H_point, Y_point, alpha, alphalen);
 
-	crypto_scalarmult_ed25519_noclamp(Gamma_point, x_scalar, H_point); /* Gamma = x*H */
+	if (crypto_scalarmult_ed25519_noclamp(Gamma_point, x_scalar, H_point) != 0) { /* Gamma = x*H */
+		return -1;
+	}
 	nonce_generation(k_scalar, truncated_hashed_sk_string, H_point);
 	crypto_scalarmult_ed25519_base_noclamp(kB_point, k_scalar); /* compute k*B */
-	crypto_scalarmult_ed25519_noclamp(kH_point, k_scalar, H_point); /* compute k*H */
-	
+	if (crypto_scalarmult_ed25519_noclamp(kH_point, k_scalar, H_point) != 0) { /* compute k*H */
+		return -1;
+	}
 	/* c = hash_points(h, gamma, k*B, k*H)
 	 * (writes only to first 16 bytes of c_scalar */
 	hash_points(c_scalar, H_point, Gamma_point, kB_point, kH_point);
@@ -183,6 +186,7 @@ static void prove_helper(unsigned char pi[80], const unsigned char Y_point[32], 
 	sodium_memzero(Gamma_point, sizeof Gamma_point);
 	sodium_memzero(kB_point, sizeof kB_point);
 	sodium_memzero(kH_point, sizeof kH_point);
+	return 0;
 }
 
 int vrf_prove(unsigned char proof[80], const unsigned char skpk[64], const unsigned char *msg, unsigned long long msglen) {
@@ -193,7 +197,9 @@ int vrf_prove(unsigned char proof[80], const unsigned char skpk[64], const unsig
 		sodium_memzero(Y_point, 32); /* for good measure */
 		return -1;
 	}
-	prove_helper(proof, Y_point, x_scalar, truncated_hashed_sk_string, msg, msglen);
+	if (prove_helper(proof, Y_point, x_scalar, truncated_hashed_sk_string, msg, msglen) != 0) {
+		return -1;
+	}
 	sodium_memzero(x_scalar, 32);
 	sodium_memzero(truncated_hashed_sk_string, 32);
 	sodium_memzero(Y_point, 32); /* for good measure */
@@ -311,15 +317,21 @@ verify_helper(const unsigned char Y_point[32], const unsigned char pi[80],
 	 * Fortunately, it appears that as of libsodium 1.0.18 the functions do
 	 * correctly give the identity if 0 is passed in for the scalar.
 	 */
-	crypto_scalarmult_ed25519_noclamp(tmp_point, c_scalar, Y_point); /* tmp_point = c*Y */
+	if (crypto_scalarmult_ed25519_noclamp(tmp_point, c_scalar, Y_point) != 0) { /* tmp_point = c*Y */
+		return -1;
+	}
 	crypto_scalarmult_ed25519_base_noclamp(tmp2_point, s_scalar_reduced); /* tmp2_point = s*B */
 	crypto_core_ed25519_sub(U_point, tmp2_point, tmp_point); /* U = tmp2_point - tmp_point = s*B - c*Y */
 
 	/* calculate V = s*H -  c*Gamma */
 	/* See the comment above for an explanation of the special handling
 	 * when c and s are 0 */
-	crypto_scalarmult_ed25519_noclamp(tmp_point, c_scalar, Gamma_point); /* tmp_point = c*Gamma */
-	crypto_scalarmult_ed25519_noclamp(tmp2_point, s_scalar_reduced, H_point); /* tmp2_point = s*H */
+	if (crypto_scalarmult_ed25519_noclamp(tmp_point, c_scalar, Gamma_point) != 0) { /* tmp_point = c*Gamma */
+		return -1;
+	}
+	if (crypto_scalarmult_ed25519_noclamp(tmp2_point, s_scalar_reduced, H_point) != 0) { /* tmp2_point = s*H */
+		return -1;
+	}
 	crypto_core_ed25519_sub(V_point, tmp2_point, tmp_point); /* V = tmp2_point - tmp_point = s*H - c*Gamma */
 
 	hash_points(cprime, H_point, Gamma_point, U_point, V_point);

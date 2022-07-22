@@ -1869,13 +1869,13 @@ impl Blockstore {
         self.block_height_cf.put(slot, &block_height)
     }
 
-    pub fn get_block_seed(&self, slot: Slot) -> Result<Option<Box<[u8; 32]>>> {
+    pub fn get_block_seed(&self, slot: Slot) -> Result<Option<Hash>> {
         datapoint_info!("blockstore-rpc-api", ("method", "get_block_seed", String));
         let _lock = self.check_lowest_cleanup_slot(slot)?;
         self.block_seed_cf.get(slot)
     }
 
-    pub fn cache_block_seed(&self, slot: Slot, block_seed: Box<[u8; 32]>) -> Result<()> {
+    pub fn cache_block_seed(&self, slot: Slot, block_seed: Hash) -> Result<()> {
         self.block_seed_cf.put(slot, &block_seed)
     }
 

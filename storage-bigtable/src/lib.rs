@@ -8,6 +8,7 @@ use {
     domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         deserialize_utils::default_on_eof,
+        hash::Hash,
         message::v0::LoadedAddresses,
         pubkey::Pubkey,
         signature::Signature,
@@ -119,7 +120,7 @@ struct StoredConfirmedBlock {
     block_time: Option<UnixTimestamp>,
     #[serde(deserialize_with = "default_on_eof")]
     block_height: Option<u64>,
-    pub seed: Box<[u8; 32]>,
+    pub seed: Hash,
 }
 
 #[cfg(test)]
