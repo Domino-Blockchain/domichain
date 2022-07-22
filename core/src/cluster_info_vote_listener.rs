@@ -71,6 +71,9 @@ pub type GossipDuplicateConfirmedSlotsReceiver = Receiver<ThresholdConfirmedSlot
 const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE];
 const BANK_SEND_VOTES_LOOP_SLEEP_MS: u128 = 10;
 
+// Consensus parameters constant
+const EXPECTED_SELECTION: u64 = 2990;
+
 #[derive(Default)]
 pub struct SlotVoteTracker {
     // Maps pubkeys that have voted for this slot
@@ -312,8 +315,9 @@ impl ClusterInfoVoteListener {
                 let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
                 let slot = vote.last_voted_slot()?;
                 let epoch = epoch_schedule.get_epoch(slot);
-                let authorized_voter = root_bank
-                    .epoch_stakes(epoch)?
+                let epoch_stakes = root_bank
+                    .epoch_stakes(epoch)?;
+                let authorized_voter = epoch_stakes
                     .epoch_authorized_voters()
                     .get(&vote_account_key)?;
 
@@ -325,24 +329,30 @@ impl ClusterInfoVoteListener {
                 info!("TPU: parent_block_seed: {parent_block_seed:?}");
                 info!("TPU: vrf_proof: {vrf_proof:?}");
                 let verify_result = vrf_verify(
-                    &parent_block_seed.unwrap().to_string(),
+                    &parent_block_seed?.to_string(), // Replace unwrap
                     authorized_voter,
                     vrf_proof.as_slice().try_into().unwrap(),
                 );
                 info!("TPU: verify_result: {verify_result:?}");
                 match verify_result {
                     Ok(vrf_hash) => {
-                        // Use sortition
+                        let vote_accounts = epoch_stakes.stakes().vote_accounts();
+                        let stake = vote_accounts
+                            .get(&vote_account_key)
+                            .map(|(stake, _)| *stake)
+                            .unwrap_or_default(); // Stake
+                        let total_stake = epoch_stakes.total_stake(); // Total stake
 
                         let h = hashv(&[
                             vrf_hash.as_slice(),
-                            &authorized_voter.to_bytes()
+                            authorized_voter.as_ref(),
                         ]);
 
+                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={EXPECTED_SELECTION}");
                         let weight = sortition::select(
-                            userMoney.Raw,                // ?
-                            m.TotalMoney.Raw,       // ?
-                            expectedSelection,    // ?
+                            stake,
+                            total_stake,                // Maybe use circulation across net?
+                            EXPECTED_SELECTION as f64,  // Consensus params
                             h,
                         );
 
@@ -353,14 +363,21 @@ impl ClusterInfoVoteListener {
                             pub vrf_proof: Vec<u8>,
                         }
 
-                        let res = Credential {
+                        let credential = Credential {
                             weight: weight,
                             vrf_out: h,
                             vrf_proof,
                         };
+
+                        info!("TPU: credential: {credential:?}");
+
+                        if credential.weight == 0 {
+                            return None;
+                        }
                     },
                     Err(e) => {
                         error!("VRF verify error: {e}");
+                        return None;
                     }
                 }
 
