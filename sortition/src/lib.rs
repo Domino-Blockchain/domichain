@@ -27,18 +27,6 @@ fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
     boundary_money.min(money)
 }
 
-// fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
-//     use statrs::distribution::{Binomial, DiscreteCDF};
-//     let binomial = Binomial::new(p, n).unwrap();
-//     for j in 0..money {
-//         let boundary = binomial.cdf(j);
-//         if ratio <= boundary {
-//             return j;
-//         }
-//     }
-//     return money;
-// }
-
 #[cfg(test)]
 mod tests {
     use rand::{Fill, prelude::StdRng, SeedableRng};

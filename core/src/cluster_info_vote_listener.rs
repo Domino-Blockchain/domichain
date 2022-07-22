@@ -329,7 +329,7 @@ impl ClusterInfoVoteListener {
                 info!("TPU: parent_block_seed: {parent_block_seed:?}");
                 info!("TPU: vrf_proof: {vrf_proof:?}");
                 let verify_result = vrf_verify(
-                    &parent_block_seed?.to_string(), // Replace unwrap
+                    &parent_block_seed?.to_string(),
                     authorized_voter,
                     vrf_proof.as_slice().try_into().unwrap(),
                 );
