@@ -661,9 +661,8 @@ impl ClusterInfoVoteListener {
             // 2) We do not know the hash of the earlier slot
             if slot == last_vote_slot {
                 let vote_accounts = epoch_stakes.stakes().vote_accounts();
-                let vote_account = vote_accounts
-                    .get(vote_pubkey);
-                let stake = vote_account
+                let stake = vote_accounts
+                    .get(vote_pubkey)
                     .map(|(stake, _)| *stake)
                     .unwrap_or_default();
                 let total_stake = epoch_stakes.total_stake();
