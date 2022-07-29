@@ -325,15 +325,11 @@ impl ClusterInfoVoteListener {
                     .get(slot)
                     .map(|b| b.parent_block_seed());
                 let vrf_proof = vote.vrf_proof().unwrap_or_default().to_vec();
-                info!("TPU: last_voted_slot: {slot}");
-                info!("TPU: parent_block_seed: {parent_block_seed:?}");
-                info!("TPU: vrf_proof: {vrf_proof:?}");
                 let verify_result = vrf_verify(
                     &parent_block_seed?.to_string(),
                     authorized_voter,
                     vrf_proof.as_slice().try_into().unwrap(),
                 );
-                info!("TPU: verify_result: {verify_result:?}");
                 match verify_result {
                     Ok(vrf_hash) => {
                         let vote_accounts = epoch_stakes.stakes().vote_accounts();
@@ -348,7 +344,6 @@ impl ClusterInfoVoteListener {
                             authorized_voter.as_ref(),
                         ]);
 
-                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={EXPECTED_SELECTION}");
                         let weight = sortition::select(
                             stake,
                             total_stake,                // Maybe use circulation across net?
@@ -356,22 +351,7 @@ impl ClusterInfoVoteListener {
                             h,
                         );
 
-                        #[derive(Debug)]
-                        struct Credential {
-                            pub weight: u64,
-                            pub vrf_out: domichain_sdk::hash::Hash,
-                            pub vrf_proof: Vec<u8>,
-                        }
-
-                        let credential = Credential {
-                            weight: weight,
-                            vrf_out: h,
-                            vrf_proof,
-                        };
-
-                        info!("TPU: credential: {credential:?}");
-
-                        if credential.weight == 0 {
+                        if weight == 0 {
                             return None;
                         }
                     },
@@ -540,6 +520,7 @@ impl ClusterInfoVoteListener {
                 &gossip_vote_txs_receiver,
                 &vote_tracker,
                 &root_bank,
+                bank_forks.clone(),
                 &subscriptions,
                 &gossip_verified_vote_hash_sender,
                 &verified_vote_sender,
@@ -592,6 +573,7 @@ impl ClusterInfoVoteListener {
         gossip_vote_txs_receiver: &VerifiedVoteTransactionsReceiver,
         vote_tracker: &VoteTracker,
         root_bank: &Bank,
+        bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: &RpcSubscriptions,
         gossip_verified_vote_hash_sender: &GossipVerifiedVoteHashSender,
         verified_vote_sender: &VerifiedVoteSender,
@@ -621,6 +603,7 @@ impl ClusterInfoVoteListener {
                     gossip_vote_txs,
                     replay_votes,
                     root_bank,
+                    bank_forks,
                     subscriptions,
                     gossip_verified_vote_hash_sender,
                     verified_vote_sender,
@@ -640,6 +623,7 @@ impl ClusterInfoVoteListener {
         vote_transaction_signature: Signature,
         vote_tracker: &VoteTracker,
         root_bank: &Bank,
+        bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: &RpcSubscriptions,
         verified_vote_sender: &VerifiedVoteSender,
         gossip_verified_vote_hash_sender: &GossipVerifiedVoteHashSender,
@@ -677,11 +661,51 @@ impl ClusterInfoVoteListener {
             // 2) We do not know the hash of the earlier slot
             if slot == last_vote_slot {
                 let vote_accounts = epoch_stakes.stakes().vote_accounts();
-                let stake = vote_accounts
-                    .get(vote_pubkey)
+                let vote_account = vote_accounts
+                    .get(vote_pubkey);
+                let stake = vote_account
                     .map(|(stake, _)| *stake)
                     .unwrap_or_default();
                 let total_stake = epoch_stakes.total_stake();
+
+                let parent_block_seed = bank_forks.read().unwrap()
+                    .get(slot)
+                    .map(|b| b.parent_block_seed());
+
+                let vrf_proof = vote.vrf_proof().unwrap_or_default().to_vec();
+
+                let authorized_voter = epoch_stakes
+                    .epoch_authorized_voters()
+                    .get(&vote_pubkey).unwrap();
+                let verify_result = vrf_verify(
+                    &parent_block_seed.unwrap_or_default().to_string(),
+                    authorized_voter,
+                    vrf_proof.as_slice().try_into().unwrap(),
+                );
+
+                info!("TPU: vrf_verify {slot} {parent_block_seed:?} {authorized_voter} {vrf_proof:?}");
+
+                let weight = match verify_result {
+                    Ok(vrf_hash) => {
+                        let h = hashv(&[
+                            vrf_hash.as_slice(),
+                            authorized_voter.as_ref(),
+                        ]);
+
+                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={EXPECTED_SELECTION}");
+                        let weight = sortition::select(
+                            stake,
+                            total_stake,                  // DEV: Maybe use circulation across net?
+                            EXPECTED_SELECTION as f64,  // DEV: Consensus params
+                            h,
+                        );
+                        weight
+                    }
+                    Err(e) => {
+                        error!("TPU: Optimistic VRF verify error: {e}");
+                        0
+                    }
+                };
 
                 // Fast track processing of the last slot in a vote transactions
                 // so that notifications for optimistic confirmation can be sent
@@ -693,7 +717,9 @@ impl ClusterInfoVoteListener {
                     *vote_pubkey,
                     stake,
                     total_stake,
+                    weight,
                 );
+                info!("TPU: reached_threshold_results={reached_threshold_results:?} is_new={is_new} weight={weight}");
 
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((
@@ -703,12 +729,12 @@ impl ClusterInfoVoteListener {
                     ));
                 }
 
-                if reached_threshold_results[0] {
+                if reached_threshold_results[0] { // Majority
                     if let Some(sender) = cluster_confirmed_slot_sender {
                         let _ = sender.send(vec![(last_vote_slot, last_vote_hash)]);
                     }
                 }
-                if reached_threshold_results[1] {
+                if reached_threshold_results[1] { // Quorum
                     new_optimistic_confirmed_slots.push((last_vote_slot, last_vote_hash));
                     // Notify subscribers about new optimistic confirmation
                     if let Some(sender) = bank_notification_sender {
@@ -756,6 +782,7 @@ impl ClusterInfoVoteListener {
         gossip_vote_txs: Vec<Transaction>,
         replayed_votes: Vec<ParsedVote>,
         root_bank: &Bank,
+        bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: &RpcSubscriptions,
         gossip_verified_vote_hash_sender: &GossipVerifiedVoteHashSender,
         verified_vote_sender: &VerifiedVoteSender,
@@ -778,6 +805,7 @@ impl ClusterInfoVoteListener {
                 signature,
                 vote_tracker,
                 root_bank,
+                bank_forks.clone(),
                 subscriptions,
                 verified_vote_sender,
                 gossip_verified_vote_hash_sender,
@@ -849,6 +877,7 @@ impl ClusterInfoVoteListener {
         pubkey: Pubkey,
         stake: u64,
         total_epoch_stake: u64,
+        weight: u64,
     ) -> (Vec<bool>, bool) {
         let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
         // Insert vote and check for optimistic confirmation
@@ -856,7 +885,13 @@ impl ClusterInfoVoteListener {
 
         w_slot_tracker
             .get_or_insert_optimistic_votes_tracker(hash)
-            .add_vote_pubkey(pubkey, stake, total_epoch_stake, &THRESHOLDS_TO_CHECK)
+            .add_vote_pubkey(
+                pubkey,
+                stake,
+                total_epoch_stake,
+                weight,
+                &THRESHOLDS_TO_CHECK,
+            )
     }
 
     fn sum_stake(sum: &mut u64, epoch_stakes: Option<&EpochStakes>, pubkey: &Pubkey) {

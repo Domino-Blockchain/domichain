@@ -4,7 +4,10 @@ use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
 pub struct VoteStakeTracker {
     voted: HashSet<Pubkey>,
     stake: u64,
+    weight: u64,
 }
+
+const TOTAL_WEIGHT: u64 = 2267; // SoftCommitteeThreshold - to be corrected
 
 impl VoteStakeTracker {
     // Returns tuple (reached_threshold_results, is_new) where
@@ -14,21 +17,23 @@ impl VoteStakeTracker {
     pub fn add_vote_pubkey(
         &mut self,
         vote_pubkey: Pubkey,
-        stake: u64,
-        total_stake: u64,
+        _stake: u64,
+        _total_stake: u64,
+        weight: u64,
         thresholds_to_check: &[f64],
     ) -> (Vec<bool>, bool) {
         let is_new = !self.voted.contains(&vote_pubkey);
         if is_new {
             self.voted.insert(vote_pubkey);
-            let old_stake = self.stake;
-            let new_stake = self.stake + stake;
-            self.stake = new_stake;
+            let old_weight = self.weight;
+            let new_weight = self.weight + weight;
+            self.weight = new_weight;
             let reached_threshold_results: Vec<bool> = thresholds_to_check
                 .iter()
                 .map(|threshold| {
-                    let threshold_stake = (total_stake as f64 * threshold) as u64;
-                    old_stake <= threshold_stake && threshold_stake < new_stake
+                    let threshold_weight = (TOTAL_WEIGHT as f64 * threshold) as u64;
+                    info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
+                    old_weight <= threshold_weight && threshold_weight < new_weight
                 })
                 .collect();
             (reached_threshold_results, is_new)

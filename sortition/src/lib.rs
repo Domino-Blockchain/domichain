@@ -1,5 +1,5 @@
 use primitive_types::U256;
-use probability::distribution::{Binomial, Inverse};
+use statrs::distribution::{Binomial, DiscreteCDF};
 
 use domichain_program::hash::Hash;
 
@@ -23,8 +23,14 @@ fn get_cratio(vrf_output: Hash) -> f64 {
 }
 
 fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
-    let boundary_money = Binomial::new(n as usize, p).inverse(ratio) as u64;
-    boundary_money.min(money)
+    let binomial = Binomial::new(p, n).unwrap();
+    for j in 0..money {
+        let boundary = binomial.cdf(j);
+        if ratio <= boundary {
+            return j;
+        }
+    }
+    return money;
 }
 
 #[cfg(test)]
@@ -64,7 +70,7 @@ mod tests {
             let expected = (n as f64 * expected_size / 2.0) as u64;
             let d = expected.abs_diff(hitcount);
             // within 2% good enough
-            let maxd = expected / 50; // or by 20 for 5%?
+            let maxd = expected / 50;
             avg += d;
             if d > maxd {
                 err += 1;
@@ -101,7 +107,9 @@ mod tests {
         let expected = (n as f64 * expected_size / 2.0) as u64;
         let d = expected.abs_diff(hitcount);
         // within 2% good enough
-        let maxd = expected / 50; // or by 20 for 5%?
+        let maxd = expected / 50;
+        // if we want 5%
+        // let maxd = expected / 20;
         if d > maxd {
             panic!("wanted {expected} selections but got {hitcount}, d={d}, maxd={maxd}");
         }
