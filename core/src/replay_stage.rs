@@ -2979,6 +2979,7 @@ impl ReplayStage {
                 // log voted_stakes
                 let is_slot_confirmed = bank.is_frozen() &&
                     tower.is_slot_confirmed(*slot, vote_tracker, prog.fork_stats.bank_hash.unwrap());
+                info!("DEV: is_slot_confirmed={is_slot_confirmed}");
                 info!("DEV: voted_stakes={voted_stakes:?}");
                 // info!("DEV: is_slot_confirmed={is_slot_confirmed}");
                 if is_slot_confirmed { // is_slot_confirmed 

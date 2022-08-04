@@ -403,9 +403,8 @@ impl Tower {
             .optimistic_votes_tracker(&bank_hash)
             .map(|vote_stake_tracker| {
                 let weight = vote_stake_tracker.weight();
-                let is_slot_confirmed = vote_stake_tracker.weight() as f64 / TOTAL_WEIGHT as f64 > self.threshold_size;
-                info!("DEV: is_slot_confirmed={is_slot_confirmed} weight={weight} total={TOTAL_WEIGHT}");
-                is_slot_confirmed
+                info!("DEV: weight={weight} total={TOTAL_WEIGHT}");
+                vote_stake_tracker.weight() as f64 / TOTAL_WEIGHT as f64 > self.threshold_size
             })
             .unwrap_or(false)
     }

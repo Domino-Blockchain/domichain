@@ -86,25 +86,34 @@ mod tests {
         let sample: [([u8; 32], f64); 1000] = include!("../samples/sample.txt");
 
         let mut hitcount = 0;
-        let n = 1000;
-        let expected_size = 20.0;
+        let sample_num = 1000;
+        let total_expected_size = 20.0;
         let my_money = 100;
         let total_money = 200;
+        let koeff = total_money as f64 / my_money as f64;
 
-        for i in 0..n {
+        for i in 0..sample_num {
             let (arr, _exp_cratio) = sample[i];
             let vrf_output = Hash::new_from_array(arr);
 
             let selected = select(
                 my_money,
                 total_money,
-                expected_size,
+                total_expected_size,
                 vrf_output,
             );
 
             hitcount += selected
         }
-        let expected = (n as f64 * expected_size / 2.0) as u64;
+        // 3 nodes
+        // threshold = 13
+        // #1: 14 5 2  | 14
+        // #2: 1 8 9   | 9 8
+        // #3: 13 4 3  | 13
+        // #4: 8 6 6   | 8 6
+
+        println!("{hitcount}");
+        let expected = (sample_num as f64 * total_expected_size / koeff) as u64;
         let d = expected.abs_diff(hitcount);
         // within 2% good enough
         let maxd = expected / 50;
