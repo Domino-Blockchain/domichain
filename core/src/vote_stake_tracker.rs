@@ -7,7 +7,7 @@ pub struct VoteStakeTracker {
     weight: u64,
 }
 
-const TOTAL_WEIGHT: u64 = 2267; // SoftCommitteeThreshold - to be corrected
+pub const TOTAL_WEIGHT: u64 = 2267; // SoftCommitteeThreshold - to be corrected
 
 impl VoteStakeTracker {
     // Returns tuple (reached_threshold_results, is_new) where
@@ -48,6 +48,10 @@ impl VoteStakeTracker {
 
     pub fn stake(&self) -> u64 {
         self.stake
+    }
+
+    pub fn weight(&self) -> u64 {
+        self.weight
     }
 }
 

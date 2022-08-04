@@ -608,6 +608,7 @@ impl ReplayStage {
                             fork_stats.total_stake,
                             &progress,
                             &bank_forks,
+                            &vote_tracker,
                         );
 
                         Self::mark_slots_confirmed(&confirmed_forks, &blockstore, &bank_forks, &mut progress, &mut duplicate_slots_tracker, &mut heaviest_subtree_fork_choice,  &mut epoch_slots_frozen_slots, &mut duplicate_slots_to_repair, &ancestor_hashes_replay_update_sender);
@@ -2959,10 +2960,11 @@ impl ReplayStage {
 
     fn confirm_forks(
         tower: &Tower,
-        voted_stakes: &VotedStakes,
-        total_stake: Stake,
+        voted_stakes: &VotedStakes, // slot to weights
+        _total_stake: Stake,         // config constant
         progress: &ProgressMap,
         bank_forks: &RwLock<BankForks>,
+        vote_tracker: &VoteTracker, // slot_tracker -> weight
     ) -> Vec<(Slot, Hash)> {
         let mut confirmed_forks = vec![];
         for (slot, prog) in progress.iter() {
@@ -2974,7 +2976,12 @@ impl ReplayStage {
                     .expect("bank in progress must exist in BankForks")
                     .clone();
                 let duration = prog.replay_stats.started.elapsed().as_millis();
-                if bank.is_frozen() && tower.is_slot_confirmed(*slot, voted_stakes, total_stake) {
+                // log voted_stakes
+                let is_slot_confirmed = bank.is_frozen() &&
+                    tower.is_slot_confirmed(*slot, vote_tracker, prog.fork_stats.bank_hash.unwrap());
+                info!("DEV: voted_stakes={voted_stakes:?}");
+                // info!("DEV: is_slot_confirmed={is_slot_confirmed}");
+                if is_slot_confirmed { // is_slot_confirmed 
                     info!("validator fork confirmed {} {}ms", *slot, duration);
                     datapoint_info!("validator-confirmation", ("duration_ms", duration, i64));
                     confirmed_forks.push((*slot, bank.hash()));
