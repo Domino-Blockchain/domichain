@@ -13,6 +13,7 @@ use {
 
 const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::LAMPORTS_PER_SOL;
 
+#[derive(Debug)]
 pub enum ExternalClientType {
     // Submits transactions to an Rpc node using an RpcClient
     RpcClient,
@@ -31,6 +32,7 @@ impl Default for ExternalClientType {
 }
 
 /// Holds the configuration for a single run of the benchmark
+#[derive(Debug)]
 pub struct Config {
     pub entrypoint_addr: SocketAddr,
     pub json_rpc_url: String,

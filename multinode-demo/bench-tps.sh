@@ -23,9 +23,10 @@ if [[ -z $1 ]]; then # default behavior
   $domichain_bench_tps \
     --entrypoint 127.0.0.1:8001 \
     --faucet 127.0.0.1:9900 \
-    --duration 90 \
-    --tx_count 50000 \
+    --duration 20 \
+    --tx_count 500 \
     --thread-batch-sleep-ms 0 \
+    --keypair-multiplier 2 \
 
 else
   $domichain_bench_tps "$@"
