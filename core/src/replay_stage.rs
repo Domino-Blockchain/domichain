@@ -12,7 +12,7 @@ use {
         cluster_slots_service::ClusterSlotsUpdateSender,
         commitment_service::{AggregateCommitmentService, CommitmentAggregationData},
         consensus::{
-            ComputedBankState, Stake, SwitchForkDecision, Tower, VotedStakes, SWITCH_FORK_THRESHOLD,
+            ComputedBankState, Stake, SwitchForkDecision, Tower, SWITCH_FORK_THRESHOLD,
         },
         cost_update_service::CostUpdate,
         fork_choice::{ForkChoice, SelectVoteAndResetForkResult},
@@ -600,12 +600,9 @@ impl ReplayStage {
                     compute_bank_stats_time.stop();
 
                     let mut compute_slot_stats_time = Measure::start("compute_slot_stats_time");
-                    for slot in newly_computed_slot_stats {
-                        let fork_stats = progress.get_fork_stats(slot).unwrap();
+                    for _slot in newly_computed_slot_stats {
                         let confirmed_forks = Self::confirm_forks(
                             &tower,
-                            &fork_stats.voted_stakes,
-                            fork_stats.total_stake,
                             &progress,
                             &bank_forks,
                             &vote_tracker,
@@ -2960,11 +2957,9 @@ impl ReplayStage {
 
     fn confirm_forks(
         tower: &Tower,
-        voted_stakes: &VotedStakes, // slot to weights
-        _total_stake: Stake,         // config constant
         progress: &ProgressMap,
         bank_forks: &RwLock<BankForks>,
-        vote_tracker: &VoteTracker, // slot_tracker -> weight
+        vote_tracker: &VoteTracker,
     ) -> Vec<(Slot, Hash)> {
         let mut confirmed_forks = vec![];
         for (slot, prog) in progress.iter() {
@@ -2976,13 +2971,11 @@ impl ReplayStage {
                     .expect("bank in progress must exist in BankForks")
                     .clone();
                 let duration = prog.replay_stats.started.elapsed().as_millis();
-                // log voted_stakes
+                let bank_hash = prog.fork_stats.bank_hash.unwrap();
                 let is_slot_confirmed = bank.is_frozen() &&
-                    tower.is_slot_confirmed(*slot, vote_tracker, prog.fork_stats.bank_hash.unwrap());
+                    tower.is_slot_confirmed(*slot, vote_tracker, bank_hash);
                 info!("DEV: is_slot_confirmed={is_slot_confirmed}");
-                info!("DEV: voted_stakes={voted_stakes:?}");
-                // info!("DEV: is_slot_confirmed={is_slot_confirmed}");
-                if is_slot_confirmed { // is_slot_confirmed 
+                if is_slot_confirmed { // is_slot_confirmed
                     info!("validator fork confirmed {} {}ms", *slot, duration);
                     datapoint_info!("validator-confirmation", ("duration_ms", duration, i64));
                     confirmed_forks.push((*slot, bank.hash()));
@@ -2991,7 +2984,7 @@ impl ReplayStage {
                         "validator fork not confirmed {} {}ms {:?}",
                         *slot,
                         duration,
-                        voted_stakes.get(slot)
+                        bank_hash,
                     );
                 }
             }
@@ -4173,13 +4166,12 @@ pub(crate) mod tests {
         // The only vote is in bank 1, and bank_forks does not currently contain
         // bank 1, so no slot should be confirmed.
         {
-            let fork_progress = progress.get(&0).unwrap();
+            let vote_tracker = VoteTracker::default();
             let confirmed_forks = ReplayStage::confirm_forks(
                 &tower,
-                &fork_progress.fork_stats.voted_stakes,
-                fork_progress.fork_stats.total_stake,
                 &progress,
                 &bank_forks,
+                &vote_tracker,
             );
 
             assert!(confirmed_forks.is_empty());
@@ -4215,13 +4207,12 @@ pub(crate) mod tests {
         // Bank 1 had one vote
         assert_eq!(newly_computed, vec![1]);
         {
-            let fork_progress = progress.get(&1).unwrap();
+            let vote_tracker = VoteTracker::default();
             let confirmed_forks = ReplayStage::confirm_forks(
                 &tower,
-                &fork_progress.fork_stats.voted_stakes,
-                fork_progress.fork_stats.total_stake,
                 &progress,
                 &bank_forks,
+                &vote_tracker,
             );
             // No new stats should have been computed
             assert_eq!(confirmed_forks, vec![(0, bank0.hash())]);
@@ -5906,6 +5897,7 @@ pub(crate) mod tests {
     #[test]
     fn test_replay_stage_refresh_last_vote() {
         let ReplayBlockstoreComponents {
+            blockstore,
             cluster_info,
             poh_recorder,
             mut tower,
@@ -5946,6 +5938,7 @@ pub(crate) mod tests {
             &my_vote_pubkey,
             &identity_keypair,
             &my_vote_keypair,
+            &blockstore,
             &mut tower,
             &SwitchForkDecision::SameFork,
             &mut voted_signatures,
@@ -5988,6 +5981,7 @@ pub(crate) mod tests {
                 &my_vote_pubkey,
                 &identity_keypair,
                 &my_vote_keypair,
+                &blockstore,
                 &mut voted_signatures,
                 has_new_vote_been_rooted,
                 &mut last_vote_refresh_time,
@@ -6011,6 +6005,7 @@ pub(crate) mod tests {
             &my_vote_pubkey,
             &identity_keypair,
             &my_vote_keypair,
+            &blockstore,
             &mut tower,
             &SwitchForkDecision::SameFork,
             &mut voted_signatures,
@@ -6045,6 +6040,7 @@ pub(crate) mod tests {
             &my_vote_pubkey,
             &identity_keypair,
             &my_vote_keypair,
+            &blockstore,
             &mut voted_signatures,
             has_new_vote_been_rooted,
             &mut last_vote_refresh_time,
@@ -6089,6 +6085,7 @@ pub(crate) mod tests {
             &my_vote_pubkey,
             &identity_keypair,
             &my_vote_keypair,
+            &blockstore,
             &mut voted_signatures,
             has_new_vote_been_rooted,
             &mut last_vote_refresh_time,
@@ -6157,6 +6154,7 @@ pub(crate) mod tests {
             &my_vote_pubkey,
             &identity_keypair,
             &my_vote_keypair,
+            &blockstore,
             &mut voted_signatures,
             has_new_vote_been_rooted,
             &mut last_vote_refresh_time,

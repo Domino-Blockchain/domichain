@@ -6514,7 +6514,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
-            seed: Box::new([0; 32]),
+            seed: Hash::default(),
         };
         assert_eq!(confirmed_block, expected_block);
 
@@ -6529,7 +6529,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
-            seed: Box::new([0; 32]),
+            seed: Hash::default(),
         };
         assert_eq!(confirmed_block, expected_block);
 
@@ -6547,7 +6547,7 @@ pub mod tests {
             rewards: vec![],
             block_time: None,
             block_height: None,
-            seed: Box::new([0; 32]),
+            seed: Hash::default(),
         };
         assert_eq!(complete_block, expected_complete_block);
 

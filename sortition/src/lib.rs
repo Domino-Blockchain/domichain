@@ -105,14 +105,7 @@ mod tests {
 
             hitcount += selected
         }
-        // 3 nodes
-        // threshold = 13
-        // #1: 14 5 2  | 14
-        // #2: 1 8 9   | 9 8
-        // #3: 13 4 3  | 13
-        // #4: 8 6 6   | 8 6
 
-        println!("{hitcount}");
         let expected = (sample_num as f64 * total_expected_size / koeff) as u64;
         let d = expected.abs_diff(hitcount);
         // within 2% good enough

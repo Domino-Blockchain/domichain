@@ -69,6 +69,7 @@ mod test {
                 pubkey,
                 1,
                 total_epoch_stake,
+                0,
                 &[VOTE_THRESHOLD_SIZE, 0.0],
             );
             let stake = vote_stake_tracker.stake();
@@ -76,6 +77,7 @@ mod test {
                 pubkey,
                 1,
                 total_epoch_stake,
+                0,
                 &[VOTE_THRESHOLD_SIZE, 0.0],
             );
             let stake2 = vote_stake_tracker.stake();

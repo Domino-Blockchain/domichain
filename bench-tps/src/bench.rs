@@ -130,8 +130,10 @@ where
             reclaim_lamports_back_to_source_account,
         );
 
-        let balances: u64 = source_keypair_chunks.iter().flatten().map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0)).sum();
-        // assert_eq!(balances, 0);
+        let balances: u64 = source_keypair_chunks.iter()
+            .flatten()
+            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+            .sum();
         info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
 
         datapoint_info!(
@@ -226,8 +228,9 @@ where
         ..
     } = config;
 
-    let balances_before: u64 = gen_keypairs.iter().map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0)).sum();
-    // assert_eq!(balances_before, 0);
+    let balances_before: u64 = gen_keypairs.iter()
+        .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+        .sum();
     let mut source_keypair_chunks: Vec<Vec<&Keypair>> = Vec::new();
     let mut dest_keypair_chunks: Vec<VecDeque<&Keypair>> = Vec::new();
     assert!(gen_keypairs.len() >= 2 * tx_count);
@@ -324,8 +327,9 @@ where
     let balance = client.get_balance(&id.pubkey()).unwrap_or(0);
     metrics_submit_lamport_balance(balance);
 
-    let balances_after: u64 = gen_keypairs.iter().map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0)).sum();
-    // assert_eq!(balances_after, 0);
+    let balances_after: u64 = gen_keypairs.iter()
+        .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+        .sum();
     info!("balances_before balances={balances_before}");
     info!("balances_after balances={balances_after}");
 
@@ -970,8 +974,8 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
             lamports_per_account,
         );
         let balances: u64 = keypairs.iter()
-            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0)).sum();
-        // assert_eq!(balances, 0);
+            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+            .sum();
         info!("total={total}, max_fee={max_fee}, lamports_per_account={lamports_per_account}");
         info!("fund_keypairs balances={balances}");
     }

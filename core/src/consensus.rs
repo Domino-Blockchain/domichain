@@ -2372,6 +2372,7 @@ pub mod test {
             slots: vec![0],
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         };
         local.process_vote_unchecked(vote);
         assert_eq!(local.votes.len(), 1);
@@ -2388,6 +2389,7 @@ pub mod test {
             slots: vec![0],
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         };
         local.process_vote_unchecked(vote);
         assert_eq!(local.votes.len(), 1);
