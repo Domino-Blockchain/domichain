@@ -2,14 +2,14 @@
 title: Validator Requirements
 ---
 
-## Minimum SOL requirements
+## Minimum DOMI requirements
 
-There is no strict minimum amount of SOL required to run a validator on Domichain.
+There is no strict minimum amount of DOMI required to run a validator on Domichain.
 
 However in order to participate in consensus, a vote account is required which
-has a rent-exempt reserve of 0.02685864 SOL. Voting also requires sending a vote
+has a rent-exempt reserve of 0.02685864 DOMI. Voting also requires sending a vote
 transaction for each block the validator agrees with, which can cost up to
-1.1 SOL per day.
+1.1 DOMI per day.
 
 ## Hardware Recommendations
 

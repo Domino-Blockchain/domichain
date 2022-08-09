@@ -185,7 +185,7 @@ let airdropSignature = await connection.requestAirdrop(
 await connection.confirmTransaction(airdropSignature);
 ```
 
-First, we set up the account Keypair and connection so that we have an account to make allocate on the testnet. We also create a payer Keypair and airdrop some sol so we can pay for the allocate transaction.
+First, we set up the account Keypair and connection so that we have an account to make allocate on the testnet. We also create a payer Keypair and airdrop some domi so we can pay for the allocate transaction.
 
 ```javascript
 let allocateTransaction = new web3.Transaction({

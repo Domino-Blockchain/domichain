@@ -2571,7 +2571,7 @@ impl ClusterInfo {
         let recycler = PacketBatchRecycler::default();
         let thread_pool = ThreadPoolBuilder::new()
             .num_threads(get_thread_count().min(8))
-            .thread_name(|i| format!("sol-gossip-work-{}", i))
+            .thread_name(|i| format!("domi-gossip-work-{}", i))
             .build()
             .unwrap();
         Builder::new()

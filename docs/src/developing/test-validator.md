@@ -86,7 +86,7 @@ domichain balance
 
 - **NOTE:** `Error: No such file or directory (os error 2)` means that the default
   wallet does not yet exist. Create it with `domichain-keygen new`.
-- **NOTE:** If the wallet has a zero SOL balance, airdrop some localnet SOL with
+- **NOTE:** If the wallet has a zero DOMI balance, airdrop some localnet DOMI with
   `domichain airdrop 10`
 
 #### Perform a basic transfer transaction

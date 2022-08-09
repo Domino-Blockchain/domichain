@@ -345,12 +345,12 @@ fn main() {
         )
         .arg(
             Arg::with_name("faucet_sol")
-                .long("faucet-sol")
+                .long("faucet-domi")
                 .takes_value(true)
-                .value_name("SOL")
+                .value_name("DOMI")
                 .default_value(default_faucet_sol.as_str())
                 .help(
-                    "Give the faucet address this much SOL in genesis. \
+                    "Give the faucet address this much DOMI in genesis. \
                      If the ledger already exists then this parameter is silently ignored",
                 ),
         )
@@ -625,7 +625,7 @@ fn main() {
             ("mint_address", "--mint"),
             ("ticks_per_slot", "--ticks-per-slot"),
             ("slots_per_epoch", "--slots-per-epoch"),
-            ("faucet_sol", "--faucet-sol"),
+            ("faucet_sol", "--faucet-domi"),
             ("deactivate_feature", "--deactivate-feature"),
         ] {
             if matches.is_present(name) {
@@ -635,7 +635,7 @@ fn main() {
     } else if random_mint {
         println_name_value(
             "\nNotice!",
-            "No wallet available. `domichain airdrop` localnet SOL after creating one\n",
+            "No wallet available. `domichain airdrop` localnet DOMI after creating one\n",
         );
     }
 

@@ -16,14 +16,14 @@ $ domichain-keygen pubkey
 <PUBKEY>
 ```
 
-### Airdrop SOL/Lamports
+### Airdrop DOMI/Lamports
 
 ```bash
 // Command
 $ domichain airdrop 1
 
 // Return
-"1 SOL"
+"1 DOMI"
 ```
 
 ### Get Balance
@@ -33,7 +33,7 @@ $ domichain airdrop 1
 $ domichain balance
 
 // Return
-"3.00050001 SOL"
+"3.00050001 DOMI"
 ```
 
 ### Confirm Transaction
