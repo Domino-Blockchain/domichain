@@ -60,7 +60,7 @@ use {
         genesis_config::{ClusterType, GenesisConfig},
         hash::Hash,
         inflation::Inflation,
-        native_token::{lamports_to_sol, sol_to_lamports, Sol},
+        native_token::{lamports_to_sol, sol_to_lamports, Domi},
         pubkey::Pubkey,
         rent::Rent,
         shred_version::compute_shred_version,
@@ -361,7 +361,7 @@ fn output_account(
     print_account_data: bool,
 ) {
     println!("{}", pubkey);
-    println!("  balance: {} SOL", lamports_to_sol(account.lamports()));
+    println!("  balance: {} DOMI", lamports_to_sol(account.lamports()));
     println!("  owner: '{}'", account.owner());
     println!("  executable: {}", account.executable());
     if let Some(slot) = modified_slot {
@@ -490,7 +490,7 @@ fn graph_forks(bank_forks: &BankForks, include_all_votes: bool) -> String {
                         slot_stake_and_vote_count.get(&bank.slot())
                     {
                         format!(
-                            "\nvotes: {}, stake: {:.1} SOL ({:.1}%)",
+                            "\nvotes: {}, stake: {:.1} DOMI ({:.1}%)",
                             votes,
                             lamports_to_sol(*stake),
                             *stake as f64 / *total_stake as f64 * 100.,
@@ -551,7 +551,7 @@ fn graph_forks(bank_forks: &BankForks, include_all_votes: bool) -> String {
         });
 
         dot.push(format!(
-            r#"  "last vote {}"[shape=box,label="Latest validator vote: {}\nstake: {} SOL\nroot slot: {}\nvote history:\n{}"];"#,
+            r#"  "last vote {}"[shape=box,label="Latest validator vote: {}\nstake: {} DOMI\nroot slot: {}\nvote history:\n{}"];"#,
             node_pubkey,
             node_pubkey,
             lamports_to_sol(*stake),
@@ -585,7 +585,7 @@ fn graph_forks(bank_forks: &BankForks, include_all_votes: bool) -> String {
     // Annotate the final "..." node with absent vote and stake information
     if absent_votes > 0 {
         dot.push(format!(
-            r#"    "..."[label="...\nvotes: {}, stake: {:.1} SOL {:.1}%"];"#,
+            r#"    "..."[label="...\nvotes: {}, stake: {:.1} DOMI {:.1}%"];"#,
             absent_votes,
             lamports_to_sol(absent_stake),
             absent_stake as f64 / lowest_total_stake as f64 * 100.,
@@ -2914,7 +2914,7 @@ fn main() {
                             if old_capitalization == bank.capitalization() {
                                 eprintln!(
                                     "Capitalization was identical: {}",
-                                    Sol(old_capitalization)
+                                    Domi(old_capitalization)
                                 );
                             }
                         }
@@ -3161,9 +3161,9 @@ fn main() {
                                 / warped_bank.epoch_duration_in_years(base_bank.epoch());
                             println!(
                                 "Capitalization: {} => {} (+{} {}%; annualized {}%)",
-                                Sol(base_bank.capitalization()),
-                                Sol(warped_bank.capitalization()),
-                                Sol(warped_bank.capitalization() - base_bank.capitalization()),
+                                Domi(base_bank.capitalization()),
+                                Domi(warped_bank.capitalization()),
+                                Domi(warped_bank.capitalization() - base_bank.capitalization()),
                                 interest_per_epoch,
                                 interest_per_year,
                             );
@@ -3234,9 +3234,9 @@ fn main() {
                                         "{:<45}({}): {} => {} (+{} {:>4.9}%) {:?}",
                                         format!("{}", pubkey), // format! is needed to pad/justify correctly.
                                         base_account.owner(),
-                                        Sol(base_account.lamports()),
-                                        Sol(warped_account.lamports()),
-                                        Sol(delta),
+                                        Domi(base_account.lamports()),
+                                        Domi(warped_account.lamports()),
+                                        Domi(delta),
                                         ((warped_account.lamports() as f64)
                                             / (base_account.lamports() as f64)
                                             * 100_f64)
@@ -3384,7 +3384,7 @@ fn main() {
                                 }
                             }
                             if overall_delta > 0 {
-                                println!("Sum of lamports changes: {}", Sol(overall_delta));
+                                println!("Sum of lamports changes: {}", Domi(overall_delta));
                             }
                         } else {
                             if arg_matches.is_present("recalculate_capitalization") {
@@ -3401,7 +3401,7 @@ fn main() {
                             assert_capitalization(&bank);
                             println!("Inflation: {:?}", bank.inflation());
                             println!("RentCollector: {:?}", bank.rent_collector());
-                            println!("Capitalization: {}", Sol(bank.capitalization()));
+                            println!("Capitalization: {}", Domi(bank.capitalization()));
                         }
                     }
                     Err(err) => {

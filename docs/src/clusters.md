@@ -127,7 +127,7 @@ The identities of the
 
 A permissionless, persistent cluster for Domichain users, builders, validators and token holders.
 
-- Tokens that are issued on Mainnet Beta are **real** SOL
+- Tokens that are issued on Mainnet Beta are **real** DOMI
 - Gossip entrypoint for Mainnet Beta: `entrypoint.mainnet-beta.domichain.com:8001`
 - Metrics environment variable for Mainnet Beta:
 

@@ -67,7 +67,7 @@ A transaction is used to interact with programs on the Domichain blockchain. The
 const web3 = require('@domichain/web3.js');
 const nacl = require('tweetnacl');
 
-// Airdrop SOL for paying transactions
+// Airdrop DOMI for paying transactions
 let payer = web3.Keypair.generate();
 let connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
 
@@ -231,7 +231,7 @@ The SystemProgram grants the ability to create accounts, allocate account data, 
 ```javascript
 const web3 = require("@domichain/web3.js");
 
-// Airdrop SOL for paying transactions
+// Airdrop DOMI for paying transactions
 let payer = web3.Keypair.generate();
 let connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
 
@@ -641,7 +641,7 @@ VoteAccount {
 
 [SourceDocumentation](https://domichain-labs.github.io/domichain-web3.js/classes/StakeProgram.html)
 
-The StakeProgram facilitates staking SOL and delegating them to any validators on the network. You can use StakeProgram to create a stake account, stake some SOL, authorize accounts for withdrawal of your stake, deactivate your stake, and withdraw your funds. The StakeInstruction class is used to decode and read more instructions from transactions calling the StakeProgram
+The StakeProgram facilitates staking DOMI and delegating them to any validators on the network. You can use StakeProgram to create a stake account, stake some DOMI, authorize accounts for withdrawal of your stake, deactivate your stake, and withdraw your funds. The StakeInstruction class is used to decode and read more instructions from transactions calling the StakeProgram
 
 #### Example Usage
 

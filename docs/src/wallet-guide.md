@@ -4,7 +4,7 @@ title: Domichain Wallet Guide
 
 This document describes the different wallet options that are available to users
 of Domichain who want to be able to send, receive and interact with
-SOL tokens on the Domichain blockchain.
+DOMI tokens on the Domichain blockchain.
 
 ## What is a Wallet?
 
@@ -44,7 +44,7 @@ Some store and back up private keys more securely.
 Domichain supports multiple types of wallets so you can choose the right balance
 of security and convenience.
 
-**If you want to be able to receive SOL tokens on the Domichain blockchain,
+**If you want to be able to receive DOMI tokens on the Domichain blockchain,
 you first will need to create a wallet.**
 
 ## Supported Wallets
