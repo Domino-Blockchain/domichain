@@ -99,7 +99,8 @@ where
         .unwrap()
 }
 
-fn generate_chunked_transfers(
+fn generate_chunked_transfers<T>(
+    client: &Arc<T>,
     recent_blockhash: Arc<RwLock<Hash>>,
     shared_txs: &SharedTransactions,
     shared_tx_active_thread_count: Arc<AtomicIsize>,
@@ -108,7 +109,10 @@ fn generate_chunked_transfers(
     threads: usize,
     duration: Duration,
     sustained: bool,
-) {
+)
+where
+    T: 'static + BenchTpsClient + Send + Sync,
+{
     // generate and send transactions for the specified duration
     let start = Instant::now();
     let keypair_chunks = source_keypair_chunks.len();
@@ -125,6 +129,12 @@ fn generate_chunked_transfers(
             threads,
             reclaim_lamports_back_to_source_account,
         );
+
+        let balances: u64 = source_keypair_chunks.iter()
+            .flatten()
+            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+            .sum();
+        info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
 
         datapoint_info!(
             "blockhash_stats",
@@ -217,6 +227,9 @@ where
         ..
     } = config;
 
+    let balances_before: u64 = gen_keypairs.iter()
+        .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+        .sum();
     let mut source_keypair_chunks: Vec<Vec<&Keypair>> = Vec::new();
     let mut dest_keypair_chunks: Vec<VecDeque<&Keypair>> = Vec::new();
     assert!(gen_keypairs.len() >= 2 * tx_count);
@@ -278,6 +291,7 @@ where
     let start = Instant::now();
 
     generate_chunked_transfers(
+        &client,
         blockhash,
         &shared_txs,
         shared_tx_active_thread_count,
@@ -311,6 +325,12 @@ where
 
     let balance = client.get_balance(&id.pubkey()).unwrap_or(0);
     metrics_submit_lamport_balance(balance);
+
+    let balances_after: u64 = gen_keypairs.iter()
+        .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+        .sum();
+    info!("balances_before balances={balances_before}");
+    info!("balances_after balances={balances_after}");
 
     compute_and_report_stats(
         &maxes,
@@ -872,6 +892,7 @@ pub fn generate_and_fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
 
     info!("Creating {} keypairs...", keypair_count);
     let (mut keypairs, extra) = generate_keypairs(funding_key, keypair_count as u64);
+    info!("lamports_per_account={lamports_per_account}");
     fund_keypairs(client, funding_key, &keypairs, extra, lamports_per_account)?;
 
     // 'generate_keypairs' generates extra keys to be able to have size-aligned funding batches for fund_keys.
@@ -944,13 +965,18 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
         }
 
         fund_keys(
-            client,
+            client.clone(),
             funding_key,
             keypairs,
             total,
             max_fee,
             lamports_per_account,
         );
+        let balances: u64 = keypairs.iter()
+            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+            .sum();
+        info!("total={total}, max_fee={max_fee}, lamports_per_account={lamports_per_account}");
+        info!("fund_keypairs balances={balances}");
     }
     Ok(())
 }

@@ -411,6 +411,7 @@ mod test {
             slots: vec![1, 2, 4],
             hash,
             timestamp: Some(1_234_567_890),
+            vrf_proof: None,
         };
 
         let vote_pubkey = Pubkey::new_unique();
@@ -566,6 +567,7 @@ mod test {
             slots: vec![1, 2, 4],
             hash,
             timestamp: Some(1_234_567_890),
+            vrf_proof: None,
         };
 
         let vote_pubkey = Pubkey::new_unique();

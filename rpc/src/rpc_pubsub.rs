@@ -1339,6 +1339,7 @@ mod tests {
             slots: vec![1, 2],
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         };
         subscriptions.notify_vote(
             Pubkey::default(),

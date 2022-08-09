@@ -324,11 +324,22 @@ impl ClusterInfoVoteListener {
                 let parent_block_seed = bank_forks.read().unwrap()
                     .get(slot)
                     .map(|b| b.parent_block_seed());
-                let vrf_proof = vote.vrf_proof().unwrap_or_default().to_vec();
+                let vrf_proof = vote.vrf_proof().and_then(|vrf_proof| vrf_proof.try_into().ok());
+                let vrf_proof = match vrf_proof {
+                    Some(vrf_proof) => vrf_proof,
+                    None => {
+                        error!(
+                            "VRF read error: cannot cast {:?} into &[u8; {}]",
+                            vote.vrf_proof(),
+                            libvrf::vrf::PROOF_LEN,
+                        );
+                        return None;
+                    }
+                };
                 let verify_result = vrf_verify(
                     &parent_block_seed?.to_string(),
                     authorized_voter,
-                    vrf_proof.as_slice().try_into().unwrap(),
+                    vrf_proof,
                 );
                 match verify_result {
                     Ok(vrf_hash) => {
@@ -1035,6 +1046,7 @@ mod tests {
             &Pubkey::default(),
             3,
         ));
+        let bank_forks = Arc::new(RwLock::new(BankForks::new_from_banks(&[bank3.clone()], bank3.slot())));
         let vote_slots = vec![1, 2];
         send_vote_txs(
             vote_slots,
@@ -1048,6 +1060,7 @@ mod tests {
             &votes_receiver,
             &vote_tracker,
             &bank3,
+            bank_forks.clone(),
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,
@@ -1079,6 +1092,7 @@ mod tests {
             &votes_receiver,
             &vote_tracker,
             &bank3,
+            bank_forks,
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,
@@ -1144,6 +1158,8 @@ mod tests {
                 vec![stake_per_validator; validator_voting_keypairs.len()],
             );
         let bank0 = Bank::new_for_tests(&genesis_config);
+        let bank0_clone = Bank::new_for_tests(&genesis_config);
+        let bank_forks = Arc::new(RwLock::new(BankForks::new(bank0_clone)));
 
         let gossip_vote_slots = vec![1, 2];
         let replay_vote_slots = vec![3, 4];
@@ -1161,6 +1177,7 @@ mod tests {
             &votes_txs_receiver,
             &vote_tracker,
             &bank0,
+            bank_forks,
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,
@@ -1279,6 +1296,8 @@ mod tests {
                 vec![stake_per_validator; validator_voting_keypairs.len()],
             );
         let bank0 = Bank::new_for_tests(&genesis_config);
+        let bank0_clone = Bank::new_for_tests(&genesis_config);
+        let bank_forks = Arc::new(RwLock::new(BankForks::new(bank0_clone)));
 
         // Send some votes to process
         let (votes_txs_sender, votes_txs_receiver) = unbounded();
@@ -1318,6 +1337,7 @@ mod tests {
             &votes_txs_receiver,
             &vote_tracker,
             &bank0,
+            bank_forks,
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,
@@ -1388,6 +1408,7 @@ mod tests {
         ];
         for events in ordered_events {
             let (vote_tracker, bank, validator_voting_keypairs, subscriptions) = setup();
+            let bank_forks = Arc::new(RwLock::new(BankForks::new_from_banks(&[bank.clone()], bank.slot())));
             let node_keypair = &validator_voting_keypairs[0].node_keypair;
             let vote_keypair = &validator_voting_keypairs[0].vote_keypair;
             for &e in &events {
@@ -1418,6 +1439,7 @@ mod tests {
                     &votes_receiver,
                     &vote_tracker,
                     &bank,
+                    bank_forks.clone(),
                     &subscriptions,
                     &gossip_verified_vote_hash_sender,
                     &verified_vote_sender,
@@ -1476,7 +1498,7 @@ mod tests {
         let subscriptions = Arc::new(RpcSubscriptions::new_for_tests(
             &exit,
             max_complete_transaction_status_slot,
-            bank_forks,
+            bank_forks.clone(),
             Arc::new(RwLock::new(BlockCommitmentCache::default())),
             optimistically_confirmed_bank,
         ));
@@ -1509,6 +1531,7 @@ mod tests {
                 Signature::default(),
             )],
             &bank,
+            bank_forks.clone(),
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,
@@ -1555,6 +1578,7 @@ mod tests {
                 Signature::default(),
             )],
             &new_root_bank,
+            bank_forks,
             &subscriptions,
             &gossip_verified_vote_hash_sender,
             &verified_vote_sender,

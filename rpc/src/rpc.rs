@@ -7053,6 +7053,7 @@ pub mod tests {
                         slots: vec![bank.slot()],
                         hash: bank.hash(),
                         timestamp: None,
+                        vrf_proof: None,
                     },
                 ),
                 vote_instruction::vote(
@@ -7062,6 +7063,7 @@ pub mod tests {
                         slots: vec![bank.slot()],
                         hash: bank.hash(),
                         timestamp: None,
+                        vrf_proof: None,
                     },
                 ),
             ];

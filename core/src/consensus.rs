@@ -1,10 +1,12 @@
 use {
     crate::{
+        cluster_info_vote_listener::VoteTracker,
         heaviest_subtree_fork_choice::HeaviestSubtreeForkChoice,
         latest_validator_votes_for_frozen_banks::LatestValidatorVotesForFrozenBanks,
         progress_map::{LockoutIntervals, ProgressMap},
         tower1_7_14::Tower1_7_14,
         tower_storage::{SavedTower, SavedTowerVersions, TowerStorage},
+        vote_stake_tracker::TOTAL_WEIGHT,
     },
     chrono::prelude::*,
     domichain_ledger::{ancestor_iterator::AncestorIterator, blockstore::Blockstore, blockstore_db},
@@ -389,12 +391,21 @@ impl Tower {
     pub fn is_slot_confirmed(
         &self,
         slot: Slot,
-        voted_stakes: &VotedStakes,
-        total_stake: Stake,
+        vote_tracker: &VoteTracker,
+        bank_hash: Hash,
     ) -> bool {
-        voted_stakes
-            .get(&slot)
-            .map(|stake| (*stake as f64 / total_stake as f64) > self.threshold_size)
+        let slot_vote_tracker = match vote_tracker.get_slot_vote_tracker(slot) {
+            Some(slot_vote_tracker) => slot_vote_tracker,
+            None => return false,
+        };
+        let slot_vote_tracker = slot_vote_tracker.read().unwrap();
+        slot_vote_tracker
+            .optimistic_votes_tracker(&bank_hash)
+            .map(|vote_stake_tracker| {
+                let weight = vote_stake_tracker.weight();
+                info!("DEV: weight={weight} total={TOTAL_WEIGHT}");
+                vote_stake_tracker.weight() as f64 / TOTAL_WEIGHT as f64 > self.threshold_size
+            })
             .unwrap_or(false)
     }
 
@@ -2361,6 +2372,7 @@ pub mod test {
             slots: vec![0],
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         };
         local.process_vote_unchecked(vote);
         assert_eq!(local.votes.len(), 1);
@@ -2377,6 +2389,7 @@ pub mod test {
             slots: vec![0],
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         };
         local.process_vote_unchecked(vote);
         assert_eq!(local.votes.len(), 1);

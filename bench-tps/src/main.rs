@@ -53,6 +53,8 @@ fn main() {
         ..
     } = &cli_config;
 
+    info!("cli_config={cli_config:#?}");
+
     let keypair_count = *tx_count * keypair_multiplier;
     if *write_to_client_file {
         info!("Generating {} keypairs", keypair_count);

@@ -2007,6 +2007,7 @@ mod tests {
                 slots: vote_group.clone(),
                 hash: Hash::new_unique(),
                 timestamp: None,
+                vrf_proof: None,
             });
 
             // Now use the resulting new vote state to perform a vote state update on vote_state
