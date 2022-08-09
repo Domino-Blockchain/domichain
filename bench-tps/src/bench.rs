@@ -212,7 +212,6 @@ where
         .collect()
 }
 
-// 500 * 2 keypairs
 pub fn do_bench_tps<T>(client: Arc<T>, config: Config, gen_keypairs: Vec<Keypair>) -> u64
 where
     T: 'static + BenchTpsClient + Send + Sync,
