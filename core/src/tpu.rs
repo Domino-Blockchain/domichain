@@ -96,6 +96,7 @@ impl Tpu {
         connection_cache: &Arc<ConnectionCache>,
         keypair: &Keypair,
         enable_quic_servers: bool,
+        total_weight: u64,
     ) -> Self {
         let TpuSockets {
             transactions: transactions_sockets,
@@ -218,6 +219,7 @@ impl Tpu {
             blockstore.clone(),
             bank_notification_sender,
             cluster_confirmed_slot_sender,
+            total_weight,
         );
 
         let banking_stage = BankingStage::new(

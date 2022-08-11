@@ -1394,6 +1394,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "domichain-bench-tps-simple"
+version = "1.11.1"
+dependencies = [
+ "clap 2.33.3",
+ "crossbeam-channel",
+ "domichain-bench-tps",
+ "domichain-clap-utils",
+ "domichain-cli-config",
+ "domichain-client",
+ "domichain-core",
+ "domichain-faucet",
+ "domichain-genesis",
+ "domichain-gossip",
+ "domichain-local-cluster",
+ "domichain-logger",
+ "domichain-measure",
+ "domichain-metrics",
+ "domichain-net-utils",
+ "domichain-rpc",
+ "domichain-runtime",
+ "domichain-sdk",
+ "domichain-streamer",
+ "domichain-test-validator",
+ "domichain-version",
+ "log",
+ "rayon",
+ "serde_json",
+ "serde_yaml",
+ "serial_test",
+ "thiserror",
+]
+
+[[package]]
 name = "domichain-bloom"
 version = "1.11.1"
 dependencies = [

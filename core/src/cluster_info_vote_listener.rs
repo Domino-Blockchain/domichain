@@ -71,9 +71,6 @@ pub type GossipDuplicateConfirmedSlotsReceiver = Receiver<ThresholdConfirmedSlot
 const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE];
 const BANK_SEND_VOTES_LOOP_SLEEP_MS: u128 = 10;
 
-// Consensus parameters constant
-const EXPECTED_SELECTION: u64 = 2990;
-
 #[derive(Default)]
 pub struct SlotVoteTracker {
     // Maps pubkeys that have voted for this slot
@@ -206,6 +203,7 @@ impl ClusterInfoVoteListener {
         blockstore: Arc<Blockstore>,
         bank_notification_sender: Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: GossipDuplicateConfirmedSlotsSender,
+        total_weight: u64,
     ) -> Self {
         let (verified_vote_label_packets_sender, verified_vote_label_packets_receiver) =
             unbounded();
@@ -222,6 +220,7 @@ impl ClusterInfoVoteListener {
                         &bank_forks,
                         verified_vote_label_packets_sender,
                         verified_vote_transactions_sender,
+                        total_weight,
                     );
                 })
                 .unwrap()
@@ -254,6 +253,7 @@ impl ClusterInfoVoteListener {
                     blockstore,
                     bank_notification_sender,
                     cluster_confirmed_slot_sender,
+                    total_weight,
                 );
             })
             .unwrap();
@@ -273,13 +273,14 @@ impl ClusterInfoVoteListener {
         bank_forks: &RwLock<BankForks>,
         verified_vote_label_packets_sender: VerifiedLabelVotePacketsSender,
         verified_vote_transactions_sender: VerifiedVoteTransactionsSender,
+        total_weight: u64,
     ) -> Result<()> {
         let mut cursor = Cursor::default();
         while !exit.load(Ordering::Relaxed) {
             let votes = cluster_info.get_votes(&mut cursor);
             inc_new_counter_debug!("cluster_info_vote_listener-recv_count", votes.len());
             if !votes.is_empty() {
-                let (vote_txs, packets) = Self::verify_votes(votes, bank_forks);
+                let (vote_txs, packets) = Self::verify_votes(votes, bank_forks, total_weight);
                 verified_vote_transactions_sender.send(vote_txs)?;
                 verified_vote_label_packets_sender.send(packets)?;
             }
@@ -292,6 +293,7 @@ impl ClusterInfoVoteListener {
     fn verify_votes(
         votes: Vec<Transaction>,
         bank_forks: &RwLock<BankForks>,
+        total_weight: u64,
     ) -> (Vec<Transaction>, Vec<VerifiedVoteMetadata>) {
         let mut packet_batches = packet::to_packet_batches(&votes, 1);
 
@@ -358,7 +360,7 @@ impl ClusterInfoVoteListener {
                         let weight = sortition::select(
                             stake,
                             total_stake,                // Maybe use circulation across net?
-                            EXPECTED_SELECTION as f64,  // Consensus params
+                            total_weight as f64,  // Consensus params
                             h,
                         );
 
@@ -502,6 +504,7 @@ impl ClusterInfoVoteListener {
         blockstore: Arc<Blockstore>,
         bank_notification_sender: Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: GossipDuplicateConfirmedSlotsSender,
+        total_weight: u64,
     ) -> Result<()> {
         let mut confirmation_verifier =
             OptimisticConfirmationVerifier::new(bank_forks.read().unwrap().root());
@@ -538,6 +541,7 @@ impl ClusterInfoVoteListener {
                 &replay_votes_receiver,
                 &bank_notification_sender,
                 &cluster_confirmed_slot_sender,
+                total_weight,
             );
             match confirmed_slots {
                 Ok(confirmed_slots) => {
@@ -591,6 +595,7 @@ impl ClusterInfoVoteListener {
         replay_votes_receiver: &ReplayVoteReceiver,
         bank_notification_sender: &Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
+        total_weight: u64,
     ) -> Result<ThresholdConfirmedSlots> {
         let mut sel = Select::new();
         sel.recv(gossip_vote_txs_receiver);
@@ -620,6 +625,7 @@ impl ClusterInfoVoteListener {
                     verified_vote_sender,
                     bank_notification_sender,
                     cluster_confirmed_slot_sender,
+                    total_weight,
                 ));
             }
             remaining_wait_time = remaining_wait_time.saturating_sub(start.elapsed());
@@ -643,6 +649,7 @@ impl ClusterInfoVoteListener {
         is_gossip_vote: bool,
         bank_notification_sender: &Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
+        total_weight: u64,
     ) {
         if vote.is_empty() {
             return;
@@ -702,11 +709,11 @@ impl ClusterInfoVoteListener {
                             authorized_voter.as_ref(),
                         ]);
 
-                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={EXPECTED_SELECTION}");
+                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={total_weight}");
                         let weight = sortition::select(
                             stake,
-                            total_stake,                  // DEV: Maybe use circulation across net?
-                            EXPECTED_SELECTION as f64,  // DEV: Consensus params
+                            total_stake,
+                            total_weight as f64,
                             h,
                         );
                         weight
@@ -728,6 +735,7 @@ impl ClusterInfoVoteListener {
                     stake,
                     total_stake,
                     weight,
+                    total_weight,
                 );
                 info!("TPU: reached_threshold_results={reached_threshold_results:?} is_new={is_new} weight={weight}");
 
@@ -798,6 +806,7 @@ impl ClusterInfoVoteListener {
         verified_vote_sender: &VerifiedVoteSender,
         bank_notification_sender: &Option<BankNotificationSender>,
         cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
+        total_weight: u64,
     ) -> ThresholdConfirmedSlots {
         let mut diff: HashMap<Slot, HashMap<Pubkey, bool>> = HashMap::new();
         let mut new_optimistic_confirmed_slots = vec![];
@@ -824,6 +833,7 @@ impl ClusterInfoVoteListener {
                 is_gossip,
                 bank_notification_sender,
                 cluster_confirmed_slot_sender,
+                total_weight,
             );
         }
 
@@ -888,6 +898,7 @@ impl ClusterInfoVoteListener {
         stake: u64,
         total_epoch_stake: u64,
         weight: u64,
+        total_weight: u64,
     ) -> (Vec<bool>, bool) {
         let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
         // Insert vote and check for optimistic confirmation
@@ -901,6 +912,7 @@ impl ClusterInfoVoteListener {
                 total_epoch_stake,
                 weight,
                 &THRESHOLDS_TO_CHECK,
+                total_weight,
             )
     }
 
@@ -1067,6 +1079,7 @@ mod tests {
             &replay_votes_receiver,
             &None,
             &None,
+            3000,
         )
         .unwrap();
 
@@ -1099,6 +1112,7 @@ mod tests {
             &replay_votes_receiver,
             &None,
             &None,
+            3000,
         )
         .unwrap();
 
@@ -1184,6 +1198,7 @@ mod tests {
             &replay_votes_receiver,
             &None,
             &None,
+            3000,
         )
         .unwrap();
 
@@ -1344,6 +1359,7 @@ mod tests {
             &replay_votes_receiver,
             &None,
             &None,
+            3000,
         )
         .unwrap();
 
@@ -1446,6 +1462,7 @@ mod tests {
                     &replay_votes_receiver,
                     &None,
                     &None,
+                    3000,
                 );
             }
             let slot_vote_tracker = vote_tracker.get_slot_vote_tracker(vote_slot).unwrap();
@@ -1537,6 +1554,7 @@ mod tests {
             &verified_vote_sender,
             &None,
             &None,
+            3000,
         );
 
         // Setup next epoch
@@ -1584,6 +1602,7 @@ mod tests {
             &verified_vote_sender,
             &None,
             &None,
+            3000,
         );
     }
 
@@ -1632,7 +1651,7 @@ mod tests {
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_forks = RwLock::new(BankForks::new(bank));
         let votes = vec![];
-        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks);
+        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks, 3000);
         assert!(vote_txs.is_empty());
         assert!(packets.is_empty());
     }
@@ -1678,7 +1697,7 @@ mod tests {
         let bank_forks = RwLock::new(BankForks::new(bank));
         let vote_tx = test_vote_tx(voting_keypairs.first(), hash);
         let votes = vec![vote_tx];
-        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks);
+        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks, 3000);
         assert_eq!(vote_txs.len(), 1);
         verify_packets_len(&packets, 1);
     }
@@ -1705,7 +1724,7 @@ mod tests {
         let mut bad_vote = vote_tx.clone();
         bad_vote.signatures[0] = Signature::default();
         let votes = vec![vote_tx.clone(), bad_vote, vote_tx];
-        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks);
+        let (vote_txs, packets) = ClusterInfoVoteListener::verify_votes(votes, &bank_forks, 3000);
         assert_eq!(vote_txs.len(), 2);
         verify_packets_len(&packets, 2);
     }

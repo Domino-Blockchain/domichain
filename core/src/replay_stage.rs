@@ -143,6 +143,7 @@ pub struct ReplayStageConfig {
     // Stops voting until this slot has been reached. Should be used to avoid
     // duplicate voting which can lead to slashing.
     pub wait_to_vote_slot: Option<Slot>,
+    pub total_weight: u64,
 }
 
 #[derive(Default)]
@@ -396,6 +397,7 @@ impl ReplayStage {
             ancestor_hashes_replay_update_sender,
             tower_storage,
             wait_to_vote_slot,
+            total_weight,
         } = config;
 
         trace!("replay stage");
@@ -606,6 +608,7 @@ impl ReplayStage {
                             &progress,
                             &bank_forks,
                             &vote_tracker,
+                            total_weight,
                         );
 
                         Self::mark_slots_confirmed(&confirmed_forks, &blockstore, &bank_forks, &mut progress, &mut duplicate_slots_tracker, &mut heaviest_subtree_fork_choice,  &mut epoch_slots_frozen_slots, &mut duplicate_slots_to_repair, &ancestor_hashes_replay_update_sender);
@@ -2960,6 +2963,7 @@ impl ReplayStage {
         progress: &ProgressMap,
         bank_forks: &RwLock<BankForks>,
         vote_tracker: &VoteTracker,
+        total_weight: u64,
     ) -> Vec<(Slot, Hash)> {
         let mut confirmed_forks = vec![];
         for (slot, prog) in progress.iter() {
@@ -2971,9 +2975,9 @@ impl ReplayStage {
                     .expect("bank in progress must exist in BankForks")
                     .clone();
                 let duration = prog.replay_stats.started.elapsed().as_millis();
-                let bank_hash = prog.fork_stats.bank_hash.unwrap();
+                let bank_hash = prog.fork_stats.bank_hash;
                 let is_slot_confirmed = bank.is_frozen() &&
-                    tower.is_slot_confirmed(*slot, vote_tracker, bank_hash);
+                    bank_hash.map(|bank_hash| tower.is_slot_confirmed(*slot, vote_tracker, bank_hash, total_weight)).unwrap_or(false);
                 info!("DEV: is_slot_confirmed={is_slot_confirmed}");
                 if is_slot_confirmed { // is_slot_confirmed
                     info!("validator fork confirmed {} {}ms", *slot, duration);
@@ -4172,6 +4176,7 @@ pub(crate) mod tests {
                 &progress,
                 &bank_forks,
                 &vote_tracker,
+                3000,
             );
 
             assert!(confirmed_forks.is_empty());
@@ -4213,6 +4218,7 @@ pub(crate) mod tests {
                 &progress,
                 &bank_forks,
                 &vote_tracker,
+                3000,
             );
             // No new stats should have been computed
             assert_eq!(confirmed_forks, vec![(0, bank0.hash())]);

@@ -62,6 +62,7 @@ else
 fi
 
 domichain_bench_tps=$(domichain_program bench-tps)
+domichain_bench_tps_simple=$(domichain_program bench-tps-simple)
 domichain_faucet=$(domichain_program faucet)
 domichain_validator=$(domichain_program validator)
 domichain_validator_cuda="$domichain_validator --cuda"

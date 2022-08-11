@@ -7,8 +7,6 @@ pub struct VoteStakeTracker {
     weight: u64,
 }
 
-pub const TOTAL_WEIGHT: u64 = 3000; // SoftCommitteeThreshold - to be corrected
-
 impl VoteStakeTracker {
     // Returns tuple (reached_threshold_results, is_new) where
     // Each index in `reached_threshold_results` is true if the corresponding threshold in the input
@@ -21,6 +19,7 @@ impl VoteStakeTracker {
         _total_stake: u64,
         weight: u64,
         thresholds_to_check: &[f64],
+        total_weight: u64,
     ) -> (Vec<bool>, bool) {
         let is_new = !self.voted.contains(&vote_pubkey);
         if is_new {
@@ -31,7 +30,7 @@ impl VoteStakeTracker {
             let reached_threshold_results: Vec<bool> = thresholds_to_check
                 .iter()
                 .map(|threshold| {
-                    let threshold_weight = (TOTAL_WEIGHT as f64 * threshold) as u64;
+                    let threshold_weight = (total_weight as f64 * threshold) as u64;
                     info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
                     old_weight <= threshold_weight && threshold_weight < new_weight
                 })
@@ -71,6 +70,7 @@ mod test {
                 total_epoch_stake,
                 0,
                 &[VOTE_THRESHOLD_SIZE, 0.0],
+                3000,
             );
             let stake = vote_stake_tracker.stake();
             let (is_confirmed_thresholds2, is_new2) = vote_stake_tracker.add_vote_pubkey(
@@ -79,6 +79,7 @@ mod test {
                 total_epoch_stake,
                 0,
                 &[VOTE_THRESHOLD_SIZE, 0.0],
+                3000,
             );
             let stake2 = vote_stake_tracker.stake();
 

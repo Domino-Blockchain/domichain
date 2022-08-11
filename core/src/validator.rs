@@ -119,6 +119,8 @@ const WAIT_FOR_SUPERMAJORITY_THRESHOLD_PERCENT: u64 = 80;
 /// maximum drop bank signal queue length
 const MAX_DROP_BANK_SIGNAL_QUEUE_SIZE: usize = 10_000;
 
+pub const DEFAULT_TOTAL_WEIGHT: u64 = 3000; // SoftCommitteeSize - to be corrected
+
 pub struct ValidatorConfig {
     pub halt_at_slot: Option<Slot>,
     pub expected_genesis_hash: Option<Hash>,
@@ -177,6 +179,7 @@ pub struct ValidatorConfig {
     pub ledger_column_options: LedgerColumnOptions,
     pub runtime_config: RuntimeConfig,
     pub enable_quic_servers: bool,
+    pub total_weight: u64,
 }
 
 impl Default for ValidatorConfig {
@@ -239,6 +242,7 @@ impl Default for ValidatorConfig {
             ledger_column_options: LedgerColumnOptions::default(),
             runtime_config: RuntimeConfig::default(),
             enable_quic_servers: false,
+            total_weight: DEFAULT_TOTAL_WEIGHT,
         }
     }
 }
@@ -969,6 +973,7 @@ impl Validator {
                 rocksdb_compaction_interval: config.rocksdb_compaction_interval,
                 rocksdb_max_compaction_jitter: config.rocksdb_compaction_interval,
                 wait_for_vote_to_start_leader,
+                total_weight: config.total_weight,
             },
             &max_slots,
             &cost_model,
@@ -1022,6 +1027,7 @@ impl Validator {
             &connection_cache,
             &identity_keypair,
             enable_quic_servers,
+            config.total_weight,
         );
 
         datapoint_info!(
