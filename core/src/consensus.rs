@@ -2180,26 +2180,26 @@ pub mod test {
         assert!(!tower.check_vote_stake_threshold(MAX_LOCKOUT_HISTORY as u64 + 1, &stakes, 2,));
     }
 
-    // #[test]
-    // fn test_is_slot_confirmed_not_enough_stake_failure() {
-    //     let tower = Tower::new_for_tests(1, 0.67);
-    //     let stakes = vec![(0, 1)].into_iter().collect();
-    //     assert!(!tower.is_slot_confirmed(0, &stakes, 2));
-    // }
-    //
-    // #[test]
-    // fn test_is_slot_confirmed_unknown_slot() {
-    //     let tower = Tower::new_for_tests(1, 0.67);
-    //     let stakes = HashMap::new();
-    //     assert!(!tower.is_slot_confirmed(0, &stakes, 2));
-    // }
-    //
-    // #[test]
-    // fn test_is_slot_confirmed_pass() {
-    //     let tower = Tower::new_for_tests(1, 0.67);
-    //     let stakes = vec![(0, 2)].into_iter().collect();
-    //     assert!(tower.is_slot_confirmed(0, &stakes, 2));
-    // }
+    #[test]
+    fn test_is_slot_confirmed_not_enough_stake_failure() {
+        let tower = Tower::new_for_tests(1, 0.67);
+        let stakes = vec![(0, 1)].into_iter().collect();
+        assert!(!tower.is_slot_confirmed(0, &stakes, 2));
+    }
+
+    #[test]
+    fn test_is_slot_confirmed_unknown_slot() {
+        let tower = Tower::new_for_tests(1, 0.67);
+        let stakes = HashMap::new();
+        assert!(!tower.is_slot_confirmed(0, &stakes, 2));
+    }
+
+    #[test]
+    fn test_is_slot_confirmed_pass() {
+        let tower = Tower::new_for_tests(1, 0.67);
+        let stakes = vec![(0, 2)].into_iter().collect();
+        assert!(tower.is_slot_confirmed(0, &stakes, 2));
+    }
 
     #[test]
     fn test_is_locked_out_empty() {

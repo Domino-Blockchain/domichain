@@ -1,8 +1,3 @@
-use std::{thread::{sleep, spawn}, time::Duration};
-
-use domichain_bench_tps::cli::Config;
-use domichain_sdk::{system_transaction, signer::Signer};
-
 use {
     clap::{value_t, ArgMatches},
     log::*,
@@ -16,9 +11,9 @@ use {
         thin_client::ThinClient,
     },
     domichain_gossip::gossip_service::{discover_cluster, get_client, try_get_multi_client},
-    domichain_sdk::signature::Keypair,
+    domichain_sdk::{system_transaction, signature::Keypair, signer::Signer},
     domichain_streamer::socket::SocketAddrSpace,
-    std::{process::exit, sync::Arc},
+    std::{process::exit, sync::Arc, thread::{sleep, spawn}, time::Duration},
 };
 
 fn get_bench_client(cli_config: &cli::Config, matches: &ArgMatches) -> ThinClient {
@@ -138,7 +133,7 @@ where
 
 fn do_bench_tps_simple<T>(
     client: Arc<T>,
-    config: Config,
+    config: &cli::Config,
     from: &Keypair,
     to: &Keypair,
 )
@@ -204,20 +199,19 @@ fn main() {
     let client = get_bench_client(&cli_config, &matches);
     let client = Arc::new(client);
     
-    let keypairs = get_bench_keypairs(
+    let funded_keypairs = get_bench_keypairs(
         client.clone(),
         id,
         1,
         *num_lamports_per_account,
     );
 
-    let keypairs2 = get_bench_keypairs(
+    let empty_keypairs = get_bench_keypairs(
         client.clone(),
         id,
         1,
         0,
     );
 
-    // do_bench_tps(client, cli_config, keypairs);
-    do_bench_tps_simple(client, cli_config, &keypairs[0], &keypairs2[0]);
+    do_bench_tps_simple(client, &cli_config, &funded_keypairs[0], &empty_keypairs[0]);
 }
