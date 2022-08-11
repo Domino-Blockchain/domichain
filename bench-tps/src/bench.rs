@@ -15,7 +15,7 @@ use {
         hash::Hash,
         instruction::{AccountMeta, Instruction},
         message::Message,
-        native_token::Sol,
+        native_token::Domi,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         system_instruction, system_transaction,
@@ -948,8 +948,8 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
         if funding_key_balance < total + rent {
             error!(
                 "funder has {}, needed {}",
-                Sol(funding_key_balance),
-                Sol(total)
+                Domi(funding_key_balance),
+                Domi(total)
             );
             let latest_blockhash = get_latest_blockhash(client.as_ref());
             if client

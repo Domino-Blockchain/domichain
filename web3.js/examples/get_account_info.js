@@ -7,7 +7,7 @@ import * as web3 from '@domichain/web3.js';
     'confirmed',
   );
 
-  // Generate a new wallet keypair and airdrop SOL
+  // Generate a new wallet keypair and airdrop DOMI
   var wallet = web3.Keypair.generate();
   var airdropSignature = await connection.requestAirdrop(
     wallet.publicKey,

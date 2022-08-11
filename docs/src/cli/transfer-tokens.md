@@ -2,7 +2,7 @@
 title: Send and Receive Tokens
 ---
 
-This page decribes how to receive and send SOL tokens using the command line
+This page decribes how to receive and send DOMI tokens using the command line
 tools with a command line wallet such as a [paper wallet](../wallet-guide/paper-wallet.md),
 a [file system wallet](../wallet-guide/file-system-wallet.md), or a
 [hardware wallet](../wallet-guide/hardware-wallets.md). Before you begin, make sure
@@ -44,7 +44,7 @@ domichain confirm -v <TRANSACTION_SIGNATURE>
 #### Check your balance
 
 Confirm the airdrop was successful by checking the account's balance.
-It should output `1 SOL`:
+It should output `1 DOMI`:
 
 ```bash
 domichain balance <ACCOUNT_ADDRESS> --url https://api.devnet.domichain.com
@@ -109,12 +109,12 @@ Save this seed phrase to recover your new keypair:
 width enhance concert vacant ketchup eternal spy craft spy guard tag punch    # If this was a real wallet, never share these words on the internet like this!
 ==========================================================================
 
-$ domichain airdrop 1 DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK --url https://api.devnet.domichain.com  # Airdropping 1 SOL to my wallet's address/pubkey
-Requesting airdrop of 1 SOL from 35.233.193.70:9900
-1 SOL
+$ domichain airdrop 1 DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK --url https://api.devnet.domichain.com  # Airdropping 1 DOMI to my wallet's address/pubkey
+Requesting airdrop of 1 DOMI from 35.233.193.70:9900
+1 DOMI
 
 $ domichain balance DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK --url https://api.devnet.domichain.com # Check the address's balance
-1 SOL
+1 DOMI
 
 $ domichain-keygen new --no-outfile  # Creating a second wallet, a paper wallet
 Generating a new keypair
@@ -130,10 +130,10 @@ $ domichain transfer --from my_domichain_wallet.json 7S3P4HxJpyyigGzodYwHtCxZyUQ
 3gmXvykAd1nCQQ7MjosaHLf69Xyaqyq1qw2eu1mgPyYXd5G4v1rihhg1CiRw35b9fHzcftGKKEu4mbUeXY2pEX2z  # This is the transaction signature
 
 $ domichain balance DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK --url https://api.devnet.domichain.com
-0.499995 SOL  # The sending account has slightly less than 0.5 SOL remaining due to the 0.000005 SOL transaction fee payment
+0.499995 DOMI  # The sending account has slightly less than 0.5 DOMI remaining due to the 0.000005 DOMI transaction fee payment
 
 $ domichain balance 7S3P4HxJpyyigGzodYwHtCxZyUQe9JiBMHyRWXArAaKv --url https://api.devnet.domichain.com
-0.5 SOL  # The second wallet has now received the 0.5 SOL transfer from the first wallet
+0.5 DOMI  # The second wallet has now received the 0.5 DOMI transfer from the first wallet
 
 ```
 
@@ -150,7 +150,7 @@ characters. Its length varies from 32 to 44 characters.
 
 ## Send Tokens
 
-If you already hold SOL and want to send tokens to someone, you will need
+If you already hold DOMI and want to send tokens to someone, you will need
 a path to your keypair, their base58-encoded public key, and a number of
 tokens to transfer. Once you have that collected, you can transfer tokens
 with the `domichain transfer` command:

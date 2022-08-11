@@ -80,8 +80,8 @@ export function lamportsToSolString(
   lamports: number | BN,
   maximumFractionDigits: number = 9
 ): string {
-  const sol = lamportsToSol(lamports);
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(sol);
+  const domi = lamportsToSol(lamports);
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(domi);
 }
 
 export function numberWithSeparator(s: string) {

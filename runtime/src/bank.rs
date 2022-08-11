@@ -1818,7 +1818,7 @@ impl Bank {
             rent_collector: Self::get_rent_collector_from(&parent.rent_collector, epoch),
             max_tick_height: (slot + 1) * parent.ticks_per_slot,
             block_height: parent.block_height + 1,
-            block_seed: hash(parent.block_seed.as_ref()),
+            block_seed: parent.derive_new_block_seed(),
             fee_calculator,
             fee_rate_governor,
             capitalization: AtomicU64::new(parent.capitalization()),
@@ -7033,7 +7033,20 @@ impl Bank {
 
     /// Return the block_seed of this bank
     pub fn block_seed(&self) -> Hash {
-        self.block_seed.clone()
+        self.block_seed
+    }
+
+    /// Return the block_seed of this bank
+    pub fn derive_new_block_seed(&self) -> Hash {
+        let alpha = hash(self.block_seed.as_ref());
+        assert_ne!(alpha, self.block_seed); // New seed from previous
+
+        assert_eq!(self.is_frozen(), true);
+        let history = self.hash();
+
+        let new_seed = hashv(&[alpha.as_ref(), history.as_ref()]);
+        info!("DEV: derived new seed {new_seed} from {}", self.block_seed);
+        new_seed
     }
 
     /// Return the number of slots per epoch for the given epoch
@@ -16897,7 +16910,7 @@ pub(crate) mod tests {
             ])
             .collect();
 
-        // Initialize accounts; all have larger SOL balances than current Bank built-ins
+        // Initialize accounts; all have larger DOMI balances than current Bank built-ins
         let account0 = AccountSharedData::new(pubkeys_balances[0].1, 0, &Pubkey::default());
         bank.store_account(&pubkeys_balances[0].0, &account0);
         let account1 = AccountSharedData::new(pubkeys_balances[1].1, 0, &Pubkey::default());

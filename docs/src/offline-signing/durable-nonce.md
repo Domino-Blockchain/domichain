@@ -104,8 +104,8 @@ domichain nonce-account nonce-keypair.json
 - Output
 
 ```text
-balance: 0.5 SOL
-minimum balance required: 0.00136416 SOL
+balance: 0.5 DOMI
+minimum balance required: 0.00136416 DOMI
 nonce: DZar6t2EaCFQTbUP4DHKwZ1wT8gCPW2aRfkVWhydkBvS
 ```
 
@@ -165,7 +165,7 @@ The following subcommands have received this treatment so far
 
 ### Example Pay Using Durable Nonce
 
-Here we demonstrate Alice paying Bob 1 SOL using a durable nonce. The procedure
+Here we demonstrate Alice paying Bob 1 DOMI using a durable nonce. The procedure
 is the same for all subcommands supporting durable nonces
 
 #### - Create accounts
@@ -181,11 +181,11 @@ $ domichain-keygen new -o bob.json
 #### - Fund Alice's account
 
 Alice will need some funds to create a nonce account and send to Bob. Airdrop
-her some SOL
+her some DOMI
 
 ```bash
 $ domichain airdrop -k alice.json 1
-1 SOL
+1 DOMI
 ```
 
 #### - Create Alice's nonce account
@@ -219,8 +219,8 @@ blockhash stored there
 
 ```bash
 $ domichain nonce-account nonce.json
-balance: 0.1 SOL
-minimum balance required: 0.00136416 SOL
+balance: 0.1 DOMI
+minimum balance required: 0.00136416 DOMI
 nonce: F7vmkY3DTaxfagttWjQweib42b6ZHADSx94Tw8gHx3W7
 ```
 
@@ -231,17 +231,17 @@ HR1368UKHVZyenmH7yVz5sBAijV6XAPeWbEiXEGVYQorRMcoijeNAbzZqEZiH8cDB8tk65ckqeegFjK8
 
 #### - Success!
 
-The transaction succeeds! Bob receives 0.01 SOL from Alice and Alice's stored
+The transaction succeeds! Bob receives 0.01 DOMI from Alice and Alice's stored
 nonce advances to a new value
 
 ```bash
 $ domichain balance -k bob.json
-0.01 SOL
+0.01 DOMI
 ```
 
 ```bash
 $ domichain nonce-account nonce.json
-balance: 0.1 SOL
-minimum balance required: 0.00136416 SOL
+balance: 0.1 DOMI
+minimum balance required: 0.00136416 DOMI
 nonce: 6bjroqDcZgTv6Vavhqf81oBHTv3aMnX19UTB51YhAZnN
 ```

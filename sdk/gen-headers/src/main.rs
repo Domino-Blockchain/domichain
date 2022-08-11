@@ -22,7 +22,7 @@ use {
  * used the call the syscall function.
  */
 fn main() {
-    let syscalls_inc_path = PathBuf::from("sdk/bpf/c/inc/sol/inc");
+    let syscalls_inc_path = PathBuf::from("sdk/bpf/c/inc/domi/inc");
 
     if syscalls_inc_path.is_dir() {
         for entry in fs::read_dir(syscalls_inc_path).expect("Can't open headers dir") {
@@ -78,7 +78,7 @@ fn transform(inc: &PathBuf) {
     };
     let mut output_writer = BufWriter::new(output);
     let decl_re =
-        Regex::new(r"@SYSCALL ([0-9A-Za-z_*]+)[[:space:]]+(sol_[0-9A-Za-z_]+)\(([^);]*)\);")
+        Regex::new(r"@SYSCALL ([0-9A-Za-z_*]+)[[:space:]]+(domi_[0-9A-Za-z_]+)\(([^);]*)\);")
             .unwrap();
     let comm_re = Regex::new(r",").unwrap();
     let output_content = decl_re.replace_all(input_content, |caps: &Captures| {
