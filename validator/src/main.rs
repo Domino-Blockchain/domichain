@@ -27,7 +27,10 @@ use {
         system_monitor_service::SystemMonitorService,
         tower_storage,
         tpu::DEFAULT_TPU_COALESCE_MS,
-        validator::{is_snapshot_config_valid, Validator, ValidatorConfig, ValidatorStartProgress},
+        validator::{
+            is_snapshot_config_valid, Validator, ValidatorConfig,
+            ValidatorStartProgress, DEFAULT_TOTAL_WEIGHT,
+        },
     },
     domichain_gossip::{cluster_info::Node, contact_info::ContactInfo},
     domichain_ledger::blockstore_options::{
@@ -487,6 +490,12 @@ pub fn main() {
                 .takes_value(true)
                 .validator(is_keypair_or_ask_keyword)
                 .help("Validator identity keypair"),
+        )
+        .arg(
+            Arg::with_name("total_weight")
+                .long("total-weight")
+                .value_name("WEIGHT")
+                .takes_value(true)
         )
         .arg(
             Arg::with_name("authorized_voter_keypairs")
@@ -2580,6 +2589,7 @@ pub fn main() {
             ..RuntimeConfig::default()
         },
         enable_quic_servers,
+        total_weight: value_t!(matches, "total_weight", u64).unwrap_or(DEFAULT_TOTAL_WEIGHT),
         ..ValidatorConfig::default()
     };
 

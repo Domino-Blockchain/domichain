@@ -6,7 +6,6 @@ use {
         progress_map::{LockoutIntervals, ProgressMap},
         tower1_7_14::Tower1_7_14,
         tower_storage::{SavedTower, SavedTowerVersions, TowerStorage},
-        vote_stake_tracker::TOTAL_WEIGHT,
     },
     chrono::prelude::*,
     domichain_ledger::{ancestor_iterator::AncestorIterator, blockstore::Blockstore, blockstore_db},
@@ -393,6 +392,7 @@ impl Tower {
         slot: Slot,
         vote_tracker: &VoteTracker,
         bank_hash: Hash,
+        total_weight: u64,
     ) -> bool {
         let slot_vote_tracker = match vote_tracker.get_slot_vote_tracker(slot) {
             Some(slot_vote_tracker) => slot_vote_tracker,
@@ -403,8 +403,8 @@ impl Tower {
             .optimistic_votes_tracker(&bank_hash)
             .map(|vote_stake_tracker| {
                 let weight = vote_stake_tracker.weight();
-                info!("DEV: weight={weight} total={TOTAL_WEIGHT}");
-                vote_stake_tracker.weight() as f64 / TOTAL_WEIGHT as f64 > self.threshold_size
+                info!("DEV: weight={weight} total={total_weight}");
+                vote_stake_tracker.weight() as f64 / total_weight as f64 > self.threshold_size
             })
             .unwrap_or(false)
     }
