@@ -24,8 +24,8 @@ if [[ -z $1 ]]; then # default behavior
     --entrypoint 127.0.0.1:8001 \
     --faucet 127.0.0.1:9900 \
     --duration 30 \
-    --tx_count 1000 \
-    --num-lamports-per-account 2000000000 \
+    --tx_count 500 \
+    --num-lamports-per-account 3000000000 \
 
 else
   $domichain_bench_tps_simple "$@"
