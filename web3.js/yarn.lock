@@ -1095,6 +1095,55 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
+"@domichain/buffer-layout-utils@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/@domichain/buffer-layout-utils/-/buffer-layout-utils-0.2.0.tgz"
+  dependencies:
+    "@domichain/buffer-layout" "^4.0.0"
+    "@domichain/web3.js" "^1.32.0"
+    bigint-buffer "^1.1.5"
+    bignumber.js "^9.0.1"
+
+"@domichain/buffer-layout@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/@domichain/buffer-layout/-/buffer-layout-3.0.0.tgz"
+  dependencies:
+    buffer "~6.0.3"
+
+"@domichain/buffer-layout@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/@domichain/buffer-layout/-/buffer-layout-4.0.0.tgz"
+  dependencies:
+    buffer "~6.0.3"
+
+"@domichain/spl-token@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/@domichain/spl-token/-/spl-token-0.2.0.tgz"
+  dependencies:
+    "@domichain/buffer-layout" "^4.0.0"
+    "@domichain/buffer-layout-utils" "^0.2.0"
+    "@domichain/web3.js" "^1.32.0"
+    start-server-and-test "^1.14.0"
+
+"@domichain/web3.js@^1.32.0":
+  version "1.36.0"
+  resolved "https://registry.npmjs.org/@domichain/web3.js/-/web3.js-1.36.0.tgz"
+  dependencies:
+    "@babel/runtime" "^7.12.5"
+    "@domichain/buffer-layout" "^3.0.0"
+    "@ethersproject/sha2" "^5.5.0"
+    bn.js "^5.0.0"
+    borsh "^0.4.0"
+    bs58 "^4.0.1"
+    buffer "6.0.1"
+    cross-fetch "^3.1.4"
+    jayson "^3.4.4"
+    js-sha3 "^0.8.0"
+    rpc-websockets "^7.4.2"
+    secp256k1 "^4.0.2"
+    superstruct "^0.14.2"
+    tweetnacl "^1.0.0"
+
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
   resolved "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-0.4.3.tgz"
@@ -1736,55 +1785,6 @@
 "@sinonjs/text-encoding@^0.7.1":
   version "0.7.1"
   resolved "https://registry.npmjs.org/@sinonjs/text-encoding/-/text-encoding-0.7.1.tgz"
-
-"@domichain/buffer-layout-utils@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/@domichain/buffer-layout-utils/-/buffer-layout-utils-0.2.0.tgz"
-  dependencies:
-    "@domichain/buffer-layout" "^4.0.0"
-    "@domichain/web3.js" "^1.32.0"
-    bigint-buffer "^1.1.5"
-    bignumber.js "^9.0.1"
-
-"@domichain/buffer-layout@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/@domichain/buffer-layout/-/buffer-layout-3.0.0.tgz"
-  dependencies:
-    buffer "~6.0.3"
-
-"@domichain/buffer-layout@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/@domichain/buffer-layout/-/buffer-layout-4.0.0.tgz"
-  dependencies:
-    buffer "~6.0.3"
-
-"@domichain/spl-token@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/@domichain/spl-token/-/spl-token-0.2.0.tgz"
-  dependencies:
-    "@domichain/buffer-layout" "^4.0.0"
-    "@domichain/buffer-layout-utils" "^0.2.0"
-    "@domichain/web3.js" "^1.32.0"
-    start-server-and-test "^1.14.0"
-
-"@domichain/web3.js@^1.32.0":
-  version "1.36.0"
-  resolved "https://registry.npmjs.org/@domichain/web3.js/-/web3.js-1.36.0.tgz"
-  dependencies:
-    "@babel/runtime" "^7.12.5"
-    "@ethersproject/sha2" "^5.5.0"
-    "@domichain/buffer-layout" "^3.0.0"
-    bn.js "^5.0.0"
-    borsh "^0.4.0"
-    bs58 "^4.0.1"
-    buffer "6.0.1"
-    cross-fetch "^3.1.4"
-    jayson "^3.4.4"
-    js-sha3 "^0.8.0"
-    rpc-websockets "^7.4.2"
-    secp256k1 "^4.0.2"
-    superstruct "^0.14.2"
-    tweetnacl "^1.0.0"
 
 "@tootallnate/once@1":
   version "1.1.2"
@@ -7056,6 +7056,11 @@ stubs@^3.0.0:
 superstruct@^0.14.2:
   version "0.14.2"
   resolved "https://registry.npmjs.org/superstruct/-/superstruct-0.14.2.tgz"
+
+superstruct@^0.16.4:
+  version "0.16.4"
+  resolved "https://registry.yarnpkg.com/superstruct/-/superstruct-0.16.4.tgz#84c80753a3376e16ef5a4f8dafa1e06767ba8e81"
+  integrity sha512-PGf1ZSWwbOb33efMX5Jq/JUM5UpCOk1p3/6jPS6o8mcPy9vd2XXOiEXDKwWOETpnzAvjkXcryL+l+jhvkDaizQ==
 
 supports-color@8.1.1:
   version "8.1.1"
