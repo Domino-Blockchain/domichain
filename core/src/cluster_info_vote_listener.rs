@@ -691,35 +691,42 @@ impl ClusterInfoVoteListener {
 
                 let vrf_proof = vote.vrf_proof().unwrap_or_default().to_vec();
 
-                let authorized_voter = epoch_stakes
+                let verify_result = epoch_stakes
                     .epoch_authorized_voters()
-                    .get(&vote_pubkey).unwrap();
+                    .get(&vote_pubkey)
+                    .map(|authorized_voter| {
                 let verify_result = vrf_verify(
                     &parent_block_seed.unwrap_or_default().to_string(),
                     authorized_voter,
                     vrf_proof.as_slice().try_into().unwrap(),
                 );
+                        (authorized_voter, verify_result)
+                    });
 
-                info!("TPU: vrf_verify {slot} {parent_block_seed:?} {authorized_voter} {vrf_proof:?}");
+                info!("TPU: vrf_verify {slot} {parent_block_seed:?} {vrf_proof:?}");
 
                 let weight = match verify_result {
-                    Ok(vrf_hash) => {
+                    Some((authorized_voter, Ok(vrf_hash))) => {
                         let h = hashv(&[
                             vrf_hash.as_slice(),
                             authorized_voter.as_ref(),
                         ]);
 
-                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={total_weight}");
                         let weight = sortition::select(
                             stake,
                             total_stake,
                             total_weight as f64,
                             h,
                         );
+                        warn!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={total_weight} weight={weight}");
                         weight
                     }
-                    Err(e) => {
-                        error!("TPU: Optimistic VRF verify error: {e}");
+                    Some((authorized_voter, Err(e))) => {
+                        error!("TPU: Optimistic VRF verify error: {e} {authorized_voter}");
+                        0
+                    }
+                    None => {
+                        error!("TPU: Error. No authorized_voter");
                         0
                     }
                 };
