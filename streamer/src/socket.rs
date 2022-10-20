@@ -27,7 +27,9 @@ impl SocketAddrSpace {
                 //    addr.is_loopback() || addr.is_link_local()
                 // || addr.is_broadcast() || addr.is_documentation()
                 // || addr.is_unspecified()
-                !addr.is_private()
+                // JDING: allow private IP
+                // !addr.is_private()
+                true
             }
             IpAddr::V6(_) => {
                 // TODO: Consider excluding:
