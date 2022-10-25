@@ -726,7 +726,7 @@ impl ClusterInfoVoteListener {
                         0
                     }
                     None => {
-                        error!("TPU: Error. No authorized_voter");
+                        warn!("TPU: Error. No authorized_voter");
                         0
                     }
                 };
