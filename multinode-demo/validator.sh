@@ -196,6 +196,10 @@ while [[ -n $1 ]]; do
   fi
 done
 
+args+=(
+  --enable-rpc-transaction-history
+)
+
 if [[ "$DOMICHAIN_GPU_MISSING" -eq 1 ]]; then
   echo "Testnet requires GPUs, but none were found!  Aborting..."
   exit 1
