@@ -695,11 +695,11 @@ impl ClusterInfoVoteListener {
                     .epoch_authorized_voters()
                     .get(&vote_pubkey)
                     .map(|authorized_voter| {
-                let verify_result = vrf_verify(
-                    &parent_block_seed.unwrap_or_default().to_string(),
-                    authorized_voter,
-                    vrf_proof.as_slice().try_into().unwrap(),
-                );
+                        let verify_result = vrf_verify(
+                            &parent_block_seed.unwrap_or_default().to_string(),
+                            authorized_voter,
+                            vrf_proof.as_slice().try_into().unwrap(),
+                        );
                         (authorized_voter, verify_result)
                     });
 

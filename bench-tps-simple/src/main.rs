@@ -1,3 +1,6 @@
+use domichain_client::nonce_utils;
+use domichain_sdk::{system_instruction, nonce::State, transaction::Transaction};
+
 use {
     clap::{value_t, ArgMatches},
     log::*,
@@ -131,36 +134,89 @@ where
     keypairs
 }
 
-fn do_bench_tps_simple<T>(
-    client: Arc<T>,
+// See: sdk/program/src/system_instruction.rs `create_nonce_account`
+fn submit_create_nonce_account_tx(
+    client: Arc<ThinClient>,
+    payer: &Keypair,
+) -> Keypair {
+    let nonce_account = Keypair::new();
+
+    let nonce_rent = client.get_minimum_balance_for_rent_exemption(State::size())
+        .expect("Cannot get rent balance. Please restart benchmark");
+    let instr = system_instruction::create_nonce_account(
+        &payer.pubkey(),
+        &nonce_account.pubkey(),
+        &payer.pubkey(), // Make the fee payer the nonce account authority
+        nonce_rent,
+    );
+
+    let mut tx = Transaction::new_with_payer(&instr, Some(&payer.pubkey()));
+
+    let blockhash = client.get_latest_blockhash().unwrap();
+    tx.try_sign(&[&nonce_account, payer], blockhash).unwrap();
+
+    client.send_and_confirm_transaction(
+        &[&nonce_account, payer],
+        &mut tx,
+        5,
+        0
+    ).unwrap();
+
+    nonce_account
+}
+
+fn do_bench_tps_simple(
+    client: ThinClient,
     config: &cli::Config,
     from: &Keypair,
     to: &Keypair,
-)
-where
-    T: 'static + BenchTpsClient + Send + Sync,
-{
-    info!("From {:?} To {:?}", from.pubkey(), to.pubkey());
-    for _ in 0..15 {
-        let from_balance = client.get_balance(&from.pubkey()).unwrap_or(u64::MAX);
-        let to_balance = client.get_balance(&to.pubkey()).unwrap_or(u64::MAX);
-        info!("Token balance: From {} To {}", from_balance, to_balance);
-    
+    nonce_kps: &[Keypair],
+) {
+    let nonce_pks: Vec<_> = nonce_kps.iter().map(|nonce| nonce.pubkey()).collect();
+    info!("From {:?} To {:?} Nonce {:?}", from.pubkey(), to.pubkey(), nonce_pks.len());
+    loop {
+        let from_balance = client.get_balance(&from.pubkey());
+        let to_balance = client.get_balance(&to.pubkey());
+        let nonce_balances: Vec<_> = nonce_pks.iter().map(|nonce| client.get_balance(nonce).unwrap()).collect();
+        let done = nonce_balances.iter().filter(|b| **b > 0).count();
+        let sum: u64 = nonce_balances.iter().sum();
+        info!("Token balance: From {from_balance:?} To {to_balance:?} Nonce {done}/{} sum={sum}", nonce_pks.len());
+
+        if done == nonce_pks.len() {
+            break;
+        }
+
         sleep(Duration::from_secs(1));
     }
+
+    info!("Sending transaction");
 
     let n = config.tx_count;
     let mut txs = Vec::with_capacity(n);
     for i in 0..n {
-        let blockhash = client.get_latest_blockhash().unwrap();
-        let tx = system_transaction::transfer(
-            from, &to.pubkey(),
-            1_000_000 + i as u64,
-            blockhash
+
+        // Sign the tx with nonce_account's `blockhash` instead of the
+        // network's latest blockhash.
+        let nonce = nonce_kps[i % nonce_kps.len()].pubkey();
+        let nonce_account = client.get_account(&nonce).unwrap();
+        let nonce_data = nonce_utils::data_from_account(&nonce_account).unwrap();
+        let blockhash = nonce_data.blockhash();
+
+        // let blockhash = client.get_latest_blockhash().unwrap();
+        // TODO: use nonce instead https://docs.solana.com/offline-signing/durable-nonce
+        let tx = system_transaction::nonced_transfer(
+            from,
+            &to.pubkey(),
+            1_000_000,
+            &nonce,
+            from,
+            blockhash,
         );
+
         txs.push(tx);
     }
     let mut threads = Vec::new();
+    let client = Arc::new(client);
     for chunk in txs.chunks(250) {
         let chunk = chunk.to_vec();
         let client = client.clone();
@@ -172,10 +228,24 @@ where
 
     info!("Transactions sent");
 
+    let client = Arc::try_unwrap(client).map_err(|_| "").unwrap();
+
     for _ in 0..config.duration.as_secs() {
-        let from_balance = client.get_balance(&from.pubkey()).unwrap_or(u64::MAX);
-        let to_balance = client.get_balance(&to.pubkey()).unwrap_or(u64::MAX);
-        info!("Token balance: From {} To {}", from_balance, to_balance);
+        let from_balance = client.get_balance(&from.pubkey());
+        let to_balance = client.get_balance(&to.pubkey());
+        let nonce_balances: u64 = nonce_pks.iter().map(|nonce| client.get_balance(nonce).unwrap()).sum();
+
+        // let new_blockhashes: Vec<_> = nonce_pks.iter().map(|nonce| {
+        //     let nonce_account = {
+        //         use domichain_sdk::client::SyncClient;
+        //         SyncClient::get_account_with_commitment(&client, nonce, CommitmentConfig::processed()).unwrap().unwrap()
+        //     };
+        //     let nonce_data = nonce_utils::data_from_account(&nonce_account).unwrap();
+        //     let new_blockhash = nonce_data.blockhash();
+        //     new_blockhash
+        // }).collect();
+
+        info!("Token balance: From {from_balance:?} To {to_balance:?} Nonce {nonce_balances:?}");
 
         sleep(Duration::from_secs(1));
     }
@@ -191,27 +261,49 @@ fn main() {
     let cli::Config {
         id,
         num_lamports_per_account,
+        tx_count,
         ..
     } = &cli_config;
 
     info!("cli_config={cli_config:#?}");
 
+
     let client = get_bench_client(&cli_config, &matches);
+
     let client = Arc::new(client);
-    
-    let funded_keypairs = get_bench_keypairs(
+
+    let nonce_rent = client.get_minimum_balance_for_rent_exemption(State::size())
+        .expect("Cannot get rent balance. Please restart benchmark");
+    info!("Nonce rent: {nonce_rent}");
+
+    let n = *tx_count;
+
+    let from = get_bench_keypairs(
         client.clone(),
         id,
         1,
-        *num_lamports_per_account,
-    );
+        *num_lamports_per_account + nonce_rent * n as u64,
+    ).into_iter().nth(0).unwrap();
 
-    let empty_keypairs = get_bench_keypairs(
+    let to = get_bench_keypairs(
         client.clone(),
         id,
         1,
         0,
-    );
+    ).into_iter().nth(0).unwrap();
 
-    do_bench_tps_simple(client, &cli_config, &funded_keypairs[0], &empty_keypairs[0]);
+    let nonce_kps: Vec<_> = (0..n).map(|i| {
+        let client = client.clone();
+        let from = Keypair::from_bytes(&from.to_bytes()).unwrap();
+        spawn(move || {
+            let kp = submit_create_nonce_account_tx(client, &from);
+            info!("Done {i}/{n} nonce account creation");
+            kp
+        })
+    }).collect();
+    let nonce_kps: Vec<_> = nonce_kps.into_iter().map(|t| t.join().unwrap()).collect();
+
+    let client = Arc::try_unwrap(client).map_err(|_| "").unwrap();
+
+    do_bench_tps_simple(client, &cli_config, &from, &to, &nonce_kps);
 }
