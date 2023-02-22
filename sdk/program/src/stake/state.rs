@@ -353,6 +353,7 @@ impl Delegation {
     }
 
     #[allow(clippy::comparison_chain)]
+    // stake_activating_and_deactivating
     pub fn stake_activating_and_deactivating(
         &self,
         target_epoch: Epoch,
