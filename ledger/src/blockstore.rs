@@ -1987,7 +1987,7 @@ impl Blockstore {
                     rewards,
                     block_time,
                     block_height,
-                    seed: block_seed.unwrap(),
+                    seed: block_seed.ok_or(BlockstoreError::SlotUnavailable)?,
                 };
                 return Ok(block);
             }
