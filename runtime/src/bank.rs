@@ -3170,7 +3170,7 @@ impl Bank {
                         reward_calc_tracer.as_ref(),
                         credits_auto_rewind,
                     );
-                    dbg!(stake_account.owner);
+                    warn!("DEV: reward stake_account.owner={}", stake_account.owner());
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
                         // track voter rewards
                         if let Some((
