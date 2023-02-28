@@ -3045,7 +3045,6 @@ impl Bank {
 
     /// iterate over all stakes, redeem vote credits for each stake we can
     /// successfully load and parse, return the lamport value of one point
-    // pay_validator_rewards_with_thread_pool
     fn pay_validator_rewards_with_thread_pool(
         &mut self,
         rewarded_epoch: Epoch,
@@ -3129,7 +3128,6 @@ impl Bank {
 
         // pay according to point value
 
-        // point_value
         let point_value = PointValue { rewards, points };
         let vote_account_rewards: DashMap<Pubkey, (AccountSharedData, u8, u64, bool)> =
             DashMap::with_capacity(vote_with_stake_delegations_map.len());

@@ -199,7 +199,6 @@ fn redeem_stake_rewards(
     })
 }
 
-// calculate_stake_points
 fn calculate_stake_points(
     stake: &Stake,
     vote_state: &VoteState,
@@ -227,7 +226,6 @@ struct CalculatedStakePoints {
 /// for a given stake and vote_state, calculate how many
 ///   points were earned (credits * stake) and new value
 ///   for credits_observed were the points paid
-// calculate_stake_points_and_credits
 fn calculate_stake_points_and_credits(
     stake: &Stake,
     new_vote_state: &VoteState,
@@ -1462,7 +1460,6 @@ pub fn redeem_rewards(
 
 // utility function, used by runtime
 #[doc(hidden)]
-// calculate_points
 pub fn calculate_points(
     stake_state: &StakeState,
     vote_state: &VoteState,
