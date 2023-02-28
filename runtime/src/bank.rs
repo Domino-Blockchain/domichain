@@ -3127,7 +3127,6 @@ impl Bank {
         }
 
         // pay according to point value
-
         let point_value = PointValue { rewards, points };
         let vote_account_rewards: DashMap<Pubkey, (AccountSharedData, u8, u64, bool)> =
             DashMap::with_capacity(vote_with_stake_delegations_map.len());
