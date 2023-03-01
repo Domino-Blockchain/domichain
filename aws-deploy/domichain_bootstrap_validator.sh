@@ -1,11 +1,18 @@
 #!/bin/bash
 # Start bootstrap validator
 
+# Exit on any error
+set -o errexit
+# Print executed commands
+set -o verbose
+
 cd ~/domichain
 export CUDA_HOME=/usr/local/cuda-11.1/
 export LD_LIBRARY_PATH=/home/ubuntu/domichain/target/perf-libs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-export NODE_IP_ADDR=$(hostname --ip-address)
+
+NODE_IP_ADDR=$(hostname --ip-address)
+export NODE_IP_ADDR
 
 screen -d -m -S sys-tuner bash -c 'sudo $(command -v target/release/domichain-sys-tuner) --user $(whoami)'
 # sudo $(command -v target/release/domichain-sys-tuner) --user $(whoami)

@@ -12,14 +12,20 @@
 # ```
 # Put it into: https://github.com/settings/keys and share between instances
 
+# Exit on any error
+set -o errexit
+# Print executed commands
+set -o verbose
+
 if [ -z "$1" ]
   then
     echo "No argument supplied: you must supply identity file for GitHub"
     exit 1
 fi
 
-export IDENTITY_FILE=$(realpath $1)
-chmod 400 $IDENTITY_FILE
+IDENTITY_FILE=$(realpath $1)
+export IDENTITY_FILE
+chmod 400 "$IDENTITY_FILE"
 
 sudo apt update && sudo apt upgrade -y && sudo apt install -y libsodium-dev libudev-dev libclang-dev htop
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -30,7 +36,10 @@ ssh-keyscan github.com >> ~/.ssh/known_hosts
 git clone git@github.com:Domino-Blockchain/domichain.git ~/domichain
 cd ~/domichain
 
-git switch bench-tps-simple # Select most recent branch
+if [ -n "$2" ]
+  then
+    git switch "$2" # Select most recent branch
+fi
 git pull
 cargo build --release
 
@@ -40,7 +49,6 @@ export PATH=/usr/local/cuda/bin:$PATH
 make -j$(nproc)
 export SOLANA_ROOT=/home/ubuntu/domichain
 make DESTDIR=${SOLANA_ROOT:?}/target/perf-libs install
-
 
 echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
 echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf
