@@ -3171,46 +3171,46 @@ impl Bank {
                         credits_auto_rewind,
                     );
 
-                    let verify_result = self.epoch_stakes
-                        .epoch_authorized_voters()
-                        .get(&vote_pubkey)
-                        .map(|authorized_voter| {
-                            let verify_result = vrf_verify(
-                                &parent_block_seed.unwrap_or_default().to_string(),
-                                authorized_voter,
-                                vrf_proof.as_slice().try_into().unwrap(),
-                            );
-                            (authorized_voter, verify_result)
-                        });
-
-                    let weight = match verify_result {
-                        Some((authorized_voter, Ok(vrf_hash))) => {
-                            let h = hashv(&[
-                                vrf_hash.as_slice(),
-                                authorized_voter.as_ref(),
-                            ]);
-    
-                            let weight = sortition::select(
-                                stake,
-                                total_stake,
-                                total_weight as f64,
-                                h,
-                            );
-                            weight
-                        }
-                        Some((authorized_voter, Err(e))) => {
-                            error!("DEV: Optimistic VRF verify error: {e} {authorized_voter}");
-                            0
-                        }
-                        None => {
-                            warn!("DEV: Error. No authorized_voter");
-                            0
-                        }
-                    };
-
-                    if weight > DEFAULT_TOTAL_WEIGHT {
-                        redeemed = Err(InstructionError::GenericError)
-                    }
+                    // let verify_result = self.epoch_stakes
+                    //     .epoch_authorized_voters()
+                    //     .get(&vote_pubkey)
+                    //     .map(|authorized_voter| {
+                    //         let verify_result = vrf_verify(
+                    //             &parent_block_seed.unwrap_or_default().to_string(),
+                    //             authorized_voter,
+                    //             vrf_proof.as_slice().try_into().unwrap(),
+                    //         );
+                    //         (authorized_voter, verify_result)
+                    //     });
+                    //
+                    // let weight = match verify_result {
+                    //     Some((authorized_voter, Ok(vrf_hash))) => {
+                    //         let h = hashv(&[
+                    //             vrf_hash.as_slice(),
+                    //             authorized_voter.as_ref(),
+                    //         ]);
+                    //
+                    //         let weight = sortition::select(
+                    //             stake,
+                    //             total_stake,
+                    //             total_weight as f64,
+                    //             h,
+                    //         );
+                    //         weight
+                    //     }
+                    //     Some((authorized_voter, Err(e))) => {
+                    //         error!("DEV: Optimistic VRF verify error: {e} {authorized_voter}");
+                    //         0
+                    //     }
+                    //     None => {
+                    //         warn!("DEV: Error. No authorized_voter");
+                    //         0
+                    //     }
+                    // };
+                    //
+                    // if weight > DEFAULT_TOTAL_WEIGHT {
+                    //     redeemed = Err(InstructionError::GenericError)
+                    // }
 
                     warn!("DEV: reward stake_account.owner={}, redeemed (stakers_reward, voters_reward)={:?}", stake_account.owner(), redeemed);
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
