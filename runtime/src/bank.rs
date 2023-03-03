@@ -33,7 +33,6 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
-use domichain_sdk::instruction::InstructionError;
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
 use {
@@ -169,6 +168,30 @@ use {
         time::{Duration, Instant},
     },
 };
+
+#[derive(Default)]
+pub struct WeightVoteTracker {
+    // Map from a slot to a set of validators who have voted for that slot
+    slot_vote_trackers: RwLock<HashMap<Slot, Arc<RwLock<WeightSlotVoteTracker>>>>,
+}
+
+#[derive(Default)]
+pub struct WeightSlotVoteTracker {
+    // Maps pubkeys that have voted for this slot
+    // to whether or not we've seen the vote on gossip.
+    // True if seen on gossip, false if only seen in replay.
+    voted: HashMap<Pubkey, bool>,
+    optimistic_votes_tracker: HashMap<Hash, WeightVoteStakeTracker>,
+    voted_slot_updates: Option<Vec<Pubkey>>,
+    gossip_only_stake: u64,
+}
+
+#[derive(Default)]
+pub struct WeightVoteStakeTracker {
+    voted: HashSet<Pubkey>,
+    stake: u64,
+    weight: u64,
+}
 
 #[derive(Debug, Default)]
 struct RewardsMetrics {
@@ -1385,6 +1408,8 @@ pub struct Bank {
 
     /// Transaction fee structure
     pub fee_structure: FeeStructure,
+
+    pub vote_tracker: WeightVoteTracker,
 }
 
 struct VoteWithStakeDelegations {
@@ -1661,13 +1686,20 @@ impl Bank {
     }
 
     /// Create a new bank that points to an immutable checkpoint of another bank.
-    pub fn new_from_parent(parent: &Arc<Bank>, collector_id: &Pubkey, slot: Slot) -> Self {
+    pub fn new_from_parent(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
+        vote_tracker: Arc<WeightVoteTracker>,
+    ) -> Self {
+        // new_from_parent
         Self::_new_from_parent(
             parent,
             collector_id,
             slot,
             null_tracer(),
             NewBankOptions::default(),
+            vote_tracker,
         )
     }
 
@@ -1705,6 +1737,7 @@ impl Bank {
         slot: Slot,
         reward_calc_tracer: Option<impl Fn(&RewardCalculationEvent) + Send + Sync>,
         new_bank_options: NewBankOptions,
+        vote_tracker: Arc<WeightVoteTracker>,
     ) -> Self {
         let mut time = Measure::start("bank::new_from_parent");
         let NewBankOptions { vote_only_bank } = new_bank_options;
@@ -1877,6 +1910,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: parent.fee_structure.clone(),
+            vote_tracker,
         };
 
         let (_, ancestors_time) = measure!(
@@ -2102,9 +2136,15 @@ impl Bank {
     /// in the past
     /// * Adjusts the new bank's tick height to avoid having to run PoH for millions of slots
     /// * Freezes the new bank, assuming that the user will `Bank::new_from_parent` from this bank
-    pub fn warp_from_parent(parent: &Arc<Bank>, collector_id: &Pubkey, slot: Slot) -> Self {
+    pub fn warp_from_parent(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
+        vote_tracker: Arc<WeightVoteTracker>,
+    ) -> Self {
         let parent_timestamp = parent.clock().unix_timestamp;
-        let mut new = Bank::new_from_parent(parent, collector_id, slot);
+        // new_from_parent
+        let mut new = Bank::new_from_parent(parent, collector_id, slot, vote_tracker);
         new.apply_feature_activations(ApplyFeatureActivationsCaller::WarpFromParent, false);
         new.update_epoch_stakes(new.epoch_schedule().get_epoch(slot));
         new.tick_height.store(new.max_tick_height(), Relaxed);
@@ -3170,6 +3210,11 @@ impl Bank {
                         reward_calc_tracer.as_ref(),
                         credits_auto_rewind,
                     );
+
+                    let vt = self.vote_tracker.slot_vote_trackers
+                        .read()
+                        .unwrap()
+                        .get(&self.slot()).unwrap().read().unwrap().optimistic_votes_tracker.get()
 
                     // let verify_result = self.epoch_stakes
                     //     .epoch_authorized_voters()

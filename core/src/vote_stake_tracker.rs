@@ -7,6 +7,12 @@ pub struct VoteStakeTracker {
     weight: u64,
 }
 
+#[derive(Debug)]
+pub struct ReachedThresholdResults {
+    pub majority: bool,
+    pub quorum: bool,
+}
+
 impl VoteStakeTracker {
     // Returns tuple (reached_threshold_results, is_new) where
     // Each index in `reached_threshold_results` is true if the corresponding threshold in the input
@@ -18,26 +24,29 @@ impl VoteStakeTracker {
         _stake: u64,
         _total_stake: u64,
         weight: u64,
-        thresholds_to_check: &[f64],
+        thresholds_to_check: [f64; 2],
         total_weight: u64,
-    ) -> (Vec<bool>, bool) {
+    ) -> (ReachedThresholdResults, bool) {
         let is_new = !self.voted.contains(&vote_pubkey);
         let result = if is_new {
             self.voted.insert(vote_pubkey);
             let old_weight = self.weight;
             let new_weight = self.weight + weight;
             self.weight = new_weight;
-            let reached_threshold_results: Vec<bool> = thresholds_to_check
-                .iter()
-                .map(|threshold| {
-                    let threshold_weight = (total_weight as f64 * threshold) as u64;
-                    info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
-                    old_weight <= threshold_weight && threshold_weight < new_weight
-                })
-                .collect();
-            (reached_threshold_results, is_new)
+            let check = |threshold| {
+                let threshold_weight = (total_weight as f64 * threshold) as u64;
+                info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
+                old_weight <= threshold_weight && threshold_weight < new_weight
+            };
+            (
+                ReachedThresholdResults {
+                    majority: check(thresholds_to_check[0]),
+                    quorum: check(thresholds_to_check[1]),
+                },
+                is_new,
+            )
         } else {
-            (vec![false; thresholds_to_check.len()], is_new)
+            (ReachedThresholdResults {majority: false, quorum: false}, is_new)
         };
         warn!("DEV: reward reached_threshold_results={:?}, is_new={:?}", result.0, result.1);
 

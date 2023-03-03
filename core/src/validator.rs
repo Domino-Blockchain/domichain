@@ -112,6 +112,7 @@ use {
         time::{Duration, Instant},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 const MAX_COMPLETED_DATA_SETS_IN_CHANNEL: usize = 100_000;
 const WAIT_FOR_SUPERMAJORITY_THRESHOLD_PERCENT: u64 = 80;
@@ -683,12 +684,17 @@ impl Validator {
             config,
         );
 
+        let vote_tracker = Arc::<VoteTracker>::default(); // vote_tracker
+        let weight_vote_tracker = Arc::<WeightVoteTracker>::default();
+
+        // maybe_warp_slot
         maybe_warp_slot(
             config,
             &mut process_blockstore,
             ledger_path,
             &bank_forks,
             &leader_schedule_cache,
+            weight_vote_tracker.clone(),
         );
 
         *start_progress.write().unwrap() = ValidatorStartProgress::StartingServices;
@@ -915,7 +921,7 @@ impl Validator {
             "New shred signal for the TVU should be the same as the clear bank signal."
         );
 
-        let vote_tracker = Arc::<VoteTracker>::default();
+        // let vote_tracker = Arc::<VoteTracker>::default(); // vote_tracker
         let mut cost_model = CostModel::default();
         // initialize cost model with built-in instruction costs only
         cost_model.initialize_cost_table(&[]);
@@ -1014,7 +1020,7 @@ impl Validator {
             &config.broadcast_stage_type,
             &exit,
             node.info.shred_version,
-            vote_tracker,
+            vote_tracker, // vote_tracker
             bank_forks.clone(),
             verified_vote_sender,
             gossip_verified_vote_hash_sender,
@@ -1674,6 +1680,7 @@ fn maybe_warp_slot(
     ledger_path: &Path,
     bank_forks: &RwLock<BankForks>,
     leader_schedule_cache: &LeaderScheduleCache,
+    vote_tracker: Arc<WeightVoteTracker>,
 ) {
     if let Some(warp_slot) = config.warp_slot {
         let snapshot_config = config.snapshot_config.as_ref().unwrap_or_else(|| {
@@ -1702,6 +1709,7 @@ fn maybe_warp_slot(
             &root_bank,
             &Pubkey::default(),
             warp_slot,
+            vote_tracker,
         ));
         bank_forks.set_root(
             warp_slot,

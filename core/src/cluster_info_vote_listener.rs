@@ -54,6 +54,7 @@ use {
         time::{Duration, Instant},
     },
 };
+use crate::vote_stake_tracker::ReachedThresholdResults;
 
 // Map from a vote account to the authorized voter for an epoch
 pub type ThresholdConfirmedSlots = Vec<(Slot, Hash)>;
@@ -68,7 +69,7 @@ pub type GossipVerifiedVoteHashReceiver = Receiver<(Pubkey, Slot, Hash)>;
 pub type GossipDuplicateConfirmedSlotsSender = Sender<ThresholdConfirmedSlots>;
 pub type GossipDuplicateConfirmedSlotsReceiver = Receiver<ThresholdConfirmedSlots>;
 
-const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE];
+const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE]; // [0.52, 2/3]
 const BANK_SEND_VOTES_LOOP_SLEEP_MS: u128 = 10;
 
 #[derive(Default)]
@@ -754,12 +755,12 @@ impl ClusterInfoVoteListener {
                     ));
                 }
 
-                if reached_threshold_results[0] { // Majority
+                if reached_threshold_results.majority { // Majority
                     if let Some(sender) = cluster_confirmed_slot_sender {
                         let _ = sender.send(vec![(last_vote_slot, last_vote_hash)]);
                     }
                 }
-                if reached_threshold_results[1] { // Quorum
+                if reached_threshold_results.quorum { // Quorum
                     new_optimistic_confirmed_slots.push((last_vote_slot, last_vote_hash));
                     // Notify subscribers about new optimistic confirmation
                     if let Some(sender) = bank_notification_sender {
@@ -906,7 +907,7 @@ impl ClusterInfoVoteListener {
         total_epoch_stake: u64,
         weight: u64,
         total_weight: u64,
-    ) -> (Vec<bool>, bool) {
+    ) -> (ReachedThresholdResults, bool) {
         let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
         // Insert vote and check for optimistic confirmation
         let mut w_slot_tracker = slot_tracker.write().unwrap();
@@ -918,7 +919,7 @@ impl ClusterInfoVoteListener {
                 stake,
                 total_epoch_stake,
                 weight,
-                &THRESHOLDS_TO_CHECK,
+                THRESHOLDS_TO_CHECK,
                 total_weight,
             )
     }
