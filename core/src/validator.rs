@@ -1021,6 +1021,7 @@ impl Validator {
             &exit,
             node.info.shred_version,
             vote_tracker, // vote_tracker
+            weight_vote_tracker,
             bank_forks.clone(),
             verified_vote_sender,
             gossip_verified_vote_hash_sender,

@@ -54,6 +54,7 @@ use {
         time::{Duration, Instant},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 use crate::vote_stake_tracker::ReachedThresholdResults;
 
 // Map from a vote account to the authorized voter for an epoch
@@ -196,6 +197,7 @@ impl ClusterInfoVoteListener {
         verified_packets_sender: BankingPacketSender,
         poh_recorder: Arc<Mutex<PohRecorder>>,
         vote_tracker: Arc<VoteTracker>,
+        weight_vote_tracker: Arc<WeightVoteTracker>,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: Arc<RpcSubscriptions>,
         verified_vote_sender: VerifiedVoteSender,
@@ -246,6 +248,7 @@ impl ClusterInfoVoteListener {
                     exit,
                     verified_vote_transactions_receiver,
                     vote_tracker,
+                    weight_vote_tracker,
                     bank_forks,
                     subscriptions,
                     gossip_verified_vote_hash_sender,
@@ -497,6 +500,7 @@ impl ClusterInfoVoteListener {
         exit: Arc<AtomicBool>,
         gossip_vote_txs_receiver: VerifiedVoteTransactionsReceiver,
         vote_tracker: Arc<VoteTracker>,
+        weight_vote_tracker: Arc<WeightVoteTracker>,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: Arc<RpcSubscriptions>,
         gossip_verified_vote_hash_sender: GossipVerifiedVoteHashSender,
@@ -531,9 +535,10 @@ impl ClusterInfoVoteListener {
                 vote_tracker.progress_with_new_root_bank(&root_bank);
                 last_process_root = Instant::now();
             }
-            let confirmed_slots = Self::listen_and_confirm_votes(
+            let confirmed_slots = Self::listen_and_confirm_votes_with_weight(
                 &gossip_vote_txs_receiver,
                 &vote_tracker,
+                &weight_vote_tracker,
                 &root_bank,
                 bank_forks.clone(),
                 &subscriptions,
@@ -598,6 +603,36 @@ impl ClusterInfoVoteListener {
         cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
         total_weight: u64,
     ) -> Result<ThresholdConfirmedSlots> {
+        Self::listen_and_confirm_votes_with_weight(
+            &gossip_vote_txs_receiver,
+            &vote_tracker,
+            todo!(),
+            &root_bank,
+            bank_forks.clone(),
+            &subscriptions,
+            &gossip_verified_vote_hash_sender,
+            &verified_vote_sender,
+            &replay_votes_receiver,
+            &bank_notification_sender,
+            &cluster_confirmed_slot_sender,
+            total_weight,
+        )
+    }
+
+    fn listen_and_confirm_votes_with_weight(
+        gossip_vote_txs_receiver: &VerifiedVoteTransactionsReceiver,
+        vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
+        root_bank: &Bank,
+        bank_forks: Arc<RwLock<BankForks>>,
+        subscriptions: &RpcSubscriptions,
+        gossip_verified_vote_hash_sender: &GossipVerifiedVoteHashSender,
+        verified_vote_sender: &VerifiedVoteSender,
+        replay_votes_receiver: &ReplayVoteReceiver,
+        bank_notification_sender: &Option<BankNotificationSender>,
+        cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
+        total_weight: u64,
+    ) -> Result<ThresholdConfirmedSlots> {
         let mut sel = Select::new();
         sel.recv(gossip_vote_txs_receiver);
         sel.recv(replay_votes_receiver);
@@ -617,6 +652,7 @@ impl ClusterInfoVoteListener {
             if !gossip_vote_txs.is_empty() || !replay_votes.is_empty() {
                 return Ok(Self::filter_and_confirm_with_new_votes(
                     vote_tracker,
+                    weight_vote_tracker,
                     gossip_vote_txs,
                     replay_votes,
                     root_bank,
@@ -639,7 +675,8 @@ impl ClusterInfoVoteListener {
         vote: VoteTransaction,
         vote_pubkey: &Pubkey,
         vote_transaction_signature: Signature,
-        vote_tracker: &VoteTracker,
+        vote_tracker: &VoteTracker, // vote_tracker - sort weights
+        weight_vote_tracker: &WeightVoteTracker,
         root_bank: &Bank,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: &RpcSubscriptions,
@@ -737,6 +774,7 @@ impl ClusterInfoVoteListener {
                 // as soon as possible.
                 let (reached_threshold_results, is_new) = Self::track_optimistic_confirmation_vote(
                     vote_tracker,
+                    weight_vote_tracker,
                     last_vote_slot,
                     last_vote_hash,
                     *vote_pubkey,
@@ -805,6 +843,7 @@ impl ClusterInfoVoteListener {
 
     fn filter_and_confirm_with_new_votes(
         vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
         gossip_vote_txs: Vec<Transaction>,
         replayed_votes: Vec<ParsedVote>,
         root_bank: &Bank,
@@ -831,6 +870,7 @@ impl ClusterInfoVoteListener {
                 &vote_pubkey,
                 signature,
                 vote_tracker,
+                weight_vote_tracker,
                 root_bank,
                 bank_forks.clone(),
                 subscriptions,
@@ -900,6 +940,7 @@ impl ClusterInfoVoteListener {
     // the slot was new
     fn track_optimistic_confirmation_vote(
         vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
         slot: Slot,
         hash: Hash,
         pubkey: Pubkey,
@@ -909,11 +950,14 @@ impl ClusterInfoVoteListener {
         total_weight: u64,
     ) -> (ReachedThresholdResults, bool) {
         let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
+        let weight_slot_tracker = weight_vote_tracker.get_or_insert_slot_tracker(slot);
         // Insert vote and check for optimistic confirmation
         let mut w_slot_tracker = slot_tracker.write().unwrap();
+        let mut w_weight_slot_tracker = weight_slot_tracker.write().unwrap();
 
-        w_slot_tracker
-            .get_or_insert_optimistic_votes_tracker(hash)
+        let vote_stake_tracker = w_slot_tracker
+            .get_or_insert_optimistic_votes_tracker(hash);
+        let result = vote_stake_tracker
             .add_vote_pubkey(
                 pubkey,
                 stake,
@@ -921,7 +965,14 @@ impl ClusterInfoVoteListener {
                 weight,
                 THRESHOLDS_TO_CHECK,
                 total_weight,
-            )
+            );
+
+        let weight_vote_stake_tracker = w_weight_slot_tracker.get_or_insert_optimistic_votes_tracker(hash);
+        weight_vote_stake_tracker.voted = vote_stake_tracker.voted().clone();
+        weight_vote_stake_tracker.stake = vote_stake_tracker.stake();
+        weight_vote_stake_tracker.weight = vote_stake_tracker.weight();
+
+        result
     }
 
     fn sum_stake(sum: &mut u64, epoch_stakes: Option<&EpochStakes>, pubkey: &Pubkey) {

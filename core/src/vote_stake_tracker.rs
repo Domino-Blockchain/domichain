@@ -1,6 +1,6 @@
 use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct VoteStakeTracker {
     voted: HashSet<Pubkey>,
     stake: u64,

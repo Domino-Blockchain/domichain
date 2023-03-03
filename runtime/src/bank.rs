@@ -175,6 +175,22 @@ pub struct WeightVoteTracker {
     slot_vote_trackers: RwLock<HashMap<Slot, Arc<RwLock<WeightSlotVoteTracker>>>>,
 }
 
+impl fmt::Debug for WeightVoteTracker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeightVoteTracker").field("inner", &"<rw lock hidden>").finish()
+    }
+}
+
+impl WeightVoteTracker {
+    pub fn get_or_insert_slot_tracker(&self, slot: Slot) -> Arc<RwLock<WeightSlotVoteTracker>> {
+        if let Some(slot_vote_tracker) = self.slot_vote_trackers.read().unwrap().get(&slot) {
+            return slot_vote_tracker.clone();
+        }
+        let mut slot_vote_trackers = self.slot_vote_trackers.write().unwrap();
+        slot_vote_trackers.entry(slot).or_default().clone()
+    }
+}
+
 #[derive(Default)]
 pub struct WeightSlotVoteTracker {
     // Maps pubkeys that have voted for this slot
@@ -186,11 +202,21 @@ pub struct WeightSlotVoteTracker {
     gossip_only_stake: u64,
 }
 
+impl WeightSlotVoteTracker {
+    pub(crate) fn get_voted_slot_updates(&mut self) -> Option<Vec<Pubkey>> {
+        self.voted_slot_updates.take()
+    }
+
+    pub fn get_or_insert_optimistic_votes_tracker(&mut self, hash: Hash) -> &mut WeightVoteStakeTracker {
+        self.optimistic_votes_tracker.entry(hash).or_default()
+    }
+}
+
 #[derive(Default)]
 pub struct WeightVoteStakeTracker {
-    voted: HashSet<Pubkey>,
-    stake: u64,
-    weight: u64,
+    pub voted: HashSet<Pubkey>,
+    pub stake: u64,
+    pub weight: u64,
 }
 
 #[derive(Debug, Default)]
@@ -1126,6 +1152,7 @@ impl PartialEq for Bank {
             accounts_data_size_delta_on_chain: _,
             accounts_data_size_delta_off_chain: _,
             fee_structure: _,
+            vote_tracker: _,
             // Ignore new fields explicitly if they do not impact PartialEq.
             // Adding ".." will remove compile-time checks that if a new field
             // is added to the struct, this ParitalEq is accordingly updated.
@@ -1409,7 +1436,7 @@ pub struct Bank {
     /// Transaction fee structure
     pub fee_structure: FeeStructure,
 
-    pub vote_tracker: WeightVoteTracker,
+    pub vote_tracker: Arc<WeightVoteTracker>,
 }
 
 struct VoteWithStakeDelegations {
@@ -1576,6 +1603,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
+            vote_tracker: Arc::<WeightVoteTracker>::default(),
         };
 
         let accounts_data_size_initial = bank.get_total_accounts_stats().unwrap().data_len as u64;
@@ -1690,6 +1718,22 @@ impl Bank {
         parent: &Arc<Bank>,
         collector_id: &Pubkey,
         slot: Slot,
+    ) -> Self {
+        // new_from_parent
+        Self::_new_from_parent(
+            parent,
+            collector_id,
+            slot,
+            null_tracer(),
+            NewBankOptions::default(),
+            todo!(),
+        )
+    }
+
+    pub fn new_from_parent_with_vote_tracker(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
         vote_tracker: Arc<WeightVoteTracker>,
     ) -> Self {
         // new_from_parent
@@ -1709,7 +1753,14 @@ impl Bank {
         slot: Slot,
         new_bank_options: NewBankOptions,
     ) -> Self {
-        Self::_new_from_parent(parent, collector_id, slot, null_tracer(), new_bank_options)
+        Self::_new_from_parent(
+            parent,
+            collector_id,
+            slot,
+            null_tracer(),
+            new_bank_options,
+            Default::default(), // FIXME: should propagate here?
+        )
     }
 
     pub fn new_from_parent_with_tracer(
@@ -1724,6 +1775,7 @@ impl Bank {
             slot,
             Some(reward_calc_tracer),
             NewBankOptions::default(),
+            todo!(),
         )
     }
 
@@ -2144,7 +2196,7 @@ impl Bank {
     ) -> Self {
         let parent_timestamp = parent.clock().unix_timestamp;
         // new_from_parent
-        let mut new = Bank::new_from_parent(parent, collector_id, slot, vote_tracker);
+        let mut new = Bank::new_from_parent_with_vote_tracker(parent, collector_id, slot, vote_tracker);
         new.apply_feature_activations(ApplyFeatureActivationsCaller::WarpFromParent, false);
         new.update_epoch_stakes(new.epoch_schedule().get_epoch(slot));
         new.tick_height.store(new.max_tick_height(), Relaxed);
@@ -2257,6 +2309,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
+            vote_tracker: new(), // TODO: pass value here
         };
         bank.finish_init(
             genesis_config,
@@ -3211,10 +3264,31 @@ impl Bank {
                         credits_auto_rewind,
                     );
 
-                    let vt = self.vote_tracker.slot_vote_trackers
-                        .read()
-                        .unwrap()
-                        .get(&self.slot()).unwrap().read().unwrap().optimistic_votes_tracker.get()
+                    let vote_hash = self.hash();
+                    let contains_pubkey = {
+                        let r_slot_vote_trackers = self.vote_tracker.slot_vote_trackers
+                            .read()
+                            .unwrap();
+
+                        let weight_slot_vote_tracker = r_slot_vote_trackers
+                            .get(&self.slot())
+                            .unwrap()
+                            .read()
+                            .unwrap();
+
+                        let vote_stake_tracker = weight_slot_vote_tracker
+                            .optimistic_votes_tracker
+                            .get(&vote_hash)
+                            .unwrap();
+
+                        vote_stake_tracker.voted.contains(&vote_pubkey)
+                    };
+
+                    if !contains_pubkey {
+                        let stake_account_owner = stake_account.owner();
+                        warn!("DEV: reward not in committee stake_account.owner={stake_account_owner}, redeemed (stakers_reward, voters_reward)={redeemed:?}");
+                        return None;
+                    }
 
                     // let verify_result = self.epoch_stakes
                     //     .epoch_authorized_voters()
