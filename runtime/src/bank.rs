@@ -172,7 +172,7 @@ use {
 #[derive(Default)]
 pub struct WeightVoteTracker {
     // Map from a slot to a set of validators who have voted for that slot
-    slot_vote_trackers: RwLock<HashMap<Slot, Arc<RwLock<WeightSlotVoteTracker>>>>,
+    pub slot_vote_trackers: RwLock<HashMap<Slot, Arc<RwLock<WeightSlotVoteTracker>>>>,
 }
 
 impl fmt::Debug for WeightVoteTracker {
@@ -191,15 +191,15 @@ impl WeightVoteTracker {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct WeightSlotVoteTracker {
     // Maps pubkeys that have voted for this slot
     // to whether or not we've seen the vote on gossip.
     // True if seen on gossip, false if only seen in replay.
-    voted: HashMap<Pubkey, bool>,
+    pub voted: HashMap<Pubkey, bool>,
     optimistic_votes_tracker: HashMap<Hash, WeightVoteStakeTracker>,
-    voted_slot_updates: Option<Vec<Pubkey>>,
-    gossip_only_stake: u64,
+    pub voted_slot_updates: Option<Vec<Pubkey>>,
+    pub gossip_only_stake: u64,
 }
 
 impl WeightSlotVoteTracker {
@@ -212,7 +212,7 @@ impl WeightSlotVoteTracker {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct WeightVoteStakeTracker {
     pub voted: HashSet<Pubkey>,
     pub stake: u64,
@@ -1672,6 +1672,7 @@ impl Bank {
         debug_do_not_add_builtins: bool,
         accounts_db_config: Option<AccountsDbConfig>,
         accounts_update_notifier: Option<AccountsUpdateNotifier>,
+        vote_tracker: &Arc<WeightVoteTracker>,
     ) -> Self {
         let accounts = Accounts::new_with_config(
             paths,
@@ -1683,6 +1684,7 @@ impl Bank {
             accounts_update_notifier,
         );
         let mut bank = Self::default_with_accounts(accounts);
+        bank.vote_tracker = vote_tracker.clone();
         bank.ancestors = Ancestors::from(vec![bank.slot()]);
         bank.transaction_debug_keys = debug_keys;
         bank.cluster_type = Some(genesis_config.cluster_type);
@@ -1719,6 +1721,22 @@ impl Bank {
         collector_id: &Pubkey,
         slot: Slot,
     ) -> Self {
+        let vote_tracker = parent.vote_tracker.clone();
+
+        // {
+        //     let weight_vote_tracker = vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling {} r_slot_vote_trackers={r_slot_vote_trackers:?}", line!());
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
+
         // new_from_parent
         Self::_new_from_parent(
             parent,
@@ -1726,7 +1744,7 @@ impl Bank {
             slot,
             null_tracer(),
             NewBankOptions::default(),
-            todo!(),
+            vote_tracker,
         )
     }
 
@@ -1753,13 +1771,30 @@ impl Bank {
         slot: Slot,
         new_bank_options: NewBankOptions,
     ) -> Self {
+        let vote_tracker = parent.vote_tracker.clone();
+
+        // NON EMPTY
+        // {
+        //     let weight_vote_tracker = vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling {} r_slot_vote_trackers={r_slot_vote_trackers:?}", line!());
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
+
         Self::_new_from_parent(
             parent,
             collector_id,
             slot,
             null_tracer(),
             new_bank_options,
-            Default::default(), // FIXME: should propagate here?
+            vote_tracker,
         )
     }
 
@@ -1769,14 +1804,15 @@ impl Bank {
         slot: Slot,
         reward_calc_tracer: impl Fn(&RewardCalculationEvent) + Send + Sync,
     ) -> Self {
-        Self::_new_from_parent(
-            parent,
-            collector_id,
-            slot,
-            Some(reward_calc_tracer),
-            NewBankOptions::default(),
-            todo!(),
-        )
+        todo!();
+        // Self::_new_from_parent(
+        //     parent,
+        //     collector_id,
+        //     slot,
+        //     Some(reward_calc_tracer),
+        //     NewBankOptions::default(),
+        //     todo!(),
+        // )
     }
 
     fn get_rent_collector_from(rent_collector: &RentCollector, epoch: Epoch) -> RentCollector {
@@ -2309,7 +2345,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
-            vote_tracker: new(), // TODO: pass value here
+            vote_tracker: todo!(), // TODO: pass value here
         };
         bank.finish_init(
             genesis_config,
@@ -3265,29 +3301,40 @@ impl Bank {
                     );
 
                     let vote_hash = self.hash();
-                    let contains_pubkey = {
+                    let contains_pubkey = || {
                         let r_slot_vote_trackers = self.vote_tracker.slot_vote_trackers
                             .read()
                             .unwrap();
 
+                        let slot = self.slot();
+                        warn!("DEV: reward r_slot_vote_trackers={r_slot_vote_trackers:?} trying to get slot={slot:?}");
                         let weight_slot_vote_tracker = r_slot_vote_trackers
-                            .get(&self.slot())
-                            .unwrap()
+                            .get(&slot);
+                        let weight_slot_vote_tracker = match weight_slot_vote_tracker {
+                            Some(t) => t,
+                            None => return false,
+                        };
+                        let r_weight_slot_vote_tracker = weight_slot_vote_tracker
                             .read()
                             .unwrap();
 
-                        let vote_stake_tracker = weight_slot_vote_tracker
-                            .optimistic_votes_tracker
-                            .get(&vote_hash)
-                            .unwrap();
+                        // FIXME: use optimistic_votes_tracker
+                        // let vote_stake_tracker = r_weight_slot_vote_tracker
+                        //     .optimistic_votes_tracker
+                        //     .get(&vote_hash)
+                        //     .unwrap();
+                        //
+                        // vote_stake_tracker.voted.contains(&vote_pubkey)
 
-                        vote_stake_tracker.voted.contains(&vote_pubkey)
+                        r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)
                     };
 
-                    if !contains_pubkey {
-                        let stake_account_owner = stake_account.owner();
+                    let stake_account_owner = stake_account.owner();
+                    if !contains_pubkey() {
                         warn!("DEV: reward not in committee stake_account.owner={stake_account_owner}, redeemed (stakers_reward, voters_reward)={redeemed:?}");
                         return None;
+                    } else {
+                        warn!("DEV: reward in committee stake_account.owner={stake_account_owner}, redeemed (stakers_reward, voters_reward)={redeemed:?}");
                     }
 
                     // let verify_result = self.epoch_stakes

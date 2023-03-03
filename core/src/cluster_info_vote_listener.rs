@@ -888,6 +888,7 @@ impl ClusterInfoVoteListener {
         // Process all the slots accumulated from replay and gossip.
         for (slot, mut slot_diff) in diff {
             let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
+            let weight_slot_tracker = weight_vote_tracker.get_or_insert_slot_tracker(slot);
             {
                 let r_slot_tracker = slot_tracker.read().unwrap();
                 // Only keep the pubkeys we haven't seen voting for this slot
@@ -902,8 +903,12 @@ impl ClusterInfoVoteListener {
                 });
             }
             let mut w_slot_tracker = slot_tracker.write().unwrap();
+            let mut w_weight_slot_tracker = weight_slot_tracker.write().unwrap();
             if w_slot_tracker.voted_slot_updates.is_none() {
                 w_slot_tracker.voted_slot_updates = Some(vec![]);
+            }
+            if w_weight_slot_tracker.voted_slot_updates.is_none() {
+                w_weight_slot_tracker.voted_slot_updates = Some(vec![]);
             }
             let mut gossip_only_stake = 0;
             let epoch = root_bank.epoch_schedule().get_epoch(slot);
@@ -924,14 +929,21 @@ impl ClusterInfoVoteListener {
                 // `is_new || is_new_from_gossip`. In both cases we want to record
                 // `is_new_from_gossip` for the `pubkey` entry.
                 w_slot_tracker.voted.insert(pubkey, seen_in_gossip_above);
+                w_weight_slot_tracker.voted.insert(pubkey, seen_in_gossip_above);
                 w_slot_tracker
+                    .voted_slot_updates
+                    .as_mut()
+                    .unwrap()
+                    .push(pubkey);
+                w_weight_slot_tracker
                     .voted_slot_updates
                     .as_mut()
                     .unwrap()
                     .push(pubkey);
             }
 
-            w_slot_tracker.gossip_only_stake += gossip_only_stake
+            w_slot_tracker.gossip_only_stake += gossip_only_stake;
+            w_weight_slot_tracker.gossip_only_stake += gossip_only_stake;
         }
         new_optimistic_confirmed_slots
     }
@@ -971,6 +983,7 @@ impl ClusterInfoVoteListener {
         weight_vote_stake_tracker.voted = vote_stake_tracker.voted().clone();
         weight_vote_stake_tracker.stake = vote_stake_tracker.stake();
         weight_vote_stake_tracker.weight = vote_stake_tracker.weight();
+        warn!("DEV: inserting weight_vote_stake_tracker slot={slot} hash={hash} weight_vote_stake_tracker={weight_vote_stake_tracker:?}");
 
         result
     }

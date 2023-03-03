@@ -24,6 +24,7 @@ use {
         sync::{Arc, RwLock},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 pub type LoadResult = result::Result<
     (
@@ -88,6 +89,35 @@ pub fn load_bank_forks(
     LeaderScheduleCache,
     Option<StartingSnapshotHashes>,
 ) {
+    load_bank_forks_with_vote_tracker(
+        genesis_config,
+        blockstore,
+        account_paths,
+        shrink_paths,
+        snapshot_config,
+        process_options,
+        cache_block_meta_sender,
+        accounts_update_notifier,
+        todo!(),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn load_bank_forks_with_vote_tracker(
+    genesis_config: &GenesisConfig,
+    blockstore: &Blockstore,
+    account_paths: Vec<PathBuf>,
+    shrink_paths: Option<Vec<PathBuf>>,
+    snapshot_config: Option<&SnapshotConfig>,
+    process_options: &ProcessOptions,
+    cache_block_meta_sender: Option<&CacheBlockMetaSender>,
+    accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
+) -> (
+    Arc<RwLock<BankForks>>,
+    LeaderScheduleCache,
+    Option<StartingSnapshotHashes>,
+) {
     let snapshot_present = if let Some(snapshot_config) = snapshot_config {
         info!(
             "Initializing bank snapshot path: {}",
@@ -143,6 +173,7 @@ pub fn load_bank_forks(
                 process_options,
                 cache_block_meta_sender,
                 accounts_update_notifier,
+                vote_tracker,
             ),
             None,
         )

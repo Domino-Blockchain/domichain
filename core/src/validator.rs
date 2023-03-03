@@ -515,6 +515,7 @@ impl Validator {
         let poh_timing_report_service =
             PohTimingReportService::new(poh_timing_point_receiver, &exit);
 
+        let weight_vote_tracker = Arc::<WeightVoteTracker>::default();
         let (
             genesis_config,
             bank_forks,
@@ -543,6 +544,7 @@ impl Validator {
             accounts_update_notifier,
             transaction_notifier,
             Some(poh_timing_point_sender.clone()),
+            &weight_vote_tracker,
         );
 
         node.info.wallclock = timestamp();
@@ -685,7 +687,21 @@ impl Validator {
         );
 
         let vote_tracker = Arc::<VoteTracker>::default(); // vote_tracker
-        let weight_vote_tracker = Arc::<WeightVoteTracker>::default();
+
+        // NON EMPTY
+        // {
+        //     let weight_vote_tracker = weight_vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling r_slot_vote_trackers={r_slot_vote_trackers:?}");
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
 
         // maybe_warp_slot
         maybe_warp_slot(
@@ -1346,6 +1362,7 @@ fn load_blockstore(
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
     transaction_notifier: Option<TransactionNotifierLock>,
     poh_timing_point_sender: Option<PohTimingSender>,
+    weight_vote_tracker: &Arc<WeightVoteTracker>,
 ) -> (
     GenesisConfig,
     Arc<RwLock<BankForks>>,
@@ -1439,7 +1456,7 @@ fn load_blockstore(
         };
 
     let (bank_forks, mut leader_schedule_cache, starting_snapshot_hashes) =
-        bank_forks_utils::load_bank_forks(
+        bank_forks_utils::load_bank_forks_with_vote_tracker(
             &genesis_config,
             &blockstore,
             config.account_paths.clone(),
@@ -1450,6 +1467,7 @@ fn load_blockstore(
                 .cache_block_meta_sender
                 .as_ref(),
             accounts_update_notifier,
+            weight_vote_tracker,
         );
 
     // Before replay starts, set the callbacks in each of the banks in BankForks so that

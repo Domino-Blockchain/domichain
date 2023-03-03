@@ -63,6 +63,7 @@ use {
     },
     thiserror::Error,
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 // it tracks the block cost available capacity - number of compute-units allowed
 // by max block cost limit.
@@ -608,27 +609,28 @@ pub fn test_process_blockstore(
     blockstore: &Blockstore,
     opts: &ProcessOptions,
 ) -> (Arc<RwLock<BankForks>>, LeaderScheduleCache) {
-    let (bank_forks, leader_schedule_cache, ..) = crate::bank_forks_utils::load_bank_forks(
-        genesis_config,
-        blockstore,
-        Vec::new(),
-        None,
-        None,
-        opts,
-        None,
-        None,
-    );
-    process_blockstore_from_root(
-        blockstore,
-        &bank_forks,
-        &leader_schedule_cache,
-        opts,
-        None,
-        None,
-        &AbsRequestSender::default(),
-    )
-    .unwrap();
-    (bank_forks, leader_schedule_cache)
+    unreachable!();
+    // let (bank_forks, leader_schedule_cache, ..) = crate::bank_forks_utils::load_bank_forks(
+    //     genesis_config,
+    //     blockstore,
+    //     Vec::new(),
+    //     None,
+    //     None,
+    //     opts,
+    //     None,
+    //     None,
+    // );
+    // process_blockstore_from_root(
+    //     blockstore,
+    //     &bank_forks,
+    //     &leader_schedule_cache,
+    //     opts,
+    //     None,
+    //     None,
+    //     &AbsRequestSender::default(),
+    // )
+    // .unwrap();
+    // (bank_forks, leader_schedule_cache)
 }
 
 pub(crate) fn process_blockstore_for_bank_0(
@@ -638,6 +640,7 @@ pub(crate) fn process_blockstore_for_bank_0(
     opts: &ProcessOptions,
     cache_block_meta_sender: Option<&CacheBlockMetaSender>,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> Arc<RwLock<BankForks>> {
     // Setup bank for slot 0
     let mut bank0 = Bank::new_with_paths(
@@ -651,6 +654,7 @@ pub(crate) fn process_blockstore_for_bank_0(
         false,
         opts.accounts_db_config.clone(),
         accounts_update_notifier,
+        vote_tracker,
     );
     bank0.set_compute_budget(opts.runtime_config.compute_budget);
     let bank_forks = Arc::new(RwLock::new(BankForks::new(bank0)));
