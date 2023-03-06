@@ -643,7 +643,7 @@ pub(crate) fn process_blockstore_for_bank_0(
     vote_tracker: &Arc<WeightVoteTracker>,
 ) -> Arc<RwLock<BankForks>> {
     // Setup bank for slot 0
-    let mut bank0 = Bank::new_with_paths(
+    let mut bank0 = Bank::new_with_paths_with_vote_tracker(
         genesis_config,
         account_paths,
         opts.debug_keys.clone(),

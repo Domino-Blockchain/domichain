@@ -1672,6 +1672,34 @@ impl Bank {
         debug_do_not_add_builtins: bool,
         accounts_db_config: Option<AccountsDbConfig>,
         accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    ) -> Self {
+        Self::new_with_paths_with_vote_tracker(
+            genesis_config,
+            paths,
+            debug_keys,
+            additional_builtins,
+            account_indexes,
+            accounts_db_caching_enabled,
+            shrink_ratio,
+            debug_do_not_add_builtins,
+            accounts_db_config,
+            accounts_update_notifier,
+            todo!(),
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_paths_with_vote_tracker(
+        genesis_config: &GenesisConfig,
+        paths: Vec<PathBuf>,
+        debug_keys: Option<Arc<HashSet<Pubkey>>>,
+        additional_builtins: Option<&Builtins>,
+        account_indexes: AccountSecondaryIndexes,
+        accounts_db_caching_enabled: bool,
+        shrink_ratio: AccountShrinkThreshold,
+        debug_do_not_add_builtins: bool,
+        accounts_db_config: Option<AccountsDbConfig>,
+        accounts_update_notifier: Option<AccountsUpdateNotifier>,
         vote_tracker: &Arc<WeightVoteTracker>,
     ) -> Self {
         let accounts = Accounts::new_with_config(
