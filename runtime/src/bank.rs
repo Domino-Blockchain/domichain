@@ -169,6 +169,8 @@ use {
     },
 };
 
+const SLOT_DIFF_TRESHOLD: u64 = 5;
+
 #[derive(Default)]
 pub struct WeightVoteTracker {
     // Map from a slot to a set of validators who have voted for that slot
@@ -3335,26 +3337,34 @@ impl Bank {
                             .unwrap();
 
                         let slot = self.slot();
-                        warn!("DEV: reward r_slot_vote_trackers={r_slot_vote_trackers:?} trying to get slot={slot:?}");
-                        let weight_slot_vote_tracker = r_slot_vote_trackers
-                            .get(&slot);
-                        let weight_slot_vote_tracker = match weight_slot_vote_tracker {
-                            Some(t) => t,
+                        let vote_tracker_max_slot = match r_slot_vote_trackers.keys().max() {
+                            Some(slot) => slot,
                             None => return false,
                         };
+                        if slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
+                            return false;
+                        }
+                        let slot = slot.min(*vote_tracker_max_slot);
+                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={:?} trying to get slot={slot:?}", r_slot_vote_trackers.keys().max());
+                        let weight_slot_vote_tracker = r_slot_vote_trackers
+                            .get(&slot).unwrap();
+                        warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:?}");
                         let r_weight_slot_vote_tracker = weight_slot_vote_tracker
                             .read()
                             .unwrap();
 
+                        warn!("DEV: reward r_weight_slot_vote_tracker.optimistic_votes_tracker={:?} trying to get vote_hash={vote_hash:?}", r_weight_slot_vote_tracker.optimistic_votes_tracker);
                         // FIXME: use optimistic_votes_tracker
-                        // let vote_stake_tracker = r_weight_slot_vote_tracker
-                        //     .optimistic_votes_tracker
-                        //     .get(&vote_hash)
-                        //     .unwrap();
-                        //
-                        // vote_stake_tracker.voted.contains(&vote_pubkey)
+                        let optimistic_result = r_weight_slot_vote_tracker
+                            .optimistic_votes_tracker
+                            .get(&vote_hash)
+                            .map(|vote_stake_tracker| vote_stake_tracker.voted.contains(&vote_pubkey));
 
-                        r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)
+                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={:?} vote_pubkey={vote_pubkey:?}", optimistic_result);
+
+                        let result = r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey);
+                        warn!("DEV: reward r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)={:?}", result);
+                        result
                     };
 
                     let stake_account_owner = stake_account.owner();

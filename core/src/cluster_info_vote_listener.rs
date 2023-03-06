@@ -983,7 +983,8 @@ impl ClusterInfoVoteListener {
         weight_vote_stake_tracker.voted = vote_stake_tracker.voted().clone();
         weight_vote_stake_tracker.stake = vote_stake_tracker.stake();
         weight_vote_stake_tracker.weight = vote_stake_tracker.weight();
-        warn!("DEV: inserting weight_vote_stake_tracker slot={slot} hash={hash} weight_vote_stake_tracker={weight_vote_stake_tracker:?}");
+        warn!("DEV: inserting weight_vote_stake_tracker slot={slot}");
+        // warn!("DEV: inserting weight_vote_stake_tracker slot={slot} hash={hash} weight_vote_stake_tracker={weight_vote_stake_tracker:?}");
 
         result
     }
