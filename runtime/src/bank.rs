@@ -2031,7 +2031,7 @@ impl Bank {
             vote_tracker,
         };
 
-        let (_, ancestors_time) = measure!(
+        let (parents, ancestors_time) = measure!(
             {
                 let mut ancestors = Vec::with_capacity(1 + new.parents().len());
                 ancestors.push(new.slot());
@@ -2039,6 +2039,7 @@ impl Bank {
                     ancestors.push(p.slot());
                 });
                 new.ancestors = Ancestors::from(ancestors);
+                new.parents()
             },
             "ancestors_creation",
         );
@@ -2085,6 +2086,7 @@ impl Bank {
                                 reward_calc_tracer,
                                 &thread_pool,
                                 &mut metrics,
+                                &parents,
                             )
                         },
                         "update_rewards_with_thread_pool",
@@ -2843,6 +2845,7 @@ impl Bank {
         reward_calc_tracer: Option<impl Fn(&RewardCalculationEvent) + Send + Sync>,
         thread_pool: &ThreadPool,
         metrics: &mut RewardsMetrics,
+        parents: &Vec<Arc<Bank>>,
     ) {
         let capitalization = self.capitalization();
         let PrevEpochInflationRewards {
@@ -2865,6 +2868,7 @@ impl Bank {
             thread_pool,
             metrics,
             update_rewards_from_cached_accounts,
+            parents,
         );
 
         let new_vote_balance_and_staked = self.stakes_cache.stakes().vote_balance_and_staked();
@@ -3213,6 +3217,7 @@ impl Bank {
         thread_pool: &ThreadPool,
         metrics: &mut RewardsMetrics,
         update_rewards_from_cached_accounts: bool,
+        parents: &Vec<Arc<Bank>>,
     ) -> f64 {
         struct StakeReward {
             stake_pubkey: Pubkey,
@@ -3330,22 +3335,51 @@ impl Bank {
                         credits_auto_rewind,
                     );
 
-                    let vote_hash = self.hash();
+                    // {
+                    //     let weight_vote_tracker = self.vote_tracker.clone();
+                    //     std::thread::spawn(move || {
+                    //         loop {
+                    //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+                    //                     .read()
+                    //                     .unwrap();
+                    //             warn!("DEV: rewards polling r_slot_vote_trackers={r_slot_vote_trackers:?}");
+                    //             drop(r_slot_vote_trackers);
+                    //             std::thread::sleep(std::time::Duration::from_secs(2));
+                    //         }
+                    //     });
+                    // }
+
+                    let our_slot = self.slot();
+                    warn!("DEV: reward our_slot={our_slot:?}");
+                    // let vote_hash = self.hash();
+                    // warn!("DEV: reward vote_hash={vote_hash:?}");
+                    // let parent_vote_hash = self.parent_hash();
+                    // warn!("DEV: reward parent_vote_hash={parent_vote_hash:?}");
+                    // let freeze_started = self.freeze_started();
+                    // warn!("DEV: reward freeze_started={freeze_started:?}");
+                    // let r_bank_parent = self.rc.parent.try_read().unwrap();
+                    // let bank_parent = r_bank_parent.clone().unwrap().clone();
+                    // drop(r_bank_parent);
+                    // // let bank_parent = self.parent();
+                    // warn!("DEV: reward bank_parent={bank_parent:?}");
+                    let parents_hashes: Vec<_> = parents.iter().map(|bank| bank.hash()).collect();
+                    // warn!("DEV: reward parents={:?}", parents.iter().map(|bank| (bank.slot(), bank.hash())).collect::<Vec<_>>());
+                    let parent_slot = self.parent_slot();
+                    warn!("DEV: reward parent_slot={parent_slot:?}");
                     let contains_pubkey = || {
                         let r_slot_vote_trackers = self.vote_tracker.slot_vote_trackers
                             .read()
                             .unwrap();
 
-                        let slot = self.slot();
                         let vote_tracker_max_slot = match r_slot_vote_trackers.keys().max() {
                             Some(slot) => slot,
                             None => return false,
                         };
-                        if slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
+                        if our_slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
                             return false;
                         }
-                        let slot = slot.min(*vote_tracker_max_slot);
-                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={:?} trying to get slot={slot:?}", r_slot_vote_trackers.keys().max());
+                        let slot = our_slot.min(*vote_tracker_max_slot);
+                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?} trying to get slot={our_slot:?}");
                         let weight_slot_vote_tracker = r_slot_vote_trackers
                             .get(&slot).unwrap();
                         warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:?}");
@@ -3353,18 +3387,24 @@ impl Bank {
                             .read()
                             .unwrap();
 
-                        warn!("DEV: reward r_weight_slot_vote_tracker.optimistic_votes_tracker={:?} trying to get vote_hash={vote_hash:?}", r_weight_slot_vote_tracker.optimistic_votes_tracker);
-                        // FIXME: use optimistic_votes_tracker
-                        let optimistic_result = r_weight_slot_vote_tracker
-                            .optimistic_votes_tracker
-                            .get(&vote_hash)
-                            .map(|vote_stake_tracker| vote_stake_tracker.voted.contains(&vote_pubkey));
+                        let optimistic_votes_tracker = &r_weight_slot_vote_tracker.optimistic_votes_tracker;
+                        warn!("DEV: reward optimistic_votes_tracker={optimistic_votes_tracker:?}");
+                        let optimistic_result = optimistic_votes_tracker
+                            .iter()
+                            .max_by_key(
+                                |(vote_hash, _)| parents_hashes
+                                    .iter()
+                                    .position(|parent_hash| parent_hash == *vote_hash)
+                            )
+                            .map(|(_, vote_stake_tracker)| vote_stake_tracker.voted
+                                .contains(&vote_pubkey)
+                            );
 
-                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={:?} vote_pubkey={vote_pubkey:?}", optimistic_result);
+                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={optimistic_result:?} vote_pubkey={vote_pubkey:?}");
 
-                        let result = r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey);
-                        warn!("DEV: reward r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)={:?}", result);
-                        result
+                        // let result = r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey);
+                        // warn!("DEV: reward r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)={:?}", result);
+                        optimistic_result.unwrap_or(false)
                     };
 
                     let stake_account_owner = stake_account.owner();

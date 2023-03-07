@@ -783,7 +783,7 @@ impl ClusterInfoVoteListener {
                     weight,
                     total_weight,
                 );
-                info!("TPU: reached_threshold_results={reached_threshold_results:?} is_new={is_new} weight={weight}");
+                warn!("TPU: majority={:?} quorum={:?} is_new={is_new} weight={weight}", reached_threshold_results.majority, reached_threshold_results.quorum);
 
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((
