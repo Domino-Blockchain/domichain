@@ -23,6 +23,7 @@ export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRAR
 export NDEBUG=1
 export DOMICHAIN_CUDA=1
 
+./multinode-demo/setup.sh
 screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1 --entrypoint "$NODE_IP_ADDR:8001" --rpc-faucet-address "$NODE_IP_ADDR:9900" --allow-private-addr > ~/stdout.txt 2> ~/stderr.txt'
 # ./multinode-demo/validator-x.sh \
 #     --label test1 \
