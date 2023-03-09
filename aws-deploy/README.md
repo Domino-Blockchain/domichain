@@ -13,10 +13,10 @@ chmod +x ./domichain_*.sh
 screen -S setup
 ./domichain_aws_setup.sh ~/.ssh/id_rsa name-of-git-branch  # Will reboot at the end
 ./domichain_bootstrap_validator.sh
-hostname --ip-address  # Get private IP
+hostname -I | cut -d' ' -f1  # Get private IP
 
 # On the other AWS node
 chmod +x ./domichain_*.sh
 ./domichain_aws_setup.sh ~/.ssh/id_rsa name-of-git-branch  # Will reboot at the end
-./domichain_validator.sh 172.31.26.40  # private/public IP address of main RPC node (run "hostname --ip-address" on it)
+./domichain_validator.sh 172.31.26.40  # private/public IP address of main RPC node (run "hostname -I | cut -d' ' -f1" on it)
 ```

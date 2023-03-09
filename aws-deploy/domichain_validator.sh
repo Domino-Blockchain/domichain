@@ -12,6 +12,7 @@ if [ -z "$1" ]
     exit 1
 fi
 export NODE_IP_ADDR="$1"
+export URL="http://$NODE_IP_ADDR:8899/"
 
 cd ~/domichain
 export CUDA_HOME=/usr/local/cuda-11.1/
@@ -29,14 +30,15 @@ screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1
 #     --rpc-faucet-address "$NODE_IP_ADDR:9900" \
 #     --allow-private-addr
 
-screen -d -m -S watch bash -c 'watch "target/release/domichain gossip --url localhost && target/release/domichain validators --url localhost && target/release/domichain stake-history --url localhost"'
-# watch 'target/release/domichain gossip --url localhost && target/release/domichain validators --url localhost && target/release/domichain stake-history --url localhost'
+screen -d -m -S watch bash -c 'watch "target/release/domichain gossip --url $URL && target/release/domichain validators --url $URL && target/release/domichain stake-history --url $URL"'
+# watch "target/release/domichain gossip --url $URL && target/release/domichain validators --url $URL && target/release/domichain stake-history --url $URL"
 
 target/release/domichain-keygen new --no-passphrase -o ~/validator-stake-keypair.json
 PUBKEY=$(target/release/domichain-keygen pubkey ~/validator-stake-keypair.json)
 export PUBKEY
 
-target/release/domichain airdrop 600 --url "http://$NODE_IP_ADDR:8899/" "$PUBKEY"
+target/release/domichain airdrop 600 --url "$URL" "$PUBKEY"
 
 export RUST_LOG=INFO
-./multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test --keypair ~/validator-stake-keypair.json
+echo 'Wait for sync slots with bootstrap validator and run:'
+echo './multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test --keypair ~/validator-stake-keypair.json'

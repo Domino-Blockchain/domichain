@@ -11,7 +11,7 @@ export CUDA_HOME=/usr/local/cuda-11.1/
 export LD_LIBRARY_PATH=/home/ubuntu/domichain/target/perf-libs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 
-NODE_IP_ADDR=$(hostname --ip-address)
+NODE_IP_ADDR=$(hostname -I | cut -d' ' -f1)
 export NODE_IP_ADDR
 
 screen -d -m -S sys-tuner bash -c 'sudo $(command -v target/release/domichain-sys-tuner) --user $(whoami)'
