@@ -1619,7 +1619,7 @@ fn rebuild_bank_from_snapshots(
     let bank = deserialize_snapshot_data_files(&snapshot_root_paths, |snapshot_streams| {
         Ok(
             match incremental_snapshot_version.unwrap_or(full_snapshot_version) {
-                SnapshotVersion::V1_2_0 => bank_from_streams(
+                SnapshotVersion::V1_2_0 => serde_snapshot::bank_from_streams(
                     SerdeStyle::Newer,
                     snapshot_streams,
                     account_paths,
