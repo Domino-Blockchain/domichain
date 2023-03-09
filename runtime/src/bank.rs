@@ -2293,6 +2293,7 @@ impl Bank {
         additional_builtins: Option<&Builtins>,
         debug_do_not_add_builtins: bool,
         accounts_data_size_initial: u64,
+        vote_tracker: &Arc<WeightVoteTracker>,
     ) -> Self {
         let now = Instant::now();
         let ancestors = Ancestors::from(&fields.ancestors);
@@ -2377,7 +2378,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
-            vote_tracker: todo!(), // TODO: pass value here
+            vote_tracker: vote_tracker.clone(),
         };
         bank.finish_init(
             genesis_config,

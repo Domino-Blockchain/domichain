@@ -286,24 +286,25 @@ fn test_bank_serialize_style(
         full_snapshot_stream: &mut reader,
         incremental_snapshot_stream: None,
     };
-    let mut dbank = crate::serde_snapshot::bank_from_streams(
-        serde_style,
-        &mut snapshot_streams,
-        &dbank_paths,
-        unpacked_append_vec_map,
-        &genesis_config,
-        None,
-        None,
-        AccountSecondaryIndexes::default(),
-        false,
-        None,
-        AccountShrinkThreshold::default(),
-        false,
-        Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
-        None,
-        false,
-    )
-    .unwrap();
+    unreachable!();
+    // let mut dbank = crate::serde_snapshot::bank_from_streams(
+    //     serde_style,
+    //     &mut snapshot_streams,
+    //     &dbank_paths,
+    //     unpacked_append_vec_map,
+    //     &genesis_config,
+    //     None,
+    //     None,
+    //     AccountSecondaryIndexes::default(),
+    //     false,
+    //     None,
+    //     AccountShrinkThreshold::default(),
+    //     false,
+    //     Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
+    //     None,
+    //     false,
+    // )
+    // .unwrap();
     dbank.src = ref_sc;
     assert_eq!(dbank.get_balance(&key1.pubkey()), 0);
     assert_eq!(dbank.get_balance(&key2.pubkey()), 10);
@@ -402,24 +403,25 @@ fn test_extra_fields_eof() {
     let copied_accounts = TempDir::new().unwrap();
     let unpacked_append_vec_map =
         copy_append_vecs(&bank.rc.accounts.accounts_db, copied_accounts.path()).unwrap();
-    let dbank = crate::serde_snapshot::bank_from_streams(
-        SerdeStyle::Newer,
-        &mut snapshot_streams,
-        &dbank_paths,
-        unpacked_append_vec_map,
-        &genesis_config,
-        None,
-        None,
-        AccountSecondaryIndexes::default(),
-        false,
-        None,
-        AccountShrinkThreshold::default(),
-        false,
-        Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
-        None,
-        false,
-    )
-    .unwrap();
+    unreachable!();
+    // let dbank = crate::serde_snapshot::bank_from_streams(
+    //     SerdeStyle::Newer,
+    //     &mut snapshot_streams,
+    //     &dbank_paths,
+    //     unpacked_append_vec_map,
+    //     &genesis_config,
+    //     None,
+    //     None,
+    //     AccountSecondaryIndexes::default(),
+    //     false,
+    //     None,
+    //     AccountShrinkThreshold::default(),
+    //     false,
+    //     Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
+    //     None,
+    //     false,
+    // )
+    // .unwrap();
 
     assert_eq!(
         bank.fee_rate_governor.lamports_per_signature,
@@ -462,25 +464,26 @@ fn test_extra_fields_full_snapshot_archive() {
     .unwrap();
 
     // Deserialize
-    let (dbank, _) = snapshot_utils::bank_from_snapshot_archives(
-        &[PathBuf::from(accounts_dir.path())],
-        bank_snapshots_dir.path(),
-        &snapshot_archive_info,
-        None,
-        &genesis_config,
-        None,
-        None,
-        AccountSecondaryIndexes::default(),
-        false,
-        None,
-        AccountShrinkThreshold::default(),
-        false,
-        false,
-        false,
-        Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
-        None,
-    )
-    .unwrap();
+    unreachable!();
+    // let (dbank, _) = snapshot_utils::bank_from_snapshot_archives(
+    //     &[PathBuf::from(accounts_dir.path())],
+    //     bank_snapshots_dir.path(),
+    //     &snapshot_archive_info,
+    //     None,
+    //     &genesis_config,
+    //     None,
+    //     None,
+    //     AccountSecondaryIndexes::default(),
+    //     false,
+    //     None,
+    //     AccountShrinkThreshold::default(),
+    //     false,
+    //     false,
+    //     false,
+    //     Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
+    //     None,
+    // )
+    // .unwrap();
 
     assert_eq!(
         bank.fee_rate_governor.lamports_per_signature,
@@ -524,24 +527,25 @@ fn test_blank_extra_fields() {
     let copied_accounts = TempDir::new().unwrap();
     let unpacked_append_vec_map =
         copy_append_vecs(&bank.rc.accounts.accounts_db, copied_accounts.path()).unwrap();
-    let dbank = crate::serde_snapshot::bank_from_streams(
-        SerdeStyle::Newer,
-        &mut snapshot_streams,
-        &dbank_paths,
-        unpacked_append_vec_map,
-        &genesis_config,
-        None,
-        None,
-        AccountSecondaryIndexes::default(),
-        false,
-        None,
-        AccountShrinkThreshold::default(),
-        false,
-        Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
-        None,
-        false,
-    )
-    .unwrap();
+    unreachable!();
+    // let dbank = crate::serde_snapshot::bank_from_streams(
+    //     SerdeStyle::Newer,
+    //     &mut snapshot_streams,
+    //     &dbank_paths,
+    //     unpacked_append_vec_map,
+    //     &genesis_config,
+    //     None,
+    //     None,
+    //     AccountSecondaryIndexes::default(),
+    //     false,
+    //     None,
+    //     AccountShrinkThreshold::default(),
+    //     false,
+    //     Some(crate::accounts_db::ACCOUNTS_DB_CONFIG_FOR_TESTING),
+    //     None,
+    //     false,
+    // )
+    // .unwrap();
 
     // Defaults to 0
     assert_eq!(0, dbank.fee_rate_governor.lamports_per_signature);

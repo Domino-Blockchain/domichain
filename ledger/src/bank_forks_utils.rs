@@ -89,17 +89,18 @@ pub fn load_bank_forks(
     LeaderScheduleCache,
     Option<StartingSnapshotHashes>,
 ) {
-    load_bank_forks_with_vote_tracker(
-        genesis_config,
-        blockstore,
-        account_paths,
-        shrink_paths,
-        snapshot_config,
-        process_options,
-        cache_block_meta_sender,
-        accounts_update_notifier,
-        todo!(),
-    )
+    unreachable!();
+    // load_bank_forks_with_vote_tracker(
+    //     genesis_config,
+    //     blockstore,
+    //     account_paths,
+    //     shrink_paths,
+    //     snapshot_config,
+    //     process_options,
+    //     cache_block_meta_sender,
+    //     accounts_update_notifier,
+    //     todo!(),
+    // )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -153,6 +154,7 @@ pub fn load_bank_forks_with_vote_tracker(
             snapshot_config.as_ref().unwrap(),
             process_options,
             accounts_update_notifier,
+            vote_tracker,
         )
     } else {
         let maybe_filler_accounts = process_options
@@ -212,6 +214,7 @@ fn bank_forks_from_snapshot(
     snapshot_config: &SnapshotConfig,
     process_options: &ProcessOptions,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> (Arc<RwLock<BankForks>>, Option<StartingSnapshotHashes>) {
     // Fail hard here if snapshot fails to load, don't silently continue
     if account_paths.is_empty() {
@@ -239,6 +242,7 @@ fn bank_forks_from_snapshot(
             process_options.verify_index,
             process_options.accounts_db_config.clone(),
             accounts_update_notifier,
+            vote_tracker,
         )
         .expect("Load from snapshot failed");
 
