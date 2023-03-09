@@ -19,11 +19,11 @@ export CUDA_HOME=/usr/local/cuda-11.1/
 export LD_LIBRARY_PATH=/home/ubuntu/domichain/target/perf-libs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 
-export RUST_LOG=ERROR
+#export RUST_LOG=ERROR
 export NDEBUG=1
 export DOMICHAIN_CUDA=1
 
-screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1 --entrypoint "$NODE_IP_ADDR:8001" --rpc-faucet-address "$NODE_IP_ADDR:9900" --allow-private-addr'
+screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1 --entrypoint "$NODE_IP_ADDR:8001" --rpc-faucet-address "$NODE_IP_ADDR:9900" --allow-private-addr > ~/stdout.txt 2> ~/stderr.txt'
 # ./multinode-demo/validator-x.sh \
 #     --label test1 \
 #     --entrypoint "$NODE_IP_ADDR:8001" \
