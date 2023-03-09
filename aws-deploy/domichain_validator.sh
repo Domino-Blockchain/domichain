@@ -33,7 +33,8 @@ screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1
 screen -d -m -S watch bash -c 'watch "target/release/domichain gossip --url $URL && target/release/domichain validators --url $URL && target/release/domichain stake-history --url $URL"'
 # watch "target/release/domichain gossip --url $URL && target/release/domichain validators --url $URL && target/release/domichain stake-history --url $URL"
 
-target/release/domichain-keygen new --no-passphrase -o ~/validator-stake-keypair.json
+# WARNING: it will override keypair file
+target/release/domichain-keygen new --force --no-passphrase -o ~/validator-stake-keypair.json
 PUBKEY=$(target/release/domichain-keygen pubkey ~/validator-stake-keypair.json)
 export PUBKEY
 
