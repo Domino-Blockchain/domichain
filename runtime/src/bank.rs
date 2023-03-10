@@ -3400,9 +3400,9 @@ impl Bank {
                                     .iter()
                                     .position(|parent_hash| parent_hash == *vote_hash)
                             )
-                            .map(|(_, vote_stake_tracker)| vote_stake_tracker.voted
-                                .contains(&vote_pubkey)
-                            );
+                            .and_then(|(_, vote_stake_tracker)| vote_stake_tracker.voted
+                                .get(&vote_pubkey)
+                            ).map(|weight| *weight > 0);
 
                         warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={optimistic_result:?}");
                         warn!("DEV: reward vote_pubkey={vote_pubkey:?}");
