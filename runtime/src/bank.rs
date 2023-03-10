@@ -3380,16 +3380,18 @@ impl Bank {
                             return false;
                         }
                         let slot = our_slot.min(*vote_tracker_max_slot);
-                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?} trying to get slot={our_slot:?}");
+                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?}");
+                        warn!("DEV: reward trying to get slot={our_slot:?}");
                         let weight_slot_vote_tracker = r_slot_vote_trackers
                             .get(&slot).unwrap();
-                        warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:?}");
+                        warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:#?}");
                         let r_weight_slot_vote_tracker = weight_slot_vote_tracker
                             .read()
                             .unwrap();
 
                         let optimistic_votes_tracker = &r_weight_slot_vote_tracker.optimistic_votes_tracker;
-                        warn!("DEV: reward optimistic_votes_tracker={optimistic_votes_tracker:?}");
+
+                        warn!("DEV: reward parents_hashes={:#?}", &parents_hashes[..5]);
                         let optimistic_result = optimistic_votes_tracker
                             .iter()
                             .max_by_key(
@@ -3401,7 +3403,8 @@ impl Bank {
                                 .contains(&vote_pubkey)
                             );
 
-                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={optimistic_result:?} vote_pubkey={vote_pubkey:?}");
+                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={optimistic_result:?}");
+                        warn!("DEV: reward vote_pubkey={vote_pubkey:?}");
 
                         // let result = r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey);
                         // warn!("DEV: reward r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)={:?}", result);
@@ -3409,11 +3412,13 @@ impl Bank {
                     };
 
                     let stake_account_owner = stake_account.owner();
+                    warn!("DEV: reward stake_account.owner={stake_account_owner}");
+                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?}");
                     if !contains_pubkey() {
-                        warn!("DEV: reward not in committee stake_account.owner={stake_account_owner}, redeemed (stakers_reward, voters_reward)={redeemed:?}");
+                        warn!("DEV: reward NOT in committee");
                         return None;
                     } else {
-                        warn!("DEV: reward in committee stake_account.owner={stake_account_owner}, redeemed (stakers_reward, voters_reward)={redeemed:?}");
+                        warn!("DEV: reward in committee");
                     }
 
                     // let verify_result = self.epoch_stakes
@@ -3457,7 +3462,6 @@ impl Bank {
                     //     redeemed = Err(InstructionError::GenericError)
                     // }
 
-                    warn!("DEV: reward stake_account.owner={}, redeemed (stakers_reward, voters_reward)={:?}", stake_account.owner(), redeemed);
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
                         // track voter rewards
                         if let Some((
