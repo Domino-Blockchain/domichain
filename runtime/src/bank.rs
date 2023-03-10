@@ -216,7 +216,7 @@ impl WeightSlotVoteTracker {
 
 #[derive(Default, Debug)]
 pub struct WeightVoteStakeTracker {
-    pub voted: HashSet<Pubkey>,
+    pub voted: HashMap<Pubkey, u64>,
     pub stake: u64,
     pub weight: u64,
 }
@@ -617,6 +617,7 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
+use crate::contains::Contains;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {

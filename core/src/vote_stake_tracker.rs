@@ -1,9 +1,13 @@
+use std::collections::HashMap;
 use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
+use domichain_runtime::contains::Contains;
 
 #[derive(Default, Clone)]
 pub struct VoteStakeTracker {
-    voted: HashSet<Pubkey>,
+    // Mapping from Pubkey to weight
+    voted: HashMap<Pubkey, u64>,
     stake: u64,
+    // Total weight
     weight: u64,
 }
 
@@ -29,7 +33,7 @@ impl VoteStakeTracker {
     ) -> (ReachedThresholdResults, bool) {
         let is_new = !self.voted.contains(&vote_pubkey);
         if is_new {
-            self.voted.insert(vote_pubkey);
+            self.voted.insert(vote_pubkey, weight);
             let old_weight = self.weight;
             let new_weight = self.weight + weight;
             self.weight = new_weight;
@@ -50,7 +54,7 @@ impl VoteStakeTracker {
         }
     }
 
-    pub fn voted(&self) -> &HashSet<Pubkey> {
+    pub fn voted(&self) -> &HashMap<Pubkey, u64> {
         &self.voted
     }
 
