@@ -20,3 +20,8 @@ chmod +x ./domichain_*.sh
 ./domichain_aws_setup.sh ~/.ssh/id_rsa name-of-git-branch  # Will reboot at the end
 ./domichain_validator.sh 172.31.26.40  # private/public IP address of main RPC node (run "hostname -I | cut -d' ' -f1" on it)
 ```
+
+```bash
+# For ping rpc-url:
+target/release/domichain-gossip --allow-private-addr rpc-url --timeout 10 --entrypoint 127.0.0.1:8001
+```
