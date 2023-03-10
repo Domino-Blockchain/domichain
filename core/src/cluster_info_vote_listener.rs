@@ -79,6 +79,7 @@ pub struct SlotVoteTracker {
     // to whether or not we've seen the vote on gossip.
     // True if seen on gossip, false if only seen in replay.
     voted: HashMap<Pubkey, bool>,
+    // Maps vote_hash to VoteStakeTracker (set of voted pubkeys)
     optimistic_votes_tracker: HashMap<Hash, VoteStakeTracker>,
     voted_slot_updates: Option<Vec<Pubkey>>,
     gossip_only_stake: u64,

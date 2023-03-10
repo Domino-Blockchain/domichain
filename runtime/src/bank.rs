@@ -216,6 +216,7 @@ impl WeightSlotVoteTracker {
 
 #[derive(Default, Debug)]
 pub struct WeightVoteStakeTracker {
+    // Mapiing from PK to weight
     pub voted: HashMap<Pubkey, u64>,
     pub stake: u64,
     pub weight: u64,
@@ -3326,16 +3327,7 @@ impl Bank {
                     });
                     let (mut stake_account, stake_state) =
                         <(AccountSharedData, StakeState)>::from(stake_account);
-                    let redeemed = stake_state::redeem_rewards(
-                        rewarded_epoch,
-                        stake_state,
-                        &mut stake_account,
-                        &vote_state,
-                        &point_value,
-                        Some(&stake_history),
-                        reward_calc_tracer.as_ref(),
-                        credits_auto_rewind,
-                    );
+
 
                     // {
                     //     let weight_vote_tracker = self.vote_tracker.clone();
@@ -3414,54 +3406,24 @@ impl Bank {
 
                     let stake_account_owner = stake_account.owner();
                     warn!("DEV: reward stake_account.owner={stake_account_owner}");
-                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?}");
                     if !contains_pubkey() {
-                        warn!("DEV: reward NOT in committee");
+                        warn!("DEV: reward NOT in committee vote_pubkey={vote_pubkey:?}");
                         return None;
                     } else {
-                        warn!("DEV: reward in committee");
+                        warn!("DEV: reward in committee vote_pubkey={vote_pubkey:?}");
                     }
 
-                    // let verify_result = self.epoch_stakes
-                    //     .epoch_authorized_voters()
-                    //     .get(&vote_pubkey)
-                    //     .map(|authorized_voter| {
-                    //         let verify_result = vrf_verify(
-                    //             &parent_block_seed.unwrap_or_default().to_string(),
-                    //             authorized_voter,
-                    //             vrf_proof.as_slice().try_into().unwrap(),
-                    //         );
-                    //         (authorized_voter, verify_result)
-                    //     });
-                    //
-                    // let weight = match verify_result {
-                    //     Some((authorized_voter, Ok(vrf_hash))) => {
-                    //         let h = hashv(&[
-                    //             vrf_hash.as_slice(),
-                    //             authorized_voter.as_ref(),
-                    //         ]);
-                    //
-                    //         let weight = sortition::select(
-                    //             stake,
-                    //             total_stake,
-                    //             total_weight as f64,
-                    //             h,
-                    //         );
-                    //         weight
-                    //     }
-                    //     Some((authorized_voter, Err(e))) => {
-                    //         error!("DEV: Optimistic VRF verify error: {e} {authorized_voter}");
-                    //         0
-                    //     }
-                    //     None => {
-                    //         warn!("DEV: Error. No authorized_voter");
-                    //         0
-                    //     }
-                    // };
-                    //
-                    // if weight > DEFAULT_TOTAL_WEIGHT {
-                    //     redeemed = Err(InstructionError::GenericError)
-                    // }
+                    let redeemed = stake_state::redeem_rewards(
+                        rewarded_epoch,
+                        stake_state,
+                        &mut stake_account,
+                        &vote_state,
+                        &point_value,
+                        Some(&stake_history),
+                        reward_calc_tracer.as_ref(),
+                        credits_auto_rewind,
+                    );
+                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?}");
 
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
                         // track voter rewards
