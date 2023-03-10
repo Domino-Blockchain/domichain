@@ -3423,7 +3423,7 @@ impl Bank {
                         reward_calc_tracer.as_ref(),
                         credits_auto_rewind,
                     );
-                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?}");
+                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?} vote_pubkey={vote_pubkey:?}");
 
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
                         // track voter rewards
