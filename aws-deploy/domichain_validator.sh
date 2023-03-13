@@ -11,7 +11,7 @@ if [ -z "$1" ]
     echo "No argument supplied: you must supply private IP address or bootstrap node"
     exit 1
 fi
-export NODE_IP_ADDR="$1"
+export NODE_IP_ADDR="$1" # Get form main node: hostname -I | cut -d' ' -f1
 export URL="http://$NODE_IP_ADDR:8899/"
 
 cd ~/domichain
@@ -43,4 +43,4 @@ target/release/domichain airdrop 600 --url "$URL" "$PUBKEY"
 
 export RUST_LOG=INFO
 echo 'Wait for sync slots with bootstrap validator and run:'
-echo './multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test --keypair ~/validator-stake-keypair.json'
+echo './multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test1 --keypair ~/validator-stake-keypair.json'
