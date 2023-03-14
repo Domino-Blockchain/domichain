@@ -3344,6 +3344,7 @@ impl Bank {
                     // }
 
                     let our_slot = self.slot();
+                    warn!("DEV: reward ");
                     warn!("DEV: reward our_slot={our_slot:?}");
                     // let vote_hash = self.hash();
                     // warn!("DEV: reward vote_hash={vote_hash:?}");
