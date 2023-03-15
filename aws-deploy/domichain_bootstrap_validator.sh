@@ -21,8 +21,9 @@ export RUST_LOG=ERROR
 export NDEBUG=1
 export DOMICHAIN_CUDA=1
 
-screen -d -m -S faucet bash -c './multinode-demo/setup.sh && ./multinode-demo/faucet.sh'
-# ./multinode-demo/setup.sh && ./multinode-demo/faucet.sh
+./multinode-demo/setup.sh # --slots-per-epoch 32
+screen -d -m -S faucet bash -c './multinode-demo/faucet.sh'
+# ./multinode-demo/faucet.sh
 
 screen -d -m -S bootstrap-validator bash -c './multinode-demo/bootstrap-validator.sh --gossip-host $NODE_IP_ADDR --enable-rpc-transaction-history --allow-private-addr'
 # ./multinode-demo/bootstrap-validator.sh --gossip-host $NODE_IP_ADDR --enable-rpc-transaction-history --allow-private-addr
