@@ -7297,6 +7297,8 @@ impl Bank {
 
     /// Return the block_seed of this bank
     pub fn derive_new_block_seed(&self) -> Hash {
+        let measure_start = Instant::now();
+
         let alpha = hash(self.block_seed.as_ref());
         assert_ne!(alpha, self.block_seed); // New seed from previous
 
@@ -7305,6 +7307,8 @@ impl Bank {
 
         let new_seed = hashv(&[alpha.as_ref(), history.as_ref()]);
         info!("DEV: derived new seed {new_seed} from {}", self.block_seed);
+
+        warn!("DEV: measure took {} derived new seed", measure_start.elapsed().as_secs_f64());
         new_seed
     }
 

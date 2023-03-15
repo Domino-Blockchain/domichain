@@ -319,77 +319,84 @@ impl ClusterInfoVoteListener {
                 !packet_batch[0].meta.discard()
             })
             .filter_map(|(tx, packet_batch)| {
-                let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
-                let slot = vote.last_voted_slot()?;
-                let epoch = epoch_schedule.get_epoch(slot);
-                let epoch_stakes = root_bank
-                    .epoch_stakes(epoch)?;
-                let authorized_voter = epoch_stakes
-                    .epoch_authorized_voters()
-                    .get(&vote_account_key)?;
+                let f = || {
+                    let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
+                    let slot = vote.last_voted_slot()?;
+                    let epoch = epoch_schedule.get_epoch(slot);
+                    let epoch_stakes = root_bank
+                        .epoch_stakes(epoch)?;
+                    let authorized_voter = epoch_stakes
+                        .epoch_authorized_voters()
+                        .get(&vote_account_key)?;
 
-                let parent_block_seed = bank_forks.read().unwrap()
-                    .get(slot)
-                    .map(|b| b.parent_block_seed());
-                let vrf_proof = vote.vrf_proof().and_then(|vrf_proof| vrf_proof.try_into().ok());
-                let vrf_proof = match vrf_proof {
-                    Some(vrf_proof) => vrf_proof,
-                    None => {
-                        error!(
-                            "VRF read error: cannot cast {:?} into &[u8; {}]",
-                            vote.vrf_proof(),
-                            libvrf::vrf::PROOF_LEN,
-                        );
-                        return None;
-                    }
-                };
-                let verify_result = vrf_verify(
-                    &parent_block_seed?.to_string(),
-                    authorized_voter,
-                    vrf_proof,
-                );
-                match verify_result {
-                    Ok(vrf_hash) => {
-                        let vote_accounts = epoch_stakes.stakes().vote_accounts();
-                        let stake = vote_accounts
-                            .get(&vote_account_key)
-                            .map(|(stake, _)| *stake)
-                            .unwrap_or_default(); // Stake
-                        let total_stake = epoch_stakes.total_stake(); // Total stake
-
-                        let h = hashv(&[
-                            vrf_hash.as_slice(),
-                            authorized_voter.as_ref(),
-                        ]);
-
-                        let weight = sortition::select(
-                            stake,
-                            total_stake,                // Maybe use circulation across net?
-                            total_weight as f64,  // Consensus params
-                            h,
-                        );
-
-                        if weight == 0 {
+                    let parent_block_seed = bank_forks.read().unwrap()
+                        .get(slot)
+                        .map(|b| b.parent_block_seed());
+                    let vrf_proof = vote.vrf_proof().and_then(|vrf_proof| vrf_proof.try_into().ok());
+                    let vrf_proof = match vrf_proof {
+                        Some(vrf_proof) => vrf_proof,
+                        None => {
+                            error!(
+                                "VRF read error: cannot cast {:?} into &[u8; {}]",
+                                vote.vrf_proof(),
+                                libvrf::vrf::PROOF_LEN,
+                            );
                             return None;
                         }
-                    },
-                    Err(e) => {
-                        error!("VRF verify error: {e}");
+                    };
+                    let verify_result = vrf_verify(
+                        &parent_block_seed?.to_string(),
+                        authorized_voter,
+                        vrf_proof,
+                    );
+                    match verify_result {
+                        Ok(vrf_hash) => {
+                            let vote_accounts = epoch_stakes.stakes().vote_accounts();
+                            let stake = vote_accounts
+                                .get(&vote_account_key)
+                                .map(|(stake, _)| *stake)
+                                .unwrap_or_default(); // Stake
+                            let total_stake = epoch_stakes.total_stake(); // Total stake
+
+                            let h = hashv(&[
+                                vrf_hash.as_slice(),
+                                authorized_voter.as_ref(),
+                            ]);
+
+                            let weight = sortition::select(
+                                stake,
+                                total_stake,                // Maybe use circulation across net?
+                                total_weight as f64,  // Consensus params
+                                h,
+                            );
+
+                            if weight == 0 {
+                                return None;
+                            }
+                        },
+                        Err(e) => {
+                            error!("VRF verify error: {e}");
+                            return None;
+                        }
+                    }
+
+                    let mut keys = tx.message.account_keys.iter().enumerate();
+                    if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
                         return None;
                     }
-                }
-
-                let mut keys = tx.message.account_keys.iter().enumerate();
-                if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
-                    return None;
-                }
-                let verified_vote_metadata = VerifiedVoteMetadata {
-                    vote_account_key,
-                    vote,
-                    packet_batch,
-                    signature: *tx.signatures.first()?,
+                    let verified_vote_metadata = VerifiedVoteMetadata {
+                        vote_account_key,
+                        vote,
+                        packet_batch,
+                        signature: *tx.signatures.first()?,
+                    };
+                    Some((tx, verified_vote_metadata))
                 };
-                Some((tx, verified_vote_metadata))
+
+                let measure_start = Instant::now();
+                let res = f();
+                warn!("Replay_stage: measure took {} f()", measure_start.elapsed().as_secs_f64());
+                res
             })
             .unzip()
     }
@@ -717,6 +724,8 @@ impl ClusterInfoVoteListener {
             // 1) There may have been a switch between the earlier vote and the last vote
             // 2) We do not know the hash of the earlier slot
             if slot == last_vote_slot {
+                let measure_start = Instant::now();
+
                 let vote_accounts = epoch_stakes.stakes().vote_accounts();
                 let stake = vote_accounts
                     .get(vote_pubkey)
@@ -785,7 +794,9 @@ impl ClusterInfoVoteListener {
                     total_weight,
                 );
                 warn!("TPU: majority={:?} quorum={:?} is_new={is_new} weight={weight}", reached_threshold_results.majority, reached_threshold_results.quorum);
-                error!("TPU: slot={slot} pk={} stake={stake} weight={weight} ", *vote_pubkey);
+                warn!("TPU: slot={slot} pk={} stake={stake} weight={weight} ", *vote_pubkey);
+
+                warn!("TPU: measure took {}", measure_start.elapsed().as_secs_f64());
 
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((

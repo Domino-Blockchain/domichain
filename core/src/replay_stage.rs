@@ -1963,6 +1963,8 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
+        let measure_start = Instant::now();
+
         let bank_parent_slot = bank.parent_slot();
         let block_parent_seed = bank.parent_block_seed();
 
@@ -1971,6 +1973,8 @@ impl ReplayStage {
         let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
         vote.set_vrf_proof(Some(vrf_proof));
+
+        warn!("Replay_stage: measure took {} set_vrf_proof", measure_start.elapsed().as_secs_f64());
 
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision
