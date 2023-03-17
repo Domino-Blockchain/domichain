@@ -395,7 +395,7 @@ impl ClusterInfoVoteListener {
 
                 let measure_start = Instant::now();
                 let res = f();
-                warn!("Replay_stage: measure took {} f()", measure_start.elapsed().as_secs_f64());
+                warn!("Cluster_info_vote_listener: measure took {} f()", measure_start.elapsed().as_secs_f64());
                 res
             })
             .unzip()
