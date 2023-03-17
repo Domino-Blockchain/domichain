@@ -3385,7 +3385,7 @@ impl Bank {
 
                         let optimistic_votes_tracker = &r_weight_slot_vote_tracker.optimistic_votes_tracker;
 
-                        warn!("DEV: reward parents_hashes={:#?}", &parents_hashes[..5]);
+                        warn!("DEV: reward parents_hashes={:#?}", &parents_hashes.chunks(5).next());
                         let optimistic_result = optimistic_votes_tracker
                             .iter()
                             .max_by_key(
