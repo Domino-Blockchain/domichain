@@ -7,23 +7,26 @@ set -o errexit
 set -o verbose
 
 cd ~/domichain
-export CUDA_HOME=/usr/local/cuda-11.1/
-export LD_LIBRARY_PATH=/home/ubuntu/domichain/target/perf-libs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+rm -rf ~/domichain/config
 
-NODE_IP_ADDR=$(hostname -I | cut -d' ' -f1)
-export NODE_IP_ADDR
+screen -d -m -S sys-tuner bash -c 'sudo $(command -v domichain-sys-tuner) --user $(whoami)'
 
-screen -d -m -S sys-tuner bash -c 'sudo $(command -v target/release/domichain-sys-tuner) --user $(whoami)'
-# sudo $(command -v target/release/domichain-sys-tuner) --user $(whoami)
-
-export RUST_LOG=ERROR
-export NDEBUG=1
-export DOMICHAIN_CUDA=1
-
-./multinode-demo/setup.sh # --slots-per-epoch 32
+slots_per_epoch=
+if [ -n "$1" ]
+  then
+    slots_per_epoch=" --slots-per-epoch $1"
+fi
+./multinode-demo/setup.sh $slots_per_epoch
 screen -d -m -S faucet bash -c './multinode-demo/faucet.sh'
-# ./multinode-demo/faucet.sh
 
-screen -d -m -S bootstrap-validator bash -c './multinode-demo/bootstrap-validator.sh --gossip-host $NODE_IP_ADDR --enable-rpc-transaction-history --allow-private-addr'
-# ./multinode-demo/bootstrap-validator.sh --gossip-host $NODE_IP_ADDR --enable-rpc-transaction-history --allow-private-addr
+export RUST_LOG="INFO,domichain_metrics::metrics=WARN"
+screen -d -m -S bootstrap-validator bash -c "./multinode-demo/bootstrap-validator.sh \
+  --gossip-host $NODE_IP_ADDR \
+  --enable-rpc-transaction-history \
+  --allow-private-addr \
+   > ~/stdout.txt 2> ~/stderr.txt"
+
+screen -d -m -S watch bash -c "watch \
+  \"domichain gossip --url $URL && \
+    domichain validators --url $URL && \
+    domichain stake-history --url $URL\" "
