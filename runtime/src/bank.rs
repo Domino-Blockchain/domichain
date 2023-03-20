@@ -3222,6 +3222,7 @@ impl Bank {
         update_rewards_from_cached_accounts: bool,
         parents: &Vec<Arc<Bank>>,
     ) -> f64 {
+        #[derive(Debug)]
         struct StakeReward {
             stake_pubkey: Pubkey,
             stake_reward_info: RewardInfo,
@@ -3359,8 +3360,6 @@ impl Bank {
                     // warn!("DEV: reward bank_parent={bank_parent:?}");
                     let parents_hashes: Vec<_> = parents.iter().map(|bank| bank.hash()).collect();
                     // warn!("DEV: reward parents={:?}", parents.iter().map(|bank| (bank.slot(), bank.hash())).collect::<Vec<_>>());
-                    let parent_slot = self.parent_slot();
-                    warn!("DEV: reward parent_slot={parent_slot:?}");
                     let contains_pubkey = || {
                         let r_slot_vote_trackers = self.vote_tracker.slot_vote_trackers
                             .read()
@@ -3370,12 +3369,12 @@ impl Bank {
                             Some(slot) => slot,
                             None => return false,
                         };
-                        if our_slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
-                            return false;
-                        }
-                        let slot = our_slot.min(*vote_tracker_max_slot);
+                        // if our_slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
+                        //     return false;
+                        // }
+                        let slot = our_slot.saturating_sub(SLOT_DIFF_TRESHOLD);
                         warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?}");
-                        warn!("DEV: reward trying to get slot={our_slot:?}");
+                        warn!("DEV: reward trying to get slot={slot:?}");
                         let weight_slot_vote_tracker = r_slot_vote_trackers
                             .get(&slot).unwrap();
                         warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:#?}");
@@ -3408,10 +3407,10 @@ impl Bank {
                     let stake_account_owner = stake_account.owner();
                     warn!("DEV: reward stake_account.owner={stake_account_owner}");
                     if !contains_pubkey() {
-                        warn!("DEV: reward NOT in committee vote_pubkey={vote_pubkey:?}");
+                        warn!("DEV: reward NOT in committee vote_pubkey={vote_pubkey:?} slot={our_slot}");
                         return None;
                     } else {
-                        warn!("DEV: reward in committee vote_pubkey={vote_pubkey:?}");
+                        warn!("DEV: reward in committee vote_pubkey={vote_pubkey:?} slot={our_slot}");
                     }
 
                     let redeemed = stake_state::redeem_rewards(
@@ -3462,6 +3461,8 @@ impl Bank {
         });
         m.stop();
         metrics.redeem_rewards_us += m.as_us();
+
+        info!("DEV: reward stake_rewards={stake_rewards:?}");
 
         // store stake account even if stakers_reward is 0
         // because credits observed has changed
@@ -3675,6 +3676,7 @@ impl Bank {
             *hash = self.hash_internal_state();
             self.rc.accounts.accounts_db.mark_slot_frozen(self.slot());
         }
+        info!("Bank frozen: slot={} collector_id={:?}", self.slot(), self.collector_id);
     }
 
     // dangerous; don't use this; this is only needed for ledger-tool's special command
