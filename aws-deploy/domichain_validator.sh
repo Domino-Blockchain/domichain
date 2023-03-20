@@ -24,10 +24,17 @@ if [ -n "$1" ]
   then
     slots_per_epoch=" --slots-per-epoch $1"
 fi
+
+airdrop_amount=600
+if [ -n "$2" ]
+  then
+    airdrop_amount=$2
+fi
+
 ./multinode-demo/setup.sh $slots_per_epoch
 FAUCET_PUBKEY=$(domichain-keygen pubkey ~/domichain/config/faucet.json)
 export FAUCET_PUBKEY
-domichain airdrop 600 --url "$URL" "$FAUCET_PUBKEY"
+domichain airdrop $airdrop_amount --url "$URL" "$FAUCET_PUBKEY"
 
 export RUST_LOG="INFO,domichain_metrics::metrics=WARN"
 screen -d -m -S validator bash -c "./multinode-demo/validator-x.sh \
@@ -75,7 +82,7 @@ function is_root_equal() {
 }
 
 echo "Waiting for sync slots with bootstrap validator"
-wait_for 20 is_root_equal
+wait_for 100 is_root_equal
 
 ./multinode-demo/delegate-stake.sh \
   --url "http://$NODE_IP_ADDR:8899/" \
