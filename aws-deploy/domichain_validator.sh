@@ -82,7 +82,7 @@ function is_root_equal() {
 }
 
 echo "Waiting for sync slots with bootstrap validator"
-wait_for 100 is_root_equal
+wait_for 180 is_root_equal
 
 ./multinode-demo/delegate-stake.sh \
   --url "http://$NODE_IP_ADDR:8899/" \
