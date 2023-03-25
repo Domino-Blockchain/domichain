@@ -31,6 +31,13 @@ if [ -n "$2" ]
     airdrop_amount=$2
 fi
 
+WAIT_TIMEOUT=200
+if [ -n "$3" ]
+  then
+    WAIT_TIMEOUT=$3
+fi
+export WAIT_TIMEOUT
+
 ./multinode-demo/setup.sh $slots_per_epoch
 FAUCET_PUBKEY=$(domichain-keygen pubkey ~/domichain/config/faucet.json)
 export FAUCET_PUBKEY
@@ -57,7 +64,7 @@ export PUBKEY
 domichain airdrop 600 --url "$URL" "$PUBKEY"
 
 function wait_for() {
-    timeout=$1
+    timeout=WAIT_TIMEOUT
     shift 1
     until [ $timeout -le 0 ] || ("$@" &> /dev/null); do
         echo waiting for "$@"
