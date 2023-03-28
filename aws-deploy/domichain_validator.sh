@@ -47,6 +47,7 @@ export RUST_LOG="INFO,domichain_metrics::metrics=WARN"
 screen -d -m -S validator bash -c "./multinode-demo/validator-x.sh \
   --label test1 \
   --entrypoint $NODE_IP_ADDR:8001 \
+  --gossip-port 8001 \
   --rpc-faucet-address $NODE_IP_ADDR:9900 \
   --allow-private-addr \
   > ~/stdout.txt 2> ~/stderr.txt"
