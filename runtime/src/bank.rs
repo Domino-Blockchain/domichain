@@ -169,7 +169,7 @@ use {
     },
 };
 
-const SLOT_DIFF_TRESHOLD: u64 = 25;
+const SLOT_DIFF_TRESHOLD: u64 = 16;
 
 #[derive(Default)]
 pub struct WeightVoteTracker {
