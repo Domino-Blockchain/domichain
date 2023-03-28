@@ -61,11 +61,11 @@ export NDEBUG=1
 export DOMICHAIN_CUDA=1
 export PATH=$PATH:~/domichain/target/release' >> ~/.bashrc
 
-if [ -z "$1" ]
+if [ -z "$3" ]
   then
     echo 'export NODE_IP_ADDR=$(hostname -I | cut -d' ' -f1)' >> ~/.bashrc
   else
-    echo "export NODE_IP_ADDR=$2" >> ~/.bashrc
+    echo "export NODE_IP_ADDR=$3" >> ~/.bashrc
 fi
 
 echo 'export URL="http://$NODE_IP_ADDR:8899/"' >> ~/.bashrc
