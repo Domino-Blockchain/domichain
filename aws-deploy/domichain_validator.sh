@@ -64,7 +64,7 @@ export PUBKEY
 domichain airdrop 600 --url "$URL" "$PUBKEY"
 
 function wait_for() {
-    timeout=WAIT_TIMEOUT
+    timeout=$WAIT_TIMEOUT
     shift 1
     until [ $timeout -le 0 ] || ("$@" &> /dev/null); do
         echo waiting for "$@"
