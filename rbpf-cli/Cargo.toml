@@ -18,3 +18,4 @@ domichain-logger = { path = "../logger", version = "=1.11.1" }
 domichain-program-runtime = { path = "../program-runtime", version = "=1.11.1" }
 domichain-sdk = { path = "../sdk", version = "=1.11.1" }
 solana_rbpf = "=0.2.31"
+# solana_rbpf = { path = "../../rbpf", version = "=0.2.31" }

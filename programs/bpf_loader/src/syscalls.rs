@@ -1,3 +1,4 @@
+use log::error;
 #[allow(deprecated)]
 use {
     crate::{allocator_bump::BpfAllocator, BpfError},
@@ -354,6 +355,9 @@ pub fn register_syscalls(
         SyscallGetStackHeight::init,
         SyscallGetStackHeight::call,
     )?;
+
+    // HERE
+    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
 
     Ok(syscall_registry)
 }
