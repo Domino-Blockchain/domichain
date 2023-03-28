@@ -37,6 +37,7 @@ fn main() {
     let sysc_re = Regex::new(r#"register_syscall_by_name\([[:space:]]*b"([^"]+)","#).unwrap();
     for caps in sysc_re.captures_iter(text) {
         let name = caps[1].to_string();
+        println!("cargo:warning=(not a warning) Generated syscall {name}");
         writeln!(out, "{}", name).unwrap();
     }
 }

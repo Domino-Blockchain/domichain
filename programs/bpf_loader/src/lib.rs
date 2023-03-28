@@ -17,7 +17,7 @@ use {
         serialization::{deserialize_parameters, serialize_parameters},
         syscalls::SyscallError,
     },
-    log::{log_enabled, trace, Level::Trace},
+    log::{log_enabled, trace, error, Level::Trace},
     domichain_measure::measure::Measure,
     domichain_program_runtime::{
         ic_logger_msg, ic_msg,
@@ -137,6 +137,7 @@ fn try_borrow_account<'a>(
     }
 }
 
+// create_executor
 pub fn create_executor(
     programdata_account_index: usize,
     programdata_offset: usize,
@@ -157,6 +158,8 @@ pub fn create_executor(
         ic_msg!(invoke_context, "Failed to register syscalls: {}", e);
         InstructionError::ProgramEnvironmentSetupFailure
     })?;
+    // HERE
+    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
     let compute_budget = invoke_context.get_compute_budget();
     let config = Config {
         max_call_depth: compute_budget.max_call_depth,
@@ -310,6 +313,7 @@ pub fn create_vm<'a, 'b>(
         AlignedMemory::new_with_size(compute_budget.heap_size.unwrap_or(HEAP_LENGTH), HOST_ALIGN);
     let parameter_region = MemoryRegion::new_writable(parameter_bytes, MM_INPUT_START);
     let mut vm = EbpfVm::new(program, heap.as_slice_mut(), vec![parameter_region])?;
+    // Here
     syscalls::bind_syscall_context_objects(&mut vm, invoke_context, heap, orig_account_lengths)?;
     Ok(vm)
 }
@@ -663,6 +667,7 @@ fn process_loader_upgradeable_instruction(
             invoke_context.native_invoke(instruction, signers.as_slice())?;
 
             // Load and verify the program bits
+            // NO
             let executor = create_executor(
                 first_instruction_account.saturating_add(3),
                 buffer_data_offset,
@@ -1215,6 +1220,7 @@ impl Executor for BpfExecutor {
         let mut create_vm_time = Measure::start("create_vm");
         let mut execute_time;
         let execution_result = {
+            // create_vm
             let mut vm = match create_vm(
                 &self.verified_executable,
                 parameter_bytes.as_slice_mut(),
@@ -1223,6 +1229,7 @@ impl Executor for BpfExecutor {
             ) {
                 Ok(info) => info,
                 Err(e) => {
+                    // THIS: Failed to create BPF VM
                     ic_logger_msg!(log_collector, "Failed to create BPF VM: {}", e);
                     return Err(InstructionError::ProgramEnvironmentSetupFailure);
                 }

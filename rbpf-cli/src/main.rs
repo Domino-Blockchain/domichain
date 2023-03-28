@@ -26,6 +26,7 @@ use {
         time::{Duration, Instant},
     },
 };
+use domichain_program_runtime::log_collector::log::error;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Account {
@@ -244,6 +245,7 @@ native machine code before execting it in the virtual machine.",
     let mut contents = Vec::new();
     file.read_to_end(&mut contents).unwrap();
     let syscall_registry = register_syscalls(&mut invoke_context, true).unwrap();
+    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
     let executable = if magic == [0x7f, 0x45, 0x4c, 0x46] {
         Executable::<BpfError, ThisInstructionMeter>::from_elf(&contents, config, syscall_registry)
             .map_err(|err| format!("Executable constructor failed: {:?}", err))
