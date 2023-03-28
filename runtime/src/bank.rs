@@ -3375,8 +3375,13 @@ impl Bank {
                         let slot = our_slot.saturating_sub(SLOT_DIFF_TRESHOLD);
                         warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?}");
                         warn!("DEV: reward trying to get slot={slot:?}");
-                        let weight_slot_vote_tracker = r_slot_vote_trackers
-                            .get(&slot).unwrap();
+                        let weight_slot_vote_tracker = match r_slot_vote_trackers.get(&slot) {
+                            Some(weight_slot_vote_tracker) => weight_slot_vote_tracker,
+                            None => {
+                                error!("DEV: reward r_slot_vote_trackers.get(solt={slot}) is None! r_slot_vote_trackers={r_slot_vote_trackers:?}");
+                                return false;
+                            }
+                        };
                         warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:#?}");
                         let r_weight_slot_vote_tracker = weight_slot_vote_tracker
                             .read()
