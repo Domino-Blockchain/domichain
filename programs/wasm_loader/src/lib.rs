@@ -145,7 +145,7 @@ pub fn create_executor(
     use_jit: bool,
     reject_deployment_of_broken_elfs: bool,
     disable_deploy_of_alloc_free_syscall: bool,
-) -> Result<Arc<BpfExecutor>, InstructionError> {
+) -> Result<Arc<WasmExecutor>, InstructionError> {
     let mut register_syscalls_time = Measure::start("register_syscalls_time");
     let register_syscall_result =
         syscalls::register_syscalls(invoke_context, disable_deploy_of_alloc_free_syscall);
@@ -204,6 +204,8 @@ pub fn create_executor(
         )?;
         create_executor_metrics.program_id = programdata.get_key().to_string();
         let mut load_elf_time = Measure::start("load_elf_time");
+        // TODO: load WASM here
+        // TODO: our own Executable, not from solana_rbpf
         let executable = Executable::<BpfError, ThisInstructionMeter>::from_elf(
             programdata
                 .get_data()
@@ -248,7 +250,7 @@ pub fn create_executor(
         }
     }
     create_executor_metrics.submit_datapoint();
-    Ok(Arc::new(BpfExecutor {
+    Ok(Arc::new(WasmExecutor {
         verified_executable,
         use_jit,
     }))
@@ -1194,7 +1196,7 @@ pub struct WasmExecutor {
 // Well, implement Debug for solana_rbpf::vm::Executable in solana-rbpf...
 impl Debug for WasmExecutor {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "BpfExecutor({:p})", self)
+        write!(f, "WasmExecutor({:p})", self)
     }
 }
 

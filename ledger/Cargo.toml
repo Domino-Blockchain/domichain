@@ -35,6 +35,7 @@ serde = "1.0.137"
 serde_bytes = "0.11.6"
 sha2 = "0.10.2"
 domichain-bpf-loader-program = { path = "../programs/bpf_loader", version = "=1.11.1" }
+domichain-wasm-loader-program = { path = "../programs/wasm_loader", version = "=1.11.1" }
 domichain-entry = { path = "../entry", version = "=1.11.1" }
 domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
 domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }

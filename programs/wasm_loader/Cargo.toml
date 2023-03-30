@@ -1,12 +1,12 @@
 [package]
-name = "domichain-bpf-loader-program"
+name = "domichain-wasm-loader-program"
 version = "1.11.1"
-description = "Domichain BPF loader"
+description = "Domichain WASM loader"
 authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
 homepage = "https://domichain.com/"
-documentation = "https://docs.rs/domichain-bpf-loader-program"
+documentation = "https://docs.rs/domichain-wasm-loader-program"
 edition = "2021"
 
 [dependencies]
