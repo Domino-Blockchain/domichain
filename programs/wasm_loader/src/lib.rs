@@ -160,39 +160,42 @@ pub fn create_executor(
     })?;
     // HERE
     error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
-    let compute_budget = invoke_context.get_compute_budget();
-    let config = Config {
-        max_call_depth: compute_budget.max_call_depth,
-        stack_frame_size: compute_budget.stack_frame_size,
-        enable_stack_frame_gaps: true,
-        instruction_meter_checkpoint_distance: 10000,
-        enable_instruction_meter: true,
-        enable_instruction_tracing: log_enabled!(Trace),
-        enable_symbol_and_section_labels: false,
-        disable_unresolved_symbols_at_runtime: invoke_context
-            .feature_set
-            .is_active(&disable_bpf_unresolved_symbols_at_runtime::id()),
-        reject_broken_elfs: reject_deployment_of_broken_elfs,
-        noop_instruction_rate: 256,
-        sanitize_user_provided_values: true,
-        encrypt_environment_registers: true,
-        disable_deprecated_load_instructions: reject_deployment_of_broken_elfs
-            && invoke_context
-                .feature_set
-                .is_active(&disable_bpf_deprecated_load_instructions::id()),
-        syscall_bpf_function_hash_collision: invoke_context
-            .feature_set
-            .is_active(&error_on_syscall_bpf_function_hash_collisions::id()),
-        reject_callx_r10: invoke_context
-            .feature_set
-            .is_active(&reject_callx_r10::id()),
-        dynamic_stack_frames: false,
-        enable_sdiv: false,
-        optimize_rodata: false,
-        static_syscalls: false,
-        enable_elf_vaddr: false,
-        // Warning, do not use `Config::default()` so that configuration here is explicit.
-    };
+    // let compute_budget = invoke_context.get_compute_budget();
+    // let config = Config {
+    //     max_call_depth: compute_budget.max_call_depth,
+    //     stack_frame_size: compute_budget.stack_frame_size,
+    //     enable_stack_frame_gaps: true,
+    //     instruction_meter_checkpoint_distance: 10000,
+    //     enable_instruction_meter: true,
+    //     enable_instruction_tracing: log_enabled!(Trace),
+    //     enable_symbol_and_section_labels: false,
+    //     disable_unresolved_symbols_at_runtime: invoke_context
+    //         .feature_set
+    //         .is_active(&disable_bpf_unresolved_symbols_at_runtime::id()),
+    //     reject_broken_elfs: reject_deployment_of_broken_elfs,
+    //     noop_instruction_rate: 256,
+    //     sanitize_user_provided_values: true,
+    //     encrypt_environment_registers: true,
+    //     disable_deprecated_load_instructions: reject_deployment_of_broken_elfs
+    //         && invoke_context
+    //             .feature_set
+    //             .is_active(&disable_bpf_deprecated_load_instructions::id()),
+    //     syscall_bpf_function_hash_collision: invoke_context
+    //         .feature_set
+    //         .is_active(&error_on_syscall_bpf_function_hash_collisions::id()),
+    //     reject_callx_r10: invoke_context
+    //         .feature_set
+    //         .is_active(&reject_callx_r10::id()),
+    //     dynamic_stack_frames: false,
+    //     enable_sdiv: false,
+    //     optimize_rodata: false,
+    //     static_syscalls: false,
+    //     enable_elf_vaddr: false,
+    //     // Warning, do not use `Config::default()` so that configuration here is explicit.
+    // };
+
+    let engine = wasmi::Engine::default();
+
     let mut create_executor_metrics = executor_metrics::CreateMetrics::default();
     let executable = {
         let transaction_context = &invoke_context.transaction_context;
@@ -206,53 +209,62 @@ pub fn create_executor(
         let mut load_elf_time = Measure::start("load_elf_time");
         // TODO: load WASM here
         // TODO: our own Executable, not from solana_rbpf
-        let executable = Executable::<BpfError, ThisInstructionMeter>::from_elf(
-            programdata
+
+        let module = wasmi::Module::new(
+            &engine,
+            &mut programdata
                 .get_data()
                 .get(programdata_offset..)
-                .ok_or(InstructionError::AccountDataTooSmall)?,
-            config,
-            syscall_registry,
-        );
+                .ok_or(InstructionError::AccountDataTooSmall)?
+        ).expect("Binary should be valid WASM");
+        // let executable = Executable::<BpfError, ThisInstructionMeter>::from_elf(
+        //     programdata
+        //         .get_data()
+        //         .get(programdata_offset..)
+        //         .ok_or(InstructionError::AccountDataTooSmall)?,
+        //     config,
+        //     syscall_registry,
+        // );
         load_elf_time.stop();
         create_executor_metrics.load_elf_us = load_elf_time.as_us();
         invoke_context.timings.create_executor_load_elf_us = invoke_context
             .timings
             .create_executor_load_elf_us
             .saturating_add(create_executor_metrics.load_elf_us);
-        executable
+        Ok(module)
     }
     .map_err(|e| map_ebpf_error(invoke_context, e))?;
     let mut verify_code_time = Measure::start("verify_code_time");
-    let mut verified_executable =
-        VerifiedExecutable::<RequisiteVerifier, BpfError, ThisInstructionMeter>::from_executable(
-            executable,
-        )
-        .map_err(|e| map_ebpf_error(invoke_context, e))?;
+    // let mut verified_executable =
+    //     VerifiedExecutable::<RequisiteVerifier, BpfError, ThisInstructionMeter>::from_executable(
+    //         executable,
+    //     )
+    //     .map_err(|e| map_ebpf_error(invoke_context, e))?;
+    let mut verified_executable = executable;
     verify_code_time.stop();
     create_executor_metrics.verify_code_us = verify_code_time.as_us();
     invoke_context.timings.create_executor_verify_code_us = invoke_context
         .timings
         .create_executor_verify_code_us
         .saturating_add(create_executor_metrics.verify_code_us);
-    if use_jit {
-        let mut jit_compile_time = Measure::start("jit_compile_time");
-        let jit_compile_result = verified_executable.jit_compile();
-        jit_compile_time.stop();
-        create_executor_metrics.jit_compile_us = jit_compile_time.as_us();
-        invoke_context.timings.create_executor_jit_compile_us = invoke_context
-            .timings
-            .create_executor_jit_compile_us
-            .saturating_add(create_executor_metrics.jit_compile_us);
-        if let Err(err) = jit_compile_result {
-            ic_msg!(invoke_context, "Failed to compile program {:?}", err);
-            return Err(InstructionError::ProgramFailedToCompile);
-        }
-    }
+    // if use_jit {
+    //     let mut jit_compile_time = Measure::start("jit_compile_time");
+    //     let jit_compile_result = verified_executable.jit_compile();
+    //     jit_compile_time.stop();
+    //     create_executor_metrics.jit_compile_us = jit_compile_time.as_us();
+    //     invoke_context.timings.create_executor_jit_compile_us = invoke_context
+    //         .timings
+    //         .create_executor_jit_compile_us
+    //         .saturating_add(create_executor_metrics.jit_compile_us);
+    //     if let Err(err) = jit_compile_result {
+    //         ic_msg!(invoke_context, "Failed to compile program {:?}", err);
+    //         return Err(InstructionError::ProgramFailedToCompile);
+    //     }
+    // }
     create_executor_metrics.submit_datapoint();
     Ok(Arc::new(WasmExecutor {
+        engine,
         verified_executable,
-        use_jit,
     }))
 }
 
@@ -315,7 +327,7 @@ pub fn create_vm<'a, 'b>(
         AlignedMemory::new_with_size(compute_budget.heap_size.unwrap_or(HEAP_LENGTH), HOST_ALIGN);
     let parameter_region = MemoryRegion::new_writable(parameter_bytes, MM_INPUT_START);
     let mut vm = EbpfVm::new(program, heap.as_slice_mut(), vec![parameter_region])?;
-    // Here
+    // TODO: bind_syscall
     syscalls::bind_syscall_context_objects(&mut vm, invoke_context, heap, orig_account_lengths)?;
     Ok(vm)
 }
@@ -1190,6 +1202,7 @@ impl InstructionMeter for ThisInstructionMeter {
 
 /// WASM Loader's Executor implementation
 pub struct WasmExecutor {
+    engine: wasmi::Engine,
     verified_executable: wasmi::Module,
 }
 
@@ -1221,7 +1234,12 @@ impl Executor for WasmExecutor {
         let mut create_vm_time = Measure::start("create_vm");
         let mut execute_time;
         let execution_result = {
-            // create_vm
+            // TODO: create_vm
+            struct ProgramState {}
+            let mut linker = <wasmi::Linker<ProgramState>>::new(&self.engine);
+            // TODO: bind functions
+            linker.define("wasm_module", "program_name", fn_syscall)?;
+
             let mut vm = match create_vm(
                 &self.verified_executable,
                 parameter_bytes.as_slice_mut(),
