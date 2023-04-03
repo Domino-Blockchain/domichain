@@ -1589,6 +1589,7 @@ dependencies = [
  "tempfile",
  "thiserror",
  "tiny-bip39",
+ "wasmi",
 ]
 
 [[package]]
@@ -3057,6 +3058,7 @@ version = "1.11.1"
 dependencies = [
  "bincode",
  "byteorder",
+ "domichain-bpf-loader-program",
  "domichain-measure",
  "domichain-metrics",
  "domichain-program-runtime",

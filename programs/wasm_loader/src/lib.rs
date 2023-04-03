@@ -1235,35 +1235,42 @@ impl Executor for WasmExecutor {
         let mut execute_time;
         let execution_result = {
             // TODO: create_vm
-            struct ProgramState {}
+            type ProgramState = u32;
+            let mut store = wasmi::Store::new(&self.engine, 42);
             let mut linker = <wasmi::Linker<ProgramState>>::new(&self.engine);
             // TODO: bind functions
-            linker.define("wasm_module", "program_name", fn_syscall)?;
+            // linker.define("wasm_module", "program_name", fn_syscall)?;
+            let instance = linker
+                .instantiate(&mut store, &self.verified_executable).unwrap()
+                .start(&mut store).unwrap();
+            let vm = instance.get_typed_func::<(), ()>(&store, "wasm_program").unwrap();
 
-            let mut vm = match create_vm(
-                &self.verified_executable,
-                parameter_bytes.as_slice_mut(),
-                account_lengths,
-                invoke_context,
-            ) {
-                Ok(info) => info,
-                Err(e) => {
-                    // THIS: Failed to create BPF VM
-                    ic_logger_msg!(log_collector, "Failed to create BPF VM: {}", e);
-                    return Err(InstructionError::ProgramEnvironmentSetupFailure);
-                }
-            };
+            // let mut vm = match create_vm(
+            //     &self.verified_executable,
+            //     parameter_bytes.as_slice_mut(),
+            //     account_lengths,
+            //     invoke_context,
+            // ) {
+            //     Ok(info) => info,
+            //     Err(e) => {
+            //         // THIS: Failed to create BPF VM
+            //         ic_logger_msg!(log_collector, "Failed to create BPF VM: {}", e);
+            //         return Err(InstructionError::ProgramEnvironmentSetupFailure);
+            //     }
+            // };
             create_vm_time.stop();
 
             execute_time = Measure::start("execute");
             stable_log::program_invoke(&log_collector, &program_id, stack_height);
             let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
-            let result = if self.use_jit {
-                vm.execute_program_jit(&mut instruction_meter)
-            } else {
-                vm.execute_program_interpreted(&mut instruction_meter)
-            };
+
+            let result = vm.call(&mut store, ()).unwrap();
+            // let result = if self.use_jit {
+            //     vm.execute_program_jit(&mut instruction_meter)
+            // } else {
+            //     vm.execute_program_interpreted(&mut instruction_meter)
+            // };
             let after = compute_meter.borrow().get_remaining();
             ic_logger_msg!(
                 log_collector,
@@ -1272,14 +1279,14 @@ impl Executor for WasmExecutor {
                 before.saturating_sub(after),
                 before
             );
-            if log_enabled!(Trace) {
-                let mut trace_buffer = Vec::<u8>::new();
-                let analysis =
-                    Analysis::from_executable(self.verified_executable.get_executable()).unwrap();
-                vm.get_tracer().write(&mut trace_buffer, &analysis).unwrap();
-                let trace_string = String::from_utf8(trace_buffer).unwrap();
-                trace!("BPF Program Instruction Trace:\n{}", trace_string);
-            }
+            // if log_enabled!(Trace) {
+            //     let mut trace_buffer = Vec::<u8>::new();
+            //     let analysis =
+            //         Analysis::from_executable(self.verified_executable.get_executable()).unwrap();
+            //     vm.get_tracer().write(&mut trace_buffer, &analysis).unwrap();
+            //     let trace_string = String::from_utf8(trace_buffer).unwrap();
+            //     trace!("BPF Program Instruction Trace:\n{}", trace_string);
+            // }
             drop(vm);
             let (_returned_from_program_id, return_data) =
                 invoke_context.transaction_context.get_return_data();
@@ -1287,50 +1294,52 @@ impl Executor for WasmExecutor {
                 stable_log::program_return(&log_collector, &program_id, return_data);
             }
             match result {
-                Ok(status) if status != SUCCESS => {
-                    let error: InstructionError = if status == MAX_ACCOUNTS_DATA_SIZE_EXCEEDED
-                        && !invoke_context
-                            .feature_set
-                            .is_active(&cap_accounts_data_len::id())
-                    {
-                        // Until the cap_accounts_data_len feature is enabled, map the
-                        // MAX_ACCOUNTS_DATA_SIZE_EXCEEDED error to InvalidError
-                        InstructionError::InvalidError
-                    } else {
-                        status.into()
-                    };
-                    stable_log::program_failure(&log_collector, &program_id, &error);
-                    Err(error)
-                }
-                Err(error) => {
-                    let error = match error {
-                        EbpfError::UserError(BpfError::SyscallError(
-                            SyscallError::InstructionError(error),
-                        )) => error,
-                        err => {
-                            ic_logger_msg!(log_collector, "Program failed to complete: {}", err);
-                            InstructionError::ProgramFailedToComplete
-                        }
-                    };
-                    stable_log::program_failure(&log_collector, &program_id, &error);
-                    Err(error)
-                }
+                // Ok(status) if status != SUCCESS => {
+                //     let error: InstructionError = if status == MAX_ACCOUNTS_DATA_SIZE_EXCEEDED
+                //         && !invoke_context
+                //             .feature_set
+                //             .is_active(&cap_accounts_data_len::id())
+                //     {
+                //         // Until the cap_accounts_data_len feature is enabled, map the
+                //         // MAX_ACCOUNTS_DATA_SIZE_EXCEEDED error to InvalidError
+                //         InstructionError::InvalidError
+                //     } else {
+                //         status.into()
+                //     };
+                //     stable_log::program_failure(&log_collector, &program_id, &error);
+                //     Err(error)
+                // }
+                // Err(error) => {
+                //     let error = match error {
+                //         EbpfError::UserError(BpfError::SyscallError(
+                //             SyscallError::InstructionError(error),
+                //         )) => error,
+                //         err => {
+                //             ic_logger_msg!(log_collector, "Program failed to complete: {}", err);
+                //             InstructionError::ProgramFailedToComplete
+                //         }
+                //     };
+                //     stable_log::program_failure(&log_collector, &program_id, &error);
+                //     Err(error)
+                // }
                 _ => Ok(()),
             }
         };
         execute_time.stop();
 
         let mut deserialize_time = Measure::start("deserialize");
-        let execute_or_deserialize_result = execution_result.and_then(|_| {
-            deserialize_parameters(
-                invoke_context.transaction_context,
-                invoke_context
-                    .transaction_context
-                    .get_current_instruction_context()?,
-                parameter_bytes.as_slice(),
-                invoke_context.get_orig_account_lengths()?,
-            )
-        });
+        // TODO: deserialize_parameters
+        let execute_or_deserialize_result = execution_result;
+        // let execute_or_deserialize_result = execution_result.and_then(|_| {
+        //     deserialize_parameters(
+        //         invoke_context.transaction_context,
+        //         invoke_context
+        //             .transaction_context
+        //             .get_current_instruction_context()?,
+        //         parameter_bytes.as_slice(),
+        //         invoke_context.get_orig_account_lengths()?,
+        //     )
+        // });
         deserialize_time.stop();
 
         // Update the timings
