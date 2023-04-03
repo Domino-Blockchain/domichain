@@ -22,6 +22,7 @@ domichain-zk-token-sdk = { path = "../../zk-token-sdk", version = "=1.11.1" }
 solana_rbpf = "=0.2.31"
 thiserror = "1.0"
 wasmi = "0.29.0"
+domichain-bpf-loader-program = { path = "../bpf_loader" }
 
 [dev-dependencies]
 rand = "0.7.3"
@@ -29,7 +30,7 @@ domichain-runtime = { path = "../../runtime", version = "=1.11.1" }
 
 [lib]
 crate-type = ["lib"]
-name = "domichain_bpf_loader_program"
+name = "domichain_wasm_loader_program"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

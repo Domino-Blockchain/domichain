@@ -50,6 +50,7 @@ pub enum TransactionError {
 
     /// An error occurred while processing an instruction. The first element of the tuple
     /// indicates the instruction index in which the error occurred.
+    // Error processing Instruction 1
     #[error("Error processing Instruction {0}: {1}")]
     InstructionError(u8, InstructionError),
 

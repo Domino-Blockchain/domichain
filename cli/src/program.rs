@@ -813,6 +813,7 @@ fn get_default_program_keypair(program_location: &Option<String>) -> Keypair {
 }
 
 /// Deploy using upgradeable loader
+// process_program_deploy
 #[allow(clippy::too_many_arguments)]
 fn process_program_deploy(
     rpc_client: Arc<RpcClient>,
@@ -920,7 +921,10 @@ fn process_program_deploy(
     };
 
     let (program_data, program_len) = if let Some(program_location) = program_location {
-        let program_data = read_and_verify_elf(program_location)?;
+        // read_and_verify_elf
+        // TODO(dev): Allow both ELF & WASM
+        // let program_data = read_and_verify_elf(program_location)?;
+        let program_data = read_and_verify_wasm(program_location)?;
         let program_len = program_data.len();
         (program_data, program_len)
     } else if buffer_provided {
@@ -1907,6 +1911,7 @@ fn do_process_program_write_and_deploy(
         )?;
     }
 
+    // send_deploy_messages
     send_deploy_messages(
         rpc_client,
         config,
@@ -2068,6 +2073,7 @@ fn do_process_program_upgrade(
     Ok(config.output_format.formatted_string(&program_id))
 }
 
+// read_and_verify_elf
 fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut file = File::open(program_location)
         .map_err(|err| format!("Unable to open program file: {}", err))?;
@@ -2086,13 +2092,29 @@ fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::e
         },
         register_syscalls(&mut invoke_context, true).unwrap(),
     )
-    .map_err(|err| format!("ELF error: {}", err))?;
+    .map_err(|err| format!("ELF error: {}", err)).unwrap();
 
     let _ =
         VerifiedExecutable::<RequisiteVerifier, BpfError, ThisInstructionMeter>::from_executable(
             executable,
         )
-        .map_err(|err| format!("ELF error: {}", err))?;
+        .map_err(|err| format!("ELF error: {}", err)).unwrap();
+
+    Ok(program_data)
+}
+
+fn read_and_verify_wasm(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut file = File::open(program_location)
+        .map_err(|err| format!("Unable to open program file: {}", err))?;
+    let mut program_data = Vec::new();
+    file.read_to_end(&mut program_data)
+        .map_err(|err| format!("Unable to read program file: {}", err))?;
+    let mut transaction_context = TransactionContext::new(Vec::new(), 1, 1);
+    let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
+
+    // TODO(dev): register syscalls for WASM
+    let engine = wasmi::Engine::default();
+    let _module = wasmi::Module::new(&engine, &mut &program_data[..]).expect("Binary should be valid WASM");
 
     Ok(program_data)
 }
@@ -2265,7 +2287,8 @@ fn send_deploy_messages(
                         ..RpcSendTransactionConfig::default()
                     },
                 )
-                .map_err(|e| format!("Deploying program failed: {}", e))?;
+                // Error: Deploying program failed: Error processing Instruction 1: invalid account data for instruction
+                .map_err(|e| format!("Deploying program failed: {}", e)).unwrap();
         }
     }
 

@@ -48,6 +48,7 @@ pub enum InstructionError {
     InvalidInstructionData,
 
     /// An account's data contents was invalid
+    // Error: Deploying program failed: Error processing Instruction 1: invalid account data for instruction
     #[error("invalid account data for instruction")]
     InvalidAccountData,
 
