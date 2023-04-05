@@ -565,6 +565,9 @@ pub mod borsh;
 pub mod bpf_loader;
 pub mod bpf_loader_deprecated;
 pub mod bpf_loader_upgradeable;
+pub mod wasm_loader;
+pub mod wasm_loader_deprecated;
+pub mod wasm_loader_upgradeable;
 pub mod clock;
 pub mod debug_account_data;
 pub mod decode_error;
@@ -640,7 +643,8 @@ pub mod vote {
 pub mod sdk_ids {
     use {
         crate::{
-            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config, ed25519_program,
+            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+            wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable, config, ed25519_program,
             feature, incinerator, secp256k1_program, domichain_program::pubkey::Pubkey, stake,
             system_program, sysvar, vote,
         },
@@ -655,12 +659,15 @@ pub mod sdk_ids {
                 system_program::id(),
                 sysvar::id(),
                 bpf_loader::id(),
+                wasm_loader::id(),
                 bpf_loader_upgradeable::id(),
+                wasm_loader_upgradeable::id(),
                 incinerator::id(),
                 config::program::id(),
                 vote::program::id(),
                 feature::id(),
                 bpf_loader_deprecated::id(),
+                wasm_loader_deprecated::id(),
                 stake::config::id(),
             ];
             sdk_ids.extend(sysvar::ALL_IDS.iter());

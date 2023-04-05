@@ -27,8 +27,8 @@ use {
         sysvar_cache::get_sysvar_with_account_check,
     },
     domichain_sdk::{
-        bpf_loader, bpf_loader_deprecated,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader, wasm_loader_deprecated,
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         entrypoint::{HEAP_LENGTH, SUCCESS},
         feature_set::{
             cap_accounts_data_len, disable_bpf_deprecated_load_instructions,
@@ -61,9 +61,9 @@ use {
 };
 
 domichain_sdk::declare_builtin!(
-    domichain_sdk::bpf_loader::ID,
-    domichain_bpf_loader_program,
-    domichain_bpf_loader_program::process_instruction
+    domichain_sdk::wasm_loader::ID,
+    domichain_wasm_loader_program,
+    domichain_wasm_loader_program::process_instruction
 );
 
 /// Errors returned by functions the BPF Loader registers with the VM
@@ -210,12 +210,13 @@ pub fn create_executor(
         // TODO: load WASM here
         // TODO: our own Executable, not from solana_rbpf
 
-        let module = wasmi::Module::new(
-            &engine,
-            &mut programdata
+        let mut data = programdata
                 .get_data()
                 .get(programdata_offset..)
-                .ok_or(InstructionError::AccountDataTooSmall)?
+                .ok_or(InstructionError::AccountDataTooSmall)?;
+        let module = wasmi::Module::new(
+            &engine,
+            &mut data,
         ).expect("Binary should be valid WASM");
         // let executable = Executable::<BpfError, ThisInstructionMeter>::from_elf(
         //     programdata
@@ -299,9 +300,9 @@ fn write_program_data(
 }
 
 fn check_loader_id(id: &Pubkey) -> bool {
-    bpf_loader::check_id(id)
-        || bpf_loader_deprecated::check_id(id)
-        || bpf_loader_upgradeable::check_id(id)
+    wasm_loader::check_id(id)
+        || wasm_loader_deprecated::check_id(id)
+        || wasm_loader_upgradeable::check_id(id)
 }
 
 /// Create the BPF virtual machine
@@ -407,7 +408,7 @@ fn process_instruction_common(
             return Err(InstructionError::IncorrectProgramId);
         }
 
-        let program_data_offset = if bpf_loader_upgradeable::check_id(program.get_owner()) {
+        let program_data_offset = if wasm_loader_upgradeable::check_id(program.get_owner()) {
             if let UpgradeableLoaderState::Program {
                 programdata_address,
             } = program.get_state()?
@@ -474,21 +475,21 @@ fn process_instruction_common(
         let disable_deprecated_loader = invoke_context
             .feature_set
             .is_active(&disable_deprecated_loader::id());
-        if bpf_loader_upgradeable::check_id(program_id) {
+        if wasm_loader_upgradeable::check_id(program_id) {
             process_loader_upgradeable_instruction(
                 first_instruction_account,
                 invoke_context,
                 use_jit,
             )
-        } else if bpf_loader::check_id(program_id)
-            || (!disable_deprecated_loader && bpf_loader_deprecated::check_id(program_id))
+        } else if wasm_loader::check_id(program_id)
+            || (!disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id))
         {
             process_loader_instruction(first_instruction_account, invoke_context, use_jit)
-        } else if disable_deprecated_loader && bpf_loader_deprecated::check_id(program_id) {
+        } else if disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id) {
             ic_logger_msg!(log_collector, "Deprecated loader is no longer supported");
             Err(InstructionError::UnsupportedProgramId)
         } else {
-            ic_logger_msg!(log_collector, "Invalid BPF loader id");
+            ic_logger_msg!(log_collector, "Invalid WASM loader id");
             Err(InstructionError::IncorrectProgramId)
         }
     }
@@ -1235,15 +1236,20 @@ impl Executor for WasmExecutor {
         let mut execute_time;
         let execution_result = {
             // TODO: create_vm
-            type ProgramState = u32;
+            type HostState = u32;
             let mut store = wasmi::Store::new(&self.engine, 42);
-            let mut linker = <wasmi::Linker<ProgramState>>::new(&self.engine);
+            let mut linker = <wasmi::Linker<HostState>>::new(&self.engine);
             // TODO: bind functions
-            // linker.define("wasm_module", "program_name", fn_syscall)?;
+            let host_hello = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, param: i32| {
+                println!("Got {param} from WebAssembly");
+                println!("My host state is: {}", caller.data());
+                *caller.data_mut() += 1;
+            });
+            linker.define("host", "hello", host_hello).unwrap();
             let instance = linker
                 .instantiate(&mut store, &self.verified_executable).unwrap()
                 .start(&mut store).unwrap();
-            let vm = instance.get_typed_func::<(), ()>(&store, "wasm_program").unwrap();
+            let vm = instance.get_typed_func::<(), ()>(&store, "hello").unwrap();
 
             // let mut vm = match create_vm(
             //     &self.verified_executable,

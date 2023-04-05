@@ -1,7 +1,10 @@
 #![cfg_attr(RUSTC_WITH_SPECIALIZATION, feature(min_specialization))]
 #![allow(clippy::integer_arithmetic)]
+
 #[macro_use]
 extern crate domichain_bpf_loader_program;
+#[macro_use]
+extern crate domichain_wasm_loader_program;
 
 pub mod bank_forks_utils;
 pub mod bigtable_delete;

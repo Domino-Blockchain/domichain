@@ -2469,6 +2469,7 @@ dependencies = [
  "domichain-runtime",
  "domichain-sdk",
  "domichain-vote-program",
+ "domichain-wasm-loader-program",
  "log",
  "serde",
  "thiserror",
@@ -7824,6 +7825,13 @@ name = "wasm-bindgen-shared"
 version = "0.2.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d554b7f530dee5964d9a9468d95c1f8b8acae4f282807e7d27d4b03099a46744"
+
+[[package]]
+name = "wasm-gen-syscall-list"
+version = "1.11.1"
+dependencies = [
+ "regex",
+]
 
 [[package]]
 name = "wasmi"
