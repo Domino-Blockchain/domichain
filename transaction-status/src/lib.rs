@@ -37,6 +37,7 @@ pub mod extract_memos;
 pub mod parse_accounts;
 pub mod parse_associated_token;
 pub mod parse_bpf_loader;
+pub mod parse_wasm_loader;
 pub mod parse_instruction;
 pub mod parse_stake;
 pub mod parse_system;

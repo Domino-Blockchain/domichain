@@ -67,6 +67,8 @@ pub mod programs;
 
 #[macro_use]
 extern crate domichain_bpf_loader_program;
+#[macro_use]
+extern crate domichain_wasm_loader_program;
 
 /// Errors from the program test environment
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -776,9 +778,11 @@ impl ProgramTest {
         if self.use_bpf_jit {
             add_builtin!(domichain_bpf_loader_program_with_jit!());
             add_builtin!(domichain_bpf_loader_upgradeable_program_with_jit!());
+            add_builtin!(domichain_wasm_loader_upgradeable_program_with_jit!());
         } else {
             add_builtin!(domichain_bpf_loader_program!());
             add_builtin!(domichain_bpf_loader_upgradeable_program!());
+            add_builtin!(domichain_wasm_loader_upgradeable_program!());
         }
 
         // Add commonly-used SPL programs as a convenience to the user

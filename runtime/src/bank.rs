@@ -4562,6 +4562,7 @@ impl Bank {
         error_counters: &mut TransactionErrorMetrics,
     ) -> TransactionExecutionResult {
         let mut get_executors_time = Measure::start("get_executors_time");
+        // get_executors
         let executors = self.get_executors(&loaded_transaction.accounts);
         get_executors_time.stop();
         saturating_add_assign!(

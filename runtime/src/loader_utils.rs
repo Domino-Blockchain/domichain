@@ -69,6 +69,7 @@ pub fn load_buffer_account<T: Client>(
     buffer_authority_keypair: &Keypair,
     program: &[u8],
 ) {
+    todo!();
     let buffer_pubkey = buffer_keypair.pubkey();
     let buffer_authority_pubkey = buffer_authority_keypair.pubkey();
 
@@ -120,6 +121,7 @@ pub fn load_upgradeable_program<T: Client>(
     authority_keypair: &Keypair,
     program: Vec<u8>,
 ) {
+    todo!();
     let program_pubkey = executable_keypair.pubkey();
     let authority_pubkey = authority_keypair.pubkey();
 
@@ -165,6 +167,7 @@ pub fn upgrade_program<T: Client>(
     authority_keypair: &Keypair,
     spill_pubkey: &Pubkey,
 ) {
+    todo!();
     let message = Message::new(
         &[bpf_loader_upgradeable::upgrade(
             program_pubkey,
@@ -186,6 +189,7 @@ pub fn set_upgrade_authority<T: Client>(
     current_authority_keypair: &Keypair,
     new_authority_pubkey: Option<&Pubkey>,
 ) {
+    todo!();
     let message = Message::new(
         &[bpf_loader_upgradeable::set_upgrade_authority(
             program_pubkey,

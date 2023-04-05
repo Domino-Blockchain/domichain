@@ -14,7 +14,8 @@ use {
     domichain_measure::measure::Measure,
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        // bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         feature_set::{
             cap_accounts_data_len, record_instruction_in_transaction_context_push,
             tx_wide_compute_cap, FeatureSet,
@@ -136,6 +137,7 @@ impl TransactionExecutor {
 }
 
 /// Compute meter
+#[derive(Debug)]
 pub struct ComputeMeter {
     remaining: u64,
 }
@@ -166,7 +168,7 @@ impl ComputeMeter {
 }
 
 /// Based loosely on the unstable std::alloc::Alloc trait
-pub trait Alloc {
+pub trait Alloc: Debug {
     fn alloc(&mut self, layout: Layout) -> Result<u64, AllocErr>;
     fn dealloc(&mut self, addr: u64, layout: Layout);
 }
@@ -185,6 +187,7 @@ impl fmt::Display for AllocErr {
     note = "Please use InstructionContext instead of StackFrame"
 )]
 #[allow(deprecated)]
+#[derive(Debug)]
 pub struct StackFrame<'a> {
     pub number_of_program_accounts: usize,
     pub keyed_accounts: Vec<KeyedAccount<'a>>,
@@ -212,6 +215,7 @@ impl<'a> StackFrame<'a> {
     }
 }
 
+#[derive(Debug)]
 struct SyscallContext {
     check_aligned: bool,
     check_size: bool,
@@ -219,6 +223,7 @@ struct SyscallContext {
     allocator: Rc<RefCell<dyn Alloc>>,
 }
 
+#[derive(Debug)]
 pub struct InvokeContext<'a> {
     pub transaction_context: &'a mut TransactionContext,
     #[allow(deprecated)]
@@ -481,7 +486,9 @@ impl<'a> InvokeContext<'a> {
         // Verify all executable accounts have zero outstanding refs
         for account_index in program_indices.iter() {
             self.transaction_context
-                .get_account_at_index(*account_index)?
+                .get_account_at_index(*account_index)
+                .inspect_err(|x| { dbg!(x); })
+                ?
                 .try_borrow_mut()
                 .map_err(|_| InstructionError::AccountBorrowOutstanding)?;
         }
@@ -801,7 +808,7 @@ impl<'a> InvokeContext<'a> {
             return Err(InstructionError::AccountNotExecutable);
         }
         let mut program_indices = vec![];
-        if borrowed_program_account.get_owner() == &bpf_loader_upgradeable::id() {
+        if borrowed_program_account.get_owner() == &wasm_loader_upgradeable::id() {
             if let UpgradeableLoaderState::Program {
                 programdata_address,
             } = borrowed_program_account.get_state()?
@@ -830,6 +837,7 @@ impl<'a> InvokeContext<'a> {
         }
         program_indices.push(borrowed_program_account.get_index_in_transaction());
 
+        // program_indices
         Ok((instruction_accounts, program_indices))
     }
 
@@ -850,7 +858,14 @@ impl<'a> InvokeContext<'a> {
                     .get_key_of_account_at_index(*index)
                     .map(|pubkey| *pubkey)
             })
-            .unwrap_or_else(|| Ok(native_loader::id()))?;
+            .unwrap_or_else(|| Ok(native_loader::id()))
+            .inspect_err(|x| { dbg!(x); })?;
+
+        if format!("{program_id}") != "Vote111111111111111111111111111111111111111" {
+            dbg!(&program_id);
+            dbg!(&program_indices);
+            dbg!(&self.transaction_context);
+        }
 
         let nesting_level = self
             .transaction_context
@@ -868,7 +883,8 @@ impl<'a> InvokeContext<'a> {
                     .verify_caller_us,
                 verify_caller_time.as_us()
             );
-            verify_caller_result?;
+            verify_caller_result
+                .inspect_err(|x| { dbg!(x); })?;
 
             if !self
                 .feature_set
@@ -886,13 +902,18 @@ impl<'a> InvokeContext<'a> {
 
         let result = self
             .push(instruction_accounts, program_indices, instruction_data)
+            .inspect_err(|x| { dbg!(x); })
             .and_then(|_| {
                 let mut process_executable_chain_time =
                     Measure::start("process_executable_chain_time");
                 self.transaction_context
-                    .set_return_data(program_id, Vec::new())?;
+                    .set_return_data(program_id, Vec::new())
+                    .inspect_err(|x| { dbg!(x); })?;
                 let pre_remaining_units = self.compute_meter.borrow().get_remaining();
-                let execution_result = self.process_executable_chain();
+                // process_executable_chain
+                let execution_result = self
+                    .process_executable_chain()
+                    .inspect_err(|x| { dbg!(x); });
                 let post_remaining_units = self.compute_meter.borrow().get_remaining();
                 *compute_units_consumed = pre_remaining_units.saturating_sub(post_remaining_units);
                 process_executable_chain_time.stop();
@@ -901,9 +922,13 @@ impl<'a> InvokeContext<'a> {
                 let mut verify_callee_time = Measure::start("verify_callee_time");
                 let result = execution_result.and_then(|_| {
                     if is_top_level_instruction {
-                        self.verify(instruction_accounts, program_indices)
+                        self
+                            .verify(instruction_accounts, program_indices)
+                            .inspect_err(|x| { dbg!(x); })
                     } else {
-                        self.verify_and_update(instruction_accounts, false)
+                        self
+                            .verify_and_update(instruction_accounts, false)
+                            .inspect_err(|x| { dbg!(x); })
                     }
                 });
                 verify_callee_time.stop();
@@ -924,21 +949,26 @@ impl<'a> InvokeContext<'a> {
                 );
 
                 result
-            });
+            })
+            .inspect_err(|x| { dbg!(x); });
 
         // Pop the invoke_stack to restore previous state
         let _ = self.pop();
-        result
+        result.inspect_err(|x| { dbg!(x); })
     }
 
     /// Calls the instruction's program entrypoint method
+    // process_executable_chain
     fn process_executable_chain(&mut self) -> Result<(), InstructionError> {
-        let instruction_context = self.transaction_context.get_current_instruction_context()?;
+        let instruction_context = self.transaction_context
+            .get_current_instruction_context()
+            .inspect_err(|x| { dbg!(x); })?;
 
         let (first_instruction_account, builtin_id) = {
             let borrowed_root_account = instruction_context
                 .try_borrow_program_account(self.transaction_context, 0)
-                .map_err(|_| InstructionError::UnsupportedProgramId)?;
+                .map_err(|_| InstructionError::UnsupportedProgramId)
+                .inspect_err(|x| { dbg!(x); })?;
             let owner_id = borrowed_root_account.get_owner();
             if domichain_sdk::native_loader::check_id(owner_id) {
                 (1, *borrowed_root_account.get_key())
@@ -947,14 +977,35 @@ impl<'a> InvokeContext<'a> {
             }
         };
 
+        if format!("{builtin_id}") != "Vote111111111111111111111111111111111111111" {
+            dbg!(builtin_id);
+            dbg!(&instruction_context);
+            dbg!(&self.transaction_context);
+            dbg!(
+                &instruction_context
+                    .try_borrow_program_account(self.transaction_context, 0)
+            );
+        }
+
         for entry in self.builtin_programs {
             if entry.program_id == builtin_id {
                 let program_id =
-                    *instruction_context.get_last_program_key(self.transaction_context)?;
+                    *instruction_context.get_last_program_key(self.transaction_context)
+                        .inspect_err(|x| { dbg!(x); })?;
                 if builtin_id == program_id {
                     let logger = self.get_log_collector();
                     stable_log::program_invoke(&logger, &program_id, self.get_stack_height());
+
+                    if format!("{}", &entry.program_id) != "Vote111111111111111111111111111111111111111" {
+                        // dbg!(&instruction_context);
+                        // dbg!(&self.transaction_context);
+                        dbg!(&self.builtin_programs);
+                        dbg!(&entry, &first_instruction_account);
+                        // dbg!(std::thread::current().id());
+                        // dbg!(std::time::SystemTime::now());
+                    }
                     return (entry.process_instruction)(first_instruction_account, self)
+                        .inspect_err(|x| { dbg!(x, &entry, &first_instruction_account); })
                         .map(|()| {
                             stable_log::program_success(&logger, &program_id);
                         })
@@ -963,12 +1014,13 @@ impl<'a> InvokeContext<'a> {
                             err
                         });
                 } else {
-                    return (entry.process_instruction)(first_instruction_account, self);
+                    return (entry.process_instruction)(first_instruction_account, self)
+                        .inspect_err(|x| { dbg!(x); });
                 }
             }
         }
 
-        Err(InstructionError::UnsupportedProgramId)
+        Err(InstructionError::UnsupportedProgramId).inspect_err(|x| { dbg!(x); })
     }
 
     #[deprecated(
@@ -1163,6 +1215,7 @@ pub fn with_mock_invoke_context<R, F: FnMut(&mut InvokeContext) -> R>(
     }];
     let preparation =
         prepare_mock_invoke_context(transaction_accounts, instruction_accounts, &program_indices);
+    dbg!(&preparation.transaction_accounts);
     let mut transaction_context = TransactionContext::new(
         preparation.transaction_accounts,
         ComputeBudget::default().max_invoke_depth.saturating_add(1),
@@ -1193,6 +1246,7 @@ pub fn mock_process_instruction(
     preparation
         .transaction_accounts
         .push((*loader_id, processor_account));
+    dbg!(&preparation.transaction_accounts);
     let mut transaction_context = TransactionContext::new(
         preparation.transaction_accounts,
         ComputeBudget::default().max_invoke_depth.saturating_add(1),
