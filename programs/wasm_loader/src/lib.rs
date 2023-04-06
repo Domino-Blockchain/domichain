@@ -1240,10 +1240,9 @@ impl Executor for WasmExecutor {
             let mut store = wasmi::Store::new(&self.engine, 42);
             let mut linker = <wasmi::Linker<HostState>>::new(&self.engine);
             // TODO: bind functions
-            let host_hello = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, param: i32| {
+            let host_hello = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, param: i32| {
                 println!("Got {param} from WebAssembly");
                 println!("My host state is: {}", caller.data());
-                *caller.data_mut() += 1;
             });
             linker.define("host", "hello", host_hello).unwrap();
             let instance = linker
