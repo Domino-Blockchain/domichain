@@ -149,6 +149,7 @@ pub fn create_executor(
     disable_deploy_of_alloc_free_syscall: bool,
 ) -> Result<Arc<BpfExecutor>, InstructionError> {
     let mut register_syscalls_time = Measure::start("register_syscalls_time");
+    // register_syscalls
     let register_syscall_result =
         syscalls::register_syscalls(invoke_context, disable_deploy_of_alloc_free_syscall);
     register_syscalls_time.stop();
@@ -314,8 +315,11 @@ pub fn create_vm<'a, 'b>(
     let mut heap =
         AlignedMemory::new_with_size(compute_budget.heap_size.unwrap_or(HEAP_LENGTH), HOST_ALIGN);
     let parameter_region = MemoryRegion::new_writable(parameter_bytes, MM_INPUT_START);
+
+    // Create VM, provide Heap and Parameters
     let mut vm = EbpfVm::new(program, heap.as_slice_mut(), vec![parameter_region])?;
-    // Here
+
+    // Bind SysCalls
     syscalls::bind_syscall_context_objects(&mut vm, invoke_context, heap, orig_account_lengths)?;
     Ok(vm)
 }

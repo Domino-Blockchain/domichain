@@ -861,11 +861,11 @@ impl<'a> InvokeContext<'a> {
             .unwrap_or_else(|| Ok(native_loader::id()))
             .inspect_err(|x| { dbg!(x); })?;
 
-        if format!("{program_id}") != "Vote111111111111111111111111111111111111111" {
-            dbg!(&program_id);
-            dbg!(&program_indices);
-            dbg!(&self.transaction_context);
-        }
+        // if format!("{program_id}") != "Vote111111111111111111111111111111111111111" {
+        //     dbg!(&program_id);
+        //     dbg!(&program_indices);
+        //     dbg!(&self.transaction_context);
+        // }
 
         let nesting_level = self
             .transaction_context
@@ -977,15 +977,15 @@ impl<'a> InvokeContext<'a> {
             }
         };
 
-        if format!("{builtin_id}") != "Vote111111111111111111111111111111111111111" {
-            dbg!(builtin_id);
-            dbg!(&instruction_context);
-            dbg!(&self.transaction_context);
-            dbg!(
-                &instruction_context
-                    .try_borrow_program_account(self.transaction_context, 0)
-            );
-        }
+        // if format!("{builtin_id}") != "Vote111111111111111111111111111111111111111" {
+        //     dbg!(builtin_id);
+        //     dbg!(&instruction_context);
+        //     dbg!(&self.transaction_context);
+        //     dbg!(
+        //         &instruction_context
+        //             .try_borrow_program_account(self.transaction_context, 0)
+        //     );
+        // }
 
         for entry in self.builtin_programs {
             if entry.program_id == builtin_id {
@@ -996,14 +996,14 @@ impl<'a> InvokeContext<'a> {
                     let logger = self.get_log_collector();
                     stable_log::program_invoke(&logger, &program_id, self.get_stack_height());
 
-                    if format!("{}", &entry.program_id) != "Vote111111111111111111111111111111111111111" {
-                        // dbg!(&instruction_context);
-                        // dbg!(&self.transaction_context);
-                        dbg!(&self.builtin_programs);
-                        dbg!(&entry, &first_instruction_account);
-                        // dbg!(std::thread::current().id());
-                        // dbg!(std::time::SystemTime::now());
-                    }
+                    // if format!("{}", &entry.program_id) != "Vote111111111111111111111111111111111111111" {
+                    //     // dbg!(&instruction_context);
+                    //     // dbg!(&self.transaction_context);
+                    //     dbg!(&self.builtin_programs);
+                    //     dbg!(&entry, &first_instruction_account);
+                    //     // dbg!(std::thread::current().id());
+                    //     // dbg!(std::time::SystemTime::now());
+                    // }
                     return (entry.process_instruction)(first_instruction_account, self)
                         .inspect_err(|x| { dbg!(x, &entry, &first_instruction_account); })
                         .map(|()| {
