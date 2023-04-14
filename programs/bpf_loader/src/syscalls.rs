@@ -126,6 +126,7 @@ macro_rules! register_feature_gated_syscall {
     };
 }
 
+// register_syscalls
 pub fn register_syscalls(
     invoke_context: &mut InvokeContext,
     disable_deploy_of_alloc_free_syscall: bool,
@@ -156,7 +157,12 @@ pub fn register_syscalls(
     )?;
 
     // Logging
-    syscall_registry.register_syscall_by_name(b"sol_log_", SyscallLog::init, SyscallLog::call)?;
+    syscall_registry.register_syscall_by_name(
+        b"sol_log_",
+        SyscallLog::init,
+        SyscallLog::call,
+    )?;
+
     syscall_registry.register_syscall_by_name(
         b"sol_log_64_",
         SyscallLogU64::init,

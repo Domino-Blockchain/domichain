@@ -321,10 +321,10 @@ impl Accounts {
                             validated_fee_payer = true;
                         }
 
-                        let acc_owner_str = format!("{}", account.owner());
-                        if acc_owner_str != "Vote111111111111111111111111111111111111111" && acc_owner_str != "11111111111111111111111111111111" {
-                            dbg!(account.owner());
-                        }
+                        // let acc_owner_str = format!("{}", account.owner());
+                        // if acc_owner_str != "Vote111111111111111111111111111111111111111" && acc_owner_str != "11111111111111111111111111111111" {
+                        //     dbg!(account.owner());
+                        // }
                         if wasm_loader_upgradeable::check_id(account.owner()) {
                             if message.is_writable(i) && !message.is_upgradeable_loader_present() {
                                 error_counters.invalid_writable_account += 1;

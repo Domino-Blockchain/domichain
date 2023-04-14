@@ -12,6 +12,10 @@ pub mod with_jit;
 #[macro_use]
 extern crate domichain_metrics;
 
+use solana_rbpf::syscalls::BpfTracePrintf;
+use solana_rbpf::user_error::UserError;
+use solana_rbpf::vm::SyscallRegistry;
+use wasmi::{AsContextMut, Extern};
 use {
     crate::{
         serialization::{deserialize_parameters, serialize_parameters},
@@ -266,6 +270,7 @@ pub fn create_executor(
     Ok(Arc::new(WasmExecutor {
         engine,
         verified_executable,
+        syscall_registry,
     }))
 }
 
@@ -1205,6 +1210,7 @@ impl InstructionMeter for ThisInstructionMeter {
 pub struct WasmExecutor {
     engine: wasmi::Engine,
     verified_executable: wasmi::Module,
+    syscall_registry: SyscallRegistry,
 }
 
 // Well, implement Debug for solana_rbpf::vm::Executable in solana-rbpf...
@@ -1240,15 +1246,39 @@ impl Executor for WasmExecutor {
             let mut store = wasmi::Store::new(&self.engine, 42);
             let mut linker = <wasmi::Linker<HostState>>::new(&self.engine);
             // TODO: bind functions
-            let host_hello = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, param: i32| {
-                println!("Got {param} from WebAssembly");
+            // let host_hello = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, param: i32| {
+            //     println!("Got {param} from WebAssembly");
+            //     println!("My host state is: {}", caller.data());
+            // });
+
+            let sol_log_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, message: i32, len: u64| {
+                let mem = match caller.get_export("memory") {
+                    Some(Extern::Memory(mem)) => mem,
+                    _ => panic!("failed to find host memory"),
+                };
+                let data = mem.data(&caller)
+                    .get(message as u32 as usize..)
+                    .and_then(|arr| arr.get(..len as u32 as usize));
+                let string = match data {
+                    Some(data) => match std::str::from_utf8(data) {
+                        Ok(s) => s,
+                        Err(_) => panic!("invalid utf-8"),
+                    },
+                    None => panic!("pointer/length out of bounds"),
+                };
+                println!("Got \"{string}\" from WebAssembly");
                 println!("My host state is: {}", caller.data());
             });
-            linker.define("host", "hello", host_hello).unwrap();
+
+            // let mut syscall_registry = SyscallRegistry::default();
+            // syscall_registry.register_syscall_by_hash(6, BpfTracePrintf::init::<u64, UserError>, BpfTracePrintf::call).unwrap();
+
+            // linker.define("host", "hello", host_hello).unwrap();
+            linker.define("env", "sol_log_", sol_log_).unwrap();
             let instance = linker
                 .instantiate(&mut store, &self.verified_executable).unwrap()
                 .start(&mut store).unwrap();
-            let vm = instance.get_typed_func::<(), ()>(&store, "hello").unwrap();
+            let vm = instance.get_typed_func::<i32, i64>(&store, "entrypoint").unwrap();
 
             // let mut vm = match create_vm(
             //     &self.verified_executable,
@@ -1270,7 +1300,8 @@ impl Executor for WasmExecutor {
             let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 
-            let result = vm.call(&mut store, ()).unwrap();
+            let result = vm.call(&mut store, 24).unwrap();
+            println!("WASM result: {result:?}");
             // let result = if self.use_jit {
             //     vm.execute_program_jit(&mut instruction_meter)
             // } else {
