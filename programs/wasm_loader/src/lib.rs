@@ -16,6 +16,7 @@ extern crate domichain_metrics;
 // use solana_rbpf::syscalls::BpfTracePrintf;
 // use solana_rbpf::user_error::UserError;
 use solana_rbpf::vm::SyscallRegistry;
+use wasmi::core::Trap;
 use wasmi::Extern;
 use wasmi_wasi::WasiCtx;
 use {
@@ -1281,7 +1282,7 @@ impl Executor for WasmExecutor {
             let sol_log_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, message: i32, len: u64| {
                 let invoke_context = caller.data().1
                     .try_borrow()
-                    .map_err(|_| SyscallError::InvokeContextBorrowFailed).unwrap();
+                    .map_err(|_| Trap::new(format!("{:?}", SyscallError::InvokeContextBorrowFailed)))?;
 
                 let mem = match caller.get_export("memory") {
                     Some(Extern::Memory(mem)) => mem,
@@ -1302,7 +1303,13 @@ impl Executor for WasmExecutor {
                 stable_log::program_log(&invoke_context.get_log_collector(), string);
 
                 // println!("My host state is: {}", caller.data());
+                Ok(())
             });
+
+            // let sol_panic_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>| {
+            //
+            // });
+            // linker.define("env", "sol_panic_", sol_panic_).unwrap();
 
             let memcpy = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, dst: i32, src: i32, len: i32| {
                 let mem = match caller.get_export("memory") {
