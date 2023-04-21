@@ -62,6 +62,8 @@ pub fn load_program<T: Client>(
     program_pubkey
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn load_buffer_account<T: Client>(
     bank_client: &T,
     from_keypair: &Keypair,
@@ -113,6 +115,8 @@ pub fn load_buffer_account<T: Client>(
     }
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn load_upgradeable_program<T: Client>(
     bank_client: &T,
     from_keypair: &Keypair,
@@ -159,6 +163,8 @@ pub fn load_upgradeable_program<T: Client>(
         .unwrap();
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn upgrade_program<T: Client>(
     bank_client: &T,
     from_keypair: &Keypair,
@@ -182,6 +188,8 @@ pub fn upgrade_program<T: Client>(
         .unwrap();
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn set_upgrade_authority<T: Client>(
     bank_client: &T,
     from_keypair: &Keypair,

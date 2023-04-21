@@ -10,6 +10,8 @@ use {
     },
 };
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn parse_wasm_loader(
     instruction: &CompiledInstruction,
     account_keys: &AccountKeys,
@@ -46,6 +48,8 @@ pub fn parse_wasm_loader(
     }
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 pub fn parse_wasm_upgradeable_loader(
     instruction: &CompiledInstruction,
     account_keys: &AccountKeys,

@@ -751,6 +751,8 @@ fn hardforks_of(matches: &ArgMatches<'_>, name: &str) -> Option<Vec<Slot>> {
     }
 }
 
+#[allow(unreachable_code)]
+#[allow(unused_variables)]
 fn load_bank_forks(
     arg_matches: &ArgMatches,
     genesis_config: &GenesisConfig,
@@ -2706,6 +2708,7 @@ fn main() {
 
                         bank.set_capitalization();
 
+                        #[allow(unreachable_code)]
                         let bank = if let Some(warp_slot) = warp_slot {
                             Arc::new(Bank::warp_from_parent(
                                 &bank,

@@ -1083,6 +1083,7 @@ impl ProgramTestContext {
     }
 
     /// Force the working bank ahead to a new slot
+    #[allow(unreachable_code)]
     pub fn warp_to_slot(&mut self, warp_slot: Slot) -> Result<(), ProgramTestError> {
         let mut bank_forks = self.bank_forks.write().unwrap();
         let bank = bank_forks.working_bank();
@@ -1105,11 +1106,13 @@ impl ProgramTestContext {
             bank.freeze();
             bank
         } else {
-            bank_forks.insert(Bank::warp_from_parent(
-                &bank,
-                &Pubkey::default(),
-                pre_warp_slot,
-            ))
+            todo!();
+            // bank_forks.insert(Bank::warp_from_parent(
+            //     &bank,
+            //     &Pubkey::default(),
+            //     pre_warp_slot,
+            //     todo!(),
+            // ))
         };
         bank_forks.set_root(
             pre_warp_slot,

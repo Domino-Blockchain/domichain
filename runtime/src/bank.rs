@@ -1605,6 +1605,7 @@ impl Bank {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(unreachable_code)]
     pub fn new_with_paths(
         genesis_config: &GenesisConfig,
         paths: Vec<PathBuf>,

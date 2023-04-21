@@ -13,17 +13,21 @@ pub mod with_jit;
 #[macro_use]
 extern crate domichain_metrics;
 
-use solana_rbpf::syscalls::BpfTracePrintf;
-use solana_rbpf::user_error::UserError;
+// use solana_rbpf::syscalls::BpfTracePrintf;
+// use solana_rbpf::user_error::UserError;
 use solana_rbpf::vm::SyscallRegistry;
-use wasmi::{AsContextMut, Extern};
+use wasmi::Extern;
 use wasmi_wasi::WasiCtx;
 use {
     crate::{
         serialization::{deserialize_parameters, serialize_parameters},
         syscalls::SyscallError,
     },
-    log::{log_enabled, trace, error, Level::Trace},
+    log::{
+        // log_enabled, trace,
+        error,
+        // Level::Trace
+    },
     domichain_measure::measure::Measure,
     domichain_program_runtime::{
         ic_logger_msg, ic_msg,
@@ -35,17 +39,24 @@ use {
     domichain_sdk::{
         wasm_loader, wasm_loader_deprecated,
         wasm_loader_upgradeable::{self, UpgradeableLoaderState},
-        entrypoint::{HEAP_LENGTH, SUCCESS},
+        entrypoint::{
+            HEAP_LENGTH,
+            // SUCCESS,
+        },
         feature_set::{
-            cap_accounts_data_len, disable_bpf_deprecated_load_instructions,
-            disable_bpf_unresolved_symbols_at_runtime, disable_deploy_of_alloc_free_syscall,
-            disable_deprecated_loader, error_on_syscall_bpf_function_hash_collisions,
-            reduce_required_deploy_balance, reject_callx_r10, requestable_heap_size,
+            // cap_accounts_data_len, disable_bpf_deprecated_load_instructions,
+            // disable_bpf_unresolved_symbols_at_runtime,
+            disable_deploy_of_alloc_free_syscall,
+            disable_deprecated_loader,
+            // error_on_syscall_bpf_function_hash_collisions,
+            reduce_required_deploy_balance,
+            // reject_callx_r10,
+            requestable_heap_size,
         },
         instruction::{AccountMeta, InstructionError},
         loader_instruction::LoaderInstruction,
         loader_upgradeable_instruction::UpgradeableLoaderInstruction,
-        program_error::MAX_ACCOUNTS_DATA_SIZE_EXCEEDED,
+        // program_error::MAX_ACCOUNTS_DATA_SIZE_EXCEEDED,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
         saturating_add_assign,
@@ -55,12 +66,14 @@ use {
     solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{HOST_ALIGN, MM_INPUT_START},
-        elf::Executable,
+        // elf::Executable,
         error::{EbpfError, UserDefinedError},
         memory_region::MemoryRegion,
-        static_analysis::Analysis,
+        // static_analysis::Analysis,
         verifier::{RequisiteVerifier, VerifierError},
-        vm::{Config, EbpfVm, InstructionMeter, VerifiedExecutable},
+        vm::{
+            // Config,
+            EbpfVm, InstructionMeter, VerifiedExecutable},
     },
     std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc},
     thiserror::Error,
@@ -149,8 +162,8 @@ pub fn create_executor(
     programdata_account_index: usize,
     programdata_offset: usize,
     invoke_context: &mut InvokeContext,
-    use_jit: bool,
-    reject_deployment_of_broken_elfs: bool,
+    _use_jit: bool,
+    _reject_deployment_of_broken_elfs: bool,
     disable_deploy_of_alloc_free_syscall: bool,
 ) -> Result<Arc<WasmExecutor>, InstructionError> {
     let mut register_syscalls_time = Measure::start("register_syscalls_time");
@@ -248,7 +261,7 @@ pub fn create_executor(
     //         executable,
     //     )
     //     .map_err(|e| map_ebpf_error(invoke_context, e))?;
-    let mut verified_executable = executable;
+    let verified_executable = executable;
     verify_code_time.stop();
     create_executor_metrics.verify_code_us = verify_code_time.as_us();
     invoke_context.timings.create_executor_verify_code_us = invoke_context
@@ -1195,6 +1208,7 @@ pub struct ThisInstructionMeter {
     pub compute_meter: Rc<RefCell<ComputeMeter>>,
 }
 impl ThisInstructionMeter {
+    #[allow(dead_code)]
     fn new(compute_meter: Rc<RefCell<ComputeMeter>>) -> Self {
         Self { compute_meter }
     }
@@ -1214,6 +1228,7 @@ impl InstructionMeter for ThisInstructionMeter {
 pub struct WasmExecutor {
     engine: wasmi::Engine,
     verified_executable: wasmi::Module,
+    #[allow(dead_code)]
     syscall_registry: SyscallRegistry,
 }
 
@@ -1249,7 +1264,7 @@ impl Executor for WasmExecutor {
         let execution_result = {
             // TODO: create_vm
             type HostState<'a, 'b> = (WasiCtx, Rc<RefCell<&'a mut InvokeContext<'b>>>);
-            let mut ctx = wasmi_wasi::WasiCtxBuilder::new().build();
+            let ctx = wasmi_wasi::WasiCtxBuilder::new().build();
             let mut store = wasmi::Store::new(&self.engine, (ctx, invoke_context.clone()));
             let mut linker = <wasmi::Linker<HostState>>::new(&self.engine);
 
@@ -1297,18 +1312,14 @@ impl Executor for WasmExecutor {
                 let data = mem.data_mut(&mut caller);
 
                 let src_start = src as u32 as usize;
-                let src_bytes = data
-                    .get(src_start..src_start + len as usize)
-                    .unwrap();
-                dbg!(std::str::from_utf8(src_bytes));
+                // let src_bytes = data
+                //     .get(src_start..src_start + len as usize)
+                //     .unwrap();
 
                 let dst_start = dst as u32 as usize;
-                let dst_bytes = data
-                    .get_mut(dst_start..dst_start + len as usize)
-                    .unwrap();
-                dbg!(std::str::from_utf8(dst_bytes));
-
-                dbg!(src_start, dst_start, len as usize);
+                // let dst_bytes = data
+                //     .get_mut(dst_start..dst_start + len as usize)
+                //     .unwrap();
 
                 unsafe {
                     std::ptr::copy_nonoverlapping(
@@ -1329,12 +1340,9 @@ impl Executor for WasmExecutor {
                 let data = mem.data_mut(&mut caller);
 
                 let dst_start = ptr as u32 as usize;
-                let dst_bytes = data
-                    .get_mut(dst_start..dst_start + len as usize)
-                    .unwrap();
-                dbg!(std::str::from_utf8(dst_bytes));
-
-                dbg!(dst_start, len as usize);
+                // let dst_bytes = data
+                //     .get_mut(dst_start..dst_start + len as usize)
+                //     .unwrap();
 
                 unsafe {
                     std::ptr::write_bytes(
@@ -1397,7 +1405,7 @@ impl Executor for WasmExecutor {
                 .feature_set
                 .is_active(&check_slice_translation_size::id());
             let heap_size = invoke_context.borrow().get_compute_budget().heap_size.unwrap_or(HEAP_LENGTH);
-            let mut heap =
+            let heap =
                 AlignedMemory::new_with_size(heap_size, HOST_ALIGN);
             invoke_context.borrow_mut()
                 .set_syscall_context(
@@ -1412,7 +1420,7 @@ impl Executor for WasmExecutor {
 
             execute_time = Measure::start("execute");
             stable_log::program_invoke(&log_collector, &program_id, stack_height);
-            let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
+            // let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 
             let result = vm.call(&mut store, 0).unwrap(); // sending pointer to params
