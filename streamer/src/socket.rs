@@ -16,6 +16,7 @@ impl SocketAddrSpace {
     }
 
     /// Returns true if the IP address is valid.
+    #[allow(unused_variables)]
     pub fn check(&self, addr: &SocketAddr) -> bool {
         if self == &SocketAddrSpace::Unspecified {
             return true;

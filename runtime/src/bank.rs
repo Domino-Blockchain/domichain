@@ -205,6 +205,7 @@ pub struct WeightSlotVoteTracker {
 }
 
 impl WeightSlotVoteTracker {
+    #[allow(dead_code)]
     pub(crate) fn get_voted_slot_updates(&mut self) -> Option<Vec<Pubkey>> {
         self.voted_slot_updates.take()
     }
@@ -618,7 +619,6 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
-use crate::contains::Contains;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -1665,6 +1665,7 @@ impl Bank {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(unreachable_code)]
     pub fn new_with_paths(
         genesis_config: &GenesisConfig,
         paths: Vec<PathBuf>,
@@ -1830,6 +1831,8 @@ impl Bank {
         )
     }
 
+    #[allow(unreachable_code)]
+    #[allow(unused_variables)]
     pub fn new_from_parent_with_tracer(
         parent: &Arc<Bank>,
         collector_id: &Pubkey,

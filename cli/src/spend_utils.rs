@@ -8,7 +8,7 @@ use {
     domichain_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig, hash::Hash, message::Message,
-        native_token::{lamports_to_sol, sol_to_lamports}, pubkey::Pubkey,
+        native_token::sol_to_lamports, pubkey::Pubkey,
     },
 };
 

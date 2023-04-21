@@ -598,6 +598,9 @@ impl ClusterInfoVoteListener {
         )
     }
 
+    #[allow(unused_variables)]
+    #[allow(dead_code)]
+    #[allow(unreachable_code)]
     fn listen_and_confirm_votes(
         gossip_vote_txs_receiver: &VerifiedVoteTransactionsReceiver,
         vote_tracker: &VoteTracker,

@@ -5,7 +5,7 @@ use {
         rpc_client::RpcClient,
     },
     domichain_sdk::{
-        commitment_config::CommitmentConfig, message::Message, native_token::{lamports_to_sol, sol_to_lamports},
+        commitment_config::CommitmentConfig, message::Message, native_token::sol_to_lamports,
         pubkey::Pubkey,
     },
 };
