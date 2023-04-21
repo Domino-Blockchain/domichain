@@ -266,9 +266,9 @@ pub fn derive_abi_enum_visitor(item: TokenStream) -> TokenStream {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn quote_for_test(
-    _test_mod_ident: &Ident,
-    _type_name: &Ident,
-    _expected_digest: &str,
+    test_mod_ident: &Ident,
+    type_name: &Ident,
+    expected_digest: &str,
 ) -> TokenStream2 {
     // escape from nits.sh...
     let p = Ident::new(&("ep".to_owned() + "rintln"), Span::call_site());
