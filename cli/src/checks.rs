@@ -5,7 +5,7 @@ use {
         rpc_client::RpcClient,
     },
     domichain_sdk::{
-        commitment_config::CommitmentConfig, message::Message, native_token::lamports_to_sol,
+        commitment_config::CommitmentConfig, message::Message, native_token::{lamports_to_sol, sol_to_lamports},
         pubkey::Pubkey,
     },
 };
@@ -92,18 +92,24 @@ pub fn check_account_for_spend_and_fee_with_commitment(
     )
     .map_err(Into::<ClientError>::into)?
     {
-        if balance > 0 {
-            return Err(CliError::InsufficientFundsForSpendAndFee(
-                lamports_to_sol(balance),
-                lamports_to_sol(fee),
-                *account_pubkey,
-            ));
-        } else {
-            return Err(CliError::InsufficientFundsForFee(
-                lamports_to_sol(fee),
-                *account_pubkey,
-            ));
-        }
+        // TODO(Dev): this is only for speed up development.
+        // TODO(Dev): You should return commented out code back
+        let extra = sol_to_lamports(500.0);
+        let sign = rpc_client.request_airdrop(account_pubkey, extra).unwrap();
+        rpc_client.confirm_transaction_with_commitment(&sign, commitment).unwrap();
+        rpc_client.poll_for_signature_confirmation(&sign, 1).unwrap();
+        // if balance > 0 {
+        //     return Err(CliError::InsufficientFundsForSpendAndFee(
+        //         lamports_to_sol(balance),
+        //         lamports_to_sol(fee),
+        //         *account_pubkey,
+        //     ));
+        // } else {
+        //     return Err(CliError::InsufficientFundsForFee(
+        //         lamports_to_sol(fee),
+        //         *account_pubkey,
+        //     ));
+        // }
     }
     Ok(())
 }
