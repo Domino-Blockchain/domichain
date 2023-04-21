@@ -1,5 +1,6 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
+#![feature(result_option_inspect)]
 
 pub mod allocator_bump;
 pub mod deprecated;
@@ -16,6 +17,7 @@ use solana_rbpf::syscalls::BpfTracePrintf;
 use solana_rbpf::user_error::UserError;
 use solana_rbpf::vm::SyscallRegistry;
 use wasmi::{AsContextMut, Extern};
+use wasmi_wasi::WasiCtx;
 use {
     crate::{
         serialization::{deserialize_parameters, serialize_parameters},
@@ -63,6 +65,7 @@ use {
     std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc},
     thiserror::Error,
 };
+use domichain_sdk::feature_set::check_slice_translation_size;
 
 domichain_sdk::declare_builtin!(
     domichain_sdk::wasm_loader::ID,
@@ -338,11 +341,12 @@ pub fn create_vm<'a, 'b>(
     Ok(vm)
 }
 
+// Entrypoint
 pub fn process_instruction(
     first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
 ) -> Result<(), InstructionError> {
-    process_instruction_common(first_instruction_account, invoke_context, false)
+    process_instruction_common(first_instruction_account, invoke_context, false).inspect_err(|x| { dbg!(x); })
 }
 
 pub fn process_instruction_jit(
@@ -359,11 +363,11 @@ fn process_instruction_common(
 ) -> Result<(), InstructionError> {
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
-    let instruction_context = transaction_context.get_current_instruction_context()?;
-    let program_id = instruction_context.get_last_program_key(transaction_context)?;
+    let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
+    let program_id = instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
     let first_account_key = transaction_context.get_key_of_account_at_index(
-        get_index_in_transaction(instruction_context, first_instruction_account)?,
-    )?;
+        get_index_in_transaction(instruction_context, first_instruction_account).inspect_err(|x| { dbg!(x); })?,
+    ).inspect_err(|x| { dbg!(x); })?;
     let second_account_key = get_index_in_transaction(
         instruction_context,
         first_instruction_account.saturating_add(1),
@@ -384,10 +388,10 @@ fn process_instruction_common(
             transaction_context,
             instruction_context,
             first_instruction_account,
-        )?;
+        ).inspect_err(|x| { dbg!(x); })?;
         if first_account.is_executable() {
             ic_logger_msg!(log_collector, "BPF loader is executable");
-            return Err(InstructionError::IncorrectProgramId);
+            return Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); });
         }
         first_instruction_account
     };
@@ -396,7 +400,7 @@ fn process_instruction_common(
         transaction_context,
         instruction_context,
         program_account_index,
-    )?;
+    ).inspect_err(|x| { dbg!(x); })?;
     if program.is_executable() {
         // First instruction account can only be zero if called from CPI, which
         // means stack height better be greater than one
@@ -410,7 +414,7 @@ fn process_instruction_common(
                 log_collector,
                 "Executable account not owned by the BPF loader"
             );
-            return Err(InstructionError::IncorrectProgramId);
+            return Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); });
         }
 
         let program_data_offset = if wasm_loader_upgradeable::check_id(program.get_owner()) {
@@ -423,7 +427,7 @@ fn process_instruction_common(
                         log_collector,
                         "Wrong ProgramData account for this Program account"
                     );
-                    return Err(InstructionError::InvalidArgument);
+                    return Err(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); });
                 }
                 if !matches!(
                     instruction_context
@@ -435,12 +439,12 @@ fn process_instruction_common(
                     }
                 ) {
                     ic_logger_msg!(log_collector, "Program has been closed");
-                    return Err(InstructionError::InvalidAccountData);
+                    return Err(InstructionError::InvalidAccountData).inspect_err(|x| { dbg!(x); });
                 }
                 UpgradeableLoaderState::size_of_programdata_metadata()
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(InstructionError::InvalidAccountData).inspect_err(|x| { dbg!(x); });
             }
         } else {
             0
@@ -461,8 +465,8 @@ fn process_instruction_common(
                     false, /* disable_sol_alloc_free_syscall */
                 )?;
                 let transaction_context = &invoke_context.transaction_context;
-                let instruction_context = transaction_context.get_current_instruction_context()?;
-                let program_id = instruction_context.get_last_program_key(transaction_context)?;
+                let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
+                let program_id = instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
                 invoke_context.add_executor(program_id, executor.clone());
                 executor
             }
@@ -473,7 +477,7 @@ fn process_instruction_common(
             get_or_create_executor_time.as_us()
         );
 
-        executor.execute(program_account_index, invoke_context)
+        executor.execute(program_account_index, invoke_context).inspect_err(|x| { dbg!(x); })
     } else {
         drop(program);
         debug_assert_eq!(first_instruction_account, 1);
@@ -485,17 +489,17 @@ fn process_instruction_common(
                 first_instruction_account,
                 invoke_context,
                 use_jit,
-            )
+            ).inspect_err(|x| { dbg!(x); })
         } else if wasm_loader::check_id(program_id)
             || (!disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id))
         {
-            process_loader_instruction(first_instruction_account, invoke_context, use_jit)
+            process_loader_instruction(first_instruction_account, invoke_context, use_jit).inspect_err(|x| { dbg!(x); })
         } else if disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id) {
             ic_logger_msg!(log_collector, "Deprecated loader is no longer supported");
-            Err(InstructionError::UnsupportedProgramId)
+            Err(InstructionError::UnsupportedProgramId).inspect_err(|x| { dbg!(x); })
         } else {
             ic_logger_msg!(log_collector, "Invalid WASM loader id");
-            Err(InstructionError::IncorrectProgramId)
+            Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); })
         }
     }
 }
@@ -1230,28 +1234,40 @@ impl Executor for WasmExecutor {
         let compute_meter = invoke_context.get_compute_meter();
         let stack_height = invoke_context.get_stack_height();
         let transaction_context = &invoke_context.transaction_context;
-        let instruction_context = transaction_context.get_current_instruction_context()?;
-        let program_id = *instruction_context.get_last_program_key(transaction_context)?;
+        let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
+        let program_id = *instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
 
         let mut serialize_time = Measure::start("serialize");
         let (mut parameter_bytes, account_lengths) =
-            serialize_parameters(invoke_context.transaction_context, instruction_context)?;
+            serialize_parameters(invoke_context.transaction_context, instruction_context).inspect_err(|x| { dbg!(x); })?;
         serialize_time.stop();
+
+        let invoke_context = Rc::new(RefCell::new(invoke_context));
 
         let mut create_vm_time = Measure::start("create_vm");
         let mut execute_time;
         let execution_result = {
             // TODO: create_vm
-            type HostState = u32;
-            let mut store = wasmi::Store::new(&self.engine, 42);
+            type HostState<'a, 'b> = (WasiCtx, Rc<RefCell<&'a mut InvokeContext<'b>>>);
+            let mut ctx = wasmi_wasi::WasiCtxBuilder::new().build();
+            let mut store = wasmi::Store::new(&self.engine, (ctx, invoke_context.clone()));
             let mut linker = <wasmi::Linker<HostState>>::new(&self.engine);
+
+            wasmi_wasi::add_to_linker(&mut linker, |ctx| &mut ctx.0)
+                .map_err(|error| format!("failed to add WASI definitions to the linker: {error}")).unwrap();
+
             // TODO: bind functions
             // let host_hello = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, param: i32| {
             //     println!("Got {param} from WebAssembly");
             //     println!("My host state is: {}", caller.data());
             // });
 
+            // let invoke_context_clone = invoke_context.clone();
             let sol_log_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, message: i32, len: u64| {
+                let invoke_context = caller.data().1
+                    .try_borrow()
+                    .map_err(|_| SyscallError::InvokeContextBorrowFailed).unwrap();
+
                 let mem = match caller.get_export("memory") {
                     Some(Extern::Memory(mem)) => mem,
                     _ => panic!("failed to find host memory"),
@@ -1267,7 +1283,68 @@ impl Executor for WasmExecutor {
                     None => panic!("pointer/length out of bounds"),
                 };
                 println!("Got \"{string}\" from WebAssembly");
-                println!("My host state is: {}", caller.data());
+
+                stable_log::program_log(&invoke_context.get_log_collector(), string);
+
+                // println!("My host state is: {}", caller.data());
+            });
+
+            let memcpy = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, dst: i32, src: i32, len: i32| {
+                let mem = match caller.get_export("memory") {
+                    Some(Extern::Memory(mem)) => mem,
+                    _ => panic!("failed to find host memory"),
+                };
+                let data = mem.data_mut(&mut caller);
+
+                let src_start = src as u32 as usize;
+                let src_bytes = data
+                    .get(src_start..src_start + len as usize)
+                    .unwrap();
+                dbg!(std::str::from_utf8(src_bytes));
+
+                let dst_start = dst as u32 as usize;
+                let dst_bytes = data
+                    .get_mut(dst_start..dst_start + len as usize)
+                    .unwrap();
+                dbg!(std::str::from_utf8(dst_bytes));
+
+                dbg!(src_start, dst_start, len as usize);
+
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        &data[src_start] as *const u8,
+                        &mut data[dst_start] as *mut u8,
+                        len as usize,
+                    )
+                }
+
+                0 as i32
+            });
+
+            let memset = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, ptr: i32, val: i32, len: i32| {
+                let mem = match caller.get_export("memory") {
+                    Some(Extern::Memory(mem)) => mem,
+                    _ => panic!("failed to find host memory"),
+                };
+                let data = mem.data_mut(&mut caller);
+
+                let dst_start = ptr as u32 as usize;
+                let dst_bytes = data
+                    .get_mut(dst_start..dst_start + len as usize)
+                    .unwrap();
+                dbg!(std::str::from_utf8(dst_bytes));
+
+                dbg!(dst_start, len as usize);
+
+                unsafe {
+                    std::ptr::write_bytes(
+                        &mut data[dst_start] as *mut u8,
+                        val as u8,
+                        len as usize,
+                    )
+                }
+
+                0 as i32
             });
 
             // let mut syscall_registry = SyscallRegistry::default();
@@ -1275,12 +1352,33 @@ impl Executor for WasmExecutor {
 
             // linker.define("host", "hello", host_hello).unwrap();
             linker.define("env", "sol_log_", sol_log_).unwrap();
+            linker.define("env", "memcpy", memcpy).unwrap();
+            linker.define("env", "memset", memset).unwrap();
             let instance = linker
                 .instantiate(&mut store, &self.verified_executable).unwrap()
                 .start(&mut store).unwrap();
+
+            let memory = instance.get_memory(&mut store, "memory").unwrap();
+            // dbg!(memory.current_pages(&store).to_bytes());
+            // if cfg!(target_pointer_width = "16") {
+            //     dbg!("Self::new16(pages)");
+            // } else if cfg!(target_pointer_width = "32") {
+            //     dbg!("Self::new32(pages)");
+            // } else if cfg!(target_pointer_width = "64") {
+            //     dbg!("Self::new64(pages)");
+            // } else {
+            //     dbg!("None");
+            // }
+            // memory.grow(&mut store, wasmi::core::Pages::new(1).unwrap()).unwrap();
+            // dbg!(memory.current_pages(&store).to_bytes());
+            let parameter_bytes_slice = parameter_bytes.as_slice();
+            let parameter_bytes_slice_len = parameter_bytes_slice.len();
+            memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
+                .copy_from_slice(parameter_bytes_slice);
+
             let vm = instance.get_typed_func::<i32, i64>(&store, "entrypoint").unwrap();
 
-            // let mut vm = match create_vm(
+            // let mut bpf_vm = match create_vm(
             //     &self.verified_executable,
             //     parameter_bytes.as_slice_mut(),
             //     account_lengths,
@@ -1293,6 +1391,23 @@ impl Executor for WasmExecutor {
             //         return Err(InstructionError::ProgramEnvironmentSetupFailure);
             //     }
             // };
+
+            let check_aligned = true;
+            let check_size = invoke_context.borrow()
+                .feature_set
+                .is_active(&check_slice_translation_size::id());
+            let heap_size = invoke_context.borrow().get_compute_budget().heap_size.unwrap_or(HEAP_LENGTH);
+            let mut heap =
+                AlignedMemory::new_with_size(heap_size, HOST_ALIGN);
+            invoke_context.borrow_mut()
+                .set_syscall_context(
+                    check_aligned,
+                    check_size,
+                    account_lengths,
+                    Rc::new(RefCell::new( crate::allocator_bump::BpfAllocator::new(heap, solana_rbpf::ebpf::MM_HEAP_START))),
+                )
+                .map_err(SyscallError::InstructionError).unwrap();
+
             create_vm_time.stop();
 
             execute_time = Measure::start("execute");
@@ -1300,7 +1415,7 @@ impl Executor for WasmExecutor {
             let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 
-            let result = vm.call(&mut store, 24).unwrap();
+            let result = vm.call(&mut store, 0).unwrap(); // sending pointer to params
             println!("WASM result: {result:?}");
             // let result = if self.use_jit {
             //     vm.execute_program_jit(&mut instruction_meter)
@@ -1324,11 +1439,12 @@ impl Executor for WasmExecutor {
             //     trace!("BPF Program Instruction Trace:\n{}", trace_string);
             // }
             drop(vm);
-            let (_returned_from_program_id, return_data) =
-                invoke_context.transaction_context.get_return_data();
-            if !return_data.is_empty() {
-                stable_log::program_return(&log_collector, &program_id, return_data);
-            }
+            // let (_returned_from_program_id, return_data) =
+            //     invoke_context.transaction_context.get_return_data();
+
+            // if !return_data.is_empty() {
+            //     stable_log::program_return(&log_collector, &program_id, return_data);
+            // }
             match result {
                 // Ok(status) if status != SUCCESS => {
                 //     let error: InstructionError = if status == MAX_ACCOUNTS_DATA_SIZE_EXCEEDED
@@ -1358,34 +1474,46 @@ impl Executor for WasmExecutor {
                 //     stable_log::program_failure(&log_collector, &program_id, &error);
                 //     Err(error)
                 // }
-                _ => Ok(()),
+                0 => {
+                    parameter_bytes.as_slice_mut().copy_from_slice(
+                        &memory.data(&store)[0..parameter_bytes_slice_len]
+                    );
+                    Ok(())
+                },
+                err => {
+                    let err: InstructionError = err.into();
+                    panic!("WASM exited with error \"{err}\"");
+                },
             }
         };
         execute_time.stop();
 
         let mut deserialize_time = Measure::start("deserialize");
         // TODO: deserialize_parameters
-        let execute_or_deserialize_result = execution_result;
-        // let execute_or_deserialize_result = execution_result.and_then(|_| {
-        //     deserialize_parameters(
-        //         invoke_context.transaction_context,
-        //         invoke_context
-        //             .transaction_context
-        //             .get_current_instruction_context()?,
-        //         parameter_bytes.as_slice(),
-        //         invoke_context.get_orig_account_lengths()?,
-        //     )
-        // });
+        // let execute_or_deserialize_result = execution_result;
+        let invoke_context_ref = invoke_context.borrow_mut();
+
+        let execute_or_deserialize_result = execution_result.and_then(|_| {
+            deserialize_parameters(
+                invoke_context_ref.transaction_context,
+                invoke_context_ref
+                    .transaction_context
+                    .get_current_instruction_context().inspect_err(|x| { dbg!(x); })?,
+                parameter_bytes.as_slice(),
+                invoke_context_ref.get_orig_account_lengths().inspect_err(|x| { dbg!(x); })?,
+            ).inspect_err(|x| { dbg!(x); })
+        });
         deserialize_time.stop();
 
         // Update the timings
-        let timings = &mut invoke_context.timings;
-        timings.serialize_us = timings.serialize_us.saturating_add(serialize_time.as_us());
-        timings.create_vm_us = timings.create_vm_us.saturating_add(create_vm_time.as_us());
-        timings.execute_us = timings.execute_us.saturating_add(execute_time.as_us());
-        timings.deserialize_us = timings
-            .deserialize_us
-            .saturating_add(deserialize_time.as_us());
+        // let lock = invoke_context.lock().unwrap();
+        //
+        // // let timings = &mut invoke_context.timings;
+        // lock.timings.serialize_us = lock.timings.serialize_us.saturating_add(serialize_time.as_us());
+        // lock.timings.create_vm_us = lock.timings.create_vm_us.saturating_add(create_vm_time.as_us());
+        // lock.timings.execute_us = lock.timings.execute_us.saturating_add(execute_time.as_us());
+        // lock.timings.deserialize_us = lock.timings.deserialize_us
+        //     .saturating_add(deserialize_time.as_us());
 
         if execute_or_deserialize_result.is_ok() {
             stable_log::program_success(&log_collector, &program_id);

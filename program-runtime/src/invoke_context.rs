@@ -1015,7 +1015,7 @@ impl<'a> InvokeContext<'a> {
                         });
                 } else {
                     return (entry.process_instruction)(first_instruction_account, self)
-                        .inspect_err(|x| { dbg!(x); });
+                        .inspect_err(|x| { dbg!(x, entry); });
                 }
             }
         }

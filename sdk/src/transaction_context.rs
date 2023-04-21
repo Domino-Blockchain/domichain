@@ -45,7 +45,7 @@ pub struct TransactionContext {
     account_keys: Pin<Box<[Pubkey]>>,
     accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
     instruction_context_capacity: usize,
-    instruction_stack: Vec<usize>,
+    pub instruction_stack: Vec<usize>,
     number_of_instructions_at_transaction_level: usize,
     instruction_trace: InstructionTrace,
     return_data: TransactionReturnData,
@@ -133,22 +133,22 @@ impl TransactionContext {
         let top_level_index = *self
             .instruction_stack
             .first()
-            .ok_or(InstructionError::CallDepth)?;
+            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
         let cpi_index = if level == 0 {
             0
         } else {
             *self
                 .instruction_stack
                 .get(level)
-                .ok_or(InstructionError::CallDepth)?
+                .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?
         };
         let instruction_context = self
             .instruction_trace
             .get(top_level_index)
             .and_then(|instruction_trace| instruction_trace.get(cpi_index))
-            .ok_or(InstructionError::CallDepth)?;
+            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
         debug_assert_eq!(instruction_context.nesting_level, level);
-        Ok(instruction_context)
+        Ok(instruction_context).inspect_err(|x| { dbg!(x); })
     }
 
     /// Gets the max height of the InstructionContext stack
@@ -167,8 +167,8 @@ impl TransactionContext {
         let level = self
             .get_instruction_context_stack_height()
             .checked_sub(1)
-            .ok_or(InstructionError::CallDepth)?;
-        self.get_instruction_context_at(level)
+            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
+        self.get_instruction_context_at(level).inspect_err(|x| { dbg!(x); })
     }
 
     /// Pushes a new InstructionContext
