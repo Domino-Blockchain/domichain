@@ -185,8 +185,7 @@ impl MessageProcessor {
             };
 
             result
-                .map_err(|err| TransactionError::InstructionError(instruction_index as u8, err))
-                .unwrap();
+                .map_err(|err| TransactionError::InstructionError(instruction_index as u8, err))?;
         }
         Ok(ProcessedMessageInfo {
             accounts_data_len_delta: invoke_context.get_accounts_data_meter().delta(),
