@@ -403,7 +403,8 @@ fn translate(
     vm_addr: u64,
     len: u64,
 ) -> Result<u64, EbpfError<BpfError>> {
-    memory_mapping.map::<BpfError>(access_type, vm_addr, len)
+    // FIXME: vm_addr is address in WASM space. For non-heap access this won't work
+    memory_mapping.map::<BpfError>(access_type, vm_addr + ebpf::MM_HEAP_START, len)
 }
 
 fn translate_type_inner<'a, T>(
