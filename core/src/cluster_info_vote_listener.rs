@@ -584,7 +584,6 @@ impl ClusterInfoVoteListener {
         )
     }
 
-
     fn listen_and_confirm_votes(
         gossip_vote_txs_receiver: &VerifiedVoteTransactionsReceiver,
         vote_tracker: &VoteTracker,

@@ -1,4 +1,3 @@
-use log::error;
 #[allow(deprecated)]
 use {
     crate::{allocator_bump::BpfAllocator, BpfError},
@@ -126,7 +125,6 @@ macro_rules! register_feature_gated_syscall {
     };
 }
 
-// register_syscalls
 pub fn register_syscalls(
     invoke_context: &mut InvokeContext,
     disable_deploy_of_alloc_free_syscall: bool,
@@ -361,9 +359,6 @@ pub fn register_syscalls(
         SyscallGetStackHeight::init,
         SyscallGetStackHeight::call,
     )?;
-
-    // HERE
-    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
 
     Ok(syscall_registry)
 }

@@ -48,8 +48,8 @@ fn builtin_feature_transitions() -> Vec<BuiltinFeatureTransition> {
 }
 
 pub(crate) fn get(bpf_jit: bool) -> Builtins {
-    dbg!(Builtins {
+    Builtins {
         genesis_builtins: genesis_builtins(bpf_jit),
         feature_transitions: builtin_feature_transitions(),
-    })
+    }
 }

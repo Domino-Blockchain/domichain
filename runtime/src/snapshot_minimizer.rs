@@ -16,8 +16,7 @@ use {
     domichain_sdk::{
         account::ReadableAccount,
         account_utils::StateMut,
-        // bpf_loader_upgradeable::{self, UpgradeableLoaderState},
-        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable,
         clock::Slot,
         pubkey::Pubkey,
         sdk_ids,
@@ -202,7 +201,7 @@ impl<'a> SnapshotMinimizer<'a> {
             .filter(|account| account.executable())
             .filter(|account| wasm_loader_upgradeable::check_id(account.owner()))
             .filter_map(|account| {
-                if let Ok(UpgradeableLoaderState::Program {
+                if let Ok(wasm_loader_upgradeable::UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = account.state()
                 {

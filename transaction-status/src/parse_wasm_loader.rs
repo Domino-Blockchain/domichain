@@ -169,5 +169,3 @@ fn check_num_bpf_upgradeable_loader_accounts(
 ) -> Result<(), ParseInstructionError> {
     check_num_accounts(accounts, num, ParsableProgram::BpfUpgradeableLoader)
 }
-
-
