@@ -18,7 +18,7 @@ use {
         serialization::{deserialize_parameters, serialize_parameters},
         syscalls::SyscallError,
     },
-    log::{log_enabled, trace, error, Level::Trace},
+    log::{log_enabled, trace, Level::Trace},
     domichain_measure::measure::Measure,
     domichain_program_runtime::{
         ic_logger_msg, ic_msg,
@@ -138,8 +138,6 @@ fn try_borrow_account<'a>(
     }
 }
 
-// create_executor
-// ERROR: InvalidAccountData
 pub fn create_executor(
     programdata_account_index: usize,
     programdata_offset: usize,
@@ -149,7 +147,6 @@ pub fn create_executor(
     disable_deploy_of_alloc_free_syscall: bool,
 ) -> Result<Arc<BpfExecutor>, InstructionError> {
     let mut register_syscalls_time = Measure::start("register_syscalls_time");
-    // register_syscalls
     let register_syscall_result =
         syscalls::register_syscalls(invoke_context, disable_deploy_of_alloc_free_syscall);
     register_syscalls_time.stop();
@@ -161,8 +158,6 @@ pub fn create_executor(
         ic_msg!(invoke_context, "Failed to register syscalls: {}", e);
         InstructionError::ProgramEnvironmentSetupFailure
     })?;
-    // HERE
-    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
     let compute_budget = invoke_context.get_compute_budget();
     let config = Config {
         max_call_depth: compute_budget.max_call_depth,
@@ -315,16 +310,11 @@ pub fn create_vm<'a, 'b>(
     let mut heap =
         AlignedMemory::new_with_size(compute_budget.heap_size.unwrap_or(HEAP_LENGTH), HOST_ALIGN);
     let parameter_region = MemoryRegion::new_writable(parameter_bytes, MM_INPUT_START);
-
-    // Create VM, provide Heap and Parameters
     let mut vm = EbpfVm::new(program, heap.as_slice_mut(), vec![parameter_region])?;
-
-    // Bind SysCalls
     syscalls::bind_syscall_context_objects(&mut vm, invoke_context, heap, orig_account_lengths)?;
     Ok(vm)
 }
 
-// process_instruction
 pub fn process_instruction(
     first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
@@ -424,7 +414,6 @@ fn process_instruction_common(
                     }
                 ) {
                     ic_logger_msg!(log_collector, "Program has been closed");
-                    // InvalidAccountData
                     return Err(InstructionError::InvalidAccountData).inspect_err(|x| { dbg!(x); });
                 }
                 UpgradeableLoaderState::size_of_programdata_metadata()
@@ -471,7 +460,6 @@ fn process_instruction_common(
             .feature_set
             .is_active(&disable_deprecated_loader::id());
         if bpf_loader_upgradeable::check_id(program_id) {
-            // process_loader_upgradeable_instruction
             process_loader_upgradeable_instruction(
                 first_instruction_account,
                 invoke_context,
@@ -491,7 +479,6 @@ fn process_instruction_common(
     }
 }
 
-// process_loader_upgradeable_instruction
 fn process_loader_upgradeable_instruction(
     first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
@@ -503,7 +490,7 @@ fn process_loader_upgradeable_instruction(
     let instruction_data = instruction_context.get_instruction_data();
     let program_id = instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
 
-    match dbg!(limited_deserialize(dbg!(instruction_data)))? {
+    match limited_deserialize(instruction_data)? {
         UpgradeableLoaderInstruction::InitializeBuffer => {
             instruction_context.check_number_of_instruction_accounts(2)?;
             let mut buffer =
@@ -680,7 +667,6 @@ fn process_loader_upgradeable_instruction(
 
             // Load and verify the program bits
 
-            // ERROR: InvalidAccountData
             let executor = create_executor(
                 first_instruction_account.saturating_add(3),
                 buffer_data_offset,
@@ -1233,7 +1219,6 @@ impl Executor for BpfExecutor {
         let mut create_vm_time = Measure::start("create_vm");
         let mut execute_time;
         let execution_result = {
-            // create_vm
             let mut vm = match create_vm(
                 &self.verified_executable,
                 parameter_bytes.as_slice_mut(),
@@ -1242,7 +1227,6 @@ impl Executor for BpfExecutor {
             ) {
                 Ok(info) => info,
                 Err(e) => {
-                    // THIS: Failed to create BPF VM
                     ic_logger_msg!(log_collector, "Failed to create BPF VM: {}", e);
                     return Err(InstructionError::ProgramEnvironmentSetupFailure);
                 }

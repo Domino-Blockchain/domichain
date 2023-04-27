@@ -4565,7 +4565,6 @@ impl Bank {
         error_counters: &mut TransactionErrorMetrics,
     ) -> TransactionExecutionResult {
         let mut get_executors_time = Measure::start("get_executors_time");
-        // get_executors
         let executors = self.get_executors(&loaded_transaction.accounts);
         get_executors_time.stop();
         saturating_add_assign!(
@@ -4574,15 +4573,7 @@ impl Bank {
         );
 
         let mut transaction_accounts = Vec::new();
-        // loaded_transaction.accounts
-        // if loaded_transaction.accounts.iter().any(|(pk, _)| {
-        //     let pk = format!("{pk}");
-        //     pk.contains("11111111") && pk != "Vote111111111111111111111111111111111111111"
-        // }) {
-        //     dbg!(&loaded_transaction.accounts);
-        // }
         std::mem::swap(&mut loaded_transaction.accounts, &mut transaction_accounts);
-        // TransactionContext::new
         let mut transaction_context = TransactionContext::new(
             transaction_accounts,
             compute_budget.max_invoke_depth.saturating_add(1),

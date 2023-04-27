@@ -1579,22 +1579,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "domichain-cargo-build-sbf"
-version = "1.11.1"
-dependencies = [
- "bzip2",
- "cargo_metadata",
- "clap 3.1.8",
- "domichain-download-utils",
- "domichain-logger",
- "domichain-sdk",
- "log",
- "regex",
- "serial_test",
- "tar",
-]
-
-[[package]]
 name = "domichain-cargo-test-bpf"
 version = "1.11.1"
 dependencies = [

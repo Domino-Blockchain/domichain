@@ -15,8 +15,6 @@ extern crate domichain_metrics;
 
 use log::{log_enabled, Level::Trace};
 use solana_rbpf::memory_region::MemoryMapping;
-// use solana_rbpf::syscalls::BpfTracePrintf;
-// use solana_rbpf::user_error::UserError;
 use solana_rbpf::vm::SyscallRegistry;
 use wasmi::core::Trap;
 use wasmi::{Caller, Extern, Func};
@@ -24,13 +22,44 @@ use wasmi_wasi::WasiCtx;
 use {
     crate::{
         serialization::{deserialize_parameters, serialize_parameters},
-        syscalls::SyscallError,
+        syscalls::{
+            SyscallError,
+            SyscallAbort,
+            SyscallPanic,
+            SyscallLog,
+            SyscallLogU64,
+            SyscallLogBpfComputeUnits,
+            SyscallLogPubkey,
+            SyscallCreateProgramAddress,
+            SyscallTryFindProgramAddress,
+            SyscallSha256,
+            SyscallKeccak256,
+            SyscallSecp256k1Recover,
+            SyscallBlake3,
+            SyscallZkTokenElgamalOp,
+            SyscallZkTokenElgamalOpWithLoHi,
+            SyscallZkTokenElgamalOpWithScalar,
+            SyscallCurvePointValidation,
+            SyscallCurveGroupOps,
+            SyscallGetClockSysvar,
+            SyscallGetEpochScheduleSysvar,
+            SyscallGetFeesSysvar,
+            SyscallGetRentSysvar,
+            SyscallMemcpy,
+            SyscallMemmove,
+            SyscallMemcmp,
+            SyscallMemset,
+            SyscallInvokeSignedC,
+            SyscallInvokeSignedRust,
+            SyscallAllocFree,
+            SyscallSetReturnData,
+            SyscallGetReturnData,
+            SyscallLogData,
+            SyscallGetProcessedSiblingInstruction,
+            SyscallGetStackHeight,
+        },
     },
-    log::{
-        // log_enabled, trace,
-        error,
-        // Level::Trace
-    },
+    log::error,
     domichain_measure::measure::Measure,
     domichain_program_runtime::{
         ic_logger_msg, ic_msg,
@@ -42,24 +71,24 @@ use {
     domichain_sdk::{
         wasm_loader, wasm_loader_deprecated,
         wasm_loader_upgradeable::{self, UpgradeableLoaderState},
-        entrypoint::{
-            HEAP_LENGTH,
-            // SUCCESS,
-        },
+        entrypoint::HEAP_LENGTH,
         feature_set::{
-            // cap_accounts_data_len, disable_bpf_deprecated_load_instructions,
-            // disable_bpf_unresolved_symbols_at_runtime,
             disable_deploy_of_alloc_free_syscall,
             disable_deprecated_loader,
-            // error_on_syscall_bpf_function_hash_collisions,
             reduce_required_deploy_balance,
-            // reject_callx_r10,
             requestable_heap_size,
+            blake3_syscall_enabled,
+            check_slice_translation_size,
+            disable_bpf_deprecated_load_instructions,
+            disable_bpf_unresolved_symbols_at_runtime,
+            disable_fees_sysvar,
+            error_on_syscall_bpf_function_hash_collisions,
+            reject_callx_r10,
+            zk_token_sdk_enabled,
         },
         instruction::{AccountMeta, InstructionError},
         loader_instruction::LoaderInstruction,
         loader_upgradeable_instruction::UpgradeableLoaderInstruction,
-        // program_error::MAX_ACCOUNTS_DATA_SIZE_EXCEEDED,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
         saturating_add_assign,
@@ -69,54 +98,13 @@ use {
     solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{HOST_ALIGN, MM_PROGRAM_START, MM_HEAP_START, MM_INPUT_START},
-        // elf::Executable,
         error::{EbpfError, UserDefinedError},
         memory_region::MemoryRegion,
-        // static_analysis::Analysis,
         verifier::{RequisiteVerifier, VerifierError},
-        vm::{
-            // Config,
-            SyscallObject,
-            EbpfVm, InstructionMeter, VerifiedExecutable},
+        vm::{SyscallObject, EbpfVm, InstructionMeter, VerifiedExecutable},
     },
     std::{cell::RefCell, fmt::Debug, rc::Rc, sync::Arc},
     thiserror::Error,
-};
-use domichain_sdk::feature_set::{blake3_syscall_enabled, check_slice_translation_size, disable_bpf_deprecated_load_instructions, disable_bpf_unresolved_symbols_at_runtime, disable_fees_sysvar, error_on_syscall_bpf_function_hash_collisions, reject_callx_r10, zk_token_sdk_enabled};
-use crate::syscalls::{
-    SyscallAbort,
-    SyscallPanic,
-    SyscallLog,
-    SyscallLogU64,
-    SyscallLogBpfComputeUnits,
-    SyscallLogPubkey,
-    SyscallCreateProgramAddress,
-    SyscallTryFindProgramAddress,
-    SyscallSha256,
-    SyscallKeccak256,
-    SyscallSecp256k1Recover,
-    SyscallBlake3,
-    SyscallZkTokenElgamalOp,
-    SyscallZkTokenElgamalOpWithLoHi,
-    SyscallZkTokenElgamalOpWithScalar,
-    SyscallCurvePointValidation,
-    SyscallCurveGroupOps,
-    SyscallGetClockSysvar,
-    SyscallGetEpochScheduleSysvar,
-    SyscallGetFeesSysvar,
-    SyscallGetRentSysvar,
-    SyscallMemcpy,
-    SyscallMemmove,
-    SyscallMemcmp,
-    SyscallMemset,
-    SyscallInvokeSignedC,
-    SyscallInvokeSignedRust,
-    SyscallAllocFree,
-    SyscallSetReturnData,
-    SyscallGetReturnData,
-    SyscallLogData,
-    SyscallGetProcessedSiblingInstruction,
-    SyscallGetStackHeight,
 };
 
 domichain_sdk::declare_builtin!(
@@ -196,7 +184,6 @@ fn try_borrow_account<'a>(
     }
 }
 
-// create_executor
 pub fn create_executor(
     programdata_account_index: usize,
     programdata_offset: usize,
@@ -217,8 +204,6 @@ pub fn create_executor(
         ic_msg!(invoke_context, "Failed to register syscalls: {}", e);
         InstructionError::ProgramEnvironmentSetupFailure
     })?;
-    // HERE
-    error!("DEV {}:{}: got syscall_registry={syscall_registry:?}", file!(), line!());
     let compute_budget = invoke_context.get_compute_budget();
     let config = solana_rbpf::vm::Config {
         max_call_depth: compute_budget.max_call_depth,
@@ -266,6 +251,7 @@ pub fn create_executor(
         )?;
         create_executor_metrics.program_id = programdata.get_key().to_string();
         let mut load_elf_time = Measure::start("load_elf_time");
+
         // TODO: load WASM here
         // TODO: our own Executable, not from solana_rbpf
 
@@ -277,14 +263,6 @@ pub fn create_executor(
             &engine,
             &mut data,
         ).expect("Binary should be valid WASM");
-        // let executable = Executable::<BpfError, ThisInstructionMeter>::from_elf(
-        //     programdata
-        //         .get_data()
-        //         .get(programdata_offset..)
-        //         .ok_or(InstructionError::AccountDataTooSmall)?,
-        //     config,
-        //     syscall_registry,
-        // );
         load_elf_time.stop();
         create_executor_metrics.load_elf_us = load_elf_time.as_us();
         invoke_context.timings.create_executor_load_elf_us = invoke_context
@@ -295,11 +273,6 @@ pub fn create_executor(
     }
     .map_err(|e| map_ebpf_error(invoke_context, e))?;
     let mut verify_code_time = Measure::start("verify_code_time");
-    // let mut verified_executable =
-    //     VerifiedExecutable::<RequisiteVerifier, BpfError, ThisInstructionMeter>::from_executable(
-    //         executable,
-    //     )
-    //     .map_err(|e| map_ebpf_error(invoke_context, e))?;
     let verified_executable = executable;
     verify_code_time.stop();
     create_executor_metrics.verify_code_us = verify_code_time.as_us();
@@ -307,20 +280,6 @@ pub fn create_executor(
         .timings
         .create_executor_verify_code_us
         .saturating_add(create_executor_metrics.verify_code_us);
-    // if use_jit {
-    //     let mut jit_compile_time = Measure::start("jit_compile_time");
-    //     let jit_compile_result = verified_executable.jit_compile();
-    //     jit_compile_time.stop();
-    //     create_executor_metrics.jit_compile_us = jit_compile_time.as_us();
-    //     invoke_context.timings.create_executor_jit_compile_us = invoke_context
-    //         .timings
-    //         .create_executor_jit_compile_us
-    //         .saturating_add(create_executor_metrics.jit_compile_us);
-    //     if let Err(err) = jit_compile_result {
-    //         ic_msg!(invoke_context, "Failed to compile program {:?}", err);
-    //         return Err(InstructionError::ProgramFailedToCompile);
-    //     }
-    // }
     create_executor_metrics.submit_datapoint();
     Ok(Arc::new(WasmExecutor {
         engine,
@@ -389,7 +348,6 @@ pub fn create_vm<'a, 'b>(
         AlignedMemory::new_with_size(compute_budget.heap_size.unwrap_or(HEAP_LENGTH), HOST_ALIGN);
     let parameter_region = MemoryRegion::new_writable(parameter_bytes, MM_INPUT_START);
     let mut vm = EbpfVm::new(program, heap.as_slice_mut(), vec![parameter_region])?;
-    // TODO: bind_syscall
     syscalls::bind_syscall_context_objects(&mut vm, invoke_context, heap, orig_account_lengths)?;
     Ok(vm)
 }
@@ -744,7 +702,6 @@ fn process_loader_upgradeable_instruction(
             invoke_context.native_invoke(instruction, signers.as_slice())?;
 
             // Load and verify the program bits
-            // NO
             let executor = create_executor(
                 first_instruction_account.saturating_add(3),
                 buffer_data_offset,
@@ -1373,14 +1330,6 @@ impl Executor for WasmExecutor {
             wasmi_wasi::add_to_linker(&mut linker, |ctx| &mut ctx.0)
                 .map_err(|error| format!("failed to add WASI definitions to the linker: {error}")).unwrap();
 
-            // TODO: bind functions
-            // let host_hello = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, param: i32| {
-            //     println!("Got {param} from WebAssembly");
-            //     println!("My host state is: {}", caller.data());
-            // });
-
-            // let invoke_context_clone = invoke_context.clone();
-
             linker.define(
                 "env",
                 "abort",
@@ -1657,198 +1606,17 @@ impl Executor for WasmExecutor {
                 }),
             ).unwrap();
 
-            // let sol_log_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, message: i32, len: u64| {
-            //     let invoke_context = caller.data().1
-            //         .try_borrow()
-            //         .map_err(|_| Trap::new(format!("{:?}", SyscallError::InvokeContextBorrowFailed)))?;
-            //
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //     let data = mem.data(&caller)
-            //         .get(message as u32 as usize..)
-            //         .and_then(|arr| arr.get(..len as u32 as usize));
-            //     let string = match data {
-            //         Some(data) => match std::str::from_utf8(data) {
-            //             Ok(s) => s,
-            //             Err(_) => panic!("invalid utf-8"),
-            //         },
-            //         None => panic!("pointer/length out of bounds"),
-            //     };
-            //
-            //     stable_log::program_log(&invoke_context.get_log_collector(), string);
-            //
-            //     // println!("My host state is: {}", caller.data());
-            //     Ok(())
-            // });
-            // linker.define("env", "sol_log_", sol_log_).unwrap();
-
-            // let abort = wasmi::Func::wrap(&mut store, |_caller: wasmi::Caller<'_, HostState>| {
-            //     Err::<i32, Trap>(Trap::new(format!("{:?}", SyscallError::Abort)))
-            // });
-            // linker.define("env", "abort", abort).unwrap();
-            //
-            // let sol_panic_ = wasmi::Func::wrap(&mut store, |caller: wasmi::Caller<'_, HostState>, file: i32, len: u64, line: u64, column: u64| {
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //     let data = mem.data(&caller)
-            //         .get(file as u32 as usize..)
-            //         .and_then(|arr| arr.get(..len as u32 as usize));
-            //     let string = match data {
-            //         Some(data) => match std::str::from_utf8(data) {
-            //             Ok(s) => s,
-            //             Err(_) => panic!("invalid utf-8"),
-            //         },
-            //         None => panic!("pointer/length out of bounds"),
-            //     };
-            //
-            //     Err::<i32, Trap>(Trap::new(format!("{:?}", SyscallError::Panic(string.to_string(), line, column))))
-            // });
-            // linker.define("env", "sol_panic_", sol_panic_).unwrap();
-
-            // let sol_sha256 = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, vals_addr: i32, vals_len: u64, result_addr: i32| {
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //
-            //     let mut hasher = domichain_sdk::hash::Hasher::default();
-            //
-            //     if vals_len > 0 {
-            //         let vals_addr = vals_addr as u32 as usize;
-            //         let vals = mem.data(&mut caller)
-            //             .get(vals_addr..vals_addr + vals_len as usize).unwrap();
-            //         hasher.hash(vals);
-            //     }
-            //     let result_addr = result_addr as u32 as usize;
-            //     let hash_result = mem.data_mut(&mut caller)
-            //         .get_mut(result_addr..result_addr + domichain_sdk::hash::HASH_BYTES).unwrap();
-            //     hash_result.copy_from_slice(&hasher.result().to_bytes());
-            //
-            //     Ok(0 as i64)
-            // });
-            // linker.define("env", "sol_sha256", sol_sha256).unwrap();
-            //
-            // let sol_keccak256 = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, vals_addr: i32, vals_len: u64, result_addr: i32| {
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //
-            //     let mut hasher = domichain_sdk::keccak::Hasher::default();
-            //
-            //     if vals_len > 0 {
-            //         let vals_addr = vals_addr as u32 as usize;
-            //         let vals = mem.data(&mut caller)
-            //             .get(vals_addr..vals_addr + vals_len as usize).unwrap();
-            //         hasher.hash(vals);
-            //     }
-            //     let result_addr = result_addr as u32 as usize;
-            //     let hash_result = mem.data_mut(&mut caller)
-            //         .get_mut(result_addr..result_addr + domichain_sdk::keccak::HASH_BYTES).unwrap();
-            //     hash_result.copy_from_slice(&hasher.result().to_bytes());
-            //
-            //     Ok(0 as i64)
-            // });
-            // linker.define("env", "sol_keccak256", sol_keccak256).unwrap();
-
-            // let memcpy = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, dst: i32, src: i32, len: i32| {
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //     let data = mem.data_mut(&mut caller);
-            //
-            //     let src_start = src as u32 as usize;
-            //     // let src_bytes = data
-            //     //     .get(src_start..src_start + len as usize)
-            //     //     .unwrap();
-            //
-            //     let dst_start = dst as u32 as usize;
-            //     // let dst_bytes = data
-            //     //     .get_mut(dst_start..dst_start + len as usize)
-            //     //     .unwrap();
-            //
-            //     unsafe {
-            //         std::ptr::copy_nonoverlapping(
-            //             &data[src_start] as *const u8,
-            //             &mut data[dst_start] as *mut u8,
-            //             len as usize,
-            //         )
-            //     }
-            //
-            //     0 as i32
-            // });
-            // linker.define("env", "memcpy", memcpy).unwrap();
-            //
-            // let memset = wasmi::Func::wrap(&mut store, |mut caller: wasmi::Caller<'_, HostState>, ptr: i32, val: i32, len: i32| {
-            //     let mem = match caller.get_export("memory") {
-            //         Some(Extern::Memory(mem)) => mem,
-            //         _ => panic!("failed to find host memory"),
-            //     };
-            //     let data = mem.data_mut(&mut caller);
-            //
-            //     let dst_start = ptr as u32 as usize;
-            //     // let dst_bytes = data
-            //     //     .get_mut(dst_start..dst_start + len as usize)
-            //     //     .unwrap();
-            //
-            //     unsafe {
-            //         std::ptr::write_bytes(
-            //             &mut data[dst_start] as *mut u8,
-            //             val as u8,
-            //             len as usize,
-            //         )
-            //     }
-            //
-            //     0 as i32
-            // });
-            // linker.define("env", "memset", memset).unwrap();
-
-            // let mut syscall_registry = SyscallRegistry::default();
-            // syscall_registry.register_syscall_by_hash(6, BpfTracePrintf::init::<u64, UserError>, BpfTracePrintf::call).unwrap();
-
-            // linker.define("host", "hello", host_hello).unwrap();
             let instance = linker
                 .instantiate(&mut store, &self.verified_executable).unwrap()
                 .start(&mut store).unwrap();
 
             let memory = instance.get_memory(&mut store, "memory").unwrap();
-            // dbg!(memory.current_pages(&store).to_bytes());
-            // if cfg!(target_pointer_width = "16") {
-            //     dbg!("Self::new16(pages)");
-            // } else if cfg!(target_pointer_width = "32") {
-            //     dbg!("Self::new32(pages)");
-            // } else if cfg!(target_pointer_width = "64") {
-            //     dbg!("Self::new64(pages)");
-            // } else {
-            //     dbg!("None");
-            // }
-            // memory.grow(&mut store, wasmi::core::Pages::new(1).unwrap()).unwrap();
-            // dbg!(memory.current_pages(&store).to_bytes());
             let parameter_bytes_slice = parameter_bytes.as_slice();
             let parameter_bytes_slice_len = parameter_bytes_slice.len();
             memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
                 .copy_from_slice(parameter_bytes_slice);
 
             let vm = instance.get_typed_func::<i32, i64>(&store, "entrypoint").unwrap();
-
-            // let mut bpf_vm = match create_vm(
-            //     &self.verified_executable,
-            //     parameter_bytes.as_slice_mut(),
-            //     account_lengths,
-            //     invoke_context,
-            // ) {
-            //     Ok(info) => info,
-            //     Err(e) => {
-            //         // THIS: Failed to create BPF VM
-            //         ic_logger_msg!(log_collector, "Failed to create BPF VM: {}", e);
-            //         return Err(InstructionError::ProgramEnvironmentSetupFailure);
-            //     }
-            // };
 
             let check_aligned = true;
             let check_size = invoke_context.borrow()
@@ -1870,6 +1638,8 @@ impl Executor for WasmExecutor {
 
             execute_time = Measure::start("execute");
             stable_log::program_invoke(&log_collector, &program_id, stack_height);
+
+            // TODO(Dev): return instruction meter and the rest
             // let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 

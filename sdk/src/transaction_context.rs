@@ -45,7 +45,7 @@ pub struct TransactionContext {
     account_keys: Pin<Box<[Pubkey]>>,
     accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
     instruction_context_capacity: usize,
-    pub instruction_stack: Vec<usize>,
+    instruction_stack: Vec<usize>,
     number_of_instructions_at_transaction_level: usize,
     instruction_trace: InstructionTrace,
     return_data: TransactionReturnData,

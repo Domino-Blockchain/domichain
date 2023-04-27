@@ -72,7 +72,6 @@ members = [
     "sdk",
     "sdk/cargo-build-bpf",
     "sdk/cargo-test-bpf",
-    "sdk/cargo-build-sbf",
     "sdk/gen-headers",
     "send-transaction-service",
     "sortition",
