@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use crate::{
     address_lookup_table_account::AddressLookupTableAccount,
     message::v0::{LoadedAddresses, MessageAddressTableLookup},
@@ -16,7 +16,7 @@ pub(crate) struct CompiledKeys {
     key_meta_map: BTreeMap<Pubkey, CompiledKeyMeta>,
 }
 
-#[cfg_attr(target_os = "domichain", allow(dead_code))]
+#[cfg_attr(target_os = "wasi", allow(dead_code))]
 #[derive(PartialEq, Debug, Error, Eq, Clone)]
 pub enum CompileError {
     #[error("account index overflowed during compilation")]
@@ -116,7 +116,7 @@ impl CompiledKeys {
         Ok((header, static_account_keys))
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     pub(crate) fn try_extract_table_lookup(
         &mut self,
         lookup_table_account: &AddressLookupTableAccount,
@@ -148,7 +148,7 @@ impl CompiledKeys {
         )))
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn try_drain_keys_found_in_lookup_table(
         &mut self,
         lookup_table_addresses: &[Pubkey],
