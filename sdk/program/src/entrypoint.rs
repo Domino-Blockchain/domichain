@@ -128,7 +128,8 @@ macro_rules! entrypoint {
                 Err(error) => error.into(),
             }
         }
-        $crate::custom_heap_default!();
+        // FIXME: decide to use custom WASM heap or not
+        // $crate::custom_heap_default!();
         $crate::custom_panic_default!();
     };
 }
