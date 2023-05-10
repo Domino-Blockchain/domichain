@@ -759,6 +759,7 @@ fn load_bank_forks(
     snapshot_archive_path: Option<PathBuf>,
     incremental_snapshot_archive_path: Option<PathBuf>,
 ) -> Result<(Arc<RwLock<BankForks>>, Option<StartingSnapshotHashes>), BlockstoreProcessorError> {
+    unreachable!();
     let bank_snapshots_dir = blockstore
         .ledger_path()
         .join(if blockstore.is_primary_access() {
@@ -2711,6 +2712,7 @@ fn main() {
                                 &bank,
                                 bank.collector_id(),
                                 warp_slot,
+                                todo!(),
                             ))
                         } else {
                             bank

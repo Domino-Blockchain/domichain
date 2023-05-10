@@ -24,6 +24,7 @@ use {
         sync::{Arc, RwLock},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 pub type LoadResult = result::Result<
     (
@@ -88,6 +89,36 @@ pub fn load_bank_forks(
     LeaderScheduleCache,
     Option<StartingSnapshotHashes>,
 ) {
+    unreachable!();
+    // load_bank_forks_with_vote_tracker(
+    //     genesis_config,
+    //     blockstore,
+    //     account_paths,
+    //     shrink_paths,
+    //     snapshot_config,
+    //     process_options,
+    //     cache_block_meta_sender,
+    //     accounts_update_notifier,
+    //     todo!(),
+    // )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn load_bank_forks_with_vote_tracker(
+    genesis_config: &GenesisConfig,
+    blockstore: &Blockstore,
+    account_paths: Vec<PathBuf>,
+    shrink_paths: Option<Vec<PathBuf>>,
+    snapshot_config: Option<&SnapshotConfig>,
+    process_options: &ProcessOptions,
+    cache_block_meta_sender: Option<&CacheBlockMetaSender>,
+    accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
+) -> (
+    Arc<RwLock<BankForks>>,
+    LeaderScheduleCache,
+    Option<StartingSnapshotHashes>,
+) {
     let snapshot_present = if let Some(snapshot_config) = snapshot_config {
         info!(
             "Initializing bank snapshot path: {}",
@@ -123,6 +154,7 @@ pub fn load_bank_forks(
             snapshot_config.as_ref().unwrap(),
             process_options,
             accounts_update_notifier,
+            vote_tracker,
         )
     } else {
         let maybe_filler_accounts = process_options
@@ -143,6 +175,7 @@ pub fn load_bank_forks(
                 process_options,
                 cache_block_meta_sender,
                 accounts_update_notifier,
+                vote_tracker,
             ),
             None,
         )
@@ -181,6 +214,7 @@ fn bank_forks_from_snapshot(
     snapshot_config: &SnapshotConfig,
     process_options: &ProcessOptions,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> (Arc<RwLock<BankForks>>, Option<StartingSnapshotHashes>) {
     // Fail hard here if snapshot fails to load, don't silently continue
     if account_paths.is_empty() {
@@ -208,6 +242,7 @@ fn bank_forks_from_snapshot(
             process_options.verify_index,
             process_options.accounts_db_config.clone(),
             accounts_update_notifier,
+            vote_tracker,
         )
         .expect("Load from snapshot failed");
 

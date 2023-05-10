@@ -54,6 +54,8 @@ use {
         time::{Duration, Instant},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
+use crate::vote_stake_tracker::ReachedThresholdResults;
 
 // Map from a vote account to the authorized voter for an epoch
 pub type ThresholdConfirmedSlots = Vec<(Slot, Hash)>;
@@ -68,7 +70,7 @@ pub type GossipVerifiedVoteHashReceiver = Receiver<(Pubkey, Slot, Hash)>;
 pub type GossipDuplicateConfirmedSlotsSender = Sender<ThresholdConfirmedSlots>;
 pub type GossipDuplicateConfirmedSlotsReceiver = Receiver<ThresholdConfirmedSlots>;
 
-const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE];
+const THRESHOLDS_TO_CHECK: [f64; 2] = [DUPLICATE_THRESHOLD, VOTE_THRESHOLD_SIZE]; // [0.52, 2/3]
 const BANK_SEND_VOTES_LOOP_SLEEP_MS: u128 = 10;
 
 #[derive(Default)]
@@ -77,6 +79,7 @@ pub struct SlotVoteTracker {
     // to whether or not we've seen the vote on gossip.
     // True if seen on gossip, false if only seen in replay.
     voted: HashMap<Pubkey, bool>,
+    // Maps vote_hash to VoteStakeTracker (set of voted pubkeys)
     optimistic_votes_tracker: HashMap<Hash, VoteStakeTracker>,
     voted_slot_updates: Option<Vec<Pubkey>>,
     gossip_only_stake: u64,
@@ -195,6 +198,7 @@ impl ClusterInfoVoteListener {
         verified_packets_sender: BankingPacketSender,
         poh_recorder: Arc<Mutex<PohRecorder>>,
         vote_tracker: Arc<VoteTracker>,
+        weight_vote_tracker: Arc<WeightVoteTracker>,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: Arc<RpcSubscriptions>,
         verified_vote_sender: VerifiedVoteSender,
@@ -245,6 +249,7 @@ impl ClusterInfoVoteListener {
                     exit,
                     verified_vote_transactions_receiver,
                     vote_tracker,
+                    weight_vote_tracker,
                     bank_forks,
                     subscriptions,
                     gossip_verified_vote_hash_sender,
@@ -314,77 +319,84 @@ impl ClusterInfoVoteListener {
                 !packet_batch[0].meta.discard()
             })
             .filter_map(|(tx, packet_batch)| {
-                let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
-                let slot = vote.last_voted_slot()?;
-                let epoch = epoch_schedule.get_epoch(slot);
-                let epoch_stakes = root_bank
-                    .epoch_stakes(epoch)?;
-                let authorized_voter = epoch_stakes
-                    .epoch_authorized_voters()
-                    .get(&vote_account_key)?;
+                let f = || {
+                    let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
+                    let slot = vote.last_voted_slot()?;
+                    let epoch = epoch_schedule.get_epoch(slot);
+                    let epoch_stakes = root_bank
+                        .epoch_stakes(epoch)?;
+                    let authorized_voter = epoch_stakes
+                        .epoch_authorized_voters()
+                        .get(&vote_account_key)?;
 
-                let parent_block_seed = bank_forks.read().unwrap()
-                    .get(slot)
-                    .map(|b| b.parent_block_seed());
-                let vrf_proof = vote.vrf_proof().and_then(|vrf_proof| vrf_proof.try_into().ok());
-                let vrf_proof = match vrf_proof {
-                    Some(vrf_proof) => vrf_proof,
-                    None => {
-                        error!(
-                            "VRF read error: cannot cast {:?} into &[u8; {}]",
-                            vote.vrf_proof(),
-                            libvrf::vrf::PROOF_LEN,
-                        );
-                        return None;
-                    }
-                };
-                let verify_result = vrf_verify(
-                    &parent_block_seed?.to_string(),
-                    authorized_voter,
-                    vrf_proof,
-                );
-                match verify_result {
-                    Ok(vrf_hash) => {
-                        let vote_accounts = epoch_stakes.stakes().vote_accounts();
-                        let stake = vote_accounts
-                            .get(&vote_account_key)
-                            .map(|(stake, _)| *stake)
-                            .unwrap_or_default(); // Stake
-                        let total_stake = epoch_stakes.total_stake(); // Total stake
-
-                        let h = hashv(&[
-                            vrf_hash.as_slice(),
-                            authorized_voter.as_ref(),
-                        ]);
-
-                        let weight = sortition::select(
-                            stake,
-                            total_stake,                // Maybe use circulation across net?
-                            total_weight as f64,  // Consensus params
-                            h,
-                        );
-
-                        if weight == 0 {
+                    let parent_block_seed = bank_forks.read().unwrap()
+                        .get(slot)
+                        .map(|b| b.parent_block_seed());
+                    let vrf_proof = vote.vrf_proof().and_then(|vrf_proof| vrf_proof.try_into().ok());
+                    let vrf_proof = match vrf_proof {
+                        Some(vrf_proof) => vrf_proof,
+                        None => {
+                            error!(
+                                "VRF read error: cannot cast {:?} into &[u8; {}]",
+                                vote.vrf_proof(),
+                                libvrf::vrf::PROOF_LEN,
+                            );
                             return None;
                         }
-                    },
-                    Err(e) => {
-                        error!("VRF verify error: {e}");
+                    };
+                    let verify_result = vrf_verify(
+                        &parent_block_seed?.to_string(),
+                        authorized_voter,
+                        vrf_proof,
+                    );
+                    match verify_result {
+                        Ok(vrf_hash) => {
+                            let vote_accounts = epoch_stakes.stakes().vote_accounts();
+                            let stake = vote_accounts
+                                .get(&vote_account_key)
+                                .map(|(stake, _)| *stake)
+                                .unwrap_or_default(); // Stake
+                            let total_stake = epoch_stakes.total_stake(); // Total stake
+
+                            let h = hashv(&[
+                                vrf_hash.as_slice(),
+                                authorized_voter.as_ref(),
+                            ]);
+
+                            let weight = sortition::select(
+                                stake,
+                                total_stake,                // Maybe use circulation across net?
+                                total_weight as f64,  // Consensus params
+                                h,
+                            );
+
+                            if weight == 0 {
+                                return None;
+                            }
+                        },
+                        Err(e) => {
+                            error!("VRF verify error: {e}");
+                            return None;
+                        }
+                    }
+
+                    let mut keys = tx.message.account_keys.iter().enumerate();
+                    if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
                         return None;
                     }
-                }
-
-                let mut keys = tx.message.account_keys.iter().enumerate();
-                if !keys.any(|(i, key)| tx.message.is_signer(i) && key == authorized_voter) {
-                    return None;
-                }
-                let verified_vote_metadata = VerifiedVoteMetadata {
-                    vote_account_key,
-                    vote,
-                    packet_batch,
-                    signature: *tx.signatures.first()?,
+                    let verified_vote_metadata = VerifiedVoteMetadata {
+                        vote_account_key,
+                        vote,
+                        packet_batch,
+                        signature: *tx.signatures.first()?,
+                    };
+                    Some((tx, verified_vote_metadata))
                 };
-                Some((tx, verified_vote_metadata))
+
+                let measure_start = Instant::now();
+                let res = f();
+                warn!("Cluster_info_vote_listener: measure took {} f()", measure_start.elapsed().as_secs_f64());
+                res
             })
             .unzip()
     }
@@ -496,6 +508,7 @@ impl ClusterInfoVoteListener {
         exit: Arc<AtomicBool>,
         gossip_vote_txs_receiver: VerifiedVoteTransactionsReceiver,
         vote_tracker: Arc<VoteTracker>,
+        weight_vote_tracker: Arc<WeightVoteTracker>,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: Arc<RpcSubscriptions>,
         gossip_verified_vote_hash_sender: GossipVerifiedVoteHashSender,
@@ -530,9 +543,10 @@ impl ClusterInfoVoteListener {
                 vote_tracker.progress_with_new_root_bank(&root_bank);
                 last_process_root = Instant::now();
             }
-            let confirmed_slots = Self::listen_and_confirm_votes(
+            let confirmed_slots = Self::listen_and_confirm_votes_with_weight(
                 &gossip_vote_txs_receiver,
                 &vote_tracker,
+                &weight_vote_tracker,
                 &root_bank,
                 bank_forks.clone(),
                 &subscriptions,
@@ -597,6 +611,36 @@ impl ClusterInfoVoteListener {
         cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
         total_weight: u64,
     ) -> Result<ThresholdConfirmedSlots> {
+        Self::listen_and_confirm_votes_with_weight(
+            &gossip_vote_txs_receiver,
+            &vote_tracker,
+            todo!(),
+            &root_bank,
+            bank_forks.clone(),
+            &subscriptions,
+            &gossip_verified_vote_hash_sender,
+            &verified_vote_sender,
+            &replay_votes_receiver,
+            &bank_notification_sender,
+            &cluster_confirmed_slot_sender,
+            total_weight,
+        )
+    }
+
+    fn listen_and_confirm_votes_with_weight(
+        gossip_vote_txs_receiver: &VerifiedVoteTransactionsReceiver,
+        vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
+        root_bank: &Bank,
+        bank_forks: Arc<RwLock<BankForks>>,
+        subscriptions: &RpcSubscriptions,
+        gossip_verified_vote_hash_sender: &GossipVerifiedVoteHashSender,
+        verified_vote_sender: &VerifiedVoteSender,
+        replay_votes_receiver: &ReplayVoteReceiver,
+        bank_notification_sender: &Option<BankNotificationSender>,
+        cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>,
+        total_weight: u64,
+    ) -> Result<ThresholdConfirmedSlots> {
         let mut sel = Select::new();
         sel.recv(gossip_vote_txs_receiver);
         sel.recv(replay_votes_receiver);
@@ -616,6 +660,7 @@ impl ClusterInfoVoteListener {
             if !gossip_vote_txs.is_empty() || !replay_votes.is_empty() {
                 return Ok(Self::filter_and_confirm_with_new_votes(
                     vote_tracker,
+                    weight_vote_tracker,
                     gossip_vote_txs,
                     replay_votes,
                     root_bank,
@@ -638,7 +683,8 @@ impl ClusterInfoVoteListener {
         vote: VoteTransaction,
         vote_pubkey: &Pubkey,
         vote_transaction_signature: Signature,
-        vote_tracker: &VoteTracker,
+        vote_tracker: &VoteTracker, // vote_tracker - sort weights
+        weight_vote_tracker: &WeightVoteTracker,
         root_bank: &Bank,
         bank_forks: Arc<RwLock<BankForks>>,
         subscriptions: &RpcSubscriptions,
@@ -678,6 +724,8 @@ impl ClusterInfoVoteListener {
             // 1) There may have been a switch between the earlier vote and the last vote
             // 2) We do not know the hash of the earlier slot
             if slot == last_vote_slot {
+                let measure_start = Instant::now();
+
                 let vote_accounts = epoch_stakes.stakes().vote_accounts();
                 let stake = vote_accounts
                     .get(vote_pubkey)
@@ -736,6 +784,7 @@ impl ClusterInfoVoteListener {
                 // as soon as possible.
                 let (reached_threshold_results, is_new) = Self::track_optimistic_confirmation_vote(
                     vote_tracker,
+                    weight_vote_tracker,
                     last_vote_slot,
                     last_vote_hash,
                     *vote_pubkey,
@@ -744,7 +793,10 @@ impl ClusterInfoVoteListener {
                     weight,
                     total_weight,
                 );
-                info!("TPU: reached_threshold_results={reached_threshold_results:?} is_new={is_new} weight={weight}");
+                warn!("TPU: majority={:?} quorum={:?} is_new={is_new} weight={weight}", reached_threshold_results.majority, reached_threshold_results.quorum);
+                warn!("TPU: slot={slot} pk={} stake={stake} weight={weight} ", *vote_pubkey);
+
+                warn!("TPU: measure took {}", measure_start.elapsed().as_secs_f64());
 
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((
@@ -754,12 +806,12 @@ impl ClusterInfoVoteListener {
                     ));
                 }
 
-                if reached_threshold_results[0] { // Majority
+                if reached_threshold_results.majority { // Majority
                     if let Some(sender) = cluster_confirmed_slot_sender {
                         let _ = sender.send(vec![(last_vote_slot, last_vote_hash)]);
                     }
                 }
-                if reached_threshold_results[1] { // Quorum
+                if reached_threshold_results.quorum { // Quorum
                     new_optimistic_confirmed_slots.push((last_vote_slot, last_vote_hash));
                     // Notify subscribers about new optimistic confirmation
                     if let Some(sender) = bank_notification_sender {
@@ -804,6 +856,7 @@ impl ClusterInfoVoteListener {
 
     fn filter_and_confirm_with_new_votes(
         vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
         gossip_vote_txs: Vec<Transaction>,
         replayed_votes: Vec<ParsedVote>,
         root_bank: &Bank,
@@ -830,6 +883,7 @@ impl ClusterInfoVoteListener {
                 &vote_pubkey,
                 signature,
                 vote_tracker,
+                weight_vote_tracker,
                 root_bank,
                 bank_forks.clone(),
                 subscriptions,
@@ -847,6 +901,7 @@ impl ClusterInfoVoteListener {
         // Process all the slots accumulated from replay and gossip.
         for (slot, mut slot_diff) in diff {
             let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
+            let weight_slot_tracker = weight_vote_tracker.get_or_insert_slot_tracker(slot);
             {
                 let r_slot_tracker = slot_tracker.read().unwrap();
                 // Only keep the pubkeys we haven't seen voting for this slot
@@ -861,8 +916,12 @@ impl ClusterInfoVoteListener {
                 });
             }
             let mut w_slot_tracker = slot_tracker.write().unwrap();
+            let mut w_weight_slot_tracker = weight_slot_tracker.write().unwrap();
             if w_slot_tracker.voted_slot_updates.is_none() {
                 w_slot_tracker.voted_slot_updates = Some(vec![]);
+            }
+            if w_weight_slot_tracker.voted_slot_updates.is_none() {
+                w_weight_slot_tracker.voted_slot_updates = Some(vec![]);
             }
             let mut gossip_only_stake = 0;
             let epoch = root_bank.epoch_schedule().get_epoch(slot);
@@ -883,14 +942,21 @@ impl ClusterInfoVoteListener {
                 // `is_new || is_new_from_gossip`. In both cases we want to record
                 // `is_new_from_gossip` for the `pubkey` entry.
                 w_slot_tracker.voted.insert(pubkey, seen_in_gossip_above);
+                w_weight_slot_tracker.voted.insert(pubkey, seen_in_gossip_above);
                 w_slot_tracker
+                    .voted_slot_updates
+                    .as_mut()
+                    .unwrap()
+                    .push(pubkey);
+                w_weight_slot_tracker
                     .voted_slot_updates
                     .as_mut()
                     .unwrap()
                     .push(pubkey);
             }
 
-            w_slot_tracker.gossip_only_stake += gossip_only_stake
+            w_slot_tracker.gossip_only_stake += gossip_only_stake;
+            w_weight_slot_tracker.gossip_only_stake += gossip_only_stake;
         }
         new_optimistic_confirmed_slots
     }
@@ -899,6 +965,7 @@ impl ClusterInfoVoteListener {
     // the slot was new
     fn track_optimistic_confirmation_vote(
         vote_tracker: &VoteTracker,
+        weight_vote_tracker: &WeightVoteTracker,
         slot: Slot,
         hash: Hash,
         pubkey: Pubkey,
@@ -906,21 +973,33 @@ impl ClusterInfoVoteListener {
         total_epoch_stake: u64,
         weight: u64,
         total_weight: u64,
-    ) -> (Vec<bool>, bool) {
+    ) -> (ReachedThresholdResults, bool) {
         let slot_tracker = vote_tracker.get_or_insert_slot_tracker(slot);
+        let weight_slot_tracker = weight_vote_tracker.get_or_insert_slot_tracker(slot);
         // Insert vote and check for optimistic confirmation
         let mut w_slot_tracker = slot_tracker.write().unwrap();
+        let mut w_weight_slot_tracker = weight_slot_tracker.write().unwrap();
 
-        w_slot_tracker
-            .get_or_insert_optimistic_votes_tracker(hash)
+        let vote_stake_tracker = w_slot_tracker
+            .get_or_insert_optimistic_votes_tracker(hash);
+        let result = vote_stake_tracker
             .add_vote_pubkey(
                 pubkey,
                 stake,
                 total_epoch_stake,
                 weight,
-                &THRESHOLDS_TO_CHECK,
+                THRESHOLDS_TO_CHECK,
                 total_weight,
-            )
+            );
+
+        let weight_vote_stake_tracker = w_weight_slot_tracker.get_or_insert_optimistic_votes_tracker(hash);
+        weight_vote_stake_tracker.voted = vote_stake_tracker.voted().clone();
+        weight_vote_stake_tracker.stake = vote_stake_tracker.stake();
+        weight_vote_stake_tracker.weight = vote_stake_tracker.weight();
+        warn!("DEV: inserting weight_vote_stake_tracker slot={slot}");
+        // warn!("DEV: inserting weight_vote_stake_tracker slot={slot} hash={hash} weight_vote_stake_tracker={weight_vote_stake_tracker:?}");
+
+        result
     }
 
     fn sum_stake(sum: &mut u64, epoch_stakes: Option<&EpochStakes>, pubkey: &Pubkey) {

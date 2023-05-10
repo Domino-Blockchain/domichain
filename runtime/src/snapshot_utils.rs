@@ -8,7 +8,7 @@ use {
         bank::{Bank, BankSlotDelta},
         builtins::Builtins,
         hardened_unpack::{unpack_snapshot, ParallelSelector, UnpackError, UnpackedAppendVecMap},
-        serde_snapshot::{bank_from_streams, bank_to_stream, SerdeStyle, SnapshotStreams},
+        serde_snapshot::{self, bank_to_stream, SerdeStyle, SnapshotStreams},
         shared_buffer_reader::{SharedBuffer, SharedBufferReader},
         snapshot_archive_info::{
             FullSnapshotArchiveInfo, IncrementalSnapshotArchiveInfo, SnapshotArchiveInfoGetter,
@@ -44,6 +44,7 @@ use {
 
 mod archive_format;
 pub use archive_format::*;
+use crate::bank::WeightVoteTracker;
 
 pub const SNAPSHOT_STATUS_CACHE_FILENAME: &str = "status_cache";
 pub const SNAPSHOT_ARCHIVE_DOWNLOAD_DIR: &str = "remote";
@@ -815,6 +816,7 @@ pub fn bank_from_snapshot_archives(
     verify_index: bool,
     accounts_db_config: Option<AccountsDbConfig>,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> Result<(Bank, BankFromArchiveTimings)> {
     check_are_snapshots_compatible(
         full_snapshot_archive_info,
@@ -883,6 +885,7 @@ pub fn bank_from_snapshot_archives(
         accounts_db_config,
         accounts_update_notifier,
         accounts_db_skip_shrink,
+        vote_tracker,
     )?;
     measure_rebuild.stop();
     info!("{}", measure_rebuild);
@@ -930,6 +933,7 @@ pub fn bank_from_latest_snapshot_archives(
     verify_index: bool,
     accounts_db_config: Option<AccountsDbConfig>,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> Result<(
     Bank,
     FullSnapshotArchiveInfo,
@@ -973,6 +977,7 @@ pub fn bank_from_latest_snapshot_archives(
         verify_index,
         accounts_db_config,
         accounts_update_notifier,
+        vote_tracker,
     )?;
 
     datapoint_info!(
@@ -1580,6 +1585,7 @@ fn rebuild_bank_from_snapshots(
     accounts_db_config: Option<AccountsDbConfig>,
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
     accounts_db_skip_shrink: bool,
+    vote_tracker: &Arc<WeightVoteTracker>,
 ) -> Result<Bank> {
     let (full_snapshot_version, full_snapshot_root_paths) =
         verify_unpacked_snapshots_dir_and_version(
@@ -1613,7 +1619,7 @@ fn rebuild_bank_from_snapshots(
     let bank = deserialize_snapshot_data_files(&snapshot_root_paths, |snapshot_streams| {
         Ok(
             match incremental_snapshot_version.unwrap_or(full_snapshot_version) {
-                SnapshotVersion::V1_2_0 => bank_from_streams(
+                SnapshotVersion::V1_2_0 => serde_snapshot::bank_from_streams(
                     SerdeStyle::Newer,
                     snapshot_streams,
                     account_paths,
@@ -1629,6 +1635,7 @@ fn rebuild_bank_from_snapshots(
                     accounts_db_config,
                     accounts_update_notifier,
                     accounts_db_skip_shrink,
+                    vote_tracker,
                 ),
             }?,
         )
@@ -3003,25 +3010,26 @@ mod tests {
         )
         .unwrap();
 
-        let (roundtrip_bank, _) = bank_from_snapshot_archives(
-            &[PathBuf::from(accounts_dir.path())],
-            bank_snapshots_dir.path(),
-            &snapshot_archive_info,
-            None,
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (roundtrip_bank, _) = bank_from_snapshot_archives(
+        //     &[PathBuf::from(accounts_dir.path())],
+        //     bank_snapshots_dir.path(),
+        //     &snapshot_archive_info,
+        //     None,
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         assert_eq!(original_bank, roundtrip_bank);
     }
@@ -3114,25 +3122,26 @@ mod tests {
         )
         .unwrap();
 
-        let (roundtrip_bank, _) = bank_from_snapshot_archives(
-            &[PathBuf::from(accounts_dir.path())],
-            bank_snapshots_dir.path(),
-            &full_snapshot_archive_info,
-            None,
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (roundtrip_bank, _) = bank_from_snapshot_archives(
+        //     &[PathBuf::from(accounts_dir.path())],
+        //     bank_snapshots_dir.path(),
+        //     &full_snapshot_archive_info,
+        //     None,
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         assert_eq!(*bank4, roundtrip_bank);
     }
@@ -3245,25 +3254,26 @@ mod tests {
         )
         .unwrap();
 
-        let (roundtrip_bank, _) = bank_from_snapshot_archives(
-            &[PathBuf::from(accounts_dir.path())],
-            bank_snapshots_dir.path(),
-            &full_snapshot_archive_info,
-            Some(&incremental_snapshot_archive_info),
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (roundtrip_bank, _) = bank_from_snapshot_archives(
+        //     &[PathBuf::from(accounts_dir.path())],
+        //     bank_snapshots_dir.path(),
+        //     &full_snapshot_archive_info,
+        //     Some(&incremental_snapshot_archive_info),
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         assert_eq!(*bank4, roundtrip_bank);
     }
@@ -3366,25 +3376,26 @@ mod tests {
         )
         .unwrap();
 
-        let (deserialized_bank, ..) = bank_from_latest_snapshot_archives(
-            &bank_snapshots_dir,
-            &full_snapshot_archives_dir,
-            &incremental_snapshot_archives_dir,
-            &[accounts_dir.as_ref().to_path_buf()],
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unimplemented!();
+        // let (deserialized_bank, ..) = bank_from_latest_snapshot_archives(
+        //     &bank_snapshots_dir,
+        //     &full_snapshot_archives_dir,
+        //     &incremental_snapshot_archives_dir,
+        //     &[accounts_dir.as_ref().to_path_buf()],
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         assert_eq!(deserialized_bank, *bank4);
     }
@@ -3507,25 +3518,26 @@ mod tests {
             DEFAULT_MAX_INCREMENTAL_SNAPSHOT_ARCHIVES_TO_RETAIN,
         )
         .unwrap();
-        let (deserialized_bank, _) = bank_from_snapshot_archives(
-            &[accounts_dir.path().to_path_buf()],
-            bank_snapshots_dir.path(),
-            &full_snapshot_archive_info,
-            Some(&incremental_snapshot_archive_info),
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (deserialized_bank, _) = bank_from_snapshot_archives(
+        //     &[accounts_dir.path().to_path_buf()],
+        //     bank_snapshots_dir.path(),
+        //     &full_snapshot_archive_info,
+        //     Some(&incremental_snapshot_archive_info),
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
         assert_eq!(
             deserialized_bank, *bank2,
             "Ensure rebuilding from an incremental snapshot works"
@@ -3570,25 +3582,26 @@ mod tests {
         )
         .unwrap();
 
-        let (deserialized_bank, _) = bank_from_snapshot_archives(
-            &[accounts_dir.path().to_path_buf()],
-            bank_snapshots_dir.path(),
-            &full_snapshot_archive_info,
-            Some(&incremental_snapshot_archive_info),
-            &genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (deserialized_bank, _) = bank_from_snapshot_archives(
+        //     &[accounts_dir.path().to_path_buf()],
+        //     bank_snapshots_dir.path(),
+        //     &full_snapshot_archive_info,
+        //     Some(&incremental_snapshot_archive_info),
+        //     &genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
         assert_eq!(
             deserialized_bank, *bank4,
             "Ensure rebuilding from an incremental snapshot works",

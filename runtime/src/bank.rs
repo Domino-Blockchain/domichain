@@ -169,6 +169,59 @@ use {
     },
 };
 
+const SLOT_DIFF_TRESHOLD: u64 = 16;
+
+#[derive(Default)]
+pub struct WeightVoteTracker {
+    // Map from a slot to a set of validators who have voted for that slot
+    pub slot_vote_trackers: RwLock<HashMap<Slot, Arc<RwLock<WeightSlotVoteTracker>>>>,
+}
+
+impl fmt::Debug for WeightVoteTracker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeightVoteTracker").field("inner", &"<rw lock hidden>").finish()
+    }
+}
+
+impl WeightVoteTracker {
+    pub fn get_or_insert_slot_tracker(&self, slot: Slot) -> Arc<RwLock<WeightSlotVoteTracker>> {
+        if let Some(slot_vote_tracker) = self.slot_vote_trackers.read().unwrap().get(&slot) {
+            return slot_vote_tracker.clone();
+        }
+        let mut slot_vote_trackers = self.slot_vote_trackers.write().unwrap();
+        slot_vote_trackers.entry(slot).or_default().clone()
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct WeightSlotVoteTracker {
+    // Maps pubkeys that have voted for this slot
+    // to whether or not we've seen the vote on gossip.
+    // True if seen on gossip, false if only seen in replay.
+    pub voted: HashMap<Pubkey, bool>,
+    optimistic_votes_tracker: HashMap<Hash, WeightVoteStakeTracker>,
+    pub voted_slot_updates: Option<Vec<Pubkey>>,
+    pub gossip_only_stake: u64,
+}
+
+impl WeightSlotVoteTracker {
+    pub(crate) fn get_voted_slot_updates(&mut self) -> Option<Vec<Pubkey>> {
+        self.voted_slot_updates.take()
+    }
+
+    pub fn get_or_insert_optimistic_votes_tracker(&mut self, hash: Hash) -> &mut WeightVoteStakeTracker {
+        self.optimistic_votes_tracker.entry(hash).or_default()
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct WeightVoteStakeTracker {
+    // Mapiing from PK to weight
+    pub voted: HashMap<Pubkey, u64>,
+    pub stake: u64,
+    pub weight: u64,
+}
+
 #[derive(Debug, Default)]
 struct RewardsMetrics {
     load_vote_and_stake_accounts_us: AtomicU64,
@@ -189,6 +242,8 @@ mod transaction_account_state_info;
 pub const SECONDS_PER_YEAR: f64 = 365.25 * 24.0 * 60.0 * 60.0;
 
 pub const MAX_LEADER_SCHEDULE_STAKES: Epoch = 5;
+
+pub const DEFAULT_TOTAL_WEIGHT: u64 = 3000; // SoftCommitteeSize - to be corrected
 
 pub type Rewrites = RwLock<HashMap<Pubkey, Hash>>;
 
@@ -563,6 +618,7 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
+use crate::contains::Contains;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -1100,6 +1156,7 @@ impl PartialEq for Bank {
             accounts_data_size_delta_on_chain: _,
             accounts_data_size_delta_off_chain: _,
             fee_structure: _,
+            vote_tracker: _,
             // Ignore new fields explicitly if they do not impact PartialEq.
             // Adding ".." will remove compile-time checks that if a new field
             // is added to the struct, this ParitalEq is accordingly updated.
@@ -1382,6 +1439,8 @@ pub struct Bank {
 
     /// Transaction fee structure
     pub fee_structure: FeeStructure,
+
+    pub vote_tracker: Arc<WeightVoteTracker>,
 }
 
 struct VoteWithStakeDelegations {
@@ -1548,6 +1607,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
+            vote_tracker: Arc::<WeightVoteTracker>::default(),
         };
 
         let accounts_data_size_initial = bank.get_total_accounts_stats().unwrap().data_len as u64;
@@ -1617,6 +1677,35 @@ impl Bank {
         accounts_db_config: Option<AccountsDbConfig>,
         accounts_update_notifier: Option<AccountsUpdateNotifier>,
     ) -> Self {
+        Self::new_with_paths_with_vote_tracker(
+            genesis_config,
+            paths,
+            debug_keys,
+            additional_builtins,
+            account_indexes,
+            accounts_db_caching_enabled,
+            shrink_ratio,
+            debug_do_not_add_builtins,
+            accounts_db_config,
+            accounts_update_notifier,
+            todo!(),
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_paths_with_vote_tracker(
+        genesis_config: &GenesisConfig,
+        paths: Vec<PathBuf>,
+        debug_keys: Option<Arc<HashSet<Pubkey>>>,
+        additional_builtins: Option<&Builtins>,
+        account_indexes: AccountSecondaryIndexes,
+        accounts_db_caching_enabled: bool,
+        shrink_ratio: AccountShrinkThreshold,
+        debug_do_not_add_builtins: bool,
+        accounts_db_config: Option<AccountsDbConfig>,
+        accounts_update_notifier: Option<AccountsUpdateNotifier>,
+        vote_tracker: &Arc<WeightVoteTracker>,
+    ) -> Self {
         let accounts = Accounts::new_with_config(
             paths,
             &genesis_config.cluster_type,
@@ -1627,6 +1716,7 @@ impl Bank {
             accounts_update_notifier,
         );
         let mut bank = Self::default_with_accounts(accounts);
+        bank.vote_tracker = vote_tracker.clone();
         bank.ancestors = Ancestors::from(vec![bank.slot()]);
         bank.transaction_debug_keys = debug_keys;
         bank.cluster_type = Some(genesis_config.cluster_type);
@@ -1658,13 +1748,52 @@ impl Bank {
     }
 
     /// Create a new bank that points to an immutable checkpoint of another bank.
-    pub fn new_from_parent(parent: &Arc<Bank>, collector_id: &Pubkey, slot: Slot) -> Self {
+    pub fn new_from_parent(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
+    ) -> Self {
+        let vote_tracker = parent.vote_tracker.clone();
+
+        // {
+        //     let weight_vote_tracker = vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling {} r_slot_vote_trackers={r_slot_vote_trackers:?}", line!());
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
+
+        // new_from_parent
         Self::_new_from_parent(
             parent,
             collector_id,
             slot,
             null_tracer(),
             NewBankOptions::default(),
+            vote_tracker,
+        )
+    }
+
+    pub fn new_from_parent_with_vote_tracker(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
+        vote_tracker: Arc<WeightVoteTracker>,
+    ) -> Self {
+        // new_from_parent
+        Self::_new_from_parent(
+            parent,
+            collector_id,
+            slot,
+            null_tracer(),
+            NewBankOptions::default(),
+            vote_tracker,
         )
     }
 
@@ -1674,7 +1803,31 @@ impl Bank {
         slot: Slot,
         new_bank_options: NewBankOptions,
     ) -> Self {
-        Self::_new_from_parent(parent, collector_id, slot, null_tracer(), new_bank_options)
+        let vote_tracker = parent.vote_tracker.clone();
+
+        // NON EMPTY
+        // {
+        //     let weight_vote_tracker = vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling {} r_slot_vote_trackers={r_slot_vote_trackers:?}", line!());
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
+
+        Self::_new_from_parent(
+            parent,
+            collector_id,
+            slot,
+            null_tracer(),
+            new_bank_options,
+            vote_tracker,
+        )
     }
 
     pub fn new_from_parent_with_tracer(
@@ -1683,13 +1836,15 @@ impl Bank {
         slot: Slot,
         reward_calc_tracer: impl Fn(&RewardCalculationEvent) + Send + Sync,
     ) -> Self {
-        Self::_new_from_parent(
-            parent,
-            collector_id,
-            slot,
-            Some(reward_calc_tracer),
-            NewBankOptions::default(),
-        )
+        todo!();
+        // Self::_new_from_parent(
+        //     parent,
+        //     collector_id,
+        //     slot,
+        //     Some(reward_calc_tracer),
+        //     NewBankOptions::default(),
+        //     todo!(),
+        // )
     }
 
     fn get_rent_collector_from(rent_collector: &RentCollector, epoch: Epoch) -> RentCollector {
@@ -1702,6 +1857,7 @@ impl Bank {
         slot: Slot,
         reward_calc_tracer: Option<impl Fn(&RewardCalculationEvent) + Send + Sync>,
         new_bank_options: NewBankOptions,
+        vote_tracker: Arc<WeightVoteTracker>,
     ) -> Self {
         let mut time = Measure::start("bank::new_from_parent");
         let NewBankOptions { vote_only_bank } = new_bank_options;
@@ -1874,9 +2030,10 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: parent.fee_structure.clone(),
+            vote_tracker,
         };
 
-        let (_, ancestors_time) = measure!(
+        let (parents, ancestors_time) = measure!(
             {
                 let mut ancestors = Vec::with_capacity(1 + new.parents().len());
                 ancestors.push(new.slot());
@@ -1884,6 +2041,7 @@ impl Bank {
                     ancestors.push(p.slot());
                 });
                 new.ancestors = Ancestors::from(ancestors);
+                new.parents()
             },
             "ancestors_creation",
         );
@@ -1930,6 +2088,7 @@ impl Bank {
                                 reward_calc_tracer,
                                 &thread_pool,
                                 &mut metrics,
+                                &parents,
                             )
                         },
                         "update_rewards_with_thread_pool",
@@ -2099,9 +2258,15 @@ impl Bank {
     /// in the past
     /// * Adjusts the new bank's tick height to avoid having to run PoH for millions of slots
     /// * Freezes the new bank, assuming that the user will `Bank::new_from_parent` from this bank
-    pub fn warp_from_parent(parent: &Arc<Bank>, collector_id: &Pubkey, slot: Slot) -> Self {
+    pub fn warp_from_parent(
+        parent: &Arc<Bank>,
+        collector_id: &Pubkey,
+        slot: Slot,
+        vote_tracker: Arc<WeightVoteTracker>,
+    ) -> Self {
         let parent_timestamp = parent.clock().unix_timestamp;
-        let mut new = Bank::new_from_parent(parent, collector_id, slot);
+        // new_from_parent
+        let mut new = Bank::new_from_parent_with_vote_tracker(parent, collector_id, slot, vote_tracker);
         new.apply_feature_activations(ApplyFeatureActivationsCaller::WarpFromParent, false);
         new.update_epoch_stakes(new.epoch_schedule().get_epoch(slot));
         new.tick_height.store(new.max_tick_height(), Relaxed);
@@ -2130,6 +2295,7 @@ impl Bank {
         additional_builtins: Option<&Builtins>,
         debug_do_not_add_builtins: bool,
         accounts_data_size_initial: u64,
+        vote_tracker: &Arc<WeightVoteTracker>,
     ) -> Self {
         let now = Instant::now();
         let ancestors = Ancestors::from(&fields.ancestors);
@@ -2214,6 +2380,7 @@ impl Bank {
             accounts_data_size_delta_on_chain: AtomicI64::new(0),
             accounts_data_size_delta_off_chain: AtomicI64::new(0),
             fee_structure: FeeStructure::default(),
+            vote_tracker: vote_tracker.clone(),
         };
         bank.finish_init(
             genesis_config,
@@ -2681,6 +2848,7 @@ impl Bank {
         reward_calc_tracer: Option<impl Fn(&RewardCalculationEvent) + Send + Sync>,
         thread_pool: &ThreadPool,
         metrics: &mut RewardsMetrics,
+        parents: &Vec<Arc<Bank>>,
     ) {
         let capitalization = self.capitalization();
         let PrevEpochInflationRewards {
@@ -2703,6 +2871,7 @@ impl Bank {
             thread_pool,
             metrics,
             update_rewards_from_cached_accounts,
+            parents,
         );
 
         let new_vote_balance_and_staked = self.stakes_cache.stakes().vote_balance_and_staked();
@@ -3051,7 +3220,9 @@ impl Bank {
         thread_pool: &ThreadPool,
         metrics: &mut RewardsMetrics,
         update_rewards_from_cached_accounts: bool,
+        parents: &Vec<Arc<Bank>>,
     ) -> f64 {
+        #[derive(Debug)]
         struct StakeReward {
             stake_pubkey: Pubkey,
             stake_reward_info: RewardInfo,
@@ -3157,6 +3328,96 @@ impl Bank {
                     });
                     let (mut stake_account, stake_state) =
                         <(AccountSharedData, StakeState)>::from(stake_account);
+
+
+                    // {
+                    //     let weight_vote_tracker = self.vote_tracker.clone();
+                    //     std::thread::spawn(move || {
+                    //         loop {
+                    //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+                    //                     .read()
+                    //                     .unwrap();
+                    //             warn!("DEV: rewards polling r_slot_vote_trackers={r_slot_vote_trackers:?}");
+                    //             drop(r_slot_vote_trackers);
+                    //             std::thread::sleep(std::time::Duration::from_secs(2));
+                    //         }
+                    //     });
+                    // }
+
+                    let our_slot = self.slot();
+                    warn!("DEV: reward ");
+                    warn!("DEV: reward our_slot={our_slot:?}");
+                    // let vote_hash = self.hash();
+                    // warn!("DEV: reward vote_hash={vote_hash:?}");
+                    // let parent_vote_hash = self.parent_hash();
+                    // warn!("DEV: reward parent_vote_hash={parent_vote_hash:?}");
+                    // let freeze_started = self.freeze_started();
+                    // warn!("DEV: reward freeze_started={freeze_started:?}");
+                    // let r_bank_parent = self.rc.parent.try_read().unwrap();
+                    // let bank_parent = r_bank_parent.clone().unwrap().clone();
+                    // drop(r_bank_parent);
+                    // // let bank_parent = self.parent();
+                    // warn!("DEV: reward bank_parent={bank_parent:?}");
+                    let parents_hashes: Vec<_> = parents.iter().map(|bank| bank.hash()).collect();
+                    // warn!("DEV: reward parents={:?}", parents.iter().map(|bank| (bank.slot(), bank.hash())).collect::<Vec<_>>());
+                    let contains_pubkey = || {
+                        let r_slot_vote_trackers = self.vote_tracker.slot_vote_trackers
+                            .read()
+                            .unwrap();
+
+                        let vote_tracker_max_slot = match r_slot_vote_trackers.keys().max() {
+                            Some(slot) => slot,
+                            None => return false,
+                        };
+                        // if our_slot.abs_diff(*vote_tracker_max_slot) > SLOT_DIFF_TRESHOLD {
+                        //     return false;
+                        // }
+                        let slot = our_slot.saturating_sub(SLOT_DIFF_TRESHOLD);
+                        warn!("DEV: reward r_slot_vote_trackers.keys().max()={vote_tracker_max_slot:?}");
+                        warn!("DEV: reward trying to get slot={slot:?}");
+                        let weight_slot_vote_tracker = match r_slot_vote_trackers.get(&slot) {
+                            Some(weight_slot_vote_tracker) => weight_slot_vote_tracker,
+                            None => {
+                                error!("DEV: reward r_slot_vote_trackers.get(solt={slot}) is None! r_slot_vote_trackers={r_slot_vote_trackers:?}");
+                                return false;
+                            }
+                        };
+                        warn!("DEV: reward weight_slot_vote_tracker={weight_slot_vote_tracker:#?}");
+                        let r_weight_slot_vote_tracker = weight_slot_vote_tracker
+                            .read()
+                            .unwrap();
+
+                        let optimistic_votes_tracker = &r_weight_slot_vote_tracker.optimistic_votes_tracker;
+
+                        warn!("DEV: reward parents_hashes={:#?}", &parents_hashes.chunks(5).next());
+                        let optimistic_result = optimistic_votes_tracker
+                            .iter()
+                            .max_by_key(
+                                |(vote_hash, _)| parents_hashes
+                                    .iter()
+                                    .position(|parent_hash| parent_hash == *vote_hash)
+                            )
+                            .and_then(|(_, vote_stake_tracker)| vote_stake_tracker.voted
+                                .get(&vote_pubkey)
+                            ).map(|weight| *weight > 0);
+
+                        warn!("DEV: reward optimistic_votes_tracker.voted.contains(&vote_pubkey)={optimistic_result:?}");
+                        warn!("DEV: reward vote_pubkey={vote_pubkey:?}");
+
+                        // let result = r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey);
+                        // warn!("DEV: reward r_weight_slot_vote_tracker.voted.contains_key(&vote_pubkey)={:?}", result);
+                        optimistic_result.unwrap_or(false)
+                    };
+
+                    let stake_account_owner = stake_account.owner();
+                    warn!("DEV: reward stake_account.owner={stake_account_owner}");
+                    if !contains_pubkey() {
+                        warn!("DEV: reward NOT in committee vote_pubkey={vote_pubkey:?} slot={our_slot}");
+                        return None;
+                    } else {
+                        warn!("DEV: reward in committee vote_pubkey={vote_pubkey:?} slot={our_slot}");
+                    }
+
                     let redeemed = stake_state::redeem_rewards(
                         rewarded_epoch,
                         stake_state,
@@ -3167,6 +3428,8 @@ impl Bank {
                         reward_calc_tracer.as_ref(),
                         credits_auto_rewind,
                     );
+                    warn!("DEV: reward redeemed (stakers_reward, voters_reward)={redeemed:?} vote_pubkey={vote_pubkey:?}");
+
                     if let Ok((stakers_reward, voters_reward)) = redeemed {
                         // track voter rewards
                         if let Some((
@@ -3203,6 +3466,8 @@ impl Bank {
         });
         m.stop();
         metrics.redeem_rewards_us += m.as_us();
+
+        info!("DEV: reward stake_rewards={stake_rewards:?}");
 
         // store stake account even if stakers_reward is 0
         // because credits observed has changed
@@ -3416,6 +3681,7 @@ impl Bank {
             *hash = self.hash_internal_state();
             self.rc.accounts.accounts_db.mark_slot_frozen(self.slot());
         }
+        info!("Bank frozen: slot={} collector_id={:?}", self.slot(), self.collector_id);
     }
 
     // dangerous; don't use this; this is only needed for ledger-tool's special command
@@ -7038,6 +7304,8 @@ impl Bank {
 
     /// Return the block_seed of this bank
     pub fn derive_new_block_seed(&self) -> Hash {
+        let measure_start = Instant::now();
+
         let alpha = hash(self.block_seed.as_ref());
         assert_ne!(alpha, self.block_seed); // New seed from previous
 
@@ -7046,6 +7314,8 @@ impl Bank {
 
         let new_seed = hashv(&[alpha.as_ref(), history.as_ref()]);
         info!("DEV: derived new seed {new_seed} from {}", self.block_seed);
+
+        warn!("DEV: measure took {} derived new seed", measure_start.elapsed().as_secs_f64());
         new_seed
     }
 

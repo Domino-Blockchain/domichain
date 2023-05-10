@@ -198,29 +198,30 @@ mod tests {
         let full_snapshot_archive_info =
             FullSnapshotArchiveInfo::new_from_path(full_snapshot_archive_path).unwrap();
 
-        let (deserialized_bank, _timing) = snapshot_utils::bank_from_snapshot_archives(
-            account_paths,
-            &old_bank_forks
-                .snapshot_config
-                .as_ref()
-                .unwrap()
-                .bank_snapshots_dir,
-            &full_snapshot_archive_info,
-            None,
-            old_genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            accounts_db::AccountShrinkThreshold::default(),
-            check_hash_calculation,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (deserialized_bank, _timing) = snapshot_utils::bank_from_snapshot_archives(
+        //     account_paths,
+        //     &old_bank_forks
+        //         .snapshot_config
+        //         .as_ref()
+        //         .unwrap()
+        //         .bank_snapshots_dir,
+        //     &full_snapshot_archive_info,
+        //     None,
+        //     old_genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     accounts_db::AccountShrinkThreshold::default(),
+        //     check_hash_calculation,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         let bank = old_bank_forks.get(deserialized_bank.slot()).unwrap();
         assert_eq!(bank.as_ref(), &deserialized_bank);
@@ -851,24 +852,25 @@ mod tests {
         accounts_dir: PathBuf,
         genesis_config: &GenesisConfig,
     ) -> snapshot_utils::Result<()> {
-        let (deserialized_bank, ..) = snapshot_utils::bank_from_latest_snapshot_archives(
-            &snapshot_config.bank_snapshots_dir,
-            &snapshot_config.full_snapshot_archives_dir,
-            &snapshot_config.incremental_snapshot_archives_dir,
-            &[accounts_dir],
-            genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            accounts_db::AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )?;
+        unreachable!();
+        // let (deserialized_bank, ..) = snapshot_utils::bank_from_latest_snapshot_archives(
+        //     &snapshot_config.bank_snapshots_dir,
+        //     &snapshot_config.full_snapshot_archives_dir,
+        //     &snapshot_config.incremental_snapshot_archives_dir,
+        //     &[accounts_dir],
+        //     genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     accounts_db::AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )?;
 
         assert_eq!(bank, &deserialized_bank);
 
@@ -1028,29 +1030,30 @@ mod tests {
         std::thread::sleep(Duration::from_secs(5));
         info!("Awake! Rebuilding bank from latest snapshot archives...");
 
-        let (deserialized_bank, ..) = snapshot_utils::bank_from_latest_snapshot_archives(
-            &snapshot_test_config.snapshot_config.bank_snapshots_dir,
-            &snapshot_test_config
-                .snapshot_config
-                .full_snapshot_archives_dir,
-            &snapshot_test_config
-                .snapshot_config
-                .incremental_snapshot_archives_dir,
-            &[snapshot_test_config.accounts_dir.as_ref().to_path_buf()],
-            &snapshot_test_config.genesis_config_info.genesis_config,
-            None,
-            None,
-            AccountSecondaryIndexes::default(),
-            false,
-            None,
-            accounts_db::AccountShrinkThreshold::default(),
-            false,
-            false,
-            false,
-            Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
-            None,
-        )
-        .unwrap();
+        unreachable!();
+        // let (deserialized_bank, ..) = snapshot_utils::bank_from_latest_snapshot_archives(
+        //     &snapshot_test_config.snapshot_config.bank_snapshots_dir,
+        //     &snapshot_test_config
+        //         .snapshot_config
+        //         .full_snapshot_archives_dir,
+        //     &snapshot_test_config
+        //         .snapshot_config
+        //         .incremental_snapshot_archives_dir,
+        //     &[snapshot_test_config.accounts_dir.as_ref().to_path_buf()],
+        //     &snapshot_test_config.genesis_config_info.genesis_config,
+        //     None,
+        //     None,
+        //     AccountSecondaryIndexes::default(),
+        //     false,
+        //     None,
+        //     accounts_db::AccountShrinkThreshold::default(),
+        //     false,
+        //     false,
+        //     false,
+        //     Some(ACCOUNTS_DB_CONFIG_FOR_TESTING),
+        //     None,
+        // )
+        // .unwrap();
 
         assert_eq!(deserialized_bank.slot(), LAST_SLOT);
         assert_eq!(

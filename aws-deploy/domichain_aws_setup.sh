@@ -53,5 +53,22 @@ make DESTDIR=${SOLANA_ROOT:?}/target/perf-libs install
 echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
 echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf
 echo "fs.file-max = 500000" | sudo tee -a /etc/sysctl.conf
+
+echo 'export CUDA_HOME=/usr/local/cuda-11.1/
+export LD_LIBRARY_PATH=/home/ubuntu/domichain/target/perf-libs${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export NDEBUG=1
+export DOMICHAIN_CUDA=1
+export PATH=$PATH:~/domichain/target/release' >> ~/.bashrc
+
+if [ -z "$3" ]
+  then
+    echo 'export NODE_IP_ADDR=$(hostname -I | cut -d' ' -f1)' >> ~/.bashrc
+  else
+    echo "export NODE_IP_ADDR=$3" >> ~/.bashrc
+fi
+
+echo 'export URL="http://$NODE_IP_ADDR:8899/"' >> ~/.bashrc
+
 # Apply settings
 sudo reboot

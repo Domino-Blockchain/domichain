@@ -40,6 +40,7 @@ use {
         thread,
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 pub const DEFAULT_TPU_COALESCE_MS: u64 = 5;
 
@@ -84,6 +85,7 @@ impl Tpu {
         exit: &Arc<AtomicBool>,
         shred_version: u16,
         vote_tracker: Arc<VoteTracker>,
+        weight_vote_tracker: Arc<WeightVoteTracker>,
         bank_forks: Arc<RwLock<BankForks>>,
         verified_vote_sender: VerifiedVoteSender,
         gossip_verified_vote_hash_sender: GossipVerifiedVoteHashSender,
@@ -211,6 +213,7 @@ impl Tpu {
             verified_gossip_vote_packets_sender,
             poh_recorder.clone(),
             vote_tracker,
+            weight_vote_tracker,
             bank_forks.clone(),
             subscriptions.clone(),
             verified_vote_sender,

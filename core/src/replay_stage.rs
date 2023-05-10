@@ -82,7 +82,7 @@ pub const MAX_ENTRY_RECV_PER_ITER: usize = 512;
 pub const SUPERMINORITY_THRESHOLD: f64 = 1f64 / 3f64;
 pub const MAX_UNCONFIRMED_SLOTS: usize = 5;
 pub const DUPLICATE_LIVENESS_THRESHOLD: f64 = 0.1;
-pub const DUPLICATE_THRESHOLD: f64 = 1.0 - SWITCH_FORK_THRESHOLD - DUPLICATE_LIVENESS_THRESHOLD;
+pub const DUPLICATE_THRESHOLD: f64 = 1.0 - SWITCH_FORK_THRESHOLD - DUPLICATE_LIVENESS_THRESHOLD; // 0.52
 const MAX_VOTE_SIGNATURES: usize = 200;
 const MAX_VOTE_REFRESH_INTERVAL_MILLIS: usize = 5000;
 
@@ -1963,6 +1963,8 @@ impl ReplayStage {
             Some(authorized_voter_keypair) => authorized_voter_keypair,
         };
 
+        let measure_start = Instant::now();
+
         let bank_parent_slot = bank.parent_slot();
         let block_parent_seed = bank.parent_block_seed();
 
@@ -1971,6 +1973,8 @@ impl ReplayStage {
         let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
         vote.set_vrf_proof(Some(vrf_proof));
+
+        warn!("Replay_stage: measure took {} set_vrf_proof", measure_start.elapsed().as_secs_f64());
 
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision

@@ -207,7 +207,7 @@ fn do_bench_tps_simple(
         let tx = system_transaction::nonced_transfer(
             from,
             &to.pubkey(),
-            1_000_000,
+            1_000_000 + i as u64,
             &nonce,
             from,
             blockhash,

@@ -859,7 +859,7 @@ fn compute_and_report_stats(
         maxes.read().unwrap().len(),
         drop_rate,
     );
-    info!(
+    error!(
         "\tAverage TPS: {}",
         max_tx_count as f32 / duration_as_s(tx_send_elapsed)
     );

@@ -112,6 +112,7 @@ use {
         time::{Duration, Instant},
     },
 };
+use domichain_runtime::bank::WeightVoteTracker;
 
 const MAX_COMPLETED_DATA_SETS_IN_CHANNEL: usize = 100_000;
 const WAIT_FOR_SUPERMAJORITY_THRESHOLD_PERCENT: u64 = 80;
@@ -514,6 +515,7 @@ impl Validator {
         let poh_timing_report_service =
             PohTimingReportService::new(poh_timing_point_receiver, &exit);
 
+        let weight_vote_tracker = Arc::<WeightVoteTracker>::default();
         let (
             genesis_config,
             bank_forks,
@@ -542,6 +544,7 @@ impl Validator {
             accounts_update_notifier,
             transaction_notifier,
             Some(poh_timing_point_sender.clone()),
+            &weight_vote_tracker,
         );
 
         node.info.wallclock = timestamp();
@@ -683,12 +686,31 @@ impl Validator {
             config,
         );
 
+        let vote_tracker = Arc::<VoteTracker>::default(); // vote_tracker
+
+        // NON EMPTY
+        // {
+        //     let weight_vote_tracker = weight_vote_tracker.clone();
+        //     std::thread::spawn(move || {
+        //         loop {
+        //             let r_slot_vote_trackers = weight_vote_tracker.slot_vote_trackers
+        //                     .read()
+        //                     .unwrap();
+        //             warn!("DEV: polling r_slot_vote_trackers={r_slot_vote_trackers:?}");
+        //             drop(r_slot_vote_trackers);
+        //             std::thread::sleep(std::time::Duration::from_secs(2));
+        //         }
+        //     });
+        // }
+
+        // maybe_warp_slot
         maybe_warp_slot(
             config,
             &mut process_blockstore,
             ledger_path,
             &bank_forks,
             &leader_schedule_cache,
+            weight_vote_tracker.clone(),
         );
 
         *start_progress.write().unwrap() = ValidatorStartProgress::StartingServices;
@@ -915,7 +937,7 @@ impl Validator {
             "New shred signal for the TVU should be the same as the clear bank signal."
         );
 
-        let vote_tracker = Arc::<VoteTracker>::default();
+        // let vote_tracker = Arc::<VoteTracker>::default(); // vote_tracker
         let mut cost_model = CostModel::default();
         // initialize cost model with built-in instruction costs only
         cost_model.initialize_cost_table(&[]);
@@ -1014,7 +1036,8 @@ impl Validator {
             &config.broadcast_stage_type,
             &exit,
             node.info.shred_version,
-            vote_tracker,
+            vote_tracker, // vote_tracker
+            weight_vote_tracker,
             bank_forks.clone(),
             verified_vote_sender,
             gossip_verified_vote_hash_sender,
@@ -1339,6 +1362,7 @@ fn load_blockstore(
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
     transaction_notifier: Option<TransactionNotifierLock>,
     poh_timing_point_sender: Option<PohTimingSender>,
+    weight_vote_tracker: &Arc<WeightVoteTracker>,
 ) -> (
     GenesisConfig,
     Arc<RwLock<BankForks>>,
@@ -1432,7 +1456,7 @@ fn load_blockstore(
         };
 
     let (bank_forks, mut leader_schedule_cache, starting_snapshot_hashes) =
-        bank_forks_utils::load_bank_forks(
+        bank_forks_utils::load_bank_forks_with_vote_tracker(
             &genesis_config,
             &blockstore,
             config.account_paths.clone(),
@@ -1443,6 +1467,7 @@ fn load_blockstore(
                 .cache_block_meta_sender
                 .as_ref(),
             accounts_update_notifier,
+            weight_vote_tracker,
         );
 
     // Before replay starts, set the callbacks in each of the banks in BankForks so that
@@ -1674,6 +1699,7 @@ fn maybe_warp_slot(
     ledger_path: &Path,
     bank_forks: &RwLock<BankForks>,
     leader_schedule_cache: &LeaderScheduleCache,
+    vote_tracker: Arc<WeightVoteTracker>,
 ) {
     if let Some(warp_slot) = config.warp_slot {
         let snapshot_config = config.snapshot_config.as_ref().unwrap_or_else(|| {
@@ -1702,6 +1728,7 @@ fn maybe_warp_slot(
             &root_bank,
             &Pubkey::default(),
             warp_slot,
+            vote_tracker,
         ));
         bank_forks.set_root(
             warp_slot,
