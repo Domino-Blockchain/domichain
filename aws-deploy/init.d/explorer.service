@@ -1,0 +1,13 @@
+[Unit]
+After=network.target
+
+[Service]
+Type=idle
+User=ubuntu
+Environment=PATH=/home/ubuntu/.nvm/versions/node/v16.10.0/bin
+WorkingDirectory=/home/ubuntu/domiexplorer
+ExecStart=/home/ubuntu/.nvm/versions/node/v16.10.0/bin/yarn start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
