@@ -22,7 +22,7 @@ export RUST_LOG=ERROR
 export NDEBUG=1
 export DOMICHAIN_CUDA=1
 
-screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1 --entrypoint "$NODE_IP_ADDR:8001" --rpc-faucet-address "$NODE_IP_ADDR:9900" --allow-private-addr'
+screen -d -m -S validator bash -c './multinode-demo/validator-x.sh --label test1 --entrypoint "$NODE_IP_ADDR:8001" --rpc-faucet-address "$NODE_IP_ADDR:9900" --allow-private-addr --limit-ledger-size 50000000'
 # ./multinode-demo/validator-x.sh \
 #     --label test1 \
 #     --entrypoint "$NODE_IP_ADDR:8001" \
