@@ -153,6 +153,7 @@ impl MessageProcessor {
                         &instruction.data,
                         true,
                     )
+
                     .and_then(|_| invoke_context.transaction_context.pop())
             } else {
                 let mut time = Measure::start("execute_instruction");

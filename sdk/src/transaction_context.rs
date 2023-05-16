@@ -133,22 +133,22 @@ impl TransactionContext {
         let top_level_index = *self
             .instruction_stack
             .first()
-            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
+            .ok_or(InstructionError::CallDepth)?;
         let cpi_index = if level == 0 {
             0
         } else {
             *self
                 .instruction_stack
                 .get(level)
-                .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?
+                .ok_or(InstructionError::CallDepth)?
         };
         let instruction_context = self
             .instruction_trace
             .get(top_level_index)
             .and_then(|instruction_trace| instruction_trace.get(cpi_index))
-            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
+            .ok_or(InstructionError::CallDepth)?;
         debug_assert_eq!(instruction_context.nesting_level, level);
-        Ok(instruction_context).inspect_err(|x| { dbg!(x); })
+        Ok(instruction_context)
     }
 
     /// Gets the max height of the InstructionContext stack
@@ -167,8 +167,8 @@ impl TransactionContext {
         let level = self
             .get_instruction_context_stack_height()
             .checked_sub(1)
-            .ok_or(InstructionError::CallDepth).inspect_err(|x| { dbg!(x); })?;
-        self.get_instruction_context_at(level).inspect_err(|x| { dbg!(x); })
+            .ok_or(InstructionError::CallDepth)?;
+        self.get_instruction_context_at(level)
     }
 
     /// Pushes a new InstructionContext

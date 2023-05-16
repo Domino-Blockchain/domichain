@@ -482,7 +482,7 @@ impl<'a> InvokeContext<'a> {
         for account_index in program_indices.iter() {
             self.transaction_context
                 .get_account_at_index(*account_index)
-                .inspect_err(|x| { dbg!(x); })?
+                ?
                 .try_borrow_mut()
                 .map_err(|_| InstructionError::AccountBorrowOutstanding)?;
         }
@@ -852,7 +852,7 @@ impl<'a> InvokeContext<'a> {
                     .map(|pubkey| *pubkey)
             })
             .unwrap_or_else(|| Ok(native_loader::id()))
-            .inspect_err(|x| { dbg!(x); })?;
+            ?;
 
         let nesting_level = self
             .transaction_context
@@ -871,7 +871,7 @@ impl<'a> InvokeContext<'a> {
                 verify_caller_time.as_us()
             );
             verify_caller_result
-                .inspect_err(|x| { dbg!(x); })?;
+                ?;
 
             if !self
                 .feature_set
@@ -889,17 +889,17 @@ impl<'a> InvokeContext<'a> {
 
         let result = self
             .push(instruction_accounts, program_indices, instruction_data)
-            .inspect_err(|x| { dbg!(x); })
+
             .and_then(|_| {
                 let mut process_executable_chain_time =
                     Measure::start("process_executable_chain_time");
                 self.transaction_context
                     .set_return_data(program_id, Vec::new())
-                    .inspect_err(|x| { dbg!(x); })?;
+                    ?;
                 let pre_remaining_units = self.compute_meter.borrow().get_remaining();
                 let execution_result = self
                     .process_executable_chain()
-                    .inspect_err(|x| { dbg!(x); });
+                    ;
                 let post_remaining_units = self.compute_meter.borrow().get_remaining();
                 *compute_units_consumed = pre_remaining_units.saturating_sub(post_remaining_units);
                 process_executable_chain_time.stop();
@@ -910,11 +910,11 @@ impl<'a> InvokeContext<'a> {
                     if is_top_level_instruction {
                         self
                             .verify(instruction_accounts, program_indices)
-                            .inspect_err(|x| { dbg!(x); })
+
                     } else {
                         self
                             .verify_and_update(instruction_accounts, false)
-                            .inspect_err(|x| { dbg!(x); })
+
                     }
                 });
                 verify_callee_time.stop();
@@ -936,24 +936,24 @@ impl<'a> InvokeContext<'a> {
 
                 result
             })
-            .inspect_err(|x| { dbg!(x); });
+            ;
 
         // Pop the invoke_stack to restore previous state
         let _ = self.pop();
-        result.inspect_err(|x| { dbg!(x); })
+        result
     }
 
     /// Calls the instruction's program entrypoint method
     fn process_executable_chain(&mut self) -> Result<(), InstructionError> {
         let instruction_context = self.transaction_context
             .get_current_instruction_context()
-            .inspect_err(|x| { dbg!(x); })?;
+            ?;
 
         let (first_instruction_account, builtin_id) = {
             let borrowed_root_account = instruction_context
                 .try_borrow_program_account(self.transaction_context, 0)
                 .map_err(|_| InstructionError::UnsupportedProgramId)
-                .inspect_err(|x| { dbg!(x); })?;
+                ?;
             let owner_id = borrowed_root_account.get_owner();
             if domichain_sdk::native_loader::check_id(owner_id) {
                 (1, *borrowed_root_account.get_key())
@@ -966,7 +966,7 @@ impl<'a> InvokeContext<'a> {
             if entry.program_id == builtin_id {
                 let program_id =
                     *instruction_context.get_last_program_key(self.transaction_context)
-                        .inspect_err(|x| { dbg!(x); })?;
+                        ?;
                 if builtin_id == program_id {
                     let logger = self.get_log_collector();
                     stable_log::program_invoke(&logger, &program_id, self.get_stack_height());
@@ -987,7 +987,7 @@ impl<'a> InvokeContext<'a> {
             }
         }
 
-        Err(InstructionError::UnsupportedProgramId).inspect_err(|x| { dbg!(x); })
+        Err(InstructionError::UnsupportedProgramId)
     }
 
     #[deprecated(
