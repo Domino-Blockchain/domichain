@@ -8,7 +8,7 @@ use {
     domichain_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig, hash::Hash, message::Message,
-        native_token::sol_to_lamports, pubkey::Pubkey,
+        native_token::lamports_to_sol, pubkey::Pubkey,
     },
 };
 
@@ -117,39 +117,25 @@ where
         )?;
         if from_pubkey == fee_pubkey {
             if from_balance == 0 || from_balance < spend + fee {
-                // TODO(Dev): this is only for speed up development.
-                // TODO(Dev): You should return commented out code back
-                let extra = sol_to_lamports(500.0);
-                let sign = rpc_client.request_airdrop(from_pubkey, extra).unwrap();
-                rpc_client.confirm_transaction_with_commitment(&sign, commitment).unwrap();
-                rpc_client.poll_for_signature_confirmation(&sign, 1).unwrap();
-                // return Err(CliError::InsufficientFundsForSpendAndFee(
-                //     lamports_to_sol(spend),
-                //     lamports_to_sol(fee),
-                //     *from_pubkey,
-                // ));
+                return Err(CliError::InsufficientFundsForSpendAndFee(
+                    lamports_to_sol(spend),
+                    lamports_to_sol(fee),
+                    *from_pubkey,
+                ));
             }
         } else {
             if from_balance < spend {
-                let extra = sol_to_lamports(500.0);
-                let sign = rpc_client.request_airdrop(from_pubkey, extra).unwrap();
-                rpc_client.confirm_transaction_with_commitment(&sign, commitment).unwrap();
-                rpc_client.poll_for_signature_confirmation(&sign, 1).unwrap();
-                // return Err(CliError::InsufficientFundsForSpend(
-                //     lamports_to_sol(spend),
-                //     *from_pubkey,
-                // ));
+                return Err(CliError::InsufficientFundsForSpend(
+                    lamports_to_sol(spend),
+                    *from_pubkey,
+                ));
             }
             if !check_account_for_balance_with_commitment(rpc_client, fee_pubkey, fee, commitment)?
             {
-                let extra = sol_to_lamports(500.0);
-                let sign = rpc_client.request_airdrop(fee_pubkey, extra).unwrap();
-                rpc_client.confirm_transaction_with_commitment(&sign, commitment).unwrap();
-                rpc_client.poll_for_signature_confirmation(&sign, 1).unwrap();
-                // return Err(CliError::InsufficientFundsForFee(
-                //     lamports_to_sol(fee),
-                //     *fee_pubkey,
-                // ));
+                return Err(CliError::InsufficientFundsForFee(
+                    lamports_to_sol(fee),
+                    *fee_pubkey,
+                ));
             }
         }
         Ok((message, spend))

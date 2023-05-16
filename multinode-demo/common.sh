@@ -13,7 +13,7 @@ set -o verbose
 # shellcheck source=net/common.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. || exit 1; pwd)"/net/common.sh
 
-CARGO="cargo +nightly"
+CARGO="cargo"
 
 prebuild=
 if [[ $1 = "--prebuild" ]]; then

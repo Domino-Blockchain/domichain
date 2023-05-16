@@ -772,15 +772,10 @@ impl JsonRpcRequestProcessor {
                         .take(limit.saturating_sub(slot_leaders.len())),
                 );
             } else {
-                // TODO(Dev): this is only for speed up development.
-                // TODO(Dev): You should return commented out code back
-                println!("Waiting for leader_schedule for epoch {epoch}");
-                std::thread::sleep(std::time::Duration::from_secs(1));
-                continue;
-                // return Err(Error::invalid_params(format!(
-                //     "Invalid slot range: leader schedule for epoch {} is unavailable",
-                //     epoch
-                // )));
+                return Err(Error::invalid_params(format!(
+                    "Invalid slot range: leader schedule for epoch {} is unavailable",
+                    epoch
+                )));
             }
 
             epoch += 1;

@@ -1106,13 +1106,12 @@ impl ProgramTestContext {
             bank.freeze();
             bank
         } else {
-            todo!();
-            // bank_forks.insert(Bank::warp_from_parent(
-            //     &bank,
-            //     &Pubkey::default(),
-            //     pre_warp_slot,
-            //     todo!(),
-            // ))
+            bank_forks.insert(Bank::warp_from_parent(
+                &bank,
+                &Pubkey::default(),
+                pre_warp_slot,
+                todo!(),
+            ))
         };
         bank_forks.set_root(
             pre_warp_slot,

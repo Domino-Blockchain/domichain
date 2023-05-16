@@ -1,6 +1,5 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
-#![feature(result_option_inspect)]
 
 pub mod allocator_bump;
 pub mod deprecated;
@@ -357,7 +356,7 @@ pub fn process_instruction(
     first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
 ) -> Result<(), InstructionError> {
-    process_instruction_common(first_instruction_account, invoke_context, false).inspect_err(|x| { dbg!(x); })
+    process_instruction_common(first_instruction_account, invoke_context, false)
 }
 
 pub fn process_instruction_jit(
@@ -374,11 +373,11 @@ fn process_instruction_common(
 ) -> Result<(), InstructionError> {
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
-    let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
-    let program_id = instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
+    let instruction_context = transaction_context.get_current_instruction_context()?;
+    let program_id = instruction_context.get_last_program_key(transaction_context)?;
     let first_account_key = transaction_context.get_key_of_account_at_index(
-        get_index_in_transaction(instruction_context, first_instruction_account).inspect_err(|x| { dbg!(x); })?,
-    ).inspect_err(|x| { dbg!(x); })?;
+        get_index_in_transaction(instruction_context, first_instruction_account)?,
+    )?;
     let second_account_key = get_index_in_transaction(
         instruction_context,
         first_instruction_account.saturating_add(1),
@@ -399,10 +398,10 @@ fn process_instruction_common(
             transaction_context,
             instruction_context,
             first_instruction_account,
-        ).inspect_err(|x| { dbg!(x); })?;
+        )?;
         if first_account.is_executable() {
             ic_logger_msg!(log_collector, "BPF loader is executable");
-            return Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); });
+            return Err(InstructionError::IncorrectProgramId);
         }
         first_instruction_account
     };
@@ -411,7 +410,7 @@ fn process_instruction_common(
         transaction_context,
         instruction_context,
         program_account_index,
-    ).inspect_err(|x| { dbg!(x); })?;
+    )?;
     if program.is_executable() {
         // First instruction account can only be zero if called from CPI, which
         // means stack height better be greater than one
@@ -425,7 +424,7 @@ fn process_instruction_common(
                 log_collector,
                 "Executable account not owned by the BPF loader"
             );
-            return Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); });
+            return Err(InstructionError::IncorrectProgramId);
         }
 
         let program_data_offset = if wasm_loader_upgradeable::check_id(program.get_owner()) {
@@ -438,7 +437,7 @@ fn process_instruction_common(
                         log_collector,
                         "Wrong ProgramData account for this Program account"
                     );
-                    return Err(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); });
+                    return Err(InstructionError::InvalidArgument);
                 }
                 if !matches!(
                     instruction_context
@@ -450,12 +449,12 @@ fn process_instruction_common(
                     }
                 ) {
                     ic_logger_msg!(log_collector, "Program has been closed");
-                    return Err(InstructionError::InvalidAccountData).inspect_err(|x| { dbg!(x); });
+                    return Err(InstructionError::InvalidAccountData);
                 }
                 UpgradeableLoaderState::size_of_programdata_metadata()
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(InstructionError::InvalidAccountData).inspect_err(|x| { dbg!(x); });
+                return Err(InstructionError::InvalidAccountData);
             }
         } else {
             0
@@ -476,8 +475,8 @@ fn process_instruction_common(
                     false, /* disable_sol_alloc_free_syscall */
                 )?;
                 let transaction_context = &invoke_context.transaction_context;
-                let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
-                let program_id = instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
+                let instruction_context = transaction_context.get_current_instruction_context()?;
+                let program_id = instruction_context.get_last_program_key(transaction_context)?;
                 invoke_context.add_executor(program_id, executor.clone());
                 executor
             }
@@ -488,7 +487,7 @@ fn process_instruction_common(
             get_or_create_executor_time.as_us()
         );
 
-        executor.execute(program_account_index, invoke_context).inspect_err(|x| { dbg!(x); })
+        executor.execute(program_account_index, invoke_context)
     } else {
         drop(program);
         debug_assert_eq!(first_instruction_account, 1);
@@ -500,17 +499,17 @@ fn process_instruction_common(
                 first_instruction_account,
                 invoke_context,
                 use_jit,
-            ).inspect_err(|x| { dbg!(x); })
+            )
         } else if wasm_loader::check_id(program_id)
             || (!disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id))
         {
-            process_loader_instruction(first_instruction_account, invoke_context, use_jit).inspect_err(|x| { dbg!(x); })
+            process_loader_instruction(first_instruction_account, invoke_context, use_jit)
         } else if disable_deprecated_loader && wasm_loader_deprecated::check_id(program_id) {
             ic_logger_msg!(log_collector, "Deprecated loader is no longer supported");
-            Err(InstructionError::UnsupportedProgramId).inspect_err(|x| { dbg!(x); })
+            Err(InstructionError::UnsupportedProgramId)
         } else {
             ic_logger_msg!(log_collector, "Invalid WASM loader id");
-            Err(InstructionError::IncorrectProgramId).inspect_err(|x| { dbg!(x); })
+            Err(InstructionError::IncorrectProgramId)
         }
     }
 }
@@ -1309,12 +1308,12 @@ impl Executor for WasmExecutor {
         let compute_meter = invoke_context.get_compute_meter();
         let stack_height = invoke_context.get_stack_height();
         let transaction_context = &invoke_context.transaction_context;
-        let instruction_context = transaction_context.get_current_instruction_context().inspect_err(|x| { dbg!(x); })?;
-        let program_id = *instruction_context.get_last_program_key(transaction_context).inspect_err(|x| { dbg!(x); })?;
+        let instruction_context = transaction_context.get_current_instruction_context()?;
+        let program_id = *instruction_context.get_last_program_key(transaction_context)?;
 
         let mut serialize_time = Measure::start("serialize");
         let (mut parameter_bytes, account_lengths) =
-            serialize_parameters(invoke_context.transaction_context, instruction_context).inspect_err(|x| { dbg!(x); })?;
+            serialize_parameters(invoke_context.transaction_context, instruction_context)?;
         serialize_time.stop();
 
         let invoke_context = Rc::new(RefCell::new(invoke_context));
@@ -1726,10 +1725,10 @@ impl Executor for WasmExecutor {
                 invoke_context_ref.transaction_context,
                 invoke_context_ref
                     .transaction_context
-                    .get_current_instruction_context().inspect_err(|x| { dbg!(x); })?,
+                    .get_current_instruction_context()?,
                 parameter_bytes.as_slice(),
-                invoke_context_ref.get_orig_account_lengths().inspect_err(|x| { dbg!(x); })?,
-            ).inspect_err(|x| { dbg!(x); })
+                invoke_context_ref.get_orig_account_lengths()?,
+            )
         });
         deserialize_time.stop();
 

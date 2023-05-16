@@ -47,7 +47,7 @@ pub fn deserialize_parameters(
     account_lengths: &[usize],
 ) -> Result<(), InstructionError> {
     let is_loader_deprecated = *instruction_context
-        .try_borrow_last_program_account(transaction_context).inspect_err(|x| { dbg!(x); })?
+        .try_borrow_last_program_account(transaction_context)?
         .get_owner()
         == bpf_loader_deprecated::id();
     if is_loader_deprecated {
@@ -56,14 +56,14 @@ pub fn deserialize_parameters(
             instruction_context,
             buffer,
             account_lengths,
-        ).inspect_err(|x| { dbg!(x); })
+        )
     } else {
         deserialize_parameters_aligned(
             transaction_context,
             instruction_context,
             buffer,
             account_lengths,
-        ).inspect_err(|x| { dbg!(x); })
+        )
     }
 }
 
@@ -290,13 +290,13 @@ pub fn deserialize_parameters_aligned(
         (0..instruction_context.get_number_of_instruction_accounts()).zip(account_lengths.iter())
     {
         let duplicate =
-            instruction_context.is_instruction_account_duplicate(instruction_account_index).inspect_err(|x| { dbg!(x); })?;
+            instruction_context.is_instruction_account_duplicate(instruction_account_index)?;
         start += size_of::<u8>(); // position
         if duplicate.is_some() {
             start += 7; // padding to 64-bit aligned
         } else {
             let mut borrowed_account = instruction_context
-                .try_borrow_instruction_account(transaction_context, instruction_account_index).inspect_err(|x| { dbg!(x); })?;
+                .try_borrow_instruction_account(transaction_context, instruction_account_index)?;
             start += size_of::<u8>() // is_signer
                 + size_of::<u8>() // is_writable
                 + size_of::<u8>() // executable
@@ -305,32 +305,32 @@ pub fn deserialize_parameters_aligned(
             let _ = borrowed_account.set_owner(
                 buffer
                     .get(start..start + size_of::<Pubkey>())
-                    .ok_or(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); })?,
+                    .ok_or(InstructionError::InvalidArgument)?,
             );
             start += size_of::<Pubkey>(); // owner
             let _ = borrowed_account.set_lamports(LittleEndian::read_u64(
                 buffer
                     .get(start..)
-                    .ok_or(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); })?,
+                    .ok_or(InstructionError::InvalidArgument)?,
             ));
             start += size_of::<u64>(); // lamports
             let post_len = LittleEndian::read_u64(
                 buffer
                     .get(start..)
-                    .ok_or(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); })?,
+                    .ok_or(InstructionError::InvalidArgument)?,
             ) as usize;
             start += size_of::<u64>(); // data length
 
             if post_len.saturating_sub(*pre_len) > MAX_PERMITTED_DATA_INCREASE
                 || post_len > MAX_PERMITTED_DATA_LENGTH as usize
             {
-                return Err(InstructionError::InvalidRealloc).inspect_err(|x| { dbg!(x); });
+                return Err(InstructionError::InvalidRealloc);
             }
             let data_end = start + post_len;
             let _ = borrowed_account.set_data(
                 buffer
                     .get(start..data_end)
-                    .ok_or(InstructionError::InvalidArgument).inspect_err(|x| { dbg!(x); })?,
+                    .ok_or(InstructionError::InvalidArgument)?,
             );
             start += *pre_len + MAX_PERMITTED_DATA_INCREASE; // data
             start += (start as *const u8).align_offset(BPF_ALIGN_OF_U128);
