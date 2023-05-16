@@ -130,4 +130,3 @@ fn bench_serialize_aligned(bencher: &mut Bencher) {
         let _ = serialize_parameters_aligned(&transaction_context, instruction_context).unwrap();
     });
 }
-
