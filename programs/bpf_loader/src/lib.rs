@@ -329,7 +329,6 @@ pub fn process_instruction_jit(
     process_instruction_common(first_instruction_account, invoke_context, true)
 }
 
-// process_instruction_common
 fn process_instruction_common(
     first_instruction_account: usize,
     invoke_context: &mut InvokeContext,
@@ -665,7 +664,6 @@ fn process_loader_upgradeable_instruction(
             invoke_context.native_invoke(instruction, signers.as_slice())?;
 
             // Load and verify the program bits
-
             let executor = create_executor(
                 first_instruction_account.saturating_add(3),
                 buffer_data_offset,
