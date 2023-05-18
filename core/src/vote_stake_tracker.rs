@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-use domichain_sdk::pubkey::Pubkey;
-use domichain_runtime::contains::Contains;
+use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
 
 #[derive(Default)]
 pub struct VoteStakeTracker {
