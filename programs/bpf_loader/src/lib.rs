@@ -319,7 +319,6 @@ pub fn process_instruction(
     invoke_context: &mut InvokeContext,
 ) -> Result<(), InstructionError> {
     process_instruction_common(first_instruction_account, invoke_context, false)
-
 }
 
 pub fn process_instruction_jit(
