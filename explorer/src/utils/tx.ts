@@ -397,7 +397,6 @@ export const LOADER_IDS = {
   [BPF_LOADER_DEPRECATED_PROGRAM_ID.toBase58()]: "BPF Loader",
   [BPF_LOADER_PROGRAM_ID.toBase58()]: "BPF Loader 2",
   BPFLoaderUpgradeab1e11111111111111111111111: "BPF Upgradeable Loader",
-  WASMLoaderUpgradeab1e1111111111111111111111: "WASM Upgradeable Loader",
 } as const;
 
 export const SPECIAL_IDS: { [key: string]: string } = {
