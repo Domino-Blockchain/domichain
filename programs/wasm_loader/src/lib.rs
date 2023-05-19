@@ -238,7 +238,9 @@ pub fn create_executor(
         // Warning, do not use `Config::default()` so that configuration here is explicit.
     };
 
-    let engine = wasmi::Engine::default();
+    let mut wasmi_config = wasmi::Config::default();
+    wasmi_config.consume_fuel(true);
+    let engine = wasmi::Engine::new(&wasmi_config);
 
     let mut create_executor_metrics = executor_metrics::CreateMetrics::default();
     let executable = {
@@ -1642,22 +1644,28 @@ impl Executor for WasmExecutor {
             // TODO(Dev): return instruction meter and the rest
             // let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
+            store.add_fuel(before).unwrap();
 
-            // TODO(Dev): handle panic here
-            let result = vm.call(&mut store, 0).unwrap(); // sending pointer to params
+            let result = vm.call(&mut store, 0); // sending NULL pointer to params
 
             // let result = if self.use_jit {
             //     vm.execute_program_jit(&mut instruction_meter)
             // } else {
             //     vm.execute_program_interpreted(&mut instruction_meter)
             // };
+
+            let consumed_fuel = store.fuel_consumed().unwrap();
+            let after_syscalls = compute_meter.borrow().get_remaining();
+            let compute_meter_result = compute_meter.borrow_mut().consume(consumed_fuel);
             let after = compute_meter.borrow().get_remaining();
             ic_logger_msg!(
                 log_collector,
-                "Program {} consumed {} of {} compute units",
+                "Program {} consumed {} of {} compute units ({} for WASM, {} for syscalls)",
                 &program_id,
                 before.saturating_sub(after),
-                before
+                before,
+                consumed_fuel,
+                before.saturating_sub(after_syscalls),
             );
             // if log_enabled!(Trace) {
             //     let mut trace_buffer = Vec::<u8>::new();
@@ -1667,7 +1675,7 @@ impl Executor for WasmExecutor {
             //     let trace_string = String::from_utf8(trace_buffer).unwrap();
             //     trace!("BPF Program Instruction Trace:\n{}", trace_string);
             // }
-            drop(vm);
+            // drop(vm);
             // let (_returned_from_program_id, return_data) =
             //     invoke_context.transaction_context.get_return_data();
 
@@ -1703,20 +1711,42 @@ impl Executor for WasmExecutor {
                 //     stable_log::program_failure(&log_collector, &program_id, &error);
                 //     Err(error)
                 // }
-                0 => {
+                Ok(0) => {
                     // To deserialize data back
                     parameter_bytes.as_slice_mut().copy_from_slice(
                         &memory.data(&store)[0..parameter_bytes_slice_len]
                     );
                     Ok(())
                 },
-                err => {
-                    let err: InstructionError = err.into();
-                    panic!("WASM exited with error \"{err}\"");
+                Ok(error_code) => {
+                    let error: InstructionError = error_code.into();
+                    panic!("WASM exited with error \"{error}\"");
                 },
-            }
+                Err(wasm_error) => {
+                    match wasm_error.trap_code() {
+                        Some(wasmi::core::TrapCode::OutOfFuel) => {
+                            dbg!(&wasm_error);
+                            // stable_log::program_failure(&log_collector, &program_id, &error);
+                            Err(InstructionError::ComputationalBudgetExceeded)
+                        }
+                        Some(error) => {
+                            dbg!(error);
+                            panic!("WASM exited with error \"{wasm_error}\"");
+                        }
+                        None => {
+                            dbg!(&wasm_error);
+                            // stable_log::program_failure(&log_collector, &program_id, &error);
+                            panic!("WASM exited with error \"{wasm_error}\"");
+                        }
+                    }
+                }
+            }.and(compute_meter_result)
         };
         execute_time.stop();
+
+        if let Err(ref error) = execution_result {
+            stable_log::program_failure(&log_collector, &program_id, error);
+        }
 
         let mut deserialize_time = Measure::start("deserialize");
         // TODO: deserialize_parameters
