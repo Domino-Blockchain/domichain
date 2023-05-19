@@ -74,7 +74,6 @@ pub fn load(
 }
 
 #[allow(clippy::too_many_arguments)]
-#[allow(unused_variables)]
 pub fn load_bank_forks(
     genesis_config: &GenesisConfig,
     blockstore: &Blockstore,

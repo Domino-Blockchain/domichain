@@ -16,14 +16,13 @@ impl SocketAddrSpace {
     }
 
     /// Returns true if the IP address is valid.
-    #[allow(unused_variables)]
     pub fn check(&self, addr: &SocketAddr) -> bool {
         if self == &SocketAddrSpace::Unspecified {
             return true;
         }
         // TODO: remove these once IpAddr::is_global is stable.
         match addr.ip() {
-            IpAddr::V4(addr) => {
+            IpAddr::V4(_) => {
                 // TODO: Consider excluding:
                 //    addr.is_loopback() || addr.is_link_local()
                 // || addr.is_broadcast() || addr.is_documentation()

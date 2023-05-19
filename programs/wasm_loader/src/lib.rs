@@ -1638,11 +1638,12 @@ impl Executor for WasmExecutor {
             execute_time = Measure::start("execute");
             stable_log::program_invoke(&log_collector, &program_id, stack_height);
 
-            // TODO(Dev): return instruction meter and the rest
+            // TODO(Dev): return instruction meter and rest
             // let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 
             let result = vm.call(&mut store, 0).unwrap(); // sending pointer to params
+            // TODO(Dev): return instruction meter and rest
             // let result = if self.use_jit {
             //     vm.execute_program_jit(&mut instruction_meter)
             // } else {
@@ -1656,6 +1657,7 @@ impl Executor for WasmExecutor {
                 before.saturating_sub(after),
                 before
             );
+            // TODO(Dev): add trace to WASM
             // if log_enabled!(Trace) {
             //     let mut trace_buffer = Vec::<u8>::new();
             //     let analysis =
@@ -1665,12 +1667,14 @@ impl Executor for WasmExecutor {
             //     trace!("BPF Program Instruction Trace:\n{}", trace_string);
             // }
             drop(vm);
+            // TODO(Dev): log program return
             // let (_returned_from_program_id, return_data) =
             //     invoke_context.transaction_context.get_return_data();
 
             // if !return_data.is_empty() {
             //     stable_log::program_return(&log_collector, &program_id, return_data);
             // }
+            // TODO(Dev): handle all WASMI errors
             match result {
                 // Ok(status) if status != SUCCESS => {
                 //     let error: InstructionError = if status == MAX_ACCOUNTS_DATA_SIZE_EXCEEDED
@@ -1732,6 +1736,7 @@ impl Executor for WasmExecutor {
         });
         deserialize_time.stop();
 
+        // TODO(Dev): Update the timings
         // Update the timings
         // let lock = invoke_context.lock().unwrap();
         //

@@ -10,23 +10,20 @@ use {
     },
 };
 
-#[allow(unreachable_code)]
-#[allow(unused_variables)]
 pub fn parse_wasm_loader(
     instruction: &CompiledInstruction,
     account_keys: &AccountKeys,
 ) -> Result<ParsedInstructionEnum, ParseInstructionError> {
-    todo!();
-    let bpf_loader_instruction: LoaderInstruction = deserialize(&instruction.data)
-        .map_err(|_| ParseInstructionError::InstructionNotParsable(ParsableProgram::BpfLoader))?;
+    let wasm_loader_instruction: LoaderInstruction = deserialize(&instruction.data)
+        .map_err(|_| ParseInstructionError::InstructionNotParsable(ParsableProgram::WasmLoader))?;
     if instruction.accounts.is_empty() || instruction.accounts[0] as usize >= account_keys.len() {
         return Err(ParseInstructionError::InstructionKeyMismatch(
-            ParsableProgram::BpfLoader,
+            ParsableProgram::WasmLoader,
         ));
     }
-    match bpf_loader_instruction {
+    match wasm_loader_instruction {
         LoaderInstruction::Write { offset, bytes } => {
-            check_num_bpf_loader_accounts(&instruction.accounts, 1)?;
+            check_num_wasm_loader_accounts(&instruction.accounts, 1)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "write".to_string(),
                 info: json!({
@@ -37,7 +34,7 @@ pub fn parse_wasm_loader(
             })
         }
         LoaderInstruction::Finalize => {
-            check_num_bpf_loader_accounts(&instruction.accounts, 2)?;
+            check_num_wasm_loader_accounts(&instruction.accounts, 2)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "finalize".to_string(),
                 info: json!({
@@ -48,29 +45,26 @@ pub fn parse_wasm_loader(
     }
 }
 
-#[allow(unreachable_code)]
-#[allow(unused_variables)]
 pub fn parse_wasm_upgradeable_loader(
     instruction: &CompiledInstruction,
     account_keys: &AccountKeys,
 ) -> Result<ParsedInstructionEnum, ParseInstructionError> {
-    todo!();
-    let bpf_upgradeable_loader_instruction: UpgradeableLoaderInstruction =
+    let wasm_upgradeable_loader_instruction: UpgradeableLoaderInstruction =
         deserialize(&instruction.data).map_err(|_| {
-            ParseInstructionError::InstructionNotParsable(ParsableProgram::BpfUpgradeableLoader)
+            ParseInstructionError::InstructionNotParsable(ParsableProgram::WasmUpgradeableLoader)
         })?;
     match instruction.accounts.iter().max() {
         Some(index) if (*index as usize) < account_keys.len() => {}
         _ => {
             // Runtime should prevent this from ever happening
             return Err(ParseInstructionError::InstructionKeyMismatch(
-                ParsableProgram::BpfUpgradeableLoader,
+                ParsableProgram::WasmUpgradeableLoader,
             ));
         }
     }
-    match bpf_upgradeable_loader_instruction {
+    match wasm_upgradeable_loader_instruction {
         UpgradeableLoaderInstruction::InitializeBuffer => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 1)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 1)?;
             let mut value = json!({
                 "account": account_keys[instruction.accounts[0] as usize].to_string(),
             });
@@ -87,7 +81,7 @@ pub fn parse_wasm_upgradeable_loader(
             })
         }
         UpgradeableLoaderInstruction::Write { offset, bytes } => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 2)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 2)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "write".to_string(),
                 info: json!({
@@ -99,7 +93,7 @@ pub fn parse_wasm_upgradeable_loader(
             })
         }
         UpgradeableLoaderInstruction::DeployWithMaxDataLen { max_data_len } => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 8)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 8)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "deployWithMaxDataLen".to_string(),
                 info: json!({
@@ -116,7 +110,7 @@ pub fn parse_wasm_upgradeable_loader(
             })
         }
         UpgradeableLoaderInstruction::Upgrade => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 7)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 7)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "upgrade".to_string(),
                 info: json!({
@@ -131,7 +125,7 @@ pub fn parse_wasm_upgradeable_loader(
             })
         }
         UpgradeableLoaderInstruction::SetAuthority => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 2)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 2)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "setAuthority".to_string(),
                 info: json!({
@@ -146,7 +140,7 @@ pub fn parse_wasm_upgradeable_loader(
             })
         }
         UpgradeableLoaderInstruction::Close => {
-            check_num_bpf_upgradeable_loader_accounts(&instruction.accounts, 3)?;
+            check_num_wasm_upgradeable_loader_accounts(&instruction.accounts, 3)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "close".to_string(),
                 info: json!({
@@ -159,13 +153,13 @@ pub fn parse_wasm_upgradeable_loader(
     }
 }
 
-fn check_num_bpf_loader_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInstructionError> {
-    check_num_accounts(accounts, num, ParsableProgram::BpfLoader)
+fn check_num_wasm_loader_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInstructionError> {
+    check_num_accounts(accounts, num, ParsableProgram::WasmLoader)
 }
 
-fn check_num_bpf_upgradeable_loader_accounts(
+fn check_num_wasm_upgradeable_loader_accounts(
     accounts: &[u8],
     num: usize,
 ) -> Result<(), ParseInstructionError> {
-    check_num_accounts(accounts, num, ParsableProgram::BpfUpgradeableLoader)
+    check_num_accounts(accounts, num, ParsableProgram::WasmUpgradeableLoader)
 }

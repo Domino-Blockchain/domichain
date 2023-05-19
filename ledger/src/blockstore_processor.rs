@@ -603,7 +603,6 @@ pub struct ProcessOptions {
     pub runtime_config: RuntimeConfig,
 }
 
-#[allow(unused_variables)]
 pub fn test_process_blockstore(
     genesis_config: &GenesisConfig,
     blockstore: &Blockstore,
