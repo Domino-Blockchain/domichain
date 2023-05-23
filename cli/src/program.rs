@@ -10,7 +10,7 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     log::*,
     domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
-    domichain_wasm_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
+    domichain_bpf_loader_program::{syscalls::register_syscalls as bpf_register_syscalls, BpfError, ThisInstructionMeter},
     domichain_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
     domichain_cli_output::{
         CliProgram, CliProgramAccountType, CliProgramAuthority, CliProgramBuffer, CliProgramId,
@@ -2086,7 +2086,7 @@ fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::e
             reject_broken_elfs: true,
             ..Config::default()
         },
-        register_syscalls(&mut invoke_context, true).unwrap(),
+        bpf_register_syscalls(&mut invoke_context, true).unwrap(),
     )
     .map_err(|err| format!("ELF error: {}", err))?;
 
@@ -2106,7 +2106,7 @@ fn read_and_verify_wasm(program_location: &str) -> Result<Vec<u8>, Box<dyn std::
     file.read_to_end(&mut program_data)
         .map_err(|err| format!("Unable to read program file: {}", err))?;
 
-    // TODO(Dev): move WASM register_syscalls here
+    // TODO(Dev): move WASM wasm_register_syscalls here
     // let mut transaction_context = TransactionContext::new(Vec::new(), 1, 1);
     // let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
 

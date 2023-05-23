@@ -127,14 +127,15 @@ fn sendmmsg_retry(sock: &UdpSocket, hdrs: &mut [mmsghdr]) -> Result<(), SendPkts
 }
 
 #[cfg(target_os = "linux")]
+#[allow(clippy::uninit_assumed_init)]
 pub fn batch_send<S, T>(sock: &UdpSocket, packets: &[(T, S)]) -> Result<(), SendPktsError>
 where
     S: Borrow<SocketAddr>,
     T: AsRef<[u8]>,
 {
     let size = packets.len();
-    #[allow(clippy::uninit_assumed_init)]
-    let mut iovs = vec![unsafe { std::mem::MaybeUninit::uninit().assume_init() }; size];
+    let buffer = std::mem::MaybeUninit::<iovec>::uninit();
+    let mut iovs: Vec<iovec> = vec![unsafe { buffer.assume_init() }; size];
     let mut addrs = vec![unsafe { std::mem::zeroed() }; size];
     let mut hdrs = vec![unsafe { std::mem::zeroed() }; size];
     for ((pkt, dest), hdr, iov, addr) in izip!(packets, &mut hdrs, &mut iovs, &mut addrs) {

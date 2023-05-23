@@ -9,12 +9,12 @@ use {
 
 pub fn parse_wasm_upgradeable_loader(
     data: &[u8],
-) -> Result<BpfUpgradeableLoaderAccountType, ParseAccountError> {
+) -> Result<WasmUpgradeableLoaderAccountType, ParseAccountError> {
     let account_state: UpgradeableLoaderState = deserialize(data).map_err(|_| {
-        ParseAccountError::AccountNotParsable(ParsableAccount::BpfUpgradeableLoader)
+        ParseAccountError::AccountNotParsable(ParsableAccount::WasmUpgradeableLoader)
     })?;
     let parsed_account = match account_state {
-        UpgradeableLoaderState::Uninitialized => BpfUpgradeableLoaderAccountType::Uninitialized,
+        UpgradeableLoaderState::Uninitialized => WasmUpgradeableLoaderAccountType::Uninitialized,
         UpgradeableLoaderState::Buffer { authority_address } => {
             let offset = if authority_address.is_some() {
                 UpgradeableLoaderState::size_of_buffer_metadata()
@@ -24,7 +24,7 @@ pub fn parse_wasm_upgradeable_loader(
                 UpgradeableLoaderState::size_of_buffer_metadata()
                     - serialized_size(&Pubkey::default()).unwrap() as usize
             };
-            BpfUpgradeableLoaderAccountType::Buffer(UiBuffer {
+            WasmUpgradeableLoaderAccountType::Buffer(UiBuffer {
                 authority: authority_address.map(|pubkey| pubkey.to_string()),
                 data: UiAccountData::Binary(
                     base64::encode(&data[offset as usize..]),
@@ -34,7 +34,7 @@ pub fn parse_wasm_upgradeable_loader(
         }
         UpgradeableLoaderState::Program {
             programdata_address,
-        } => BpfUpgradeableLoaderAccountType::Program(UiProgram {
+        } => WasmUpgradeableLoaderAccountType::Program(UiProgram {
             program_data: programdata_address.to_string(),
         }),
         UpgradeableLoaderState::ProgramData {
@@ -47,7 +47,7 @@ pub fn parse_wasm_upgradeable_loader(
                 UpgradeableLoaderState::size_of_programdata_metadata()
                     - serialized_size(&Pubkey::default()).unwrap() as usize
             };
-            BpfUpgradeableLoaderAccountType::ProgramData(UiProgramData {
+            WasmUpgradeableLoaderAccountType::ProgramData(UiProgramData {
                 slot,
                 authority: upgrade_authority_address.map(|pubkey| pubkey.to_string()),
                 data: UiAccountData::Binary(
@@ -62,7 +62,7 @@ pub fn parse_wasm_upgradeable_loader(
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", tag = "type", content = "info")]
-pub enum BpfUpgradeableLoaderAccountType {
+pub enum WasmUpgradeableLoaderAccountType {
     Uninitialized,
     Buffer(UiBuffer),
     Program(UiProgram),
