@@ -10,7 +10,7 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     log::*,
     domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
-    domichain_bpf_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
+    domichain_bpf_loader_program::{syscalls::register_syscalls as bpf_register_syscalls, BpfError, ThisInstructionMeter},
     domichain_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
     domichain_cli_output::{
         CliProgram, CliProgramAccountType, CliProgramAuthority, CliProgramBuffer, CliProgramId,
@@ -30,8 +30,8 @@ use {
     domichain_sdk::{
         account::Account,
         account_utils::StateMut,
-        bpf_loader, bpf_loader_deprecated,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader, wasm_loader_deprecated,
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         instruction::{Instruction, InstructionError},
         loader_instruction,
         message::Message,
@@ -858,7 +858,7 @@ fn process_program_deploy(
         .get_account_with_commitment(&program_pubkey, config.commitment)?
         .value
     {
-        if account.owner != bpf_loader_upgradeable::id() {
+        if account.owner != wasm_loader_upgradeable::id() {
             return Err(format!(
                 "Account {} is not an upgradeable program or already in use",
                 program_pubkey
@@ -920,7 +920,9 @@ fn process_program_deploy(
     };
 
     let (program_data, program_len) = if let Some(program_location) = program_location {
-        let program_data = read_and_verify_elf(program_location)?;
+        // TODO(Dev): Allow both ELF & WASM
+        // let program_data = read_and_verify_elf(program_location)?;
+        let program_data = read_and_verify_wasm(program_location)?;
         let program_len = program_data.len();
         (program_data, program_len)
     } else if buffer_provided {
@@ -929,7 +931,7 @@ fn process_program_deploy(
             .get_account_with_commitment(&buffer_pubkey, config.commitment)?
             .value
         {
-            if !bpf_loader_upgradeable::check_id(&account.owner) {
+            if !wasm_loader_upgradeable::check_id(&account.owner) {
                 return Err(format!(
                     "Buffer account {buffer_pubkey} is not owned by the BPF Upgradeable Loader",
                 )
@@ -1003,7 +1005,7 @@ fn process_program_deploy(
             program_len,
             programdata_len,
             minimum_balance,
-            &bpf_loader_upgradeable::id(),
+            &wasm_loader_upgradeable::id(),
             Some(&[program_signer.unwrap(), upgrade_authority_signer]),
             buffer_signer,
             &buffer_pubkey,
@@ -1109,7 +1111,7 @@ fn process_write_buffer(
         program_data.len(),
         program_data.len(),
         minimum_balance,
-        &bpf_loader_upgradeable::id(),
+        &wasm_loader_upgradeable::id(),
         None,
         buffer_signer,
         &buffer_pubkey,
@@ -1143,7 +1145,7 @@ fn process_set_authority(
 
     let mut tx = if let Some(ref pubkey) = program_pubkey {
         Transaction::new_unsigned(Message::new(
-            &[bpf_loader_upgradeable::set_upgrade_authority(
+            &[wasm_loader_upgradeable::set_upgrade_authority(
                 pubkey,
                 &authority_signer.pubkey(),
                 new_authority.as_ref(),
@@ -1153,7 +1155,7 @@ fn process_set_authority(
     } else if let Some(pubkey) = buffer_pubkey {
         if let Some(ref new_authority) = new_authority {
             Transaction::new_unsigned(Message::new(
-                &[bpf_loader_upgradeable::set_buffer_authority(
+                &[wasm_loader_upgradeable::set_buffer_authority(
                     &pubkey,
                     &authority_signer.pubkey(),
                     new_authority,
@@ -1336,7 +1338,7 @@ fn get_accounts_with_filter(
     length: usize,
 ) -> Result<Vec<(Pubkey, Account)>, Box<dyn std::error::Error>> {
     let results = rpc_client.get_program_accounts_with_config(
-        &bpf_loader_upgradeable::id(),
+        &wasm_loader_upgradeable::id(),
         RpcProgramAccountsConfig {
             filters: Some(filters),
             account_config: RpcAccountInfoConfig {
@@ -1365,13 +1367,13 @@ fn process_show(
             .get_account_with_commitment(&account_pubkey, config.commitment)?
             .value
         {
-            if account.owner == bpf_loader::id() || account.owner == bpf_loader_deprecated::id() {
+            if account.owner == wasm_loader::id() || account.owner == wasm_loader_deprecated::id() {
                 Ok(config.output_format.formatted_string(&CliProgram {
                     program_id: account_pubkey.to_string(),
                     owner: account.owner.to_string(),
                     data_len: account.data.len(),
                 }))
-            } else if account.owner == bpf_loader_upgradeable::id() {
+            } else if account.owner == wasm_loader_upgradeable::id() {
                 if let Ok(UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = account.state()
@@ -1458,11 +1460,11 @@ fn process_dump(
             .get_account_with_commitment(&account_pubkey, config.commitment)?
             .value
         {
-            if account.owner == bpf_loader::id() || account.owner == bpf_loader_deprecated::id() {
+            if account.owner == wasm_loader::id() || account.owner == wasm_loader_deprecated::id() {
                 let mut f = File::create(output_location)?;
                 f.write_all(&account.data)?;
                 Ok(format!("Wrote program to {}", output_location))
-            } else if account.owner == bpf_loader_upgradeable::id() {
+            } else if account.owner == wasm_loader_upgradeable::id() {
                 if let Ok(UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = account.state()
@@ -1520,7 +1522,7 @@ fn close(
     let blockhash = rpc_client.get_latest_blockhash()?;
 
     let mut tx = Transaction::new_unsigned(Message::new(
-        &[bpf_loader_upgradeable::close_any(
+        &[wasm_loader_upgradeable::close_any(
             account_pubkey,
             recipient_pubkey,
             Some(&authority_signer.pubkey()),
@@ -1708,9 +1710,9 @@ pub fn process_deploy(
     let program_data = read_and_verify_elf(program_location)?;
     let minimum_balance = rpc_client.get_minimum_balance_for_rent_exemption(program_data.len())?;
     let loader_id = if use_deprecated_loader {
-        bpf_loader_deprecated::id()
+        wasm_loader_deprecated::id()
     } else {
-        bpf_loader::id()
+        wasm_loader::id()
     };
 
     let result = do_process_program_write_and_deploy(
@@ -1783,7 +1785,7 @@ fn do_process_program_write_and_deploy(
                     &config.signers[0].pubkey(),
                     buffer_pubkey,
                     &account,
-                    if loader_id == &bpf_loader_upgradeable::id() {
+                    if loader_id == &wasm_loader_upgradeable::id() {
                         UpgradeableLoaderState::size_of_buffer(program_len)
                     } else {
                         program_len
@@ -1791,9 +1793,9 @@ fn do_process_program_write_and_deploy(
                     minimum_balance,
                     allow_excessive_balance,
                 )?
-            } else if loader_id == &bpf_loader_upgradeable::id() {
+            } else if loader_id == &wasm_loader_upgradeable::id() {
                 (
-                    bpf_loader_upgradeable::create_buffer(
+                    wasm_loader_upgradeable::create_buffer(
                         &config.signers[0].pubkey(),
                         buffer_pubkey,
                         &buffer_authority_signer.pubkey(),
@@ -1828,8 +1830,8 @@ fn do_process_program_write_and_deploy(
 
             let payer_pubkey = config.signers[0].pubkey();
             let create_msg = |offset: u32, bytes: Vec<u8>| {
-                let instruction = if loader_id == &bpf_loader_upgradeable::id() {
-                    bpf_loader_upgradeable::write(
+                let instruction = if loader_id == &wasm_loader_upgradeable::id() {
+                    wasm_loader_upgradeable::write(
                         buffer_pubkey,
                         &buffer_authority_signer.pubkey(),
                         offset,
@@ -1866,9 +1868,9 @@ fn do_process_program_write_and_deploy(
     // Create and add final message
 
     let final_message = if let Some(program_signers) = program_signers {
-        let message = if loader_id == &bpf_loader_upgradeable::id() {
+        let message = if loader_id == &wasm_loader_upgradeable::id() {
             Message::new_with_blockhash(
-                &bpf_loader_upgradeable::deploy_with_max_program_len(
+                &wasm_loader_upgradeable::deploy_with_max_program_len(
                     &config.signers[0].pubkey(),
                     &program_signers[0].pubkey(),
                     buffer_pubkey,
@@ -1941,7 +1943,7 @@ fn do_process_program_upgrade(
     buffer_signer: Option<&dyn Signer>,
     skip_fee_check: bool,
 ) -> ProcessResult {
-    let loader_id = bpf_loader_upgradeable::id();
+    let loader_id = wasm_loader_upgradeable::id();
     let data_len = program_data.len();
     let minimum_balance = rpc_client.get_minimum_balance_for_rent_exemption(
         UpgradeableLoaderState::size_of_programdata(data_len),
@@ -1969,7 +1971,7 @@ fn do_process_program_upgrade(
                 )?
             } else {
                 (
-                    bpf_loader_upgradeable::create_buffer(
+                    wasm_loader_upgradeable::create_buffer(
                         &config.signers[0].pubkey(),
                         buffer_pubkey,
                         &upgrade_authority.pubkey(),
@@ -1994,7 +1996,7 @@ fn do_process_program_upgrade(
             let upgrade_authority_pubkey = upgrade_authority.pubkey();
             let payer_pubkey = config.signers[0].pubkey();
             let create_msg = |offset: u32, bytes: Vec<u8>| {
-                let instruction = bpf_loader_upgradeable::write(
+                let instruction = wasm_loader_upgradeable::write(
                     &buffer_signer_pubkey,
                     &upgrade_authority_pubkey,
                     offset,
@@ -2028,7 +2030,7 @@ fn do_process_program_upgrade(
 
     // Create and add final message
     let final_message = Message::new_with_blockhash(
-        &[bpf_loader_upgradeable::upgrade(
+        &[wasm_loader_upgradeable::upgrade(
             program_id,
             buffer_pubkey,
             &upgrade_authority.pubkey(),
@@ -2084,7 +2086,7 @@ fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::e
             reject_broken_elfs: true,
             ..Config::default()
         },
-        register_syscalls(&mut invoke_context, true).unwrap(),
+        bpf_register_syscalls(&mut invoke_context, true).unwrap(),
     )
     .map_err(|err| format!("ELF error: {}", err))?;
 
@@ -2093,6 +2095,23 @@ fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::e
             executable,
         )
         .map_err(|err| format!("ELF error: {}", err))?;
+
+    Ok(program_data)
+}
+
+fn read_and_verify_wasm(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut file = File::open(program_location)
+        .map_err(|err| format!("Unable to open program file: {}", err))?;
+    let mut program_data = Vec::new();
+    file.read_to_end(&mut program_data)
+        .map_err(|err| format!("Unable to read program file: {}", err))?;
+
+    // TODO(Dev): move WASM wasm_register_syscalls here
+    // let mut transaction_context = TransactionContext::new(Vec::new(), 1, 1);
+    // let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
+
+    let engine = wasmi::Engine::default();
+    let _module = wasmi::Module::new(&engine, &mut &program_data[..]).expect("Binary should be valid WASM");
 
     Ok(program_data)
 }

@@ -32,7 +32,7 @@ use {
     domichain_sdk::{
         account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable,
         clock::{BankId, Slot, INITIAL_RENT_EPOCH},
         feature_set::{self, add_set_compute_unit_price_ix, tx_wide_compute_cap, FeatureSet},
         fee::FeeStructure,
@@ -320,7 +320,7 @@ impl Accounts {
                             validated_fee_payer = true;
                         }
 
-                        if bpf_loader_upgradeable::check_id(account.owner()) {
+                        if wasm_loader_upgradeable::check_id(account.owner()) {
                             if message.is_writable(i) && !message.is_upgradeable_loader_present() {
                                 error_counters.invalid_writable_account += 1;
                                 return Err(TransactionError::InvalidWritableAccount);
@@ -328,7 +328,7 @@ impl Accounts {
 
                             if account.executable() {
                                 // The upgradeable loader requires the derived ProgramData account
-                                if let Ok(UpgradeableLoaderState::Program {
+                                if let Ok(wasm_loader_upgradeable::UpgradeableLoaderState::Program {
                                     programdata_address,
                                 }) = account.state()
                                 {
@@ -487,9 +487,9 @@ impl Accounts {
             // Add loader to chain
             let program_owner = *program.owner();
             account_indices.insert(0, program_account_index);
-            if bpf_loader_upgradeable::check_id(&program_owner) {
+            if wasm_loader_upgradeable::check_id(&program_owner) {
                 // The upgradeable loader requires the derived ProgramData account
-                if let Ok(UpgradeableLoaderState::Program {
+                if let Ok(wasm_loader_upgradeable::UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = program.state()
                 {

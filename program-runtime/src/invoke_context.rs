@@ -14,7 +14,7 @@ use {
     domichain_measure::measure::Measure,
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable,
         feature_set::{
             cap_accounts_data_len, record_instruction_in_transaction_context_push,
             tx_wide_compute_cap, FeatureSet,
@@ -801,8 +801,8 @@ impl<'a> InvokeContext<'a> {
             return Err(InstructionError::AccountNotExecutable);
         }
         let mut program_indices = vec![];
-        if borrowed_program_account.get_owner() == &bpf_loader_upgradeable::id() {
-            if let UpgradeableLoaderState::Program {
+        if borrowed_program_account.get_owner() == &wasm_loader_upgradeable::id() {
+            if let wasm_loader_upgradeable::UpgradeableLoaderState::Program {
                 programdata_address,
             } = borrowed_program_account.get_state()?
             {

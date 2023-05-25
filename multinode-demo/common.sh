@@ -7,8 +7,13 @@
 # shellcheck disable=2034
 #
 
+# Print executed commands
+set -o verbose
+
 # shellcheck source=net/common.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. || exit 1; pwd)"/net/common.sh
+
+CARGO="cargo"
 
 prebuild=
 if [[ $1 = "--prebuild" ]]; then
@@ -23,6 +28,13 @@ if [[ $(uname) != Linux ]]; then
     DOMICHAIN_CUDA=
   fi
 fi
+
+maybe_release=
+if [[ -n $NDEBUG ]]; then
+  maybe_release=--release
+fi
+# Do build all!
+$CARGO $CARGO_TOOLCHAIN build $maybe_release || exit 1
 
 if [[ -n $USE_INSTALL || ! -f "$DOMICHAIN_ROOT"/Cargo.toml ]]; then
   domichain_program() {
@@ -53,11 +65,11 @@ else
       (
         set -x
         # shellcheck disable=SC2086 # Don't want to double quote
-        cargo $CARGO_TOOLCHAIN build $maybe_release --bin $program
+        $CARGO $CARGO_TOOLCHAIN build $maybe_release --bin $program
       )
     fi
 
-    printf "cargo $CARGO_TOOLCHAIN run $maybe_release  --bin %s %s -- " "$program"
+    printf "$CARGO $CARGO_TOOLCHAIN run $maybe_release  --bin %s %s -- " "$program"
   }
 fi
 

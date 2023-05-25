@@ -465,11 +465,11 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         info!("Legacy program feature detected");
     }
     let sbf_tools_download_file_name = if cfg!(target_os = "windows") {
-        "domichain-sbf-tools-windows.tar.bz2"
+        "solana-sbf-tools-windows.tar.bz2"
     } else if cfg!(target_os = "macos") {
-        "domichain-sbf-tools-osx.tar.bz2"
+        "solana-sbf-tools-osx-x86_64.tar.bz2"
     } else {
-        "domichain-sbf-tools-linux.tar.bz2"
+        "solana-sbf-tools-linux.tar.bz2"
     };
 
     let home_dir = PathBuf::from(env::var("HOME").unwrap_or_else(|err| {
@@ -485,7 +485,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
     install_if_missing(
         config,
         package,
-        "https://Domino-Blockchain/bpf-tools/releases/download",
+        "https://github.com/solana-labs/bpf-tools/releases/download",
         sbf_tools_download_file_name,
         &target_path,
     )
@@ -532,7 +532,7 @@ fn build_sbf_package(config: &Config, target_directory: &Path, package: &cargo_m
         "+sbf",
         "build",
         "--target",
-        "sbf-domichain-domichain",
+        "sbf-solana-solana",
         "--release",
     ];
     if config.no_default_features {
@@ -720,7 +720,7 @@ fn main() {
 
     // The following line is scanned by CI configuration script to
     // separate cargo caches according to the version of sbf-tools.
-    let sbf_tools_version = "v1.27";
+    let sbf_tools_version = "v1.35";
     let version = format!("{}\nsbf-tools {}", crate_version!(), sbf_tools_version);
     let matches = clap::Command::new(crate_name!())
         .about(crate_description!())

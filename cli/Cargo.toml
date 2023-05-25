@@ -29,6 +29,7 @@ serde_derive = "1.0.103"
 serde_json = "1.0.81"
 domichain-account-decoder = { path = "../account-decoder", version = "=1.11.1" }
 domichain-bpf-loader-program = { path = "../programs/bpf_loader", version = "=1.11.1" }
+domichain-wasm-loader-program = { path = "../programs/wasm_loader", version = "=1.11.1" }
 domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
 domichain-cli-config = { path = "../cli-config", version = "=1.11.1" }
 domichain-cli-output = { path = "../cli-output", version = "=1.11.1" }
@@ -46,6 +47,7 @@ solana_rbpf = "=0.2.31"
 spl-memo = { version = "=3.0.1", features = ["no-entrypoint"] }
 thiserror = "1.0.31"
 tiny-bip39 = "0.8.2"
+wasmi = "0.29.0"
 
 [dev-dependencies]
 domichain-streamer = { path = "../streamer", version = "=1.11.1" }
