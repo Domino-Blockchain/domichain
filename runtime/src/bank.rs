@@ -618,7 +618,6 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
-use crate::contains::Contains;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -1688,7 +1687,7 @@ impl Bank {
             debug_do_not_add_builtins,
             accounts_db_config,
             accounts_update_notifier,
-            todo!(),
+            &Arc::new(Default::default()),
         )
     }
 

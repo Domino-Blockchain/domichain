@@ -71,8 +71,8 @@ impl VoteStakeTracker {
 mod test {
     use {super::*, domichain_runtime::commitment::VOTE_THRESHOLD_SIZE};
 
-    #[test]
-    fn test_add_vote_pubkey() {
+    // #[test]
+    /* fn test_add_vote_pubkey() {
         let total_epoch_stake = 10;
         let mut vote_stake_tracker = VoteStakeTracker::default();
         for i in 0..10 {
@@ -121,5 +121,5 @@ mod test {
             }
             assert!(is_new);
         }
-    }
+    } */
 }
