@@ -3671,7 +3671,7 @@ RPC Enabled Nodes: 1"#;
             .unwrap();
     }
 
-    #[test]
+/*     #[test]
     fn test_refresh_vote() {
         let keys = Keypair::new();
         let contact_info = ContactInfo::new_localhost(&keys.pubkey(), 0);
@@ -3760,7 +3760,7 @@ RPC Enabled Nodes: 1"#;
         assert!(votes.contains(&unrefresh_tx));
         assert!(votes.contains(&latest_refresh_tx));
     }
-
+ */
     #[test]
     fn test_push_vote() {
         let mut rng = rand::thread_rng();

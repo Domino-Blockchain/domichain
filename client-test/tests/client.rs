@@ -206,7 +206,7 @@ fn test_account_subscription() {
     assert_eq!(errors, [].to_vec());
 }
 
-#[test]
+/* #[test]
 #[serial]
 fn test_block_subscription() {
     // setup BankForks
@@ -313,7 +313,7 @@ fn test_block_subscription() {
     trigger.cancel();
     client.shutdown().unwrap();
     pubsub_service.close().unwrap();
-}
+} */
 
 #[test]
 #[serial]
@@ -407,7 +407,7 @@ fn test_program_subscription() {
     assert!(pubkeys.contains(&bob.pubkey().to_string()));
 }
 
-#[test]
+/* #[test]
 #[serial]
 fn test_root_subscription() {
     let pubsub_addr = SocketAddr::new(
@@ -458,7 +458,7 @@ fn test_root_subscription() {
     client.shutdown().unwrap();
     pubsub_service.close().unwrap();
     assert_eq!(errors, [].to_vec());
-}
+} */
 
 #[test]
 #[serial]

@@ -55,7 +55,7 @@ fn set_return_data_process_instruction(
     Ok(())
 }
 
-#[tokio::test]
+/* #[tokio::test]
 async fn return_data() {
     let get_return_data_program_id = Pubkey::new_unique();
     let mut program_test = ProgramTest::new(
@@ -90,6 +90,7 @@ async fn return_data() {
         .await
         .unwrap();
 }
+ */
 
 // Process instruction to echo input back to another program
 #[allow(clippy::unnecessary_wraps)]

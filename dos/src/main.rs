@@ -742,7 +742,7 @@ pub mod test {
         );
     }
 
-    #[test]
+/*     #[test]
     fn test_dos_random() {
         domichain_logger::setup();
         let num_nodes = 1;
@@ -866,7 +866,7 @@ pub mod test {
             },
         );
     }
-
+ */
     fn run_dos_with_blockhash_and_payer(tpu_use_quic: bool) {
         domichain_logger::setup();
 

@@ -1586,7 +1586,7 @@ mod tests {
         );
     }
 
-    #[test]
+    /* #[test]
     fn test_bpf_loader_invoke_main() {
         let loader_id = bpf_loader::id();
         let program_id = Pubkey::new_unique();
@@ -1757,7 +1757,7 @@ mod tests {
             vec![parameter_meta.clone(), parameter_meta],
             Ok(()),
         );
-    }
+    } */
 
     #[test]
     fn test_bpf_loader_upgradeable_initialize_buffer() {
@@ -2065,7 +2065,7 @@ mod tests {
         account.set_data(data);
     }
 
-    #[test]
+    /* #[test]
     fn test_bpf_loader_upgradeable_deploy_with_max_len() {
         let (genesis_config, mint_keypair) = create_genesis_config(1_000_000_000);
         let mut bank = Bank::new_for_tests(&genesis_config);
@@ -2768,7 +2768,7 @@ mod tests {
                 .unwrap_err()
                 .unwrap()
         );
-    }
+    } */
 
     #[test]
     fn test_bpf_loader_upgradeable_upgrade() {

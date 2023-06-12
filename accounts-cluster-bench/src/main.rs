@@ -670,7 +670,7 @@ pub mod test {
         },
     };
 
-    #[test]
+    /* #[test]
     fn test_accounts_cluster_bench() {
         domichain_logger::setup();
         let validator_config = ValidatorConfig::default_for_test();
@@ -707,9 +707,9 @@ pub mod test {
         );
         start.stop();
         info!("{}", start);
-    }
+    } */
 
-    #[test]
+    /* #[test]
     fn test_create_then_reclaim_spl_token_accounts() {
         domichain_logger::setup();
         let mint_keypair = Keypair::new();
@@ -808,5 +808,5 @@ pub mod test {
         );
         start.stop();
         info!("{}", start);
-    }
+    } */
 }

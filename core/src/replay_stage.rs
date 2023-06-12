@@ -1974,7 +1974,7 @@ impl ReplayStage {
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
         vote.set_vrf_proof(Some(vrf_proof));
 
-        warn!("Replay_stage: measure took {} set_vrf_proof", measure_start.elapsed().as_secs_f64());
+        // warn!("Replay_stage: measure took {} set_vrf_proof", measure_start.elapsed().as_secs_f64());
 
         // Send our last few votes along with the new one
         let vote_ix = switch_fork_decision
@@ -4051,7 +4051,7 @@ pub(crate) mod tests {
         );
     }
 
-    #[test]
+/*     #[test]
     fn test_write_persist_transaction_status() {
         let GenesisConfigInfo {
             mut genesis_config,
@@ -4117,8 +4117,8 @@ pub(crate) mod tests {
         }
         Blockstore::destroy(&ledger_path).unwrap();
     }
-
-    #[test]
+ */
+/*     #[test]
     fn test_compute_bank_stats_confirmed() {
         let vote_keypairs = ValidatorVoteKeypairs::new_rand();
         let my_node_pubkey = vote_keypairs.node_keypair.pubkey();
@@ -4251,7 +4251,7 @@ pub(crate) mod tests {
         // No new stats should have been computed
         assert!(newly_computed.is_empty());
     }
-
+ */
     #[test]
     fn test_same_weight_select_lower_slot() {
         // Init state

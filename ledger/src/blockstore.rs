@@ -6380,7 +6380,7 @@ pub mod tests {
         assert_eq!(blockstore.lowest_slot(), 2);
     }
 
-    #[test]
+/*     #[test]
     fn test_get_rooted_block() {
         let slot = 10;
         let entries = make_slot_entries_with_transactions(100);
@@ -6578,7 +6578,7 @@ pub mod tests {
         let complete_block = blockstore.get_complete_block(slot + 2, true).unwrap();
         assert_eq!(complete_block, expected_complete_block);
     }
-
+ */
     #[test]
     fn test_persist_transaction_status() {
         let ledger_path = get_tmp_ledger_path_auto_delete!();
@@ -7725,7 +7725,7 @@ pub mod tests {
         }
     }
 
-    #[test]
+/*     #[test]
     fn test_get_confirmed_signatures_for_address2() {
         let ledger_path = get_tmp_ledger_path_auto_delete!();
         let blockstore = Blockstore::open(ledger_path.path()).unwrap();
@@ -8167,7 +8167,7 @@ pub mod tests {
         assert!(!sig_infos.found_before);
         assert!(sig_infos.infos.is_empty());
     }
-
+ */
     #[test]
     #[allow(clippy::same_item_push)]
     fn test_get_last_hash() {

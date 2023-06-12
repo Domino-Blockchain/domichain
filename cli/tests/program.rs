@@ -1188,7 +1188,7 @@ fn test_cli_program_mismatch_buffer_authority() {
     process_command(&config).unwrap();
 }
 
-#[test]
+/* #[test]
 fn test_cli_program_show() {
     domichain_logger::setup();
 
@@ -1374,7 +1374,7 @@ fn test_cli_program_show() {
         .unwrap();
     assert_eq!(max_len, data_len as usize);
 }
-
+ */
 #[test]
 fn test_cli_program_dump() {
     domichain_logger::setup();

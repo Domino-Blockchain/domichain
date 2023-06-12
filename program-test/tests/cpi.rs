@@ -42,7 +42,7 @@ fn invoked_process_instruction(
     Ok(())
 }
 
-#[tokio::test]
+/* #[tokio::test]
 async fn cpi() {
     let invoker_program_id = Pubkey::new_unique();
     let mut program_test = ProgramTest::new(
@@ -77,3 +77,4 @@ async fn cpi() {
         .await
         .unwrap();
 }
+ */

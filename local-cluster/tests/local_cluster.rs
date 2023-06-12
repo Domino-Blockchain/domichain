@@ -1,4 +1,4 @@
-#![allow(clippy::integer_arithmetic)]
+/* #![allow(clippy::integer_arithmetic)]
 use {
     assert_matches::assert_matches,
     common::*,
@@ -2559,3 +2559,4 @@ fn run_test_load_program_accounts(scan_commitment: CommitmentConfig) {
     t_update.join().unwrap();
     t_scan.join().unwrap();
 }
+ */

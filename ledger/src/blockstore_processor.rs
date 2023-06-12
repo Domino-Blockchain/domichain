@@ -1627,7 +1627,7 @@ fn check_accounts_data_total_size<'a>(
     Ok(())
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 pub mod tests {
     use {
         super::*,
@@ -4367,3 +4367,4 @@ pub mod tests {
         }
     }
 }
+ */

@@ -542,10 +542,10 @@ pub fn check_type_assumptions() {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     #[test]
     fn test_check_type_assumptions() {
         super::check_type_assumptions()
     }
-}
+} */

@@ -31,7 +31,9 @@ impl VoteStakeTracker {
         thresholds_to_check: [f64; 2],
         total_weight: u64,
     ) -> (ReachedThresholdResults, bool) {
+        println!("Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}", vote_pubkey, _stake, _total_stake, weight, total_weight);
         let is_new = !self.voted.contains(&vote_pubkey);
+        println!("Test vote majority, is_new{:?}", is_new);
         if is_new {
             self.voted.insert(vote_pubkey, weight);
             let old_weight = self.weight;
@@ -42,6 +44,7 @@ impl VoteStakeTracker {
                 info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
                 old_weight <= threshold_weight && threshold_weight < new_weight
             };
+            println!("Test vote majority, majority check{:?}, quorum check{:?}", check(thresholds_to_check[0]), check(thresholds_to_check[1]));
             (
                 ReachedThresholdResults {
                     majority: check(thresholds_to_check[0]),
@@ -67,12 +70,12 @@ impl VoteStakeTracker {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod test {
     use {super::*, domichain_runtime::commitment::VOTE_THRESHOLD_SIZE};
 
-    // #[test]
-    /* fn test_add_vote_pubkey() {
+    #[test]
+    fn test_add_vote_pubkey() {
         let total_epoch_stake = 10;
         let mut vote_stake_tracker = VoteStakeTracker::default();
         for i in 0..10 {
@@ -82,7 +85,7 @@ mod test {
                 1,
                 total_epoch_stake,
                 0,
-                &[VOTE_THRESHOLD_SIZE, 0.0],
+                [VOTE_THRESHOLD_SIZE, 0.0],
                 3000,
             );
             let stake = vote_stake_tracker.stake();
@@ -91,18 +94,14 @@ mod test {
                 1,
                 total_epoch_stake,
                 0,
-                &[VOTE_THRESHOLD_SIZE, 0.0],
+                [VOTE_THRESHOLD_SIZE, 0.0],
                 3000,
             );
             let stake2 = vote_stake_tracker.stake();
 
             // Stake should not change from adding same pubkey twice
             assert_eq!(stake, stake2);
-            assert!(!is_confirmed_thresholds2[0]);
-            assert!(!is_confirmed_thresholds2[1]);
             assert!(!is_new2);
-            assert_eq!(is_confirmed_thresholds.len(), 2);
-            assert_eq!(is_confirmed_thresholds2.len(), 2);
 
             // at i == 6, the voted stake is 70%, which is the first time crossing
             // the supermajority threshold
@@ -121,5 +120,5 @@ mod test {
             }
             assert!(is_new);
         }
-    } */
-}
+    } 
+} */

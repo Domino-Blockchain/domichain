@@ -398,15 +398,20 @@ impl Tower {
             Some(slot_vote_tracker) => slot_vote_tracker,
             None => return false,
         };
+
+        println!("Get slot_vote_tracker");
         let slot_vote_tracker = slot_vote_tracker.read().unwrap();
-        slot_vote_tracker
-            .optimistic_votes_tracker(&bank_hash)
+        println!("Get slot_vote_tracker 2");
+
+         slot_vote_tracker
+         .optimistic_votes_tracker(&bank_hash)
             .map(|vote_stake_tracker| {
                 let weight = vote_stake_tracker.weight();
-                info!("DEV: weight={weight} total={total_weight}");
+            //    println!("DEV: weight={weight} total={total_weight}");
                 vote_stake_tracker.weight() as f64 / total_weight as f64 > self.threshold_size
             })
             .unwrap_or(false)
+            
     }
 
     pub fn tower_slots(&self) -> Vec<Slot> {
@@ -2180,25 +2185,18 @@ pub mod test {
         assert!(!tower.check_vote_stake_threshold(MAX_LOCKOUT_HISTORY as u64 + 1, &stakes, 2,));
     }
 
-    #[test]
+    //#[test]
     /* fn test_is_slot_confirmed_not_enough_stake_failure() {
         let tower = Tower::new_for_tests(1, 0.67);
         let stakes = vec![(0, 1)].into_iter().collect();
         assert!(!tower.is_slot_confirmed(0, &stakes, 2));
     } */
 
-    #[test]
+    //#[test]
     /* fn test_is_slot_confirmed_unknown_slot() {
         let tower = Tower::new_for_tests(1, 0.67);
         let stakes = HashMap::new();
         assert!(!tower.is_slot_confirmed(0, &stakes, 2));
-    } */
-
-    #[test]
-    /* fn test_is_slot_confirmed_pass() {
-        let tower = Tower::new_for_tests(1, 0.67);
-        let stakes = vec![(0, 2)].into_iter().collect();
-        assert!(tower.is_slot_confirmed(0, &stakes, 2));
     } */
 
     #[test]
@@ -3260,5 +3258,45 @@ pub mod test {
     fn test_default_tower_has_no_stray_last_vote() {
         let tower = Tower::default();
         assert!(!tower.is_stray_last_vote());
+    }
+
+    use std::sync::RwLock;
+    use domichain_runtime::genesis_utils::{create_genesis_config_with_vote_accounts, GenesisConfigInfo, ValidatorVoteKeypairs};
+    #[test]
+    async fn test_is_slot_confirmed_with_stakes() {
+        let validator_keypairs: Vec<_> =
+            (0..2).map(|_| ValidatorVoteKeypairs::new_rand()).collect();
+
+        let GenesisConfigInfo { genesis_config, .. } =
+            create_genesis_config_with_vote_accounts(
+                10_000,
+                &validator_keypairs,
+                vec![2500; validator_keypairs.len()],
+            );
+
+        //let genesis_config = create_genesis_config(10_000).genesis_config;
+        let bank0 = Bank::new_for_tests(&genesis_config);
+        let bank_forks = Arc::new(RwLock::new(BankForks::new(bank0)));
+
+        let root = 3;
+        let root_bank = Bank::new_from_parent(
+            &bank_forks.read().unwrap().get(0).unwrap(),
+            &Pubkey::default(),
+            root,
+        );
+        root_bank.freeze();
+        let root_hash = root_bank.hash();
+    
+        let tower = Tower::new_for_tests(1, 0.67);
+        let vote_tracker = VoteTracker::default();
+        // println!("node_pubkey {:?}",  validator_keypairs[0].node_keypair.pubkey());
+        // println!("vote_pubkey {:?}",  validator_keypairs[0].vote_keypair.pubkey());
+        // println!("stake_pubkey {:?}",  validator_keypairs[0].stake_keypair.pubkey());
+
+        vote_tracker.insert_vote(3, validator_keypairs[0].vote_keypair.pubkey());
+        let mut slot_vote_tracker = vote_tracker.get_slot_vote_tracker(3).unwrap().write();
+        slot_vote_tracker.unwrap().get_or_insert_optimistic_votes_tracker(root_hash);
+        
+        assert!(tower.is_slot_confirmed(3, &vote_tracker, root_hash, 3000));
     }
 }

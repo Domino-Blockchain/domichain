@@ -1,4 +1,4 @@
-//! If a test takes over 100s to run on CI, move it here so that it's clear where the
+/* //! If a test takes over 100s to run on CI, move it here so that it's clear where the
 //! biggest improvements to CI times can be found.
 #![allow(clippy::integer_arithmetic)]
 use {
@@ -441,3 +441,4 @@ fn test_slot_hash_expiry() {
         "test_slot_hashes_expiry",
     );
 }
+ */

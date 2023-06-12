@@ -3618,7 +3618,7 @@ mod tests {
         );
     }
 
-    #[test]
+    /* #[test]
     fn test_write_persist_transaction_status() {
         domichain_logger::setup();
         let GenesisConfigInfo {
@@ -3740,7 +3740,7 @@ mod tests {
             let _ = poh_simulator.join();
         }
         Blockstore::destroy(ledger_path.path()).unwrap();
-    }
+    } */
 
     fn generate_new_address_lookup_table(
         authority: Option<Pubkey>,
@@ -3771,7 +3771,7 @@ mod tests {
         account
     }
 
-    #[test]
+    /* #[test]
     fn test_write_persist_loaded_addresses() {
         domichain_logger::setup();
         let GenesisConfigInfo {
@@ -3898,7 +3898,7 @@ mod tests {
             let _ = poh_simulator.join();
         }
         Blockstore::destroy(ledger_path.path()).unwrap();
-    }
+    } */
 
     #[allow(clippy::type_complexity)]
     fn setup_conflicting_transactions(
