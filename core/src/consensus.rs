@@ -399,9 +399,7 @@ impl Tower {
             None => return false,
         };
 
-        println!("Get slot_vote_tracker");
         let slot_vote_tracker = slot_vote_tracker.read().unwrap();
-        println!("Get slot_vote_tracker 2");
 
          slot_vote_tracker
          .optimistic_votes_tracker(&bank_hash)

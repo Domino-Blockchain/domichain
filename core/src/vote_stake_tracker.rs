@@ -31,9 +31,7 @@ impl VoteStakeTracker {
         thresholds_to_check: [f64; 2],
         total_weight: u64,
     ) -> (ReachedThresholdResults, bool) {
-        println!("Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}", vote_pubkey, _stake, _total_stake, weight, total_weight);
         let is_new = !self.voted.contains(&vote_pubkey);
-        println!("Test vote majority, is_new{:?}", is_new);
         if is_new {
             self.voted.insert(vote_pubkey, weight);
             let old_weight = self.weight;
@@ -44,6 +42,7 @@ impl VoteStakeTracker {
                 info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
                 old_weight <= threshold_weight && threshold_weight < new_weight
             };
+            println!("Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}", vote_pubkey, _stake, _total_stake, weight, total_weight);
             println!("Test vote majority, majority check{:?}, quorum check{:?}", check(thresholds_to_check[0]), check(thresholds_to_check[1]));
             (
                 ReachedThresholdResults {
@@ -53,6 +52,8 @@ impl VoteStakeTracker {
                 is_new,
             )
         } else {
+            println!("-------------");
+            println!("Test vote majority {:?}, {:?}, {:?} donot add_vote_pubkey", vote_pubkey, _stake, weight);
             (ReachedThresholdResults {majority: false, quorum: false}, is_new)
         }
     }
