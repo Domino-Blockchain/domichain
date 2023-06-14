@@ -1709,6 +1709,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "domichain-cli-wasm"
+version = "1.11.1"
+dependencies = [
+ "bincode",
+ "bs58",
+ "clap 2.33.3",
+ "console",
+ "const_format",
+ "criterion-stats",
+ "crossbeam-channel",
+ "ctrlc",
+ "domichain-account-decoder",
+ "domichain-bpf-loader-program",
+ "domichain-clap-utils",
+ "domichain-cli-config",
+ "domichain-cli-output",
+ "domichain-client",
+ "domichain-config-program",
+ "domichain-faucet",
+ "domichain-logger",
+ "domichain-program-runtime",
+ "domichain-remote-wallet",
+ "domichain-sdk",
+ "domichain-streamer",
+ "domichain-test-validator",
+ "domichain-transaction-status",
+ "domichain-version",
+ "domichain-vote-program",
+ "domichain-wasm-loader-program",
+ "humantime",
+ "log",
+ "num-traits",
+ "pretty-hex",
+ "reqwest",
+ "semver 1.0.9",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "solana_rbpf",
+ "spl-memo",
+ "tempfile",
+ "thiserror",
+ "tiny-bip39",
+ "wasmi",
+]
+
+[[package]]
 name = "domichain-client"
 version = "1.11.1"
 dependencies = [
