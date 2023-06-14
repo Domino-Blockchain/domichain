@@ -33,12 +33,12 @@
 /// likely introduce undefined behavior.
 #[inline]
 pub fn sol_memcpy(dst: &mut [u8], src: &[u8], n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memcpy_(dst.as_mut_ptr(), src.as_ptr(), n as u64);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memcpy(dst.as_mut_ptr(), src.as_ptr(), n);
 }
 
@@ -63,10 +63,10 @@ pub fn sol_memcpy(dst: &mut [u8], src: &[u8], n: usize) {
 /// [`ptr::copy`]: https://doc.rust-lang.org/std/ptr/fn.copy.html
 #[inline]
 pub unsafe fn sol_memmove(dst: *mut u8, src: *mut u8, n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     crate::syscalls::sol_memmove_(dst, src, n as u64);
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memmove(dst, src, n);
 }
 
@@ -98,12 +98,12 @@ pub unsafe fn sol_memmove(dst: *mut u8, src: *mut u8, n: usize) {
 pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
     let mut result = 0;
 
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memcmp_(s1.as_ptr(), s2.as_ptr(), n as u64, &mut result as *mut i32);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memcmp(s1.as_ptr(), s2.as_ptr(), n, &mut result as *mut i32);
 
     result
@@ -135,11 +135,11 @@ pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
 /// undefined behavior.
 #[inline]
 pub fn sol_memset(s: &mut [u8], c: u8, n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memset_(s.as_mut_ptr(), c, n as u64);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memset(s.as_mut_ptr(), c, n);
 }

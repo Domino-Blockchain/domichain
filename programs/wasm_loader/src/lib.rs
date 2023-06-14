@@ -1642,6 +1642,7 @@ impl Executor for WasmExecutor {
             // let mut instruction_meter = ThisInstructionMeter::new(compute_meter.clone());
             let before = compute_meter.borrow().get_remaining();
 
+            // TODO(Dev): handle panic here
             let result = vm.call(&mut store, 0).unwrap(); // sending pointer to params
             // TODO(Dev): return instruction meter and rest
             // let result = if self.use_jit {

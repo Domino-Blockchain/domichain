@@ -682,7 +682,7 @@ pub struct ProcessedSiblingInstruction {
 /// Then B's processed sibling instruction list is: `[A]`
 /// Then F's processed sibling instruction list is: `[E, C]`
 pub fn get_processed_sibling_instruction(index: usize) -> Option<Instruction> {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     {
         let mut meta = ProcessedSiblingInstruction::default();
         let mut program_id = Pubkey::default();
@@ -717,7 +717,7 @@ pub fn get_processed_sibling_instruction(index: usize) -> Option<Instruction> {
         }
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_get_processed_sibling_instruction(index)
 }
 
@@ -728,12 +728,12 @@ pub const TRANSACTION_LEVEL_STACK_HEIGHT: usize = 1;
 /// TRANSACTION_LEVEL_STACK_HEIGHT, fist invoked inner instruction is height
 /// TRANSACTION_LEVEL_STACK_HEIGHT + 1, etc...
 pub fn get_stack_height() -> usize {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_get_stack_height() as usize
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     {
         crate::program_stubs::sol_get_stack_height() as usize
     }

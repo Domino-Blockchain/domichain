@@ -17,6 +17,7 @@ members = [
     "cli",
     "cli-config",
     "cli-output",
+    "cli-wasm",
     "client",
     "client-test",
     "core",

@@ -288,7 +288,7 @@ pub fn invoke_signed_unchecked(
     account_infos: &[AccountInfo],
     signers_seeds: &[&[&[u8]]],
 ) -> ProgramResult {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     {
         let result = unsafe {
             crate::syscalls::sol_invoke_signed_rust(
@@ -305,7 +305,7 @@ pub fn invoke_signed_unchecked(
         }
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_invoke_signed(instruction, account_infos, signers_seeds)
 }
 
@@ -320,12 +320,12 @@ pub const MAX_RETURN_DATA: usize = 1024;
 /// The maximum size of return data is [`MAX_RETURN_DATA`]. Return data is
 /// retrieved by the caller with [`get_return_data`].
 pub fn set_return_data(data: &[u8]) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_set_return_data(data.as_ptr(), data.len() as u64)
     };
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_set_return_data(data)
 }
 
@@ -359,7 +359,7 @@ pub fn set_return_data(data: &[u8]) {
 ///
 /// [rdp]: https://docs.domichain.com/proposals/return-data
 pub fn get_return_data() -> Option<(Pubkey, Vec<u8>)> {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     {
         use std::cmp::min;
 
@@ -382,7 +382,7 @@ pub fn get_return_data() -> Option<(Pubkey, Vec<u8>)> {
         }
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_get_return_data()
 }
 
