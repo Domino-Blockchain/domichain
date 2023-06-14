@@ -3,7 +3,6 @@
 extern crate test;
 
 use {
-    rand::{seq::SliceRandom, Rng},
     domichain_core::{
         cluster_nodes::{make_test_cluster, new_cluster_nodes, ClusterNodes},
         retransmit_stage::RetransmitStage,
@@ -15,6 +14,7 @@ use {
     },
     domichain_runtime::bank::Bank,
     domichain_sdk::{clock::Slot, pubkey::Pubkey},
+    rand::{seq::SliceRandom, Rng},
     test::Bencher,
 };
 

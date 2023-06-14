@@ -8,8 +8,8 @@ use {
         socket::SocketAddrSpace,
     },
     crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender},
-    histogram::Histogram,
     domichain_sdk::{packet::Packet, timing::timestamp},
+    histogram::Histogram,
     std::{
         cmp::Reverse,
         collections::HashMap,

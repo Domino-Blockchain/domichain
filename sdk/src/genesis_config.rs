@@ -330,7 +330,8 @@ mod tests {
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::new(1, 0, &Pubkey::default()),
         );
-        config.add_native_instruction_processor("hi".to_string(), domichain_sdk::pubkey::new_rand());
+        config
+            .add_native_instruction_processor("hi".to_string(), domichain_sdk::pubkey::new_rand());
 
         assert_eq!(config.accounts.len(), 2);
         assert!(config

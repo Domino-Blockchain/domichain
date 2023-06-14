@@ -1,5 +1,4 @@
 use {
-    serde::Serialize,
     domichain_sdk::{
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
         client::Client,
@@ -10,6 +9,7 @@ use {
         signature::{Keypair, Signer},
         system_instruction,
     },
+    serde::Serialize,
 };
 
 const CHUNK_SIZE: usize = 512; // Size of chunk just needs to fit into tx

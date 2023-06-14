@@ -1,6 +1,7 @@
 //! The `tpu` module implements the Transaction Processing Unit, a
 //! multi-stage transaction processing pipeline in software.
 
+use domichain_runtime::bank::WeightVoteTracker;
 use {
     crate::{
         banking_stage::BankingStage,
@@ -40,7 +41,6 @@ use {
         thread,
     },
 };
-use domichain_runtime::bank::WeightVoteTracker;
 
 pub const DEFAULT_TPU_COALESCE_MS: u64 = 5;
 

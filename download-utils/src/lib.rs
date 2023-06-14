@@ -1,13 +1,13 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     console::Emoji,
-    indicatif::{ProgressBar, ProgressStyle},
-    log::*,
     domichain_runtime::{
         snapshot_package::SnapshotType,
         snapshot_utils::{self, ArchiveFormat},
     },
     domichain_sdk::{clock::Slot, genesis_config::DEFAULT_GENESIS_ARCHIVE, hash::Hash},
+    indicatif::{ProgressBar, ProgressStyle},
+    log::*,
     std::{
         fs::{self, File},
         io::{self, Read},

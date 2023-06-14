@@ -2,16 +2,16 @@ use {
     crate::shred::{
         Error, ProcessShredsStats, Shred, ShredData, ShredFlags, MAX_DATA_SHREDS_PER_FEC_BLOCK,
     },
+    domichain_entry::entry::Entry,
+    domichain_measure::measure::Measure,
+    domichain_rayon_threadlimit::get_thread_count,
+    domichain_sdk::{clock::Slot, signature::Keypair},
     lazy_static::lazy_static,
     rayon::{prelude::*, ThreadPool},
     reed_solomon_erasure::{
         galois_8::Field,
         Error::{InvalidIndex, TooFewDataShards, TooFewShardsPresent},
     },
-    domichain_entry::entry::Entry,
-    domichain_measure::measure::Measure,
-    domichain_rayon_threadlimit::get_thread_count,
-    domichain_sdk::{clock::Slot, signature::Keypair},
     std::fmt::Debug,
 };
 
@@ -362,8 +362,6 @@ mod tests {
             ShredType,
         },
         bincode::serialized_size,
-        matches::assert_matches,
-        rand::{seq::SliceRandom, Rng},
         domichain_sdk::{
             hash::{self, hash, Hash},
             pubkey::Pubkey,
@@ -371,6 +369,8 @@ mod tests {
             signature::{Signature, Signer},
             system_transaction,
         },
+        matches::assert_matches,
+        rand::{seq::SliceRandom, Rng},
         std::{collections::HashSet, convert::TryInto, iter::repeat_with, sync::Arc},
     };
 

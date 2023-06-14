@@ -1,8 +1,8 @@
 /// Managing the Geyser plugins
 use {
+    domichain_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin,
     libloading::{Library, Symbol},
     log::*,
-    domichain_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin,
     std::error::Error,
 };
 

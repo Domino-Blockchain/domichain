@@ -4,14 +4,14 @@ use {
         leader_schedule::{FixedSchedule, LeaderSchedule},
         leader_schedule_utils,
     },
-    itertools::Itertools,
-    log::*,
     domichain_runtime::bank::Bank,
     domichain_sdk::{
         clock::{Epoch, Slot},
         epoch_schedule::EpochSchedule,
         pubkey::Pubkey,
     },
+    itertools::Itertools,
+    log::*,
     std::{
         collections::{hash_map::Entry, HashMap, VecDeque},
         sync::{Arc, RwLock},

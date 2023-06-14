@@ -1,7 +1,7 @@
 use {
     crate::update_manifest::UpdateManifest,
-    serde::{Deserialize, Serialize},
     domichain_sdk::pubkey::Pubkey,
+    serde::{Deserialize, Serialize},
     std::{
         fs::{create_dir_all, File},
         io::{self, Write},

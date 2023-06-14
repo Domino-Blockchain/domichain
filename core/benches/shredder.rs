@@ -4,8 +4,6 @@
 extern crate test;
 
 use {
-    rand::seq::SliceRandom,
-    raptorq::{Decoder, Encoder},
     domichain_entry::entry::{create_ticks, Entry},
     domichain_ledger::shred::{
         max_entries_per_n_shred, max_ticks_per_n_shreds, ProcessShredsStats, Shred, ShredFlags,
@@ -13,6 +11,8 @@ use {
     },
     domichain_perf::test_tx,
     domichain_sdk::{hash::Hash, packet::PACKET_DATA_SIZE, signature::Keypair},
+    rand::seq::SliceRandom,
+    raptorq::{Decoder, Encoder},
     test::Bencher,
 };
 

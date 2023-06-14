@@ -5,8 +5,6 @@ use domichain_sdk::epoch_schedule::MAX_LEADER_SCHEDULE_EPOCH_OFFSET;
 use {
     crate::{authorized_voters::AuthorizedVoters, id, vote_error::VoteError},
     bincode::{deserialize, serialize_into, ErrorKind},
-    log::*,
-    serde_derive::{Deserialize, Serialize},
     domichain_metrics::datapoint_debug,
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
@@ -20,6 +18,8 @@ use {
         sysvar::clock::Clock,
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
+    log::*,
+    serde_derive::{Deserialize, Serialize},
     std::{
         cmp::Ordering,
         collections::{HashSet, VecDeque},
@@ -105,14 +105,18 @@ impl VoteTransaction {
     pub fn vrf_proof(&self) -> Option<&[u8]> {
         match self {
             VoteTransaction::Vote(vote) => vote.vrf_proof.as_ref().map(|v| v.as_slice()),
-            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof.as_ref().map(|v| v.as_slice()),
+            VoteTransaction::VoteStateUpdate(vote_state_update) => {
+                vote_state_update.vrf_proof.as_ref().map(|v| v.as_slice())
+            }
         }
     }
 
     pub fn set_vrf_proof(&mut self, vrf_proof: Option<Vec<u8>>) {
         match self {
             VoteTransaction::Vote(vote) => vote.vrf_proof = vrf_proof,
-            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof = vrf_proof,
+            VoteTransaction::VoteStateUpdate(vote_state_update) => {
+                vote_state_update.vrf_proof = vrf_proof
+            }
         }
     }
 

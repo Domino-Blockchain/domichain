@@ -1,11 +1,11 @@
 use {
-    serde::{Deserialize, Serialize},
     domichain_config_program::ConfigState,
     domichain_sdk::{
         hash::Hash,
         pubkey::Pubkey,
         signature::{Signable, Signature},
     },
+    serde::{Deserialize, Serialize},
     std::{borrow::Cow, error, io},
 };
 

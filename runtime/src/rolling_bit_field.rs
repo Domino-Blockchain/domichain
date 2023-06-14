@@ -290,7 +290,7 @@ impl RollingBitField {
 
 #[cfg(test)]
 pub mod tests {
-    use {super::*, log::*, domichain_measure::measure::Measure};
+    use {super::*, domichain_measure::measure::Measure, log::*};
 
     impl RollingBitField {
         pub fn clear(&mut self) {

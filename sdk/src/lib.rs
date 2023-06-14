@@ -5,9 +5,9 @@
 // Allows macro expansion of `use ::domichain_sdk::*` to work within this crate
 extern crate self as domichain_sdk;
 
+pub use domichain_program::*;
 #[cfg(feature = "full")]
 pub use signer::signers;
-pub use domichain_program::*;
 
 pub mod account;
 pub mod account_utils;

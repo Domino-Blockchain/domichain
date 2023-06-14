@@ -7,8 +7,6 @@ use {
         AppSettings, Arg, ArgMatches, SubCommand,
     },
     console::style,
-    log::*,
-    rand::{seq::SliceRandom, thread_rng},
     domichain_clap_utils::{
         input_parsers::{keypair_of, keypairs_of, pubkey_of, value_of},
         input_validators::{
@@ -28,8 +26,8 @@ use {
         tower_storage,
         tpu::DEFAULT_TPU_COALESCE_MS,
         validator::{
-            is_snapshot_config_valid, Validator, ValidatorConfig,
-            ValidatorStartProgress, DEFAULT_TOTAL_WEIGHT,
+            is_snapshot_config_valid, Validator, ValidatorConfig, ValidatorStartProgress,
+            DEFAULT_TOTAL_WEIGHT,
         },
     },
     domichain_gossip::{cluster_info::Node, contact_info::ContactInfo},
@@ -79,6 +77,8 @@ use {
         admin_rpc_service, bootstrap, dashboard::Dashboard, ledger_lockfile, lock_ledger,
         new_spinner_progress_bar, println_name_value, redirect_stderr_to_file,
     },
+    log::*,
+    rand::{seq::SliceRandom, thread_rng},
     std::{
         collections::{HashSet, VecDeque},
         env,
@@ -2481,7 +2481,8 @@ pub fn main() {
                 || matches.is_present("enable_extended_tx_metadata_storage"),
             rpc_bigtable_config,
             faucet_addr: matches.value_of("rpc_faucet_addr").map(|address| {
-                domichain_net_utils::parse_host_port(address).expect("failed to parse faucet address")
+                domichain_net_utils::parse_host_port(address)
+                    .expect("failed to parse faucet address")
             }),
             full_api,
             obsolete_v1_7_api: matches.is_present("obsolete_v1_7_rpc_api"),

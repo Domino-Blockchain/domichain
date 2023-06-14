@@ -25,8 +25,6 @@ use {
         spinner,
     },
     bincode::serialize,
-    log::*,
-    serde_json::{json, Value},
     domichain_account_decoder::{
         parse_token::{TokenAccountType, UiTokenAccount, UiTokenAmount},
         UiAccount, UiAccountData, UiAccountEncoding,
@@ -50,6 +48,8 @@ use {
         UiConfirmedBlock, UiTransactionEncoding,
     },
     domichain_vote_program::vote_state::MAX_LOCKOUT_HISTORY,
+    log::*,
+    serde_json::{json, Value},
     std::{
         cmp::min,
         net::SocketAddr,
@@ -518,9 +518,10 @@ impl RpcClient {
             let node_version = self.get_version().await.map_err(|e| {
                 RpcError::RpcRequestError(format!("cluster version query failed: {}", e))
             })?;
-            let node_version = semver::Version::parse(&node_version.domichain_core).map_err(|e| {
-                RpcError::RpcRequestError(format!("failed to parse cluster version: {}", e))
-            })?;
+            let node_version =
+                semver::Version::parse(&node_version.domichain_core).map_err(|e| {
+                    RpcError::RpcRequestError(format!("failed to parse cluster version: {}", e))
+                })?;
             *w_node_version = Some(node_version.clone());
             Ok(node_version)
         }

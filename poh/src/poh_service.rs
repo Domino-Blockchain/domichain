@@ -3,10 +3,10 @@
 use {
     crate::poh_recorder::{PohRecorder, Record},
     crossbeam_channel::Receiver,
-    log::*,
     domichain_entry::poh::Poh,
     domichain_measure::{measure, measure::Measure},
     domichain_sdk::poh_config::PohConfig,
+    log::*,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -383,7 +383,6 @@ impl PohService {
 mod tests {
     use {
         super::*,
-        rand::{thread_rng, Rng},
         domichain_ledger::{
             blockstore::Blockstore,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
@@ -396,6 +395,7 @@ mod tests {
         domichain_sdk::{
             clock, hash::hash, pubkey::Pubkey, timing, transaction::VersionedTransaction,
         },
+        rand::{thread_rng, Rng},
         std::{thread::sleep, time::Duration},
     };
 

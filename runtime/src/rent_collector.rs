@@ -1,6 +1,5 @@
 //! calculate and collect rent from Accounts
 use {
-    log::*,
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         clock::Epoch,
@@ -10,6 +9,7 @@ use {
         pubkey::Pubkey,
         rent::{Rent, RentDue},
     },
+    log::*,
 };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, AbiExample)]

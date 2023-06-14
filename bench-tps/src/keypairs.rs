@@ -3,9 +3,9 @@ use {
         bench::{fund_keypairs, generate_and_fund_keypairs},
         bench_tps_client::BenchTpsClient,
     },
-    log::*,
     domichain_genesis::Base64Account,
     domichain_sdk::signature::{Keypair, Signer},
+    log::*,
     std::{collections::HashMap, fs::File, path::Path, process::exit, sync::Arc},
 };
 

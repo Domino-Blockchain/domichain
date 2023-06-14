@@ -40,9 +40,6 @@
 //!
 #![allow(clippy::integer_arithmetic)]
 use {
-    itertools::Itertools,
-    log::*,
-    rand::{thread_rng, Rng},
     domichain_bench_tps::{bench::generate_and_fund_keypairs, bench_tps_client::BenchTpsClient},
     domichain_client::{
         connection_cache::{ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE},
@@ -67,6 +64,9 @@ use {
         transaction::Transaction,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    itertools::Itertools,
+    log::*,
+    rand::{thread_rng, Rng},
     std::{
         cmp::min,
         net::{SocketAddr, UdpSocket},
@@ -742,131 +742,131 @@ pub mod test {
         );
     }
 
-/*     #[test]
-    fn test_dos_random() {
-        domichain_logger::setup();
-        let num_nodes = 1;
-        let cluster =
-            LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
-        assert_eq!(cluster.validators.len(), num_nodes);
+    /*     #[test]
+       fn test_dos_random() {
+           domichain_logger::setup();
+           let num_nodes = 1;
+           let cluster =
+               LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
+           assert_eq!(cluster.validators.len(), num_nodes);
 
-        let nodes = cluster.get_node_pubkeys();
-        let node = cluster.get_contact_info(&nodes[0]).unwrap().clone();
-        let nodes_slice = [node];
+           let nodes = cluster.get_node_pubkeys();
+           let node = cluster.get_contact_info(&nodes[0]).unwrap().clone();
+           let nodes_slice = [node];
 
-        // send random transactions to TPU
-        // will be discarded on sigverify stage
-        run_dos_no_client(
-            &nodes_slice,
-            10,
-            DosClientParameters {
-                entrypoint_addr: cluster.entry_point_info.gossip,
-                mode: Mode::Tpu,
-                data_size: 1024,
-                data_type: DataType::Random,
-                data_input: None,
-                skip_gossip: false,
-                allow_private_addr: false,
-                transaction_params: TransactionParams::default(),
-                tpu_use_quic: false,
-            },
-        );
-    }
+           // send random transactions to TPU
+           // will be discarded on sigverify stage
+           run_dos_no_client(
+               &nodes_slice,
+               10,
+               DosClientParameters {
+                   entrypoint_addr: cluster.entry_point_info.gossip,
+                   mode: Mode::Tpu,
+                   data_size: 1024,
+                   data_type: DataType::Random,
+                   data_input: None,
+                   skip_gossip: false,
+                   allow_private_addr: false,
+                   transaction_params: TransactionParams::default(),
+                   tpu_use_quic: false,
+               },
+           );
+       }
 
-    #[test]
-    fn test_dos_without_blockhash() {
-        domichain_logger::setup();
-        let num_nodes = 1;
-        let cluster =
-            LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
-        assert_eq!(cluster.validators.len(), num_nodes);
+       #[test]
+       fn test_dos_without_blockhash() {
+           domichain_logger::setup();
+           let num_nodes = 1;
+           let cluster =
+               LocalCluster::new_with_equal_stakes(num_nodes, 100, 3, SocketAddrSpace::Unspecified);
+           assert_eq!(cluster.validators.len(), num_nodes);
 
-        let nodes = cluster.get_node_pubkeys();
-        let node = cluster.get_contact_info(&nodes[0]).unwrap().clone();
-        let nodes_slice = [node];
+           let nodes = cluster.get_node_pubkeys();
+           let node = cluster.get_contact_info(&nodes[0]).unwrap().clone();
+           let nodes_slice = [node];
 
-        let client = Arc::new(ThinClient::new(
-            cluster.entry_point_info.rpc,
-            cluster.entry_point_info.tpu,
-            cluster.connection_cache.clone(),
-        ));
+           let client = Arc::new(ThinClient::new(
+               cluster.entry_point_info.rpc,
+               cluster.entry_point_info.tpu,
+               cluster.connection_cache.clone(),
+           ));
 
-        // creates one transaction with 8 valid signatures and sends it 10 times
-        run_dos(
-            &nodes_slice,
-            10,
-            Some(client.clone()),
-            DosClientParameters {
-                entrypoint_addr: cluster.entry_point_info.gossip,
-                mode: Mode::Tpu,
-                data_size: 0, // irrelevant
-                data_type: DataType::Transaction,
-                data_input: None,
-                skip_gossip: false,
-                allow_private_addr: false,
-                transaction_params: TransactionParams {
-                    num_signatures: Some(8),
-                    valid_blockhash: false,
-                    valid_signatures: true,
-                    unique_transactions: false,
-                    transaction_type: None,
-                    num_instructions: None,
-                },
-                tpu_use_quic: false,
-            },
-        );
+           // creates one transaction with 8 valid signatures and sends it 10 times
+           run_dos(
+               &nodes_slice,
+               10,
+               Some(client.clone()),
+               DosClientParameters {
+                   entrypoint_addr: cluster.entry_point_info.gossip,
+                   mode: Mode::Tpu,
+                   data_size: 0, // irrelevant
+                   data_type: DataType::Transaction,
+                   data_input: None,
+                   skip_gossip: false,
+                   allow_private_addr: false,
+                   transaction_params: TransactionParams {
+                       num_signatures: Some(8),
+                       valid_blockhash: false,
+                       valid_signatures: true,
+                       unique_transactions: false,
+                       transaction_type: None,
+                       num_instructions: None,
+                   },
+                   tpu_use_quic: false,
+               },
+           );
 
-        // creates and sends unique transactions which have invalid signatures
-        run_dos(
-            &nodes_slice,
-            10,
-            Some(client.clone()),
-            DosClientParameters {
-                entrypoint_addr: cluster.entry_point_info.gossip,
-                mode: Mode::Tpu,
-                data_size: 0, // irrelevant
-                data_type: DataType::Transaction,
-                data_input: None,
-                skip_gossip: false,
-                allow_private_addr: false,
-                transaction_params: TransactionParams {
-                    num_signatures: Some(8),
-                    valid_blockhash: false,
-                    valid_signatures: false,
-                    unique_transactions: true,
-                    transaction_type: None,
-                    num_instructions: None,
-                },
-                tpu_use_quic: false,
-            },
-        );
+           // creates and sends unique transactions which have invalid signatures
+           run_dos(
+               &nodes_slice,
+               10,
+               Some(client.clone()),
+               DosClientParameters {
+                   entrypoint_addr: cluster.entry_point_info.gossip,
+                   mode: Mode::Tpu,
+                   data_size: 0, // irrelevant
+                   data_type: DataType::Transaction,
+                   data_input: None,
+                   skip_gossip: false,
+                   allow_private_addr: false,
+                   transaction_params: TransactionParams {
+                       num_signatures: Some(8),
+                       valid_blockhash: false,
+                       valid_signatures: false,
+                       unique_transactions: true,
+                       transaction_type: None,
+                       num_instructions: None,
+                   },
+                   tpu_use_quic: false,
+               },
+           );
 
-        // creates and sends unique transactions which have valid signatures
-        run_dos(
-            &nodes_slice,
-            10,
-            Some(client),
-            DosClientParameters {
-                entrypoint_addr: cluster.entry_point_info.gossip,
-                mode: Mode::Tpu,
-                data_size: 0, // irrelevant
-                data_type: DataType::Transaction,
-                data_input: None,
-                skip_gossip: false,
-                allow_private_addr: false,
-                transaction_params: TransactionParams {
-                    num_signatures: Some(8),
-                    valid_blockhash: false,
-                    valid_signatures: true,
-                    unique_transactions: true,
-                    transaction_type: None,
-                    num_instructions: None,
-                },
-                tpu_use_quic: false,
-            },
-        );
-    }
- */
+           // creates and sends unique transactions which have valid signatures
+           run_dos(
+               &nodes_slice,
+               10,
+               Some(client),
+               DosClientParameters {
+                   entrypoint_addr: cluster.entry_point_info.gossip,
+                   mode: Mode::Tpu,
+                   data_size: 0, // irrelevant
+                   data_type: DataType::Transaction,
+                   data_input: None,
+                   skip_gossip: false,
+                   allow_private_addr: false,
+                   transaction_params: TransactionParams {
+                       num_signatures: Some(8),
+                       valid_blockhash: false,
+                       valid_signatures: true,
+                       unique_transactions: true,
+                       transaction_type: None,
+                       num_instructions: None,
+                   },
+                   tpu_use_quic: false,
+               },
+           );
+       }
+    */
     fn run_dos_with_blockhash_and_payer(tpu_use_quic: bool) {
         domichain_logger::setup();
 

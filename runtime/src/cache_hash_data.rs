@@ -4,9 +4,9 @@ use {
         accounts_hash::CalculateHashIntermediate, cache_hash_data_stats::CacheHashDataStats,
         pubkey_bins::PubkeyBinCalculator24,
     },
+    domichain_measure::measure::Measure,
     log::*,
     memmap2::MmapMut,
-    domichain_measure::measure::Measure,
     std::{
         collections::HashSet,
         fs::{self, remove_file, OpenOptions},

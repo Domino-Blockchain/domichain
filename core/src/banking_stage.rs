@@ -16,9 +16,6 @@ use {
     crossbeam_channel::{
         Receiver as CrossbeamReceiver, RecvTimeoutError, Sender as CrossbeamSender,
     },
-    histogram::Histogram,
-    itertools::Itertools,
-    min_max_heap::MinMaxHeap,
     domichain_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
     domichain_entry::entry::hash_transactions,
     domichain_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
@@ -61,6 +58,9 @@ use {
     domichain_transaction_status::token_balances::{
         collect_token_balances, TransactionTokenBalancesSet,
     },
+    histogram::Histogram,
+    itertools::Itertools,
+    min_max_heap::MinMaxHeap,
     std::{
         cmp,
         collections::HashMap,

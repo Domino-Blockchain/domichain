@@ -86,11 +86,11 @@ mod tests {
     use {
         super::*,
         crate::account::from_account,
-        rand::{seq::SliceRandom, thread_rng},
         domichain_program::{
             hash::{Hash, HASH_BYTES},
             sysvar::recent_blockhashes::Entry,
         },
+        rand::{seq::SliceRandom, thread_rng},
     };
 
     #[test]

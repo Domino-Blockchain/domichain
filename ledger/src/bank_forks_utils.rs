@@ -1,3 +1,4 @@
+use domichain_runtime::bank::WeightVoteTracker;
 use {
     crate::{
         blockstore::Blockstore,
@@ -7,7 +8,6 @@ use {
         },
         leader_schedule_cache::LeaderScheduleCache,
     },
-    log::*,
     domichain_runtime::{
         accounts_update_notifier_interface::AccountsUpdateNotifier,
         bank_forks::BankForks,
@@ -17,6 +17,7 @@ use {
         snapshot_utils,
     },
     domichain_sdk::genesis_config::GenesisConfig,
+    log::*,
     std::{
         fs,
         path::PathBuf,
@@ -24,7 +25,6 @@ use {
         sync::{Arc, RwLock},
     },
 };
-use domichain_runtime::bank::WeightVoteTracker;
 
 pub type LoadResult = result::Result<
     (

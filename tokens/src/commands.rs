@@ -10,10 +10,6 @@ use {
     chrono::prelude::*,
     console::style,
     csv::{ReaderBuilder, Trim},
-    indexmap::IndexMap,
-    indicatif::{ProgressBar, ProgressStyle},
-    pickledb::PickleDb,
-    serde::{Deserialize, Serialize},
     domichain_account_decoder::parse_token::{
         pubkey_from_spl_token, real_number_string, spl_token_pubkey,
     },
@@ -39,6 +35,10 @@ use {
         transaction::Transaction,
     },
     domichain_transaction_status::TransactionStatus,
+    indexmap::IndexMap,
+    indicatif::{ProgressBar, ProgressStyle},
+    pickledb::PickleDb,
+    serde::{Deserialize, Serialize},
     spl_associated_token_account::get_associated_token_address,
     spl_token::solana_program::program_error::ProgramError,
     std::{

@@ -1,7 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     clap::value_t,
-    log::*,
     domichain_bench_tps::{
         bench::{do_bench_tps, generate_keypairs},
         cli::{self, ExternalClientType},
@@ -19,6 +18,7 @@ use {
         commitment_config::CommitmentConfig, fee_calculator::FeeRateGovernor, system_program,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
     std::{collections::HashMap, fs::File, io::prelude::*, path::Path, process::exit, sync::Arc},
 };
 

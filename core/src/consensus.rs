@@ -8,7 +8,9 @@ use {
         tower_storage::{SavedTower, SavedTowerVersions, TowerStorage},
     },
     chrono::prelude::*,
-    domichain_ledger::{ancestor_iterator::AncestorIterator, blockstore::Blockstore, blockstore_db},
+    domichain_ledger::{
+        ancestor_iterator::AncestorIterator, blockstore::Blockstore, blockstore_db,
+    },
     domichain_runtime::{
         bank::Bank, bank_forks::BankForks, commitment::VOTE_THRESHOLD_SIZE,
         vote_account::VoteAccountsHashMap,
@@ -401,15 +403,14 @@ impl Tower {
 
         let slot_vote_tracker = slot_vote_tracker.read().unwrap();
 
-         slot_vote_tracker
-         .optimistic_votes_tracker(&bank_hash)
+        slot_vote_tracker
+            .optimistic_votes_tracker(&bank_hash)
             .map(|vote_stake_tracker| {
                 let weight = vote_stake_tracker.weight();
-            //    println!("DEV: weight={weight} total={total_weight}");
+                //    println!("DEV: weight={weight} total={total_weight}");
                 vote_stake_tracker.weight() as f64 / total_weight as f64 > self.threshold_size
             })
             .unwrap_or(false)
-            
     }
 
     pub fn tower_slots(&self) -> Vec<Slot> {
@@ -1388,7 +1389,6 @@ pub mod test {
             replay_stage::HeaviestForkFailures, tower_storage::FileTowerStorage,
             vote_simulator::VoteSimulator,
         },
-        itertools::Itertools,
         domichain_ledger::{blockstore::make_slot_entries, get_tmp_ledger_path},
         domichain_runtime::{bank::Bank, vote_account::VoteAccount},
         domichain_sdk::{
@@ -1400,6 +1400,7 @@ pub mod test {
             slot_history::SlotHistory,
         },
         domichain_vote_program::vote_state::{Vote, VoteStateVersions, MAX_LOCKOUT_HISTORY},
+        itertools::Itertools,
         std::{
             collections::{HashMap, VecDeque},
             fs::{remove_file, OpenOptions},
@@ -3258,19 +3259,20 @@ pub mod test {
         assert!(!tower.is_stray_last_vote());
     }
 
+    use domichain_runtime::genesis_utils::{
+        create_genesis_config_with_vote_accounts, GenesisConfigInfo, ValidatorVoteKeypairs,
+    };
     use std::sync::RwLock;
-    use domichain_runtime::genesis_utils::{create_genesis_config_with_vote_accounts, GenesisConfigInfo, ValidatorVoteKeypairs};
     #[test]
     async fn test_is_slot_confirmed_with_stakes() {
         let validator_keypairs: Vec<_> =
             (0..2).map(|_| ValidatorVoteKeypairs::new_rand()).collect();
 
-        let GenesisConfigInfo { genesis_config, .. } =
-            create_genesis_config_with_vote_accounts(
-                10_000,
-                &validator_keypairs,
-                vec![2500; validator_keypairs.len()],
-            );
+        let GenesisConfigInfo { genesis_config, .. } = create_genesis_config_with_vote_accounts(
+            10_000,
+            &validator_keypairs,
+            vec![2500; validator_keypairs.len()],
+        );
 
         //let genesis_config = create_genesis_config(10_000).genesis_config;
         let bank0 = Bank::new_for_tests(&genesis_config);
@@ -3284,7 +3286,7 @@ pub mod test {
         );
         root_bank.freeze();
         let root_hash = root_bank.hash();
-    
+
         let tower = Tower::new_for_tests(1, 0.67);
         let vote_tracker = VoteTracker::default();
         // println!("node_pubkey {:?}",  validator_keypairs[0].node_keypair.pubkey());
@@ -3293,8 +3295,10 @@ pub mod test {
 
         vote_tracker.insert_vote(3, validator_keypairs[0].vote_keypair.pubkey());
         let mut slot_vote_tracker = vote_tracker.get_slot_vote_tracker(3).unwrap().write();
-        slot_vote_tracker.unwrap().get_or_insert_optimistic_votes_tracker(root_hash);
-        
+        slot_vote_tracker
+            .unwrap()
+            .get_or_insert_optimistic_votes_tracker(root_hash);
+
         assert!(tower.is_slot_confirmed(3, &vote_tracker, root_hash, 3000));
     }
 }

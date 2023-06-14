@@ -1,10 +1,10 @@
 //! defines block cost related limits
 //!
 use {
-    lazy_static::lazy_static,
     domichain_sdk::{
         feature, incinerator, native_loader, pubkey::Pubkey, secp256k1_program, system_program,
     },
+    lazy_static::lazy_static,
     std::collections::HashMap,
 };
 

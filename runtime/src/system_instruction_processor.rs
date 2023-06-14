@@ -3,7 +3,6 @@ use {
         advance_nonce_account, authorize_nonce_account, initialize_nonce_account,
         withdraw_nonce_account,
     },
-    log::*,
     domichain_program_runtime::{
         ic_msg, invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
@@ -21,6 +20,7 @@ use {
         system_program,
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
+    log::*,
     std::collections::HashSet,
 };
 

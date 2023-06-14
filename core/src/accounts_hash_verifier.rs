@@ -188,8 +188,8 @@ impl AccountsHashVerifier {
         {
             // For testing, publish an invalid hash to gossip.
             use {
-                rand::{thread_rng, Rng},
                 domichain_sdk::hash::extend_and_hash,
+                rand::{thread_rng, Rng},
             };
             warn!("inserting fault at slot: {}", accounts_package.slot);
             let rand = thread_rng().gen_range(0, 10);

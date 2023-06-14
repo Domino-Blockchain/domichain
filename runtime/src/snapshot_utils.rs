@@ -19,13 +19,13 @@ use {
     },
     bincode::{config::Options, serialize_into},
     bzip2::bufread::BzDecoder,
+    domichain_measure::measure::Measure,
+    domichain_sdk::{clock::Slot, genesis_config::GenesisConfig, hash::Hash, pubkey::Pubkey},
     flate2::read::GzDecoder,
     lazy_static::lazy_static,
     log::*,
     rayon::prelude::*,
     regex::Regex,
-    domichain_measure::measure::Measure,
-    domichain_sdk::{clock::Slot, genesis_config::GenesisConfig, hash::Hash, pubkey::Pubkey},
     std::{
         cmp::Ordering,
         collections::{HashMap, HashSet},
@@ -43,8 +43,8 @@ use {
 };
 
 mod archive_format;
-pub use archive_format::*;
 use crate::bank::WeightVoteTracker;
+pub use archive_format::*;
 
 pub const SNAPSHOT_STATUS_CACHE_FILENAME: &str = "status_cache";
 pub const SNAPSHOT_ARCHIVE_DOWNLOAD_DIR: &str = "remote";
@@ -3543,7 +3543,7 @@ mod tests {
             "Ensure rebuilding from an incremental snapshot works"
         ); */
 
- /*        let slot = slot + 1;
+        /*        let slot = slot + 1;
         let bank3 = Arc::new(Bank::new_from_parent(&bank2, &collector, slot));
         // Update Account2 so that it no longer holds a reference to slot2
         bank3

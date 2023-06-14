@@ -1,6 +1,5 @@
 use {
     crate::{cluster::Cluster, local_cluster::LocalCluster},
-    log::*,
     domichain_runtime::{
         snapshot_archive_info::{
             FullSnapshotArchiveInfo, IncrementalSnapshotArchiveInfo, SnapshotArchiveInfoGetter,
@@ -8,6 +7,7 @@ use {
         snapshot_utils,
     },
     domichain_sdk::{client::SyncClient, commitment_config::CommitmentConfig},
+    log::*,
     std::{path::Path, thread::sleep, time::Duration},
 };
 

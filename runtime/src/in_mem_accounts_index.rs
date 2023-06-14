@@ -8,10 +8,10 @@ use {
         bucket_map_holder_stats::BucketMapHolderStats,
         waitable_condvar::WaitableCondvar,
     },
-    rand::{thread_rng, Rng},
     domichain_bucket_map::bucket_api::BucketApi,
     domichain_measure::measure::Measure,
     domichain_sdk::{clock::Slot, pubkey::Pubkey},
+    rand::{thread_rng, Rng},
     std::{
         collections::{
             hash_map::{Entry, VacantEntry},

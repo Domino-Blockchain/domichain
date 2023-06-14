@@ -1224,8 +1224,8 @@ mod tests {
     use {
         super::*,
         crate::compute_budget,
-        serde::{Deserialize, Serialize},
         domichain_sdk::account::{ReadableAccount, WritableAccount},
+        serde::{Deserialize, Serialize},
     };
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -1474,7 +1474,10 @@ mod tests {
 
     #[test]
     fn test_invoke_context_verify() {
-        let accounts = vec![(domichain_sdk::pubkey::new_rand(), AccountSharedData::default())];
+        let accounts = vec![(
+            domichain_sdk::pubkey::new_rand(),
+            AccountSharedData::default(),
+        )];
         let instruction_accounts = vec![];
         let program_indices = vec![0];
         let mut transaction_context = TransactionContext::new(accounts, 1, 1);
@@ -1652,7 +1655,10 @@ mod tests {
 
     #[test]
     fn test_invoke_context_compute_budget() {
-        let accounts = vec![(domichain_sdk::pubkey::new_rand(), AccountSharedData::default())];
+        let accounts = vec![(
+            domichain_sdk::pubkey::new_rand(),
+            AccountSharedData::default(),
+        )];
 
         let mut transaction_context = TransactionContext::new(accounts, 1, 3);
         let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);

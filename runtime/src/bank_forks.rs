@@ -6,9 +6,9 @@ use {
         bank::Bank,
         snapshot_config::SnapshotConfig,
     },
-    log::*,
     domichain_measure::measure::Measure,
     domichain_sdk::{clock::Slot, hash::Hash, timing},
+    log::*,
     std::{
         collections::{hash_map::Entry, HashMap, HashSet},
         ops::Index,

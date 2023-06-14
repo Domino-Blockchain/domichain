@@ -2,8 +2,8 @@
 
 use {
     crossbeam_channel::{Receiver, Sender},
-    log::*,
     domichain_sdk::clock::Slot,
+    log::*,
     std::fmt,
 };
 

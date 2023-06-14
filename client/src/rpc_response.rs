@@ -1,6 +1,5 @@
 use {
     crate::client_error,
-    serde::{Deserialize, Deserializer, Serialize, Serializer},
     domichain_account_decoder::{parse_token::UiTokenAmount, UiAccount},
     domichain_sdk::{
         clock::{Epoch, Slot, UnixTimestamp},
@@ -13,6 +12,7 @@ use {
     domichain_transaction_status::{
         ConfirmedTransactionStatusWithSignature, TransactionConfirmationStatus, UiConfirmedBlock,
     },
+    serde::{Deserialize, Deserializer, Serialize, Serializer},
     std::{collections::HashMap, fmt, net::SocketAddr, str::FromStr},
     thiserror::Error,
 };

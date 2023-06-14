@@ -6,7 +6,6 @@ use {
         vote_instruction::VoteInstruction,
         vote_state::{self, VoteAuthorize},
     },
-    log::*,
     domichain_program_runtime::{
         invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
@@ -17,6 +16,7 @@ use {
         pubkey::Pubkey,
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
+    log::*,
     std::collections::HashSet,
 };
 
@@ -380,7 +380,12 @@ mod tests {
         let vote_pubkey = domichain_sdk::pubkey::new_rand();
         (
             vote_pubkey,
-            vote_state::create_account(&vote_pubkey, &domichain_sdk::pubkey::new_rand(), 0, balance),
+            vote_state::create_account(
+                &vote_pubkey,
+                &domichain_sdk::pubkey::new_rand(),
+                0,
+                balance,
+            ),
         )
     }
 

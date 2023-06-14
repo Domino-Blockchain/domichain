@@ -20,9 +20,9 @@ macro_rules! DEFINE_NxM_BENCH {
 
 extern crate test;
 use {
-    rayon::prelude::*,
     domichain_bucket_map::bucket_map::{BucketMap, BucketMapConfig},
     domichain_sdk::pubkey::Pubkey,
+    rayon::prelude::*,
     std::{collections::hash_map::HashMap, sync::RwLock},
     test::Bencher,
 };

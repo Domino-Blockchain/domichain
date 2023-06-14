@@ -96,7 +96,7 @@ impl Ancestors {
 #[cfg(test)]
 pub mod tests {
     use {
-        super::*, crate::contains::Contains, log::*, domichain_measure::measure::Measure,
+        super::*, crate::contains::Contains, domichain_measure::measure::Measure, log::*,
         std::collections::HashSet,
     };
 

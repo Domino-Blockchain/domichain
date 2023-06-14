@@ -32,6 +32,11 @@ use {
         crds_value::{CrdsData, CrdsValue, CrdsValueLabel},
     },
     bincode::serialize,
+    domichain_sdk::{
+        clock::Slot,
+        hash::{hash, Hash},
+        pubkey::Pubkey,
+    },
     indexmap::{
         map::{rayon::ParValues, Entry, IndexMap},
         set::IndexSet,
@@ -39,11 +44,6 @@ use {
     lru::LruCache,
     matches::debug_assert_matches,
     rayon::{prelude::*, ThreadPool},
-    domichain_sdk::{
-        clock::Slot,
-        hash::{hash, Hash},
-        pubkey::Pubkey,
-    },
     std::{
         cmp::Ordering,
         collections::{hash_map, BTreeMap, HashMap, VecDeque},
@@ -685,13 +685,13 @@ mod tests {
             contact_info::ContactInfo,
             crds_value::{new_rand_timestamp, NodeInstance, SnapshotHashes},
         },
-        rand::{thread_rng, Rng, SeedableRng},
-        rand_chacha::ChaChaRng,
-        rayon::ThreadPoolBuilder,
         domichain_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,
         },
+        rand::{thread_rng, Rng, SeedableRng},
+        rand_chacha::ChaChaRng,
+        rayon::ThreadPoolBuilder,
         std::{collections::HashSet, iter::repeat_with},
     };
 

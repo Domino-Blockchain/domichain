@@ -1,12 +1,12 @@
 use {
-    itertools::Itertools,
-    serde::ser::{Serialize, Serializer},
     domichain_sdk::{
         account::{accounts_equal, Account, AccountSharedData, ReadableAccount},
         instruction::InstructionError,
         pubkey::Pubkey,
     },
     domichain_vote_program::vote_state::VoteState,
+    itertools::Itertools,
+    serde::ser::{Serialize, Serializer},
     std::{
         cmp::Ordering,
         collections::{hash_map::Entry, HashMap},
@@ -346,9 +346,9 @@ mod tests {
     use {
         super::*,
         bincode::Options,
-        rand::Rng,
         domichain_sdk::{pubkey::Pubkey, sysvar::clock::Clock},
         domichain_vote_program::vote_state::{VoteInit, VoteStateVersions},
+        rand::Rng,
         std::iter::repeat_with,
     };
 

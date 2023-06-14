@@ -7,11 +7,6 @@ use {
         AppSettings, Arg, ArgMatches, SubCommand,
     },
     dashmap::DashMap,
-    itertools::Itertools,
-    log::*,
-    regex::Regex,
-    serde::Serialize,
-    serde_json::json,
     domichain_clap_utils::{
         input_parsers::{cluster_type_of, pubkey_of, pubkeys_of},
         input_validators::{
@@ -73,6 +68,11 @@ use {
         self,
         vote_state::{self, VoteState},
     },
+    itertools::Itertools,
+    log::*,
+    regex::Regex,
+    serde::Serialize,
+    serde_json::json,
     std::{
         collections::{BTreeMap, BTreeSet, HashMap, HashSet},
         ffi::OsStr,

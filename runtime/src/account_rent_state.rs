@@ -1,5 +1,4 @@
 use {
-    log::*,
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         pubkey::Pubkey,
@@ -7,6 +6,7 @@ use {
         transaction::{Result, TransactionError},
         transaction_context::TransactionContext,
     },
+    log::*,
 };
 
 #[derive(Debug, PartialEq, Eq)]

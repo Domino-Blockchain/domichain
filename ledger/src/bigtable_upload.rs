@@ -1,9 +1,9 @@
 use {
     crate::blockstore::Blockstore,
     crossbeam_channel::{bounded, unbounded},
-    log::*,
     domichain_measure::measure::Measure,
     domichain_sdk::clock::Slot,
+    log::*,
     std::{
         cmp::{max, min},
         collections::HashSet,

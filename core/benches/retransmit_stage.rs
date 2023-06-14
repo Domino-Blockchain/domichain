@@ -5,7 +5,6 @@ extern crate test;
 
 use {
     crossbeam_channel::unbounded,
-    log::*,
     domichain_core::retransmit_stage::retransmitter,
     domichain_entry::entry::Entry,
     domichain_gossip::{
@@ -27,6 +26,7 @@ use {
         timing::timestamp,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
     std::{
         net::UdpSocket,
         sync::{

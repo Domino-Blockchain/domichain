@@ -1,7 +1,6 @@
 #[cfg(test)]
 pub(crate) mod tests {
     use {
-        rand::Rng,
         domichain_runtime::{
             bank::Bank,
             vote_account::{VoteAccount, VoteAccounts},
@@ -23,6 +22,7 @@ pub(crate) mod tests {
             vote_instruction,
             vote_state::{VoteInit, VoteState, VoteStateVersions},
         },
+        rand::Rng,
     };
 
     pub(crate) fn setup_vote_and_stake_accounts(

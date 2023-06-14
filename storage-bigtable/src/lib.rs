@@ -2,8 +2,6 @@
 
 use {
     crate::bigtable::RowKey,
-    log::*,
-    serde::{Deserialize, Serialize},
     domichain_metrics::{datapoint_info, inc_new_counter_debug},
     domichain_sdk::{
         clock::{Slot, UnixTimestamp},
@@ -22,6 +20,8 @@ use {
         TransactionConfirmationStatus, TransactionStatus, TransactionStatusMeta,
         TransactionWithStatusMeta, VersionedConfirmedBlock, VersionedTransactionWithStatusMeta,
     },
+    log::*,
+    serde::{Deserialize, Serialize},
     std::{
         collections::{HashMap, HashSet},
         convert::TryInto,

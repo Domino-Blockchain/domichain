@@ -1,8 +1,8 @@
 use {
     bzip2::bufread::BzDecoder,
+    domichain_sdk::genesis_config::{GenesisConfig, DEFAULT_GENESIS_ARCHIVE, DEFAULT_GENESIS_FILE},
     log::*,
     rand::{thread_rng, Rng},
-    domichain_sdk::genesis_config::{GenesisConfig, DEFAULT_GENESIS_ARCHIVE, DEFAULT_GENESIS_FILE},
     std::{
         collections::HashMap,
         fs::{self, File},

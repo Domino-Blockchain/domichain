@@ -1639,7 +1639,6 @@ fn do_create_account(
 mod tests {
     use {
         super::*,
-        proptest::prelude::*,
         domichain_program_runtime::invoke_context::InvokeContext,
         domichain_sdk::{
             account::{create_account_shared_data_for_test, AccountSharedData},
@@ -1648,6 +1647,7 @@ mod tests {
             sysvar::SysvarId,
             transaction_context::TransactionContext,
         },
+        proptest::prelude::*,
     };
 
     #[test]

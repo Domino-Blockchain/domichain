@@ -1,8 +1,8 @@
 use {
     crate::crds_gossip::CrdsGossip,
-    itertools::Itertools,
     domichain_measure::measure::Measure,
     domichain_sdk::{clock::Slot, pubkey::Pubkey},
+    itertools::Itertools,
     std::{
         cmp::Reverse,
         collections::HashMap,

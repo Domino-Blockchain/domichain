@@ -5,8 +5,6 @@ use {
     },
     bincode::deserialize,
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
-    reqwest::blocking::Client,
-    serde_json::{Map, Value},
     domichain_account_decoder::validator_info::{
         self, ValidatorInfo, MAX_LONG_FIELD_LENGTH, MAX_SHORT_FIELD_LENGTH,
     },
@@ -26,6 +24,8 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
+    reqwest::blocking::Client,
+    serde_json::{Map, Value},
     std::{error, sync::Arc},
 };
 

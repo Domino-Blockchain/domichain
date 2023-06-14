@@ -1,7 +1,7 @@
 //! The `Poh` module provides an object for generating a Proof of History.
 use {
-    log::*,
     domichain_sdk::hash::{hash, hashv, Hash},
+    log::*,
     std::time::{Duration, Instant},
 };
 
@@ -131,8 +131,8 @@ pub fn compute_hashes_per_tick(duration: Duration, hashes_sample_size: u64) -> u
 mod tests {
     use {
         crate::poh::{Poh, PohEntry},
-        matches::assert_matches,
         domichain_sdk::hash::{hash, hashv, Hash},
+        matches::assert_matches,
         std::time::Duration,
     };
 

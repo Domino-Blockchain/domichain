@@ -7,10 +7,6 @@ use {
         vote_account::{VoteAccount, VoteAccounts},
     },
     dashmap::DashMap,
-    im::HashMap as ImHashMap,
-    num_derive::ToPrimitive,
-    num_traits::ToPrimitive,
-    rayon::{prelude::*, ThreadPool},
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::{Epoch, Slot},
@@ -18,6 +14,10 @@ use {
         stake::state::{Delegation, StakeActivationStatus},
     },
     domichain_vote_program::vote_state::VoteState,
+    im::HashMap as ImHashMap,
+    num_derive::ToPrimitive,
+    num_traits::ToPrimitive,
+    rayon::{prelude::*, ThreadPool},
     std::{
         collections::HashMap,
         ops::Add,
@@ -484,11 +484,11 @@ pub(crate) mod serde_stakes_enum_compat {
 pub mod tests {
     use {
         super::*,
-        rand::Rng,
-        rayon::ThreadPoolBuilder,
         domichain_sdk::{account::WritableAccount, pubkey::Pubkey, rent::Rent, stake},
         domichain_stake_program::stake_state,
         domichain_vote_program::vote_state::{self, VoteState, VoteStateVersions},
+        rand::Rng,
+        rayon::ThreadPoolBuilder,
     };
 
     //  set up some dummies for a staked node     ((     vote      )  (     stake     ))
@@ -914,8 +914,8 @@ pub mod tests {
             let vote_account = vote_state::create_account(
                 &vote_pubkey,
                 &domichain_sdk::pubkey::new_rand(), // node_pubkey
-                rng.gen_range(0, 101),           // commission
-                rng.gen_range(0, 1_000_000),     // lamports
+                rng.gen_range(0, 101),              // commission
+                rng.gen_range(0, 1_000_000),        // lamports
             );
             stakes_cache.check_and_store(&vote_pubkey, &vote_account);
             for _ in 0..rng.gen_range(10usize, 20) {

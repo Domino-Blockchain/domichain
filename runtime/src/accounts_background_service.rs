@@ -12,13 +12,13 @@ use {
         snapshot_utils::{self, SnapshotError},
     },
     crossbeam_channel::{Receiver, SendError, Sender, TrySendError},
-    log::*,
-    rand::{thread_rng, Rng},
     domichain_measure::measure::Measure,
     domichain_sdk::{
         clock::{BankId, Slot},
         hash::Hash,
     },
+    log::*,
+    rand::{thread_rng, Rng},
     std::{
         boxed::Box,
         fmt::{Debug, Formatter},

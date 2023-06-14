@@ -3,9 +3,9 @@
 extern crate test;
 
 use {
+    domichain_gossip::weighted_shuffle::WeightedShuffle,
     rand::{Rng, SeedableRng},
     rand_chacha::ChaChaRng,
-    domichain_gossip::weighted_shuffle::WeightedShuffle,
     std::iter::repeat_with,
     test::Bencher,
 };

@@ -1,7 +1,7 @@
 use {
     core::fmt,
-    enum_iterator::IntoEnumIterator,
     domichain_sdk::{pubkey::Pubkey, saturating_add_assign},
+    enum_iterator::IntoEnumIterator,
     std::{
         collections::HashMap,
         ops::{Index, IndexMut},

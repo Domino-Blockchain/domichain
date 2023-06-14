@@ -1,9 +1,9 @@
 //! Implementation defined RPC server errors
 use {
     crate::rpc_response::RpcSimulateTransactionResult,
-    jsonrpc_core::{Error, ErrorCode},
     domichain_sdk::clock::Slot,
     domichain_transaction_status::EncodeError,
+    jsonrpc_core::{Error, ErrorCode},
     thiserror::Error,
 };
 

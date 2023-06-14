@@ -1,7 +1,6 @@
 use {
     crate::transaction_notifier_interface::TransactionNotifierLock,
     crossbeam_channel::{Receiver, RecvTimeoutError},
-    itertools::izip,
     domichain_ledger::{
         blockstore::Blockstore,
         blockstore_processor::{TransactionStatusBatch, TransactionStatusMessage},
@@ -10,6 +9,7 @@ use {
     domichain_transaction_status::{
         extract_and_fmt_memos, InnerInstructions, Reward, TransactionStatusMeta,
     },
+    itertools::izip,
     std::{
         sync::{
             atomic::{AtomicBool, AtomicU64, Ordering},
@@ -216,7 +216,9 @@ pub(crate) mod tests {
         dashmap::DashMap,
         domichain_account_decoder::parse_token::token_amount_to_ui_amount,
         domichain_ledger::{genesis_utils::create_genesis_config, get_tmp_ledger_path},
-        domichain_runtime::bank::{Bank, NonceFull, NoncePartial, RentDebits, TransactionBalancesSet},
+        domichain_runtime::bank::{
+            Bank, NonceFull, NoncePartial, RentDebits, TransactionBalancesSet,
+        },
         domichain_sdk::{
             account_utils::StateMut,
             clock::Slot,

@@ -162,7 +162,11 @@ impl Parse for ProgramSdkId {
 
 impl ToTokens for ProgramSdkId {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        id_to_tokens(&self.0, quote! { ::domichain_program::pubkey::Pubkey }, tokens)
+        id_to_tokens(
+            &self.0,
+            quote! { ::domichain_program::pubkey::Pubkey },
+            tokens,
+        )
     }
 }
 
@@ -175,7 +179,11 @@ impl Parse for ProgramSdkIdDeprecated {
 
 impl ToTokens for ProgramSdkIdDeprecated {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        deprecated_id_to_tokens(&self.0, quote! { ::domichain_program::pubkey::Pubkey }, tokens)
+        deprecated_id_to_tokens(
+            &self.0,
+            quote! { ::domichain_program::pubkey::Pubkey },
+            tokens,
+        )
     }
 }
 

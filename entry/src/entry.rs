@@ -7,11 +7,6 @@ use {
     crossbeam_channel::{Receiver, Sender},
     dlopen::symbor::{Container, SymBorApi, Symbol},
     dlopen_derive::SymBorApi,
-    lazy_static::lazy_static,
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::{prelude::*, ThreadPool},
-    serde::{Deserialize, Serialize},
     domichain_measure::measure::Measure,
     domichain_merkle_tree::MerkleTree,
     domichain_metrics::*,
@@ -32,6 +27,11 @@ use {
             TransactionVerificationMode, VersionedTransaction,
         },
     },
+    lazy_static::lazy_static,
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::{prelude::*, ThreadPool},
+    serde::{Deserialize, Serialize},
     std::{
         cmp,
         ffi::OsStr,
@@ -67,16 +67,16 @@ fn init(name: &OsStr) {
     unsafe {
         INIT_HOOK.call_once(|| {
             let path;
-            let lib_name = if let Some(perf_libs_path) = domichain_perf::perf_libs::locate_perf_libs()
-            {
-                domichain_perf::perf_libs::append_to_ld_library_path(
-                    perf_libs_path.to_str().unwrap_or("").to_string(),
-                );
-                path = perf_libs_path.join(name);
-                path.as_os_str()
-            } else {
-                name
-            };
+            let lib_name =
+                if let Some(perf_libs_path) = domichain_perf::perf_libs::locate_perf_libs() {
+                    domichain_perf::perf_libs::append_to_ld_library_path(
+                        perf_libs_path.to_str().unwrap_or("").to_string(),
+                    );
+                    path = perf_libs_path.join(name);
+                    path.as_os_str()
+                } else {
+                    name
+                };
 
             API = Container::load(lib_name).ok();
         })

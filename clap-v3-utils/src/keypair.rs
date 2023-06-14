@@ -17,7 +17,6 @@ use {
     },
     bip39::{Language, Mnemonic, Seed},
     clap::ArgMatches,
-    rpassword::prompt_password,
     domichain_remote_wallet::{
         locator::{Locator as RemoteWalletLocator, LocatorError as RemoteWalletLocatorError},
         remote_keypair::generate_remote_keypair,
@@ -34,6 +33,7 @@ use {
             read_keypair, read_keypair_file, Keypair, NullSigner, Presigner, Signature, Signer,
         },
     },
+    rpassword::prompt_password,
     std::{
         cell::RefCell,
         convert::TryFrom,
@@ -1127,7 +1127,9 @@ mod tests {
         super::*,
         crate::offline::OfflineArgs,
         clap::{Arg, Command},
-        domichain_remote_wallet::{locator::Manufacturer, remote_wallet::initialize_wallet_manager},
+        domichain_remote_wallet::{
+            locator::Manufacturer, remote_wallet::initialize_wallet_manager,
+        },
         domichain_sdk::{signer::keypair::write_keypair_file, system_instruction},
         tempfile::{NamedTempFile, TempDir},
     };

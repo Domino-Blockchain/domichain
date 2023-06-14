@@ -22,7 +22,7 @@ mod tests {
         },
     };
 
-/*     #[test]
+    /*     #[test]
     fn test_quic_client_multiple_writes() {
         domichain_logger::setup();
         let s = UdpSocket::bind("127.0.0.1:0").unwrap();

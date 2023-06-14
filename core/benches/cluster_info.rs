@@ -3,7 +3,6 @@
 extern crate test;
 
 use {
-    rand::{thread_rng, Rng},
     domichain_core::{
         broadcast_stage::{
             broadcast_metrics::TransmitShredsStats, broadcast_shreds, BroadcastStage,
@@ -25,6 +24,7 @@ use {
         timing::{timestamp, AtomicInterval},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    rand::{thread_rng, Rng},
     std::{
         collections::HashMap,
         net::UdpSocket,

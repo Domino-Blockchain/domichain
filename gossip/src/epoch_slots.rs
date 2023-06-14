@@ -5,12 +5,12 @@ use {
     },
     bincode::serialized_size,
     bv::BitVec,
-    flate2::{Compress, Compression, Decompress, FlushCompress, FlushDecompress},
     domichain_sdk::{
         clock::Slot,
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
     },
+    flate2::{Compress, Compression, Decompress, FlushCompress, FlushDecompress},
 };
 
 const MAX_SLOTS_PER_ENTRY: usize = 2048 * 8;

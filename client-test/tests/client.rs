@@ -1,7 +1,4 @@
 use {
-    futures_util::StreamExt,
-    serde_json::{json, Value},
-    serial_test::serial,
     domichain_client::{
         nonblocking,
         pubsub_client::PubsubClient,
@@ -39,6 +36,9 @@ use {
     domichain_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, TransactionDetails, UiTransactionEncoding,
     },
+    futures_util::StreamExt,
+    serde_json::{json, Value},
+    serial_test::serial,
     std::{
         collections::HashSet,
         net::{IpAddr, SocketAddr},

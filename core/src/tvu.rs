@@ -326,7 +326,6 @@ impl Tvu {
 pub mod tests {
     use {
         super::*,
-        serial_test::serial,
         domichain_gossip::cluster_info::{ClusterInfo, Node},
         domichain_ledger::{
             blockstore::BlockstoreSignals,
@@ -339,6 +338,7 @@ pub mod tests {
         domichain_runtime::bank::Bank,
         domichain_sdk::signature::{Keypair, Signer},
         domichain_streamer::socket::SocketAddrSpace,
+        serial_test::serial,
         std::sync::atomic::{AtomicU64, Ordering},
     };
 

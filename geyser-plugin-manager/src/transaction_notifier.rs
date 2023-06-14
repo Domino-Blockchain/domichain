@@ -1,7 +1,6 @@
 /// Module responsible for notifying plugins of transactions
 use {
     crate::geyser_plugin_manager::GeyserPluginManager,
-    log::*,
     domichain_geyser_plugin_interface::geyser_plugin_interface::{
         ReplicaTransactionInfo, ReplicaTransactionInfoVersions,
     },
@@ -10,6 +9,7 @@ use {
     domichain_rpc::transaction_notifier_interface::TransactionNotifier,
     domichain_sdk::{clock::Slot, signature::Signature, transaction::SanitizedTransaction},
     domichain_transaction_status::TransactionStatusMeta,
+    log::*,
     std::sync::{Arc, RwLock},
 };
 

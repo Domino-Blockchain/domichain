@@ -11,7 +11,6 @@ use {
         result::{Error, Result},
     },
     crossbeam_channel::{unbounded, Receiver, RecvTimeoutError, Sender},
-    rayon::{prelude::*, ThreadPool},
     domichain_gossip::cluster_info::ClusterInfo,
     domichain_ledger::{
         blockstore::{self, Blockstore, BlockstoreInsertionMetrics},
@@ -24,6 +23,7 @@ use {
     domichain_rayon_threadlimit::get_thread_count,
     domichain_runtime::{bank::Bank, bank_forks::BankForks},
     domichain_sdk::{clock::Slot, pubkey::Pubkey},
+    rayon::{prelude::*, ThreadPool},
     std::{
         cmp::Reverse,
         collections::{HashMap, HashSet},

@@ -13,8 +13,6 @@ use {
         },
     },
     crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender},
-    rayon::prelude::*,
-    serde::Serialize,
     domichain_account_decoder::{parse_token::is_known_spl_token_id, UiAccount, UiAccountEncoding},
     domichain_client::rpc_response::{
         ProcessedSignatureResult, ReceivedSignatureResult, Response as RpcResponse, RpcBlockUpdate,
@@ -41,6 +39,8 @@ use {
     domichain_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, EncodeError, VersionedConfirmedBlock,
     },
+    rayon::prelude::*,
+    serde::Serialize,
     std::{
         cell::RefCell,
         collections::{HashMap, VecDeque},
@@ -1242,7 +1242,6 @@ pub(crate) mod tests {
             rpc_pubsub::RpcSolPubSubInternal,
             rpc_pubsub_service,
         },
-        serial_test::serial,
         domichain_client::rpc_config::{
             RpcAccountInfoConfig, RpcBlockSubscribeConfig, RpcBlockSubscribeFilter,
             RpcProgramAccountsConfig, RpcSignatureSubscribeConfig, RpcTransactionLogsConfig,
@@ -1260,6 +1259,7 @@ pub(crate) mod tests {
             transaction::Transaction,
         },
         domichain_transaction_status::{TransactionDetails, UiTransactionEncoding},
+        serial_test::serial,
         std::{
             collections::HashSet,
             sync::atomic::{AtomicU64, Ordering::Relaxed},

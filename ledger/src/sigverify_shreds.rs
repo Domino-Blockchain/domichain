@@ -1,9 +1,6 @@
 #![allow(clippy::implicit_hasher)]
 use {
     crate::shred,
-    itertools::Itertools,
-    rayon::{prelude::*, ThreadPool},
-    sha2::{Digest, Sha512},
     domichain_metrics::inc_new_counter_debug,
     domichain_perf::{
         cuda_runtime::PinnedVec,
@@ -18,6 +15,9 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signature, Signer},
     },
+    itertools::Itertools,
+    rayon::{prelude::*, ThreadPool},
+    sha2::{Digest, Sha512},
     std::{collections::HashMap, fmt::Debug, iter::repeat, mem::size_of, ops::Range, sync::Arc},
 };
 

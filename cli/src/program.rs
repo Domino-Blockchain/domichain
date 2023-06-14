@@ -8,7 +8,6 @@ use {
     },
     bip39::{Language, Mnemonic, MnemonicType, Seed},
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
-    log::*,
     domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
     domichain_bpf_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
     domichain_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
@@ -44,6 +43,7 @@ use {
         transaction::{Transaction, TransactionError},
         transaction_context::TransactionContext,
     },
+    log::*,
     solana_rbpf::{
         elf::Executable,
         verifier::RequisiteVerifier,
@@ -2311,9 +2311,9 @@ mod tests {
             clap_app::get_clap_app,
             cli::{parse_command, process_command},
         },
-        serde_json::Value,
         domichain_cli_output::OutputFormat,
         domichain_sdk::signature::write_keypair_file,
+        serde_json::Value,
     };
 
     fn make_tmp_path(name: &str) -> String {

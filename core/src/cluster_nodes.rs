@@ -1,9 +1,5 @@
 use {
     crate::{broadcast_stage::BroadcastStage, retransmit_stage::RetransmitStage},
-    itertools::Itertools,
-    lru::LruCache,
-    rand::{seq::SliceRandom, Rng, SeedableRng},
-    rand_chacha::ChaChaRng,
     domichain_gossip::{
         cluster_info::{compute_retransmit_peers, ClusterInfo},
         contact_info::ContactInfo,
@@ -22,6 +18,10 @@ use {
         timing::timestamp,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    itertools::Itertools,
+    lru::LruCache,
+    rand::{seq::SliceRandom, Rng, SeedableRng},
+    rand_chacha::ChaChaRng,
     std::{
         any::TypeId,
         cmp::Reverse,

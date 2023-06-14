@@ -1,9 +1,6 @@
 use {
+    domichain_sdk::{pubkey::Pubkey, signature::Keypair},
     libvrf::vrf::*,
-    domichain_sdk::{
-        pubkey::Pubkey,
-        signature::{Keypair},
-    },
     std::fs::read,
 };
 

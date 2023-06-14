@@ -10,7 +10,6 @@ use {
         snapshot_utils::ArchiveFormat,
     },
     bincode::serialize_into,
-    rand::{thread_rng, Rng},
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::Slot,
@@ -19,6 +18,7 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
+    rand::{thread_rng, Rng},
     std::{
         io::{BufReader, Cursor},
         path::Path,

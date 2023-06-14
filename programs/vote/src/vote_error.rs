@@ -1,9 +1,9 @@
 //! Vote program errors
 
 use {
+    domichain_sdk::decode_error::DecodeError,
     log::*,
     num_derive::{FromPrimitive, ToPrimitive},
-    domichain_sdk::decode_error::DecodeError,
     thiserror::Error,
 };
 

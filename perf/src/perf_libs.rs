@@ -2,8 +2,8 @@ use {
     core::ffi::c_void,
     dlopen::symbor::{Container, SymBorApi, Symbol},
     dlopen_derive::SymBorApi,
-    log::*,
     domichain_sdk::packet::Packet,
+    log::*,
     std::{
         env,
         ffi::OsStr,

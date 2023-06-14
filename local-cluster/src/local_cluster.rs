@@ -4,8 +4,6 @@ use {
         cluster_tests,
         validator_configs::*,
     },
-    itertools::izip,
-    log::*,
     domichain_client::{
         connection_cache::{
             ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC,
@@ -48,6 +46,8 @@ use {
         vote_instruction,
         vote_state::{VoteInit, VoteState},
     },
+    itertools::izip,
+    log::*,
     std::{
         collections::HashMap,
         io::{Error, ErrorKind, Result},

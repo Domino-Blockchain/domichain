@@ -5,8 +5,6 @@ extern crate test;
 
 use {
     dashmap::DashMap,
-    rand::Rng,
-    rayon::iter::{IntoParallelRefIterator, ParallelIterator},
     domichain_runtime::{
         accounts::{test_utils::create_test_accounts, AccountAddressFilter, Accounts},
         accounts_db::AccountShrinkThreshold,
@@ -23,6 +21,8 @@ use {
         pubkey::Pubkey,
         sysvar::epoch_schedule::EpochSchedule,
     },
+    rand::Rng,
+    rayon::iter::{IntoParallelRefIterator, ParallelIterator},
     std::{
         collections::{HashMap, HashSet},
         path::PathBuf,

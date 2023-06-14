@@ -2,9 +2,9 @@
 pub use domichain_test_validator as test_validator;
 use {
     console::style,
+    domichain_net_utils::MINIMUM_VALIDATOR_PORT_RANGE_WIDTH,
     fd_lock::{RwLock, RwLockWriteGuard},
     indicatif::{ProgressDrawTarget, ProgressStyle},
-    domichain_net_utils::MINIMUM_VALIDATOR_PORT_RANGE_WIDTH,
     std::{
         borrow::Cow,
         env,

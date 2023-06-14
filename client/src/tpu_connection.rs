@@ -1,9 +1,9 @@
 use {
     crate::{quic_client::QuicTpuConnection, udp_client::UdpTpuConnection},
-    enum_dispatch::enum_dispatch,
-    rayon::iter::{IntoParallelIterator, ParallelIterator},
     domichain_metrics::MovingStat,
     domichain_sdk::{transaction::VersionedTransaction, transport::Result as TransportResult},
+    enum_dispatch::enum_dispatch,
+    rayon::iter::{IntoParallelIterator, ParallelIterator},
     std::{net::SocketAddr, sync::atomic::AtomicU64},
 };
 

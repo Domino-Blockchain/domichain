@@ -1,8 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     common::*,
-    log::*,
-    serial_test::serial,
     domichain_core::validator::ValidatorConfig,
     domichain_ledger::{ancestor_iterator::AncestorIterator, leader_schedule::FixedSchedule},
     domichain_local_cluster::{
@@ -15,6 +13,8 @@ use {
         signature::{Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    serial_test::serial,
     std::{
         sync::Arc,
         thread::sleep,
@@ -63,9 +63,8 @@ fn do_test_choice_committee() {
     let (validator_a_pubkey, validator_b_pubkey, validator_c_pubkey) =
         (validators[0], validators[1], validators[2]);
 
-    
     let mut default_config = ValidatorConfig::default_for_test();
-   
+
     let validator_to_slots = vec![
         // Ensure validator b is leader for slots <= `next_slot_on_a`
         (validator_b_pubkey, next_slot_on_a as usize + 1),
@@ -205,7 +204,6 @@ fn do_test_choice_committee() {
     {
         let blockstore = open_blockstore(&val_a_ledger_path);
         purge_slots(&blockstore, next_slot_on_a + 1, truncated_slots);
-        
     }
 
     // Step 3:
@@ -262,5 +260,4 @@ fn do_test_choice_committee() {
     }
 
     info!("Observed A's votes on: {:?}", a_votes);
-
 }

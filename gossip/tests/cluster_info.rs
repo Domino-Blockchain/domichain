@@ -1,11 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
-    itertools::Itertools,
-    rand::SeedableRng,
-    rand_chacha::ChaChaRng,
-    rayon::{iter::ParallelIterator, prelude::*},
-    serial_test::serial,
     domichain_gossip::{
         cluster_info::{compute_retransmit_peers, ClusterInfo},
         contact_info::ContactInfo,
@@ -13,6 +8,11 @@ use {
     },
     domichain_sdk::{pubkey::Pubkey, signer::keypair::Keypair},
     domichain_streamer::socket::SocketAddrSpace,
+    itertools::Itertools,
+    rand::SeedableRng,
+    rand_chacha::ChaChaRng,
+    rayon::{iter::ParallelIterator, prelude::*},
+    serial_test::serial,
     std::{
         collections::{HashMap, HashSet},
         sync::{Arc, Mutex},

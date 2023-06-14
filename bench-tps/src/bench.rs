@@ -4,8 +4,6 @@ use {
         cli::Config,
         perf_utils::{sample_txs, SampleStats},
     },
-    log::*,
-    rayon::prelude::*,
     domichain_core::gen_keys::GenKeys,
     domichain_measure::measure::Measure,
     domichain_metrics::{self, datapoint_info},
@@ -22,6 +20,8 @@ use {
         timing::{duration_as_ms, duration_as_s, duration_as_us, timestamp},
         transaction::Transaction,
     },
+    log::*,
+    rayon::prelude::*,
     std::{
         collections::{HashSet, VecDeque},
         process::exit,
@@ -109,8 +109,7 @@ fn generate_chunked_transfers<T>(
     threads: usize,
     duration: Duration,
     sustained: bool,
-)
-where
+) where
     T: 'static + BenchTpsClient + Send + Sync,
 {
     // generate and send transactions for the specified duration
@@ -130,11 +129,15 @@ where
             reclaim_lamports_back_to_source_account,
         );
 
-        let balances: u64 = source_keypair_chunks.iter()
+        let balances: u64 = source_keypair_chunks
+            .iter()
             .flatten()
             .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
             .sum();
-        info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
+        info!(
+            "generate_chunked_transfers is_zero={} balances={balances}",
+            balances == 0
+        );
 
         datapoint_info!(
             "blockhash_stats",
@@ -227,7 +230,8 @@ where
         ..
     } = config;
 
-    let balances_before: u64 = gen_keypairs.iter()
+    let balances_before: u64 = gen_keypairs
+        .iter()
         .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
         .sum();
     let mut source_keypair_chunks: Vec<Vec<&Keypair>> = Vec::new();
@@ -326,7 +330,8 @@ where
     let balance = client.get_balance(&id.pubkey()).unwrap_or(0);
     metrics_submit_lamport_balance(balance);
 
-    let balances_after: u64 = gen_keypairs.iter()
+    let balances_after: u64 = gen_keypairs
+        .iter()
         .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
         .sum();
     info!("balances_before balances={balances_before}");
@@ -972,7 +977,8 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync>(
             max_fee,
             lamports_per_account,
         );
-        let balances: u64 = keypairs.iter()
+        let balances: u64 = keypairs
+            .iter()
             .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
             .sum();
         info!("total={total}, max_fee={max_fee}, lamports_per_account={lamports_per_account}");

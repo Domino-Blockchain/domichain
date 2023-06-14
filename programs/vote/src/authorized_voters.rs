@@ -1,7 +1,7 @@
 use {
+    domichain_sdk::{clock::Epoch, pubkey::Pubkey},
     log::*,
     serde_derive::{Deserialize, Serialize},
-    domichain_sdk::{clock::Epoch, pubkey::Pubkey},
     std::collections::BTreeMap,
 };
 

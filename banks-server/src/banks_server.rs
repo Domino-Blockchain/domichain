@@ -1,7 +1,6 @@
 use {
     bincode::{deserialize, serialize},
     crossbeam_channel::{unbounded, Receiver, Sender},
-    futures::{future, prelude::stream::StreamExt},
     domichain_banks_interface::{
         Banks, BanksRequest, BanksResponse, BanksTransactionResultWithSimulation,
         TransactionConfirmationStatus, TransactionSimulationDetails, TransactionStatus,
@@ -28,6 +27,7 @@ use {
         send_transaction_service::{SendTransactionService, TransactionInfo},
         tpu_info::NullTpuInfo,
     },
+    futures::{future, prelude::stream::StreamExt},
     std::{
         convert::TryFrom,
         io,

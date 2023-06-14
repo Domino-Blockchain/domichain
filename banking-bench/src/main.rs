@@ -2,10 +2,9 @@
 use {
     clap::{crate_description, crate_name, Arg, ArgEnum, Command},
     crossbeam_channel::{unbounded, Receiver},
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::prelude::*,
-    domichain_client::connection_cache::{ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE},
+    domichain_client::connection_cache::{
+        ConnectionCache, UseQUIC, DEFAULT_TPU_CONNECTION_POOL_SIZE,
+    },
     domichain_core::banking_stage::BankingStage,
     domichain_gossip::cluster_info::{ClusterInfo, Node},
     domichain_ledger::{
@@ -29,6 +28,9 @@ use {
         transaction::Transaction,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::prelude::*,
     std::{
         sync::{atomic::Ordering, Arc, Mutex, RwLock},
         thread::sleep,

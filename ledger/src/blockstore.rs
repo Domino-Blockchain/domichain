@@ -24,12 +24,6 @@ use {
     bincode::deserialize,
     crossbeam_channel::{bounded, Receiver, Sender, TrySendError},
     dashmap::DashSet,
-    log::*,
-    rayon::{
-        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
-        ThreadPool,
-    },
-    rocksdb::DBRawIterator,
     domichain_entry::entry::{create_ticks, Entry},
     domichain_measure::measure::Measure,
     domichain_metrics::{
@@ -37,7 +31,9 @@ use {
         poh_timing_point::{send_poh_timing_point, PohTimingSender, SlotPohTimingInfo},
     },
     domichain_rayon_threadlimit::get_max_thread_count,
-    domichain_runtime::hardened_unpack::{unpack_genesis_archive, MAX_GENESIS_ARCHIVE_UNPACKED_SIZE},
+    domichain_runtime::hardened_unpack::{
+        unpack_genesis_archive, MAX_GENESIS_ARCHIVE_UNPACKED_SIZE,
+    },
     domichain_sdk::{
         clock::{Slot, UnixTimestamp, DEFAULT_TICKS_PER_SECOND, MS_PER_TICK},
         genesis_config::{GenesisConfig, DEFAULT_GENESIS_ARCHIVE, DEFAULT_GENESIS_FILE},
@@ -53,6 +49,12 @@ use {
         TransactionStatusMeta, TransactionWithStatusMeta, VersionedConfirmedBlock,
         VersionedTransactionWithStatusMeta,
     },
+    log::*,
+    rayon::{
+        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+        ThreadPool,
+    },
+    rocksdb::DBRawIterator,
     std::{
         borrow::Cow,
         cell::RefCell,
@@ -4284,8 +4286,6 @@ pub mod tests {
         assert_matches::assert_matches,
         bincode::serialize,
         crossbeam_channel::unbounded,
-        itertools::Itertools,
-        rand::{seq::SliceRandom, thread_rng},
         domichain_account_decoder::parse_token::UiTokenAmount,
         domichain_entry::entry::{next_entry, next_entry_mut},
         domichain_runtime::bank::{Bank, RewardType},
@@ -4300,7 +4300,11 @@ pub mod tests {
             transaction_context::TransactionReturnData,
         },
         domichain_storage_proto::convert::generated,
-        domichain_transaction_status::{InnerInstructions, Reward, Rewards, TransactionTokenBalance},
+        domichain_transaction_status::{
+            InnerInstructions, Reward, Rewards, TransactionTokenBalance,
+        },
+        itertools::Itertools,
+        rand::{seq::SliceRandom, thread_rng},
         std::{thread::Builder, time::Duration},
     };
 
@@ -6380,205 +6384,205 @@ pub mod tests {
         assert_eq!(blockstore.lowest_slot(), 2);
     }
 
-/*     #[test]
-    fn test_get_rooted_block() {
-        let slot = 10;
-        let entries = make_slot_entries_with_transactions(100);
-        let blockhash = get_last_hash(entries.iter()).unwrap();
-        let shreds = entries_to_test_shreds(&entries, slot, slot - 1, true, 0);
-        let more_shreds = entries_to_test_shreds(&entries, slot + 1, slot, true, 0);
-        let unrooted_shreds = entries_to_test_shreds(&entries, slot + 2, slot + 1, true, 0);
-        let ledger_path = get_tmp_ledger_path_auto_delete!();
-        let blockstore = Blockstore::open(ledger_path.path()).unwrap();
-        blockstore.insert_shreds(shreds, None, false).unwrap();
-        blockstore.insert_shreds(more_shreds, None, false).unwrap();
-        blockstore
-            .insert_shreds(unrooted_shreds, None, false)
-            .unwrap();
-        blockstore
-            .set_roots(vec![slot - 1, slot, slot + 1].iter())
-            .unwrap();
+    /*     #[test]
+       fn test_get_rooted_block() {
+           let slot = 10;
+           let entries = make_slot_entries_with_transactions(100);
+           let blockhash = get_last_hash(entries.iter()).unwrap();
+           let shreds = entries_to_test_shreds(&entries, slot, slot - 1, true, 0);
+           let more_shreds = entries_to_test_shreds(&entries, slot + 1, slot, true, 0);
+           let unrooted_shreds = entries_to_test_shreds(&entries, slot + 2, slot + 1, true, 0);
+           let ledger_path = get_tmp_ledger_path_auto_delete!();
+           let blockstore = Blockstore::open(ledger_path.path()).unwrap();
+           blockstore.insert_shreds(shreds, None, false).unwrap();
+           blockstore.insert_shreds(more_shreds, None, false).unwrap();
+           blockstore
+               .insert_shreds(unrooted_shreds, None, false)
+               .unwrap();
+           blockstore
+               .set_roots(vec![slot - 1, slot, slot + 1].iter())
+               .unwrap();
 
-        let parent_meta = SlotMeta::default();
-        blockstore
-            .put_meta_bytes(slot - 1, &serialize(&parent_meta).unwrap())
-            .unwrap();
+           let parent_meta = SlotMeta::default();
+           blockstore
+               .put_meta_bytes(slot - 1, &serialize(&parent_meta).unwrap())
+               .unwrap();
 
-        let expected_transactions: Vec<VersionedTransactionWithStatusMeta> = entries
-            .iter()
-            .cloned()
-            .filter(|entry| !entry.is_tick())
-            .flat_map(|entry| entry.transactions)
-            .map(|transaction| {
-                let mut pre_balances: Vec<u64> = vec![];
-                let mut post_balances: Vec<u64> = vec![];
-                for i in 0..transaction.message.static_account_keys().len() {
-                    pre_balances.push(i as u64 * 10);
-                    post_balances.push(i as u64 * 11);
-                }
-                let signature = transaction.signatures[0];
-                let status = TransactionStatusMeta {
-                    status: Ok(()),
-                    fee: 42,
-                    pre_balances: pre_balances.clone(),
-                    post_balances: post_balances.clone(),
-                    inner_instructions: Some(vec![]),
-                    log_messages: Some(vec![]),
-                    pre_token_balances: Some(vec![]),
-                    post_token_balances: Some(vec![]),
-                    rewards: Some(vec![]),
-                    loaded_addresses: LoadedAddresses::default(),
-                    return_data: Some(TransactionReturnData::default()),
-                }
-                .into();
-                blockstore
-                    .transaction_status_cf
-                    .put_protobuf((0, signature, slot), &status)
-                    .unwrap();
-                let status = TransactionStatusMeta {
-                    status: Ok(()),
-                    fee: 42,
-                    pre_balances: pre_balances.clone(),
-                    post_balances: post_balances.clone(),
-                    inner_instructions: Some(vec![]),
-                    log_messages: Some(vec![]),
-                    pre_token_balances: Some(vec![]),
-                    post_token_balances: Some(vec![]),
-                    rewards: Some(vec![]),
-                    loaded_addresses: LoadedAddresses::default(),
-                    return_data: Some(TransactionReturnData::default()),
-                }
-                .into();
-                blockstore
-                    .transaction_status_cf
-                    .put_protobuf((0, signature, slot + 1), &status)
-                    .unwrap();
-                let status = TransactionStatusMeta {
-                    status: Ok(()),
-                    fee: 42,
-                    pre_balances: pre_balances.clone(),
-                    post_balances: post_balances.clone(),
-                    inner_instructions: Some(vec![]),
-                    log_messages: Some(vec![]),
-                    pre_token_balances: Some(vec![]),
-                    post_token_balances: Some(vec![]),
-                    rewards: Some(vec![]),
-                    loaded_addresses: LoadedAddresses::default(),
-                    return_data: Some(TransactionReturnData::default()),
-                }
-                .into();
-                blockstore
-                    .transaction_status_cf
-                    .put_protobuf((0, signature, slot + 2), &status)
-                    .unwrap();
-                VersionedTransactionWithStatusMeta {
-                    transaction,
-                    meta: TransactionStatusMeta {
-                        status: Ok(()),
-                        fee: 42,
-                        pre_balances,
-                        post_balances,
-                        inner_instructions: Some(vec![]),
-                        log_messages: Some(vec![]),
-                        pre_token_balances: Some(vec![]),
-                        post_token_balances: Some(vec![]),
-                        rewards: Some(vec![]),
-                        loaded_addresses: LoadedAddresses::default(),
-                        return_data: Some(TransactionReturnData::default()),
-                    },
-                }
-            })
-            .collect();
+           let expected_transactions: Vec<VersionedTransactionWithStatusMeta> = entries
+               .iter()
+               .cloned()
+               .filter(|entry| !entry.is_tick())
+               .flat_map(|entry| entry.transactions)
+               .map(|transaction| {
+                   let mut pre_balances: Vec<u64> = vec![];
+                   let mut post_balances: Vec<u64> = vec![];
+                   for i in 0..transaction.message.static_account_keys().len() {
+                       pre_balances.push(i as u64 * 10);
+                       post_balances.push(i as u64 * 11);
+                   }
+                   let signature = transaction.signatures[0];
+                   let status = TransactionStatusMeta {
+                       status: Ok(()),
+                       fee: 42,
+                       pre_balances: pre_balances.clone(),
+                       post_balances: post_balances.clone(),
+                       inner_instructions: Some(vec![]),
+                       log_messages: Some(vec![]),
+                       pre_token_balances: Some(vec![]),
+                       post_token_balances: Some(vec![]),
+                       rewards: Some(vec![]),
+                       loaded_addresses: LoadedAddresses::default(),
+                       return_data: Some(TransactionReturnData::default()),
+                   }
+                   .into();
+                   blockstore
+                       .transaction_status_cf
+                       .put_protobuf((0, signature, slot), &status)
+                       .unwrap();
+                   let status = TransactionStatusMeta {
+                       status: Ok(()),
+                       fee: 42,
+                       pre_balances: pre_balances.clone(),
+                       post_balances: post_balances.clone(),
+                       inner_instructions: Some(vec![]),
+                       log_messages: Some(vec![]),
+                       pre_token_balances: Some(vec![]),
+                       post_token_balances: Some(vec![]),
+                       rewards: Some(vec![]),
+                       loaded_addresses: LoadedAddresses::default(),
+                       return_data: Some(TransactionReturnData::default()),
+                   }
+                   .into();
+                   blockstore
+                       .transaction_status_cf
+                       .put_protobuf((0, signature, slot + 1), &status)
+                       .unwrap();
+                   let status = TransactionStatusMeta {
+                       status: Ok(()),
+                       fee: 42,
+                       pre_balances: pre_balances.clone(),
+                       post_balances: post_balances.clone(),
+                       inner_instructions: Some(vec![]),
+                       log_messages: Some(vec![]),
+                       pre_token_balances: Some(vec![]),
+                       post_token_balances: Some(vec![]),
+                       rewards: Some(vec![]),
+                       loaded_addresses: LoadedAddresses::default(),
+                       return_data: Some(TransactionReturnData::default()),
+                   }
+                   .into();
+                   blockstore
+                       .transaction_status_cf
+                       .put_protobuf((0, signature, slot + 2), &status)
+                       .unwrap();
+                   VersionedTransactionWithStatusMeta {
+                       transaction,
+                       meta: TransactionStatusMeta {
+                           status: Ok(()),
+                           fee: 42,
+                           pre_balances,
+                           post_balances,
+                           inner_instructions: Some(vec![]),
+                           log_messages: Some(vec![]),
+                           pre_token_balances: Some(vec![]),
+                           post_token_balances: Some(vec![]),
+                           rewards: Some(vec![]),
+                           loaded_addresses: LoadedAddresses::default(),
+                           return_data: Some(TransactionReturnData::default()),
+                       },
+                   }
+               })
+               .collect();
 
-        // Even if marked as root, a slot that is empty of entries should return an error
-        assert_matches!(
-            blockstore.get_rooted_block(slot - 1, true),
-            Err(BlockstoreError::SlotUnavailable)
-        );
+           // Even if marked as root, a slot that is empty of entries should return an error
+           assert_matches!(
+               blockstore.get_rooted_block(slot - 1, true),
+               Err(BlockstoreError::SlotUnavailable)
+           );
 
-        // The previous_blockhash of `expected_block` is default because its parent slot is a root,
-        // but empty of entries (eg. snapshot root slots). This now returns an error.
-        assert_matches!(
-            blockstore.get_rooted_block(slot, true),
-            Err(BlockstoreError::ParentEntriesUnavailable)
-        );
+           // The previous_blockhash of `expected_block` is default because its parent slot is a root,
+           // but empty of entries (eg. snapshot root slots). This now returns an error.
+           assert_matches!(
+               blockstore.get_rooted_block(slot, true),
+               Err(BlockstoreError::ParentEntriesUnavailable)
+           );
 
-        // Test if require_previous_blockhash is false
-        let confirmed_block = blockstore.get_rooted_block(slot, false).unwrap();
-        assert_eq!(confirmed_block.transactions.len(), 100);
-        let expected_block = VersionedConfirmedBlock {
-            transactions: expected_transactions.clone(),
-            parent_slot: slot - 1,
-            blockhash: blockhash.to_string(),
-            previous_blockhash: Hash::default().to_string(),
-            rewards: vec![],
-            block_time: None,
-            block_height: None,
-            seed: Hash::default(),
-        };
-        assert_eq!(confirmed_block, expected_block);
+           // Test if require_previous_blockhash is false
+           let confirmed_block = blockstore.get_rooted_block(slot, false).unwrap();
+           assert_eq!(confirmed_block.transactions.len(), 100);
+           let expected_block = VersionedConfirmedBlock {
+               transactions: expected_transactions.clone(),
+               parent_slot: slot - 1,
+               blockhash: blockhash.to_string(),
+               previous_blockhash: Hash::default().to_string(),
+               rewards: vec![],
+               block_time: None,
+               block_height: None,
+               seed: Hash::default(),
+           };
+           assert_eq!(confirmed_block, expected_block);
 
-        let confirmed_block = blockstore.get_rooted_block(slot + 1, true).unwrap();
-        assert_eq!(confirmed_block.transactions.len(), 100);
+           let confirmed_block = blockstore.get_rooted_block(slot + 1, true).unwrap();
+           assert_eq!(confirmed_block.transactions.len(), 100);
 
-        let mut expected_block = VersionedConfirmedBlock {
-            transactions: expected_transactions.clone(),
-            parent_slot: slot,
-            blockhash: blockhash.to_string(),
-            previous_blockhash: blockhash.to_string(),
-            rewards: vec![],
-            block_time: None,
-            block_height: None,
-            seed: Hash::default(),
-        };
-        assert_eq!(confirmed_block, expected_block);
+           let mut expected_block = VersionedConfirmedBlock {
+               transactions: expected_transactions.clone(),
+               parent_slot: slot,
+               blockhash: blockhash.to_string(),
+               previous_blockhash: blockhash.to_string(),
+               rewards: vec![],
+               block_time: None,
+               block_height: None,
+               seed: Hash::default(),
+           };
+           assert_eq!(confirmed_block, expected_block);
 
-        let not_root = blockstore.get_rooted_block(slot + 2, true).unwrap_err();
-        assert_matches!(not_root, BlockstoreError::SlotNotRooted);
+           let not_root = blockstore.get_rooted_block(slot + 2, true).unwrap_err();
+           assert_matches!(not_root, BlockstoreError::SlotNotRooted);
 
-        let complete_block = blockstore.get_complete_block(slot + 2, true).unwrap();
-        assert_eq!(complete_block.transactions.len(), 100);
+           let complete_block = blockstore.get_complete_block(slot + 2, true).unwrap();
+           assert_eq!(complete_block.transactions.len(), 100);
 
-        let mut expected_complete_block = VersionedConfirmedBlock {
-            transactions: expected_transactions,
-            parent_slot: slot + 1,
-            blockhash: blockhash.to_string(),
-            previous_blockhash: blockhash.to_string(),
-            rewards: vec![],
-            block_time: None,
-            block_height: None,
-            seed: Hash::default(),
-        };
-        assert_eq!(complete_block, expected_complete_block);
+           let mut expected_complete_block = VersionedConfirmedBlock {
+               transactions: expected_transactions,
+               parent_slot: slot + 1,
+               blockhash: blockhash.to_string(),
+               previous_blockhash: blockhash.to_string(),
+               rewards: vec![],
+               block_time: None,
+               block_height: None,
+               seed: Hash::default(),
+           };
+           assert_eq!(complete_block, expected_complete_block);
 
-        // Test block_time & block_height return, if available
-        let timestamp = 1_576_183_541;
-        blockstore.blocktime_cf.put(slot + 1, &timestamp).unwrap();
-        expected_block.block_time = Some(timestamp);
-        let block_height = slot - 2;
-        blockstore
-            .block_height_cf
-            .put(slot + 1, &block_height)
-            .unwrap();
-        expected_block.block_height = Some(block_height);
+           // Test block_time & block_height return, if available
+           let timestamp = 1_576_183_541;
+           blockstore.blocktime_cf.put(slot + 1, &timestamp).unwrap();
+           expected_block.block_time = Some(timestamp);
+           let block_height = slot - 2;
+           blockstore
+               .block_height_cf
+               .put(slot + 1, &block_height)
+               .unwrap();
+           expected_block.block_height = Some(block_height);
 
-        let confirmed_block = blockstore.get_rooted_block(slot + 1, true).unwrap();
-        assert_eq!(confirmed_block, expected_block);
+           let confirmed_block = blockstore.get_rooted_block(slot + 1, true).unwrap();
+           assert_eq!(confirmed_block, expected_block);
 
-        let timestamp = 1_576_183_542;
-        blockstore.blocktime_cf.put(slot + 2, &timestamp).unwrap();
-        expected_complete_block.block_time = Some(timestamp);
-        let block_height = slot - 1;
-        blockstore
-            .block_height_cf
-            .put(slot + 2, &block_height)
-            .unwrap();
-        expected_complete_block.block_height = Some(block_height);
+           let timestamp = 1_576_183_542;
+           blockstore.blocktime_cf.put(slot + 2, &timestamp).unwrap();
+           expected_complete_block.block_time = Some(timestamp);
+           let block_height = slot - 1;
+           blockstore
+               .block_height_cf
+               .put(slot + 2, &block_height)
+               .unwrap();
+           expected_complete_block.block_height = Some(block_height);
 
-        let complete_block = blockstore.get_complete_block(slot + 2, true).unwrap();
-        assert_eq!(complete_block, expected_complete_block);
-    }
- */
+           let complete_block = blockstore.get_complete_block(slot + 2, true).unwrap();
+           assert_eq!(complete_block, expected_complete_block);
+       }
+    */
     #[test]
     fn test_persist_transaction_status() {
         let ledger_path = get_tmp_ledger_path_auto_delete!();
@@ -6613,7 +6617,9 @@ pub mod tests {
 
         // insert value
         let status = TransactionStatusMeta {
-            status: domichain_sdk::transaction::Result::<()>::Err(TransactionError::AccountNotFound),
+            status: domichain_sdk::transaction::Result::<()>::Err(
+                TransactionError::AccountNotFound,
+            ),
             fee: 5u64,
             pre_balances: pre_balances_vec.clone(),
             post_balances: post_balances_vec.clone(),
@@ -7725,449 +7731,449 @@ pub mod tests {
         }
     }
 
-/*     #[test]
-    fn test_get_confirmed_signatures_for_address2() {
-        let ledger_path = get_tmp_ledger_path_auto_delete!();
-        let blockstore = Blockstore::open(ledger_path.path()).unwrap();
+    /*     #[test]
+       fn test_get_confirmed_signatures_for_address2() {
+           let ledger_path = get_tmp_ledger_path_auto_delete!();
+           let blockstore = Blockstore::open(ledger_path.path()).unwrap();
 
-        let (shreds, _) = make_slot_entries(1, 0, 4);
-        blockstore.insert_shreds(shreds, None, false).unwrap();
+           let (shreds, _) = make_slot_entries(1, 0, 4);
+           blockstore.insert_shreds(shreds, None, false).unwrap();
 
-        fn make_slot_entries_with_transaction_addresses(addresses: &[Pubkey]) -> Vec<Entry> {
-            let mut entries: Vec<Entry> = Vec::new();
-            for address in addresses {
-                let transaction = Transaction::new_with_compiled_instructions(
-                    &[&Keypair::new()],
-                    &[*address],
-                    Hash::default(),
-                    vec![domichain_sdk::pubkey::new_rand()],
-                    vec![CompiledInstruction::new(1, &(), vec![0])],
-                );
-                entries.push(next_entry_mut(&mut Hash::default(), 0, vec![transaction]));
-                let mut tick = create_ticks(1, 0, hash(&serialize(address).unwrap()));
-                entries.append(&mut tick);
-            }
-            entries
-        }
+           fn make_slot_entries_with_transaction_addresses(addresses: &[Pubkey]) -> Vec<Entry> {
+               let mut entries: Vec<Entry> = Vec::new();
+               for address in addresses {
+                   let transaction = Transaction::new_with_compiled_instructions(
+                       &[&Keypair::new()],
+                       &[*address],
+                       Hash::default(),
+                       vec![domichain_sdk::pubkey::new_rand()],
+                       vec![CompiledInstruction::new(1, &(), vec![0])],
+                   );
+                   entries.push(next_entry_mut(&mut Hash::default(), 0, vec![transaction]));
+                   let mut tick = create_ticks(1, 0, hash(&serialize(address).unwrap()));
+                   entries.append(&mut tick);
+               }
+               entries
+           }
 
-        let address0 = domichain_sdk::pubkey::new_rand();
-        let address1 = domichain_sdk::pubkey::new_rand();
+           let address0 = domichain_sdk::pubkey::new_rand();
+           let address1 = domichain_sdk::pubkey::new_rand();
 
-        for slot in 2..=8 {
-            let entries = make_slot_entries_with_transaction_addresses(&[
-                address0, address1, address0, address1,
-            ]);
-            let shreds = entries_to_test_shreds(&entries, slot, slot - 1, true, 0);
-            blockstore.insert_shreds(shreds, None, false).unwrap();
+           for slot in 2..=8 {
+               let entries = make_slot_entries_with_transaction_addresses(&[
+                   address0, address1, address0, address1,
+               ]);
+               let shreds = entries_to_test_shreds(&entries, slot, slot - 1, true, 0);
+               blockstore.insert_shreds(shreds, None, false).unwrap();
 
-            for entry in entries.into_iter() {
-                for transaction in entry.transactions {
-                    assert_eq!(transaction.signatures.len(), 1);
-                    blockstore
-                        .write_transaction_status(
-                            slot,
-                            transaction.signatures[0],
-                            transaction.message.static_account_keys().iter().collect(),
-                            vec![],
-                            TransactionStatusMeta::default(),
-                        )
-                        .unwrap();
-                }
-            }
-        }
+               for entry in entries.into_iter() {
+                   for transaction in entry.transactions {
+                       assert_eq!(transaction.signatures.len(), 1);
+                       blockstore
+                           .write_transaction_status(
+                               slot,
+                               transaction.signatures[0],
+                               transaction.message.static_account_keys().iter().collect(),
+                               vec![],
+                               TransactionStatusMeta::default(),
+                           )
+                           .unwrap();
+                   }
+               }
+           }
 
-        // Add 2 slots that both descend from slot 8
-        for slot in 9..=10 {
-            let entries = make_slot_entries_with_transaction_addresses(&[
-                address0, address1, address0, address1,
-            ]);
-            let shreds = entries_to_test_shreds(&entries, slot, 8, true, 0);
-            blockstore.insert_shreds(shreds, None, false).unwrap();
+           // Add 2 slots that both descend from slot 8
+           for slot in 9..=10 {
+               let entries = make_slot_entries_with_transaction_addresses(&[
+                   address0, address1, address0, address1,
+               ]);
+               let shreds = entries_to_test_shreds(&entries, slot, 8, true, 0);
+               blockstore.insert_shreds(shreds, None, false).unwrap();
 
-            for entry in entries.into_iter() {
-                for transaction in entry.transactions {
-                    assert_eq!(transaction.signatures.len(), 1);
-                    blockstore
-                        .write_transaction_status(
-                            slot,
-                            transaction.signatures[0],
-                            transaction.message.static_account_keys().iter().collect(),
-                            vec![],
-                            TransactionStatusMeta::default(),
-                        )
-                        .unwrap();
-                }
-            }
-        }
+               for entry in entries.into_iter() {
+                   for transaction in entry.transactions {
+                       assert_eq!(transaction.signatures.len(), 1);
+                       blockstore
+                           .write_transaction_status(
+                               slot,
+                               transaction.signatures[0],
+                               transaction.message.static_account_keys().iter().collect(),
+                               vec![],
+                               TransactionStatusMeta::default(),
+                           )
+                           .unwrap();
+                   }
+               }
+           }
 
-        // Leave one slot unrooted to test only returns confirmed signatures
-        blockstore
-            .set_roots(vec![1, 2, 4, 5, 6, 7, 8].iter())
-            .unwrap();
-        let highest_confirmed_root = 8;
+           // Leave one slot unrooted to test only returns confirmed signatures
+           blockstore
+               .set_roots(vec![1, 2, 4, 5, 6, 7, 8].iter())
+               .unwrap();
+           let highest_confirmed_root = 8;
 
-        // Fetch all rooted signatures for address 0 at once...
-        let sig_infos = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                None,
-                None,
-                usize::MAX,
-            )
-            .unwrap();
-        assert!(sig_infos.found_before);
-        let all0 = sig_infos.infos;
-        assert_eq!(all0.len(), 12);
+           // Fetch all rooted signatures for address 0 at once...
+           let sig_infos = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   None,
+                   None,
+                   usize::MAX,
+               )
+               .unwrap();
+           assert!(sig_infos.found_before);
+           let all0 = sig_infos.infos;
+           assert_eq!(all0.len(), 12);
 
-        // Fetch all rooted signatures for address 1 at once...
-        let all1 = blockstore
-            .get_confirmed_signatures_for_address2(
-                address1,
-                highest_confirmed_root,
-                None,
-                None,
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        assert_eq!(all1.len(), 12);
+           // Fetch all rooted signatures for address 1 at once...
+           let all1 = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address1,
+                   highest_confirmed_root,
+                   None,
+                   None,
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           assert_eq!(all1.len(), 12);
 
-        // Fetch all signatures for address 0 individually
-        for i in 0..all0.len() {
-            let sig_infos = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_root,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    None,
-                    1,
-                )
-                .unwrap();
-            assert!(sig_infos.found_before);
-            let results = sig_infos.infos;
-            assert_eq!(results.len(), 1);
-            assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
-        }
-        // Fetch all signatures for address 0 individually using `until`
-        for i in 0..all0.len() {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_root,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    if i == all0.len() - 1 || i == all0.len() {
-                        None
-                    } else {
-                        Some(all0[i + 1].signature)
-                    },
-                    10,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 1);
-            assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
-        }
+           // Fetch all signatures for address 0 individually
+           for i in 0..all0.len() {
+               let sig_infos = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_root,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       None,
+                       1,
+                   )
+                   .unwrap();
+               assert!(sig_infos.found_before);
+               let results = sig_infos.infos;
+               assert_eq!(results.len(), 1);
+               assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
+           }
+           // Fetch all signatures for address 0 individually using `until`
+           for i in 0..all0.len() {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_root,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       if i == all0.len() - 1 || i == all0.len() {
+                           None
+                       } else {
+                           Some(all0[i + 1].signature)
+                       },
+                       10,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 1);
+               assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
+           }
 
-        let sig_infos = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                Some(all0[all0.len() - 1].signature),
-                None,
-                1,
-            )
-            .unwrap();
-        assert!(sig_infos.found_before);
-        assert!(sig_infos.infos.is_empty());
+           let sig_infos = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   Some(all0[all0.len() - 1].signature),
+                   None,
+                   1,
+               )
+               .unwrap();
+           assert!(sig_infos.found_before);
+           assert!(sig_infos.infos.is_empty());
 
-        assert!(blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                None,
-                Some(all0[0].signature),
-                2,
-            )
-            .unwrap()
-            .infos
-            .is_empty());
+           assert!(blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   None,
+                   Some(all0[0].signature),
+                   2,
+               )
+               .unwrap()
+               .infos
+               .is_empty());
 
-        // Fetch all signatures for address 0, three at a time
-        assert!(all0.len() % 3 == 0);
-        for i in (0..all0.len()).step_by(3) {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_root,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    None,
-                    3,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 3);
-            assert_eq!(results[0], all0[i]);
-            assert_eq!(results[1], all0[i + 1]);
-            assert_eq!(results[2], all0[i + 2]);
-        }
+           // Fetch all signatures for address 0, three at a time
+           assert!(all0.len() % 3 == 0);
+           for i in (0..all0.len()).step_by(3) {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_root,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       None,
+                       3,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 3);
+               assert_eq!(results[0], all0[i]);
+               assert_eq!(results[1], all0[i + 1]);
+               assert_eq!(results[2], all0[i + 2]);
+           }
 
-        // Ensure that the signatures within a slot are reverse ordered by signature
-        // (current limitation of the .get_confirmed_signatures_for_address2())
-        for i in (0..all1.len()).step_by(2) {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address1,
-                    highest_confirmed_root,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all1[i - 1].signature)
-                    },
-                    None,
-                    2,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 2);
-            assert_eq!(results[0].slot, results[1].slot);
-            assert!(results[0].signature >= results[1].signature);
-            assert_eq!(results[0], all1[i]);
-            assert_eq!(results[1], all1[i + 1]);
-        }
+           // Ensure that the signatures within a slot are reverse ordered by signature
+           // (current limitation of the .get_confirmed_signatures_for_address2())
+           for i in (0..all1.len()).step_by(2) {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address1,
+                       highest_confirmed_root,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all1[i - 1].signature)
+                       },
+                       None,
+                       2,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 2);
+               assert_eq!(results[0].slot, results[1].slot);
+               assert!(results[0].signature >= results[1].signature);
+               assert_eq!(results[0], all1[i]);
+               assert_eq!(results[1], all1[i + 1]);
+           }
 
-        // A search for address 0 with `before` and/or `until` signatures from address1 should also work
-        let sig_infos = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                Some(all1[0].signature),
-                None,
-                usize::MAX,
-            )
-            .unwrap();
-        assert!(sig_infos.found_before);
-        let results = sig_infos.infos;
-        // The exact number of results returned is variable, based on the sort order of the
-        // random signatures that are generated
-        assert!(!results.is_empty());
+           // A search for address 0 with `before` and/or `until` signatures from address1 should also work
+           let sig_infos = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   Some(all1[0].signature),
+                   None,
+                   usize::MAX,
+               )
+               .unwrap();
+           assert!(sig_infos.found_before);
+           let results = sig_infos.infos;
+           // The exact number of results returned is variable, based on the sort order of the
+           // random signatures that are generated
+           assert!(!results.is_empty());
 
-        let results2 = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                Some(all1[0].signature),
-                Some(all1[4].signature),
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        assert!(results2.len() < results.len());
+           let results2 = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   Some(all1[0].signature),
+                   Some(all1[4].signature),
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           assert!(results2.len() < results.len());
 
-        // Duplicate all tests using confirmed signatures
-        let highest_confirmed_slot = 10;
+           // Duplicate all tests using confirmed signatures
+           let highest_confirmed_slot = 10;
 
-        // Fetch all signatures for address 0 at once...
-        let all0 = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_slot,
-                None,
-                None,
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        assert_eq!(all0.len(), 14);
+           // Fetch all signatures for address 0 at once...
+           let all0 = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_slot,
+                   None,
+                   None,
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           assert_eq!(all0.len(), 14);
 
-        // Fetch all signatures for address 1 at once...
-        let all1 = blockstore
-            .get_confirmed_signatures_for_address2(
-                address1,
-                highest_confirmed_slot,
-                None,
-                None,
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        assert_eq!(all1.len(), 14);
+           // Fetch all signatures for address 1 at once...
+           let all1 = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address1,
+                   highest_confirmed_slot,
+                   None,
+                   None,
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           assert_eq!(all1.len(), 14);
 
-        // Fetch all signatures for address 0 individually
-        for i in 0..all0.len() {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_slot,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    None,
-                    1,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 1);
-            assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
-        }
-        // Fetch all signatures for address 0 individually using `until`
-        for i in 0..all0.len() {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_slot,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    if i == all0.len() - 1 || i == all0.len() {
-                        None
-                    } else {
-                        Some(all0[i + 1].signature)
-                    },
-                    10,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 1);
-            assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
-        }
+           // Fetch all signatures for address 0 individually
+           for i in 0..all0.len() {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_slot,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       None,
+                       1,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 1);
+               assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
+           }
+           // Fetch all signatures for address 0 individually using `until`
+           for i in 0..all0.len() {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_slot,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       if i == all0.len() - 1 || i == all0.len() {
+                           None
+                       } else {
+                           Some(all0[i + 1].signature)
+                       },
+                       10,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 1);
+               assert_eq!(results[0], all0[i], "Unexpected result for {}", i);
+           }
 
-        assert!(blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_slot,
-                Some(all0[all0.len() - 1].signature),
-                None,
-                1,
-            )
-            .unwrap()
-            .infos
-            .is_empty());
+           assert!(blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_slot,
+                   Some(all0[all0.len() - 1].signature),
+                   None,
+                   1,
+               )
+               .unwrap()
+               .infos
+               .is_empty());
 
-        assert!(blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_slot,
-                None,
-                Some(all0[0].signature),
-                2,
-            )
-            .unwrap()
-            .infos
-            .is_empty());
+           assert!(blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_slot,
+                   None,
+                   Some(all0[0].signature),
+                   2,
+               )
+               .unwrap()
+               .infos
+               .is_empty());
 
-        // Fetch all signatures for address 0, three at a time
-        assert!(all0.len() % 3 == 2);
-        for i in (0..all0.len()).step_by(3) {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address0,
-                    highest_confirmed_slot,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all0[i - 1].signature)
-                    },
-                    None,
-                    3,
-                )
-                .unwrap()
-                .infos;
-            if i < 12 {
-                assert_eq!(results.len(), 3);
-                assert_eq!(results[2], all0[i + 2]);
-            } else {
-                assert_eq!(results.len(), 2);
-            }
-            assert_eq!(results[0], all0[i]);
-            assert_eq!(results[1], all0[i + 1]);
-        }
+           // Fetch all signatures for address 0, three at a time
+           assert!(all0.len() % 3 == 2);
+           for i in (0..all0.len()).step_by(3) {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address0,
+                       highest_confirmed_slot,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all0[i - 1].signature)
+                       },
+                       None,
+                       3,
+                   )
+                   .unwrap()
+                   .infos;
+               if i < 12 {
+                   assert_eq!(results.len(), 3);
+                   assert_eq!(results[2], all0[i + 2]);
+               } else {
+                   assert_eq!(results.len(), 2);
+               }
+               assert_eq!(results[0], all0[i]);
+               assert_eq!(results[1], all0[i + 1]);
+           }
 
-        // Ensure that the signatures within a slot are reverse ordered by signature
-        // (current limitation of the .get_confirmed_signatures_for_address2())
-        for i in (0..all1.len()).step_by(2) {
-            let results = blockstore
-                .get_confirmed_signatures_for_address2(
-                    address1,
-                    highest_confirmed_slot,
-                    if i == 0 {
-                        None
-                    } else {
-                        Some(all1[i - 1].signature)
-                    },
-                    None,
-                    2,
-                )
-                .unwrap()
-                .infos;
-            assert_eq!(results.len(), 2);
-            assert_eq!(results[0].slot, results[1].slot);
-            assert!(results[0].signature >= results[1].signature);
-            assert_eq!(results[0], all1[i]);
-            assert_eq!(results[1], all1[i + 1]);
-        }
+           // Ensure that the signatures within a slot are reverse ordered by signature
+           // (current limitation of the .get_confirmed_signatures_for_address2())
+           for i in (0..all1.len()).step_by(2) {
+               let results = blockstore
+                   .get_confirmed_signatures_for_address2(
+                       address1,
+                       highest_confirmed_slot,
+                       if i == 0 {
+                           None
+                       } else {
+                           Some(all1[i - 1].signature)
+                       },
+                       None,
+                       2,
+                   )
+                   .unwrap()
+                   .infos;
+               assert_eq!(results.len(), 2);
+               assert_eq!(results[0].slot, results[1].slot);
+               assert!(results[0].signature >= results[1].signature);
+               assert_eq!(results[0], all1[i]);
+               assert_eq!(results[1], all1[i + 1]);
+           }
 
-        // A search for address 0 with `before` and/or `until` signatures from address1 should also work
-        let results = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_slot,
-                Some(all1[0].signature),
-                None,
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        // The exact number of results returned is variable, based on the sort order of the
-        // random signatures that are generated
-        assert!(!results.is_empty());
+           // A search for address 0 with `before` and/or `until` signatures from address1 should also work
+           let results = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_slot,
+                   Some(all1[0].signature),
+                   None,
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           // The exact number of results returned is variable, based on the sort order of the
+           // random signatures that are generated
+           assert!(!results.is_empty());
 
-        let results2 = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_slot,
-                Some(all1[0].signature),
-                Some(all1[4].signature),
-                usize::MAX,
-            )
-            .unwrap()
-            .infos;
-        assert!(results2.len() < results.len());
+           let results2 = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_slot,
+                   Some(all1[0].signature),
+                   Some(all1[4].signature),
+                   usize::MAX,
+               )
+               .unwrap()
+               .infos;
+           assert!(results2.len() < results.len());
 
-        // Remove signature
-        blockstore
-            .address_signatures_cf
-            .delete((0, address0, 2, all0[0].signature))
-            .unwrap();
-        let sig_infos = blockstore
-            .get_confirmed_signatures_for_address2(
-                address0,
-                highest_confirmed_root,
-                Some(all0[0].signature),
-                None,
-                usize::MAX,
-            )
-            .unwrap();
-        assert!(!sig_infos.found_before);
-        assert!(sig_infos.infos.is_empty());
-    }
- */
+           // Remove signature
+           blockstore
+               .address_signatures_cf
+               .delete((0, address0, 2, all0[0].signature))
+               .unwrap();
+           let sig_infos = blockstore
+               .get_confirmed_signatures_for_address2(
+                   address0,
+                   highest_confirmed_root,
+                   Some(all0[0].signature),
+                   None,
+                   usize::MAX,
+               )
+               .unwrap();
+           assert!(!sig_infos.found_before);
+           assert!(sig_infos.infos.is_empty());
+       }
+    */
     #[test]
     #[allow(clippy::same_item_push)]
     fn test_get_last_hash() {

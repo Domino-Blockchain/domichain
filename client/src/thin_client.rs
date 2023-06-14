@@ -9,7 +9,6 @@ use {
         rpc_config::RpcProgramAccountsConfig, rpc_response::Response,
         tpu_connection::TpuConnection,
     },
-    log::*,
     domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
@@ -28,6 +27,7 @@ use {
         transaction::{self, Transaction, VersionedTransaction},
         transport::Result as TransportResult,
     },
+    log::*,
     std::{
         io,
         net::SocketAddr,

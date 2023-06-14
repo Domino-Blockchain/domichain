@@ -3,9 +3,9 @@ use {
         check_num_accounts, ParsableProgram, ParseInstructionError, ParsedInstructionEnum,
     },
     bincode::deserialize,
-    serde_json::json,
     domichain_sdk::{instruction::CompiledInstruction, message::AccountKeys},
     domichain_vote_program::vote_instruction::VoteInstruction,
+    serde_json::json,
 };
 
 pub fn parse_vote(

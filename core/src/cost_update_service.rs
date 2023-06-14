@@ -139,7 +139,9 @@ impl CostUpdateService {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, domichain_program_runtime::timings::ProgramTiming, domichain_sdk::pubkey::Pubkey};
+    use {
+        super::*, domichain_program_runtime::timings::ProgramTiming, domichain_sdk::pubkey::Pubkey,
+    };
 
     #[test]
     fn test_update_cost_model_with_empty_execute_timings() {

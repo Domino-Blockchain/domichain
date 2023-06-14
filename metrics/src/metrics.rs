@@ -3,10 +3,10 @@
 use {
     crate::{counter::CounterPoint, datapoint::DataPoint},
     crossbeam_channel::{unbounded, Receiver, RecvTimeoutError, Sender},
+    domichain_sdk::hash::hash,
     gethostname::gethostname,
     lazy_static::lazy_static,
     log::*,
-    domichain_sdk::hash::hash,
     std::{
         cmp,
         collections::HashMap,

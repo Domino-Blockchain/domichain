@@ -7,8 +7,6 @@ use {
     chrono::{Local, TimeZone},
     console::{style, Emoji},
     crossbeam_channel::unbounded,
-    indicatif::{ProgressBar, ProgressStyle},
-    serde::{Deserialize, Serialize},
     domichain_client::rpc_client::RpcClient,
     domichain_config_program::{config_instruction, get_config_data, ConfigState},
     domichain_sdk::{
@@ -18,6 +16,8 @@ use {
         signature::{read_keypair_file, Keypair, Signable, Signer},
         transaction::Transaction,
     },
+    indicatif::{ProgressBar, ProgressStyle},
+    serde::{Deserialize, Serialize},
     std::{
         fs::{self, File},
         io::{self, BufReader, Read},

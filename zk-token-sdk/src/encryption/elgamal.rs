@@ -25,7 +25,6 @@ use {
         scalar::Scalar,
         traits::Identity,
     },
-    serde::{Deserialize, Serialize},
     domichain_sdk::{
         instruction::Instruction,
         message::Message,
@@ -33,6 +32,7 @@ use {
         signature::Signature,
         signer::{Signer, SignerError},
     },
+    serde::{Deserialize, Serialize},
     std::convert::TryInto,
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,

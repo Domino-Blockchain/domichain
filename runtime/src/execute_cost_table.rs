@@ -4,8 +4,8 @@
 /// When its capacity limit is reached, it prunes old and less-used programs
 /// to make room for new ones.
 use {
-    log::*, domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT,
-    domichain_sdk::pubkey::Pubkey, std::collections::HashMap,
+    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT,
+    domichain_sdk::pubkey::Pubkey, log::*, std::collections::HashMap,
 };
 
 // prune is rather expensive op, free up bulk space in each operation

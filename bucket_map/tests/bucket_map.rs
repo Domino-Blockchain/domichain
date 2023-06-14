@@ -1,8 +1,8 @@
 use {
-    rayon::prelude::*,
     domichain_bucket_map::bucket_map::{BucketMap, BucketMapConfig},
     domichain_measure::measure::Measure,
     domichain_sdk::pubkey::Pubkey,
+    rayon::prelude::*,
     std::path::PathBuf,
 };
 #[test]

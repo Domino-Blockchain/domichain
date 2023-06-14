@@ -11,8 +11,6 @@ use {
         recycler::Recycler,
     },
     ahash::AHasher,
-    rand::{thread_rng, Rng},
-    rayon::{prelude::*, ThreadPool},
     domichain_metrics::inc_new_counter_debug,
     domichain_rayon_threadlimit::get_thread_count,
     domichain_sdk::{
@@ -23,6 +21,8 @@ use {
         short_vec::decode_shortu16_len,
         signature::Signature,
     },
+    rand::{thread_rng, Rng},
+    rayon::{prelude::*, ThreadPool},
     std::{
         convert::TryFrom,
         hash::Hasher,
@@ -815,13 +815,13 @@ mod tests {
         },
         bincode::{deserialize, serialize},
         curve25519_dalek::{edwards::CompressedEdwardsY, scalar::Scalar},
-        rand::{thread_rng, Rng},
         domichain_sdk::{
             instruction::CompiledInstruction,
             message::{Message, MessageHeader},
             signature::{Keypair, Signature, Signer},
             transaction::Transaction,
         },
+        rand::{thread_rng, Rng},
         std::sync::atomic::{AtomicU64, Ordering},
     };
 

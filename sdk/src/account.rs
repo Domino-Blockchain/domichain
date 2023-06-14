@@ -4,8 +4,8 @@ use {
         lamports::LamportsError,
         pubkey::Pubkey,
     },
-    serde::ser::{Serialize, Serializer},
     domichain_program::{account_info::AccountInfo, debug_account_data::*, sysvar::Sysvar},
+    serde::ser::{Serialize, Serializer},
     std::{
         cell::{Ref, RefCell},
         fmt,

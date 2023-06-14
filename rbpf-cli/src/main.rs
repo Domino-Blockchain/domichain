@@ -1,7 +1,5 @@
 use {
     clap::{crate_version, Arg, Command},
-    serde::{Deserialize, Serialize},
-    serde_json::Result,
     domichain_bpf_loader_program::{
         create_vm, serialization::serialize_parameters, syscalls::register_syscalls, BpfError,
         ThisInstructionMeter,
@@ -11,6 +9,8 @@ use {
         account::AccountSharedData, bpf_loader, instruction::AccountMeta, pubkey::Pubkey,
         transaction_context::TransactionContext,
     },
+    serde::{Deserialize, Serialize},
+    serde_json::Result,
     solana_rbpf::{
         assembler::assemble,
         elf::Executable,

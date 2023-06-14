@@ -6,13 +6,13 @@
 
 use {
     crossbeam_channel::{Receiver, RecvTimeoutError},
-    rand::{thread_rng, Rng},
     domichain_ledger::{
         blockstore::{Blockstore, PurgeType},
         blockstore_db::Result as BlockstoreResult,
     },
     domichain_measure::measure::Measure,
     domichain_sdk::clock::{Slot, DEFAULT_TICKS_PER_SLOT, TICKS_PER_DAY},
+    rand::{thread_rng, Rng},
     std::{
         string::ToString,
         sync::{

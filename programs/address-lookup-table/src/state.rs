@@ -1,6 +1,5 @@
 use {
     crate::error::AddressLookupError,
-    serde::{Deserialize, Serialize},
     domichain_frozen_abi_macro::{AbiEnumVisitor, AbiExample},
     domichain_program::{
         clock::Slot,
@@ -8,6 +7,7 @@ use {
         pubkey::Pubkey,
         slot_hashes::{SlotHashes, MAX_ENTRIES},
     },
+    serde::{Deserialize, Serialize},
     std::borrow::Cow,
 };
 

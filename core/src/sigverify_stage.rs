@@ -9,7 +9,6 @@ use {
     crate::{find_packet_sender_stake_stage, sigverify},
     core::time::Duration,
     crossbeam_channel::{RecvTimeoutError, SendError},
-    itertools::Itertools,
     domichain_measure::measure::Measure,
     domichain_perf::{
         packet::{Packet, PacketBatch},
@@ -20,6 +19,7 @@ use {
     },
     domichain_sdk::timing,
     domichain_streamer::streamer::{self, StreamerError},
+    itertools::Itertools,
     std::{
         thread::{self, Builder, JoinHandle},
         time::Instant,

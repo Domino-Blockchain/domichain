@@ -1,7 +1,4 @@
 use {
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::prelude::*,
     domichain_runtime::{
         accounts_db::{AccountsDb, LoadHint},
         ancestors::Ancestors,
@@ -12,6 +9,9 @@ use {
         genesis_config::ClusterType,
         pubkey::Pubkey,
     },
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::prelude::*,
     std::{
         collections::HashSet,
         sync::{

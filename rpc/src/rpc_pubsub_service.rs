@@ -9,9 +9,9 @@ use {
         rpc_subscriptions::{RpcNotification, RpcSubscriptions},
     },
     dashmap::{mapref::entry::Entry, DashMap},
+    domichain_metrics::TokenCounter,
     jsonrpc_core::IoHandler,
     soketto::handshake::{server, Server},
-    domichain_metrics::TokenCounter,
     std::{
         io,
         net::SocketAddr,

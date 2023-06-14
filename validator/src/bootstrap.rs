@@ -1,6 +1,4 @@
 use {
-    log::*,
-    rand::{seq::SliceRandom, thread_rng, Rng},
     domichain_client::rpc_client::RpcClient,
     domichain_core::validator::{ValidatorConfig, ValidatorStartProgress},
     domichain_download_utils::{download_snapshot_archive, DownloadProgressRecord},
@@ -27,6 +25,8 @@ use {
         signature::{Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    rand::{seq::SliceRandom, thread_rng, Rng},
     std::{
         collections::{HashMap, HashSet},
         net::{SocketAddr, TcpListener, UdpSocket},

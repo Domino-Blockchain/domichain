@@ -1,9 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     bincode::serialized_size,
-    log::*,
-    rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
-    serial_test::serial,
     domichain_gossip::{
         cluster_info,
         cluster_info_metrics::GossipStats,
@@ -24,6 +21,9 @@ use {
         timing::timestamp,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
+    serial_test::serial,
     std::{
         collections::{HashMap, HashSet},
         ops::Deref,

@@ -4,9 +4,6 @@ use {
         spend_utils::*, stake::*, validator_info::*, vote::*, wallet::*,
     },
     clap::{crate_description, crate_name, value_t_or_exit, ArgMatches, Shell},
-    log::*,
-    num_traits::FromPrimitive,
-    serde_json::{self, Value},
     domichain_clap_utils::{self, input_parsers::*, keypair::*},
     domichain_cli_config::ConfigInput,
     domichain_cli_output::{
@@ -34,6 +31,9 @@ use {
         transaction::{TransactionError, VersionedTransaction},
     },
     domichain_vote_program::vote_state::VoteAuthorize,
+    log::*,
+    num_traits::FromPrimitive,
+    serde_json::{self, Value},
     std::{collections::HashMap, error, io::stdout, str::FromStr, sync::Arc, time::Duration},
     thiserror::Error,
 };
@@ -1622,7 +1622,6 @@ where
 mod tests {
     use {
         super::*,
-        serde_json::{json, Value},
         domichain_client::{
             blockhash_query,
             mock_sender_for_cli::SIGNATURE,
@@ -1638,6 +1637,7 @@ mod tests {
             transaction::TransactionError,
         },
         domichain_transaction_status::TransactionConfirmationStatus,
+        serde_json::{json, Value},
         std::path::PathBuf,
     };
 

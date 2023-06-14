@@ -22,13 +22,6 @@ use {
         crds_value::CrdsValue,
         ping_pong::PingCache,
     },
-    itertools::Itertools,
-    lru::LruCache,
-    rand::{
-        distributions::{Distribution, WeightedIndex},
-        Rng,
-    },
-    rayon::{prelude::*, ThreadPool},
     domichain_bloom::bloom::{AtomicBloom, Bloom},
     domichain_sdk::{
         hash::{hash, Hash},
@@ -36,6 +29,13 @@ use {
         signature::{Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    itertools::Itertools,
+    lru::LruCache,
+    rand::{
+        distributions::{Distribution, WeightedIndex},
+        Rng,
+    },
+    rayon::{prelude::*, ThreadPool},
     std::{
         collections::{HashMap, HashSet, VecDeque},
         convert::TryInto,
@@ -662,16 +662,16 @@ pub(crate) mod tests {
             contact_info::ContactInfo,
             crds_value::{CrdsData, Vote},
         },
-        itertools::Itertools,
-        rand::{seq::SliceRandom, thread_rng, SeedableRng},
-        rand_chacha::ChaChaRng,
-        rayon::ThreadPoolBuilder,
         domichain_perf::test_tx::new_test_vote_tx,
         domichain_sdk::{
             hash::{hash, HASH_BYTES},
             packet::PACKET_DATA_SIZE,
             timing::timestamp,
         },
+        itertools::Itertools,
+        rand::{seq::SliceRandom, thread_rng, SeedableRng},
+        rand_chacha::ChaChaRng,
+        rayon::ThreadPoolBuilder,
     };
 
     #[cfg(debug_assertions)]

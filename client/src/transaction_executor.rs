@@ -1,12 +1,12 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     crate::rpc_client::RpcClient,
-    log::*,
     domichain_measure::measure::Measure,
     domichain_sdk::{
         commitment_config::CommitmentConfig, signature::Signature, timing::timestamp,
         transaction::Transaction,
     },
+    log::*,
     std::{
         net::SocketAddr,
         sync::{

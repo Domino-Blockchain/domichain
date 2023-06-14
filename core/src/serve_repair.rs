@@ -9,11 +9,6 @@ use {
         result::{Error, Result},
     },
     bincode::serialize,
-    lru::LruCache,
-    rand::{
-        distributions::{Distribution, WeightedError, WeightedIndex},
-        Rng,
-    },
     domichain_gossip::{
         cluster_info::{ClusterInfo, ClusterInfoError},
         contact_info::ContactInfo,
@@ -30,6 +25,11 @@ use {
         clock::Slot, hash::Hash, packet::PACKET_DATA_SIZE, pubkey::Pubkey, timing::duration_as_ms,
     },
     domichain_streamer::streamer::{PacketBatchReceiver, PacketBatchSender},
+    lru::LruCache,
+    rand::{
+        distributions::{Distribution, WeightedError, WeightedIndex},
+        Rng,
+    },
     std::{
         collections::HashSet,
         net::SocketAddr,

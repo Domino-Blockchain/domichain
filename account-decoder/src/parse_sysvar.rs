@@ -224,7 +224,9 @@ mod test {
     use domichain_sdk::sysvar::recent_blockhashes::IterItem;
     use {
         super::*,
-        domichain_sdk::{account::create_account_for_test, fee_calculator::FeeCalculator, hash::Hash},
+        domichain_sdk::{
+            account::create_account_for_test, fee_calculator::FeeCalculator, hash::Hash,
+        },
     };
 
     #[test]

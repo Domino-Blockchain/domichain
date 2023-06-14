@@ -1,7 +1,7 @@
 use {
     clap::{crate_description, crate_name, value_t_or_exit, App, Arg},
-    log::*,
     domichain_runtime::append_vec::AppendVec,
+    log::*,
 };
 
 fn main() {

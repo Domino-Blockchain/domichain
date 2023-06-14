@@ -1,8 +1,8 @@
 use {
     crate::request_response::RequestResponse,
+    domichain_ledger::shred::Nonce,
     lru::LruCache,
     rand::{thread_rng, Rng},
-    domichain_ledger::shred::Nonce,
 };
 
 pub const DEFAULT_REQUEST_EXPIRATION_MS: u64 = 60_000;

@@ -3,7 +3,6 @@ use {
         block_metadata_notifier_interface::BlockMetadataNotifier,
         geyser_plugin_manager::GeyserPluginManager,
     },
-    log::*,
     domichain_geyser_plugin_interface::geyser_plugin_interface::{
         ReplicaBlockInfo, ReplicaBlockInfoVersions,
     },
@@ -12,6 +11,7 @@ use {
     domichain_runtime::bank::RewardInfo,
     domichain_sdk::{clock::UnixTimestamp, pubkey::Pubkey},
     domichain_transaction_status::{Reward, Rewards},
+    log::*,
     std::sync::{Arc, RwLock},
 };
 

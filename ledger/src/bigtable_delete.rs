@@ -1,4 +1,6 @@
-use {log::*, domichain_measure::measure::Measure, domichain_sdk::clock::Slot, std::result::Result};
+use {
+    domichain_measure::measure::Measure, domichain_sdk::clock::Slot, log::*, std::result::Result,
+};
 
 // Attempt to delete this many blocks in parallel
 const NUM_BLOCKS_TO_DELETE_IN_PARALLEL: usize = 32;

@@ -8,15 +8,16 @@ use {
         parse_token::{parse_token, spl_token_2022_id, spl_token_id},
         parse_vote::parse_vote,
     },
+    domichain_sdk::{instruction::InstructionError, pubkey::Pubkey, stake, system_program, sysvar},
     inflector::Inflector,
     serde_json::Value,
-    domichain_sdk::{instruction::InstructionError, pubkey::Pubkey, stake, system_program, sysvar},
     std::collections::HashMap,
     thiserror::Error,
 };
 
 lazy_static! {
-    static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::bpf_loader_upgradeable::id();
+    static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey =
+        domichain_sdk::bpf_loader_upgradeable::id();
     static ref CONFIG_PROGRAM_ID: Pubkey = domichain_config_program::id();
     static ref STAKE_PROGRAM_ID: Pubkey = stake::program::id();
     static ref SYSTEM_PROGRAM_ID: Pubkey = system_program::id();

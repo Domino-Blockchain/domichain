@@ -7,9 +7,9 @@ use {
         index_entry::IndexEntry,
         MaxSearch, RefCount,
     },
-    rand::{thread_rng, Rng},
     domichain_measure::measure::Measure,
     domichain_sdk::pubkey::Pubkey,
+    rand::{thread_rng, Rng},
     std::{
         collections::hash_map::DefaultHasher,
         hash::{Hash, Hasher},

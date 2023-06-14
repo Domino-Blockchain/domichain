@@ -1,6 +1,5 @@
 use {
     crate::crds_value::sanitize_wallclock,
-    itertools::Itertools,
     domichain_ledger::{
         blockstore_meta::DuplicateSlotProof,
         shred::{self, Shred, ShredType},
@@ -10,6 +9,7 @@ use {
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
     },
+    itertools::Itertools,
     std::{
         collections::{hash_map::Entry, HashMap},
         convert::TryFrom,
@@ -282,7 +282,6 @@ impl Sanitize for DuplicateShred {
 pub(crate) mod tests {
     use {
         super::*,
-        rand::Rng,
         domichain_entry::entry::Entry,
         domichain_ledger::shred::Shredder,
         domichain_sdk::{
@@ -290,6 +289,7 @@ pub(crate) mod tests {
             signature::{Keypair, Signer},
             system_transaction,
         },
+        rand::Rng,
         std::sync::Arc,
     };
 

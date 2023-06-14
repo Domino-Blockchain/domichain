@@ -4,8 +4,6 @@ use {
     clap::{
         value_t, value_t_or_exit, values_t_or_exit, App, AppSettings, Arg, ArgMatches, SubCommand,
     },
-    log::info,
-    serde_json::json,
     domichain_clap_utils::{
         input_parsers::pubkey_of,
         input_validators::{is_slot, is_valid_pubkey},
@@ -24,6 +22,8 @@ use {
         BlockEncodingOptions, ConfirmedBlock, EncodeError, TransactionDetails,
         UiTransactionEncoding,
     },
+    log::info,
+    serde_json::json,
     std::{
         cmp::min,
         collections::HashSet,

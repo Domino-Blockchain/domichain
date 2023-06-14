@@ -1,6 +1,5 @@
 use {
     assert_matches::assert_matches,
-    rand::thread_rng,
     domichain_program_test::*,
     domichain_sdk::{
         ed25519_instruction::new_ed25519_instruction,
@@ -8,6 +7,7 @@ use {
         signature::Signer,
         transaction::{Transaction, TransactionError},
     },
+    rand::thread_rng,
 };
 
 #[tokio::test]

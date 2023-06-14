@@ -4,8 +4,6 @@
 /// discover the rest of the network.
 use log::*;
 use {
-    rand::{thread_rng, Rng},
-    rayon::prelude::*,
     domichain_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
     domichain_core::consensus::VOTE_THRESHOLD_DEPTH,
     domichain_entry::entry::{Entry, EntrySlice},
@@ -33,6 +31,8 @@ use {
     },
     domichain_streamer::socket::SocketAddrSpace,
     domichain_vote_program::vote_transaction,
+    rand::{thread_rng, Rng},
+    rayon::prelude::*,
     std::{
         collections::{HashMap, HashSet},
         net::SocketAddr,

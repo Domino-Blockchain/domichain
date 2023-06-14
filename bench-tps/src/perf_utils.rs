@@ -1,7 +1,7 @@
 use {
     crate::bench_tps_client::BenchTpsClient,
-    log::*,
     domichain_sdk::{commitment_config::CommitmentConfig, timing::duration_as_s},
+    log::*,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},

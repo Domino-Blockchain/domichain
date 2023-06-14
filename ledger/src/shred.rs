@@ -58,8 +58,6 @@ use {
     self::{shred_code::ShredCode, traits::Shred as _},
     crate::blockstore::MAX_DATA_SHREDS_PER_SLOT,
     bitflags::bitflags,
-    num_enum::{IntoPrimitive, TryFromPrimitive},
-    serde::{Deserialize, Serialize},
     domichain_entry::entry::{create_ticks, Entry},
     domichain_perf::packet::Packet,
     domichain_sdk::{
@@ -68,6 +66,8 @@ use {
         pubkey::Pubkey,
         signature::{Keypair, Signature, Signer},
     },
+    num_enum::{IntoPrimitive, TryFromPrimitive},
+    serde::{Deserialize, Serialize},
     static_assertions::const_assert_eq,
     std::fmt::Debug,
     thiserror::Error,
@@ -748,10 +748,10 @@ mod tests {
     use {
         super::*,
         bincode::serialized_size,
+        domichain_sdk::{shred_version, signature::Signer},
         matches::assert_matches,
         rand::Rng,
         rand_chacha::{rand_core::SeedableRng, ChaChaRng},
-        domichain_sdk::{shred_version, signature::Signer},
     };
 
     fn bs58_decode<T: AsRef<[u8]>>(data: T) -> Vec<u8> {

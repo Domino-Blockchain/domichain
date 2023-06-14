@@ -3,7 +3,6 @@
 
 use {
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg},
-    log::*,
     domichain_clap_utils::{
         input_parsers::pubkeys_of,
         input_validators::{is_parsable, is_pubkey_or_keypair, is_url},
@@ -17,6 +16,7 @@ use {
         native_token::{sol_to_lamports, Domi},
         pubkey::Pubkey,
     },
+    log::*,
     std::{
         collections::HashMap,
         error,

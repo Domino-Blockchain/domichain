@@ -1,12 +1,12 @@
 use {
     crate::id,
-    serde::{Deserialize, Serialize},
     domichain_program::{
         clock::Slot,
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         system_program,
     },
+    serde::{Deserialize, Serialize},
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]

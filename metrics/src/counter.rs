@@ -1,7 +1,7 @@
 use {
     crate::metrics::submit_counter,
-    log::*,
     domichain_sdk::timing,
+    log::*,
     std::{
         env,
         sync::atomic::{AtomicU64, AtomicUsize, Ordering},

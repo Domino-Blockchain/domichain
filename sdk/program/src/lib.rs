@@ -640,9 +640,9 @@ pub mod vote {
 pub mod sdk_ids {
     use {
         crate::{
-            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config, ed25519_program,
-            feature, incinerator, secp256k1_program, domichain_program::pubkey::Pubkey, stake,
-            system_program, sysvar, vote,
+            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config,
+            domichain_program::pubkey::Pubkey, ed25519_program, feature, incinerator,
+            secp256k1_program, stake, system_program, sysvar, vote,
         },
         lazy_static::lazy_static,
     };

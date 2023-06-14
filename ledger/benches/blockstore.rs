@@ -4,13 +4,13 @@ extern crate domichain_ledger;
 extern crate test;
 
 use {
-    rand::Rng,
     domichain_entry::entry::{create_ticks, Entry},
     domichain_ledger::{
         blockstore::{entries_to_test_shreds, Blockstore},
         get_tmp_ledger_path,
     },
     domichain_sdk::{clock::Slot, hash::Hash},
+    rand::Rng,
     std::path::Path,
     test::Bencher,
 };

@@ -5,15 +5,15 @@
 //! <https://docs.domichain.com/implemented-proposals/persistent-account-storage>
 
 use {
-    log::*,
-    memmap2::MmapMut,
-    serde::{Deserialize, Serialize},
     domichain_sdk::{
         account::{Account, AccountSharedData, ReadableAccount},
         clock::{Epoch, Slot},
         hash::Hash,
         pubkey::Pubkey,
     },
+    log::*,
+    memmap2::MmapMut,
+    serde::{Deserialize, Serialize},
     std::{
         borrow::Borrow,
         convert::TryFrom,
@@ -556,8 +556,8 @@ pub mod tests {
     use {
         super::{test_utils::*, *},
         assert_matches::assert_matches,
-        rand::{thread_rng, Rng},
         domichain_sdk::{account::WritableAccount, timing::duration_as_ms},
+        rand::{thread_rng, Rng},
         std::time::Instant,
     };
 

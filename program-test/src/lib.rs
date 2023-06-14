@@ -6,7 +6,6 @@ pub use tokio;
 use {
     async_trait::async_trait,
     chrono_humanize::{Accuracy, HumanTime, Tense},
-    log::*,
     domichain_banks_client::start_client,
     domichain_banks_server::banks_server::start_local_server,
     domichain_program_runtime::{
@@ -39,6 +38,7 @@ use {
         sysvar::{Sysvar, SysvarId},
     },
     domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
+    log::*,
     std::{
         cell::RefCell,
         collections::HashSet,

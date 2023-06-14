@@ -1,6 +1,5 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    serde_json::Value,
     domichain_cli::{
         cli::{process_command, CliCommand, CliConfig},
         program::ProgramCliCommand,
@@ -18,6 +17,7 @@ use {
     },
     domichain_streamer::socket::SocketAddrSpace,
     domichain_test_validator::TestValidator,
+    serde_json::Value,
     std::{env, fs::File, io::Read, path::PathBuf, str::FromStr},
 };
 

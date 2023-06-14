@@ -4,8 +4,8 @@
 //! of program logging
 use {
     crate::{ic_logger_msg, log_collector::LogCollector},
-    itertools::Itertools,
     domichain_sdk::{instruction::InstructionError, pubkey::Pubkey},
+    itertools::Itertools,
     std::{cell::RefCell, rc::Rc},
 };
 

@@ -1,10 +1,6 @@
 use {
     bincode::serialize,
     crossbeam_channel::unbounded,
-    futures_util::StreamExt,
-    log::*,
-    reqwest::{self, header::CONTENT_TYPE},
-    serde_json::{json, Value},
     domichain_account_decoder::UiAccount,
     domichain_client::{
         client_error::{ClientErrorKind, Result as ClientResult},
@@ -28,6 +24,10 @@ use {
     domichain_streamer::socket::SocketAddrSpace,
     domichain_test_validator::TestValidator,
     domichain_transaction_status::TransactionStatus,
+    futures_util::StreamExt,
+    log::*,
+    reqwest::{self, header::CONTENT_TYPE},
+    serde_json::{json, Value},
     std::{
         collections::HashSet,
         net::UdpSocket,
@@ -116,7 +116,8 @@ fn test_rpc_send_tx() {
     assert!(confirmed_tx);
 
     use {
-        domichain_account_decoder::UiAccountEncoding, domichain_client::rpc_config::RpcAccountInfoConfig,
+        domichain_account_decoder::UiAccountEncoding,
+        domichain_client::rpc_config::RpcAccountInfoConfig,
     };
     let config = RpcAccountInfoConfig {
         encoding: Some(UiAccountEncoding::Base64),

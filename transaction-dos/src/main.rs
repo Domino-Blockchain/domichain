@@ -1,9 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     clap::{crate_description, crate_name, value_t, values_t_or_exit, App, Arg},
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::prelude::*,
     domichain_clap_utils::input_parsers::pubkey_of,
     domichain_cli::{cli::CliConfig, program::process_deploy},
     domichain_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
@@ -21,6 +18,9 @@ use {
         transaction::Transaction,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::prelude::*,
     std::{
         net::SocketAddr,
         process::exit,

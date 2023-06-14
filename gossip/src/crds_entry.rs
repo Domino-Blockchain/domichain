@@ -7,8 +7,8 @@ use {
             LowestSlot, SnapshotHashes, Version,
         },
     },
-    indexmap::IndexMap,
     domichain_sdk::pubkey::Pubkey,
+    indexmap::IndexMap,
 };
 
 type CrdsTable = IndexMap<CrdsValueLabel, VersionedCrdsValue>;
@@ -82,8 +82,8 @@ mod tests {
             crds::{Crds, GossipRoute},
             crds_value::new_rand_timestamp,
         },
-        rand::seq::SliceRandom,
         domichain_sdk::signature::Keypair,
+        rand::seq::SliceRandom,
         std::collections::HashMap,
     };
 

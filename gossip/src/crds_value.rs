@@ -7,8 +7,6 @@ use {
         epoch_slots::EpochSlots,
     },
     bincode::{serialize, serialized_size},
-    rand::{CryptoRng, Rng},
-    serde::de::{Deserialize, Deserializer},
     domichain_runtime::vote_parser,
     domichain_sdk::{
         clock::Slot,
@@ -19,6 +17,8 @@ use {
         timing::timestamp,
         transaction::Transaction,
     },
+    rand::{CryptoRng, Rng},
+    serde::de::{Deserialize, Deserializer},
     std::{
         borrow::{Borrow, Cow},
         cmp::Ordering,
@@ -684,14 +684,14 @@ mod test {
         super::*,
         crate::contact_info::ContactInfo,
         bincode::{deserialize, Options},
-        rand::SeedableRng,
-        rand_chacha::ChaChaRng,
         domichain_perf::test_tx::new_test_vote_tx,
         domichain_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,
         },
         domichain_vote_program::{vote_instruction, vote_state},
+        rand::SeedableRng,
+        rand_chacha::ChaChaRng,
         std::{cmp::Ordering, iter::repeat_with},
     };
 

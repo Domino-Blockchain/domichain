@@ -191,7 +191,6 @@ mod tests {
             rpc_response::{Response, RpcFeeCalculator, RpcFees, RpcResponseContext},
         },
         clap::App,
-        serde_json::{self, json},
         domichain_account_decoder::{UiAccount, UiAccountEncoding},
         domichain_sdk::{
             account::Account,
@@ -199,6 +198,7 @@ mod tests {
             nonce::{self, state::DurableNonce},
             system_program,
         },
+        serde_json::{self, json},
         std::collections::HashMap,
     };
 

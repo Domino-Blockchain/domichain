@@ -5,9 +5,6 @@ extern crate test;
 
 use {
     crossbeam_channel::{unbounded, Receiver},
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::prelude::*,
     domichain_client::connection_cache::ConnectionCache,
     domichain_core::{
         banking_stage::{BankingStage, BankingStageStats},
@@ -37,6 +34,9 @@ use {
         transaction::{Transaction, VersionedTransaction},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::prelude::*,
     std::{
         sync::{atomic::Ordering, Arc, RwLock},
         time::{Duration, Instant},

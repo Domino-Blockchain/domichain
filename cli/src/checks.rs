@@ -166,12 +166,12 @@ pub fn check_unique_pubkeys(
 mod tests {
     use {
         super::*,
-        serde_json::json,
         domichain_client::{
             rpc_request::RpcRequest,
             rpc_response::{Response, RpcResponseContext},
         },
         domichain_sdk::system_instruction,
+        serde_json::json,
         std::collections::HashMap,
     };
 

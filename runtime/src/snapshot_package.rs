@@ -10,10 +10,10 @@ use {
             TMP_BANK_SNAPSHOT_PREFIX,
         },
     },
-    log::*,
     domichain_sdk::{
         clock::Slot, genesis_config::ClusterType, hash::Hash, sysvar::epoch_schedule::EpochSchedule,
     },
+    log::*,
     std::{
         fs,
         path::{Path, PathBuf},

@@ -2,9 +2,9 @@
 pub use crate::instruction::*;
 use {
     bytemuck::{bytes_of, Pod},
+    domichain_program::instruction::Instruction,
     num_derive::{FromPrimitive, ToPrimitive},
     num_traits::{FromPrimitive, ToPrimitive},
-    domichain_program::instruction::Instruction,
 };
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, PartialEq, Eq)]

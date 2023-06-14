@@ -3,8 +3,6 @@
 extern crate test;
 
 use {
-    rand::{thread_rng, Rng},
-    rayon::ThreadPoolBuilder,
     domichain_gossip::{
         cluster_info::MAX_BLOOM_SIZE,
         crds::{Crds, GossipRoute},
@@ -12,6 +10,8 @@ use {
         crds_value::CrdsValue,
     },
     domichain_sdk::hash,
+    rand::{thread_rng, Rng},
+    rayon::ThreadPoolBuilder,
     std::sync::RwLock,
     test::Bencher,
 };

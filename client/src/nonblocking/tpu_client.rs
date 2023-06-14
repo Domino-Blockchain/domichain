@@ -16,8 +16,6 @@ use {
         tpu_connection::TpuConnection,
     },
     bincode::serialize,
-    futures_util::stream::StreamExt,
-    log::*,
     domichain_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
@@ -27,6 +25,8 @@ use {
         transaction::{Transaction, TransactionError},
         transport::{Result as TransportResult, TransportError},
     },
+    futures_util::stream::StreamExt,
+    log::*,
     std::{
         collections::HashMap,
         net::SocketAddr,

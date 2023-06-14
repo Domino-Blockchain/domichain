@@ -7,11 +7,6 @@ use {
         builtins, static_ids,
     },
     dashmap::DashSet,
-    log::info,
-    rayon::{
-        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
-        prelude::ParallelSlice,
-    },
     domichain_measure::measure,
     domichain_sdk::{
         account::ReadableAccount,
@@ -20,6 +15,11 @@ use {
         clock::Slot,
         pubkey::Pubkey,
         sdk_ids,
+    },
+    log::info,
+    rayon::{
+        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+        prelude::ParallelSlice,
     },
     std::{
         collections::HashSet,

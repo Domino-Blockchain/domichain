@@ -1,10 +1,10 @@
 use {
     crate::geyser_plugin_manager::GeyserPluginManager,
-    log::*,
     domichain_geyser_plugin_interface::geyser_plugin_interface::SlotStatus,
     domichain_measure::measure::Measure,
     domichain_metrics::*,
     domichain_sdk::clock::Slot,
+    log::*,
     std::sync::{Arc, RwLock},
 };
 

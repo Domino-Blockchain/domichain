@@ -3,13 +3,13 @@ use {
         accounts_index::{AccountIndex, IndexKey, ScanConfig, ScanResult},
         bank::Bank,
     },
-    log::*,
     domichain_sdk::{
         account::ReadableAccount,
         pubkey::Pubkey,
         stake::{self, state::StakeState},
     },
     domichain_stake_program::stake_state,
+    log::*,
     std::{collections::HashSet, sync::Arc},
 };
 

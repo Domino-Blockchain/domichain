@@ -142,7 +142,6 @@ mod tests {
         super::*,
         crate::{config_instruction, get_config_data, id, ConfigKeys, ConfigState},
         bincode::serialized_size,
-        serde_derive::{Deserialize, Serialize},
         domichain_program_runtime::invoke_context::mock_process_instruction,
         domichain_sdk::{
             account::{AccountSharedData, ReadableAccount},
@@ -151,6 +150,7 @@ mod tests {
             signature::{Keypair, Signer},
             system_instruction::SystemInstruction,
         },
+        serde_derive::{Deserialize, Serialize},
     };
 
     fn process_instruction(

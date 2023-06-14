@@ -10,7 +10,6 @@ use {
         tpu_connection::TpuConnection,
     },
     bincode::serialize,
-    log::*,
     domichain_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
@@ -22,6 +21,7 @@ use {
         transaction::{Transaction, TransactionError},
         transport::{Result as TransportResult, TransportError},
     },
+    log::*,
     std::{
         collections::{HashMap, HashSet, VecDeque},
         net::{SocketAddr, UdpSocket},

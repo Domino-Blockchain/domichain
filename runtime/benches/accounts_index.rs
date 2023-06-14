@@ -3,7 +3,6 @@
 extern crate test;
 
 use {
-    rand::{thread_rng, Rng},
     domichain_runtime::{
         account_info::AccountInfo,
         accounts_index::{
@@ -11,6 +10,7 @@ use {
         },
     },
     domichain_sdk::{account::AccountSharedData, pubkey},
+    rand::{thread_rng, Rng},
     test::Bencher,
 };
 

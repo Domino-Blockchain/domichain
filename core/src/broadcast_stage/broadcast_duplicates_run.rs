@@ -1,7 +1,6 @@
 use {
     super::*,
     crate::cluster_nodes::ClusterNodesCache,
-    itertools::Itertools,
     domichain_entry::entry::Entry,
     domichain_gossip::cluster_info::DATA_PLANE_FANOUT,
     domichain_ledger::shred::Shredder,
@@ -10,6 +9,7 @@ use {
         signature::{Keypair, Signature, Signer},
         system_transaction,
     },
+    itertools::Itertools,
     std::collections::HashSet,
 };
 

@@ -3,8 +3,6 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     common::*,
-    log::*,
-    serial_test::serial,
     domichain_core::validator::ValidatorConfig,
     domichain_ledger::{ancestor_iterator::AncestorIterator, leader_schedule::FixedSchedule},
     domichain_local_cluster::{
@@ -17,6 +15,8 @@ use {
         signature::{Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
+    serial_test::serial,
     std::{
         sync::Arc,
         thread::sleep,

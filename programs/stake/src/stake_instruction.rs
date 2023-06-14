@@ -6,7 +6,6 @@ use {
             initialize, merge, set_lockup, split, withdraw,
         },
     },
-    log::*,
     domichain_program_runtime::{
         invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
@@ -23,6 +22,7 @@ use {
         sysvar::clock::Clock,
         transaction_context::{InstructionContext, TransactionContext},
     },
+    log::*,
 };
 
 fn get_optional_pubkey<'a>(

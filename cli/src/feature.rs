@@ -5,7 +5,6 @@ use {
     },
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     console::style,
-    serde::{Deserialize, Serialize},
     domichain_clap_utils::{input_parsers::*, input_validators::*, keypair::*},
     domichain_cli_output::{cli_version::CliVersion, QuietDisplay, VerboseDisplay},
     domichain_client::{
@@ -22,6 +21,7 @@ use {
         pubkey::Pubkey,
         transaction::Transaction,
     },
+    serde::{Deserialize, Serialize},
     std::{cmp::Ordering, collections::HashMap, fmt, str::FromStr, sync::Arc},
 };
 

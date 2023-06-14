@@ -4,11 +4,11 @@
 extern crate test;
 
 use {
-    rand::prelude::*,
     domichain_perf::{
         packet::{to_packet_batches, PacketBatch},
         sigverify,
     },
+    rand::prelude::*,
     std::time::Duration,
     test::Bencher,
 };

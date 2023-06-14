@@ -41,10 +41,6 @@ use {
     },
     bincode::{serialize, serialized_size},
     crossbeam_channel::{Receiver, RecvTimeoutError, Sender},
-    itertools::Itertools,
-    rand::{seq::SliceRandom, thread_rng, CryptoRng, Rng},
-    rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
-    serde::ser::Serialize,
     domichain_ledger::shred::Shred,
     domichain_measure::measure::Measure,
     domichain_net_utils::{
@@ -74,6 +70,10 @@ use {
         streamer::{PacketBatchReceiver, PacketBatchSender},
     },
     domichain_vote_program::vote_state::MAX_LOCKOUT_HISTORY,
+    itertools::Itertools,
+    rand::{seq::SliceRandom, thread_rng, CryptoRng, Rng},
+    rayon::{prelude::*, ThreadPool, ThreadPoolBuilder},
+    serde::ser::Serialize,
     std::{
         borrow::Cow,
         collections::{hash_map::Entry, HashMap, HashSet, VecDeque},
@@ -3061,14 +3061,14 @@ mod tests {
             crds_value::{CrdsValue, CrdsValueLabel, Vote as CrdsVote},
             duplicate_shred::{self, tests::new_rand_shred, MAX_DUPLICATE_SHREDS},
         },
-        itertools::izip,
-        rand::{seq::SliceRandom, SeedableRng},
-        rand_chacha::ChaChaRng,
-        regex::Regex,
         domichain_ledger::shred::Shredder,
         domichain_net_utils::MINIMUM_VALIDATOR_PORT_RANGE_WIDTH,
         domichain_sdk::signature::{Keypair, Signer},
         domichain_vote_program::{vote_instruction, vote_state::Vote},
+        itertools::izip,
+        rand::{seq::SliceRandom, SeedableRng},
+        rand_chacha::ChaChaRng,
+        regex::Regex,
         std::{
             iter::repeat_with,
             net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
@@ -3671,96 +3671,96 @@ RPC Enabled Nodes: 1"#;
             .unwrap();
     }
 
-/*     #[test]
-    fn test_refresh_vote() {
-        let keys = Keypair::new();
-        let contact_info = ContactInfo::new_localhost(&keys.pubkey(), 0);
-        let cluster_info = ClusterInfo::new(
-            contact_info,
-            Arc::new(Keypair::new()),
-            SocketAddrSpace::Unspecified,
-        );
+    /*     #[test]
+       fn test_refresh_vote() {
+           let keys = Keypair::new();
+           let contact_info = ContactInfo::new_localhost(&keys.pubkey(), 0);
+           let cluster_info = ClusterInfo::new(
+               contact_info,
+               Arc::new(Keypair::new()),
+               SocketAddrSpace::Unspecified,
+           );
 
-        // Construct and push a vote for some other slot
-        let unrefresh_slot = 5;
-        let unrefresh_tower = vec![1, 3, unrefresh_slot];
-        let unrefresh_vote = Vote::new(unrefresh_tower.clone(), Hash::new_unique());
-        let unrefresh_ix = vote_instruction::vote(
-            &Pubkey::new_unique(), // vote_pubkey
-            &Pubkey::new_unique(), // authorized_voter_pubkey
-            unrefresh_vote,
-        );
-        let unrefresh_tx = Transaction::new_with_payer(
-            &[unrefresh_ix], // instructions
-            None,            // payer
-        );
-        cluster_info.push_vote(&unrefresh_tower, unrefresh_tx.clone());
-        let mut cursor = Cursor::default();
-        let votes = cluster_info.get_votes(&mut cursor);
-        assert_eq!(votes, vec![unrefresh_tx.clone()]);
+           // Construct and push a vote for some other slot
+           let unrefresh_slot = 5;
+           let unrefresh_tower = vec![1, 3, unrefresh_slot];
+           let unrefresh_vote = Vote::new(unrefresh_tower.clone(), Hash::new_unique());
+           let unrefresh_ix = vote_instruction::vote(
+               &Pubkey::new_unique(), // vote_pubkey
+               &Pubkey::new_unique(), // authorized_voter_pubkey
+               unrefresh_vote,
+           );
+           let unrefresh_tx = Transaction::new_with_payer(
+               &[unrefresh_ix], // instructions
+               None,            // payer
+           );
+           cluster_info.push_vote(&unrefresh_tower, unrefresh_tx.clone());
+           let mut cursor = Cursor::default();
+           let votes = cluster_info.get_votes(&mut cursor);
+           assert_eq!(votes, vec![unrefresh_tx.clone()]);
 
-        // Now construct vote for the slot to be refreshed later
-        let refresh_slot = 7;
-        let refresh_tower = vec![1, 3, unrefresh_slot, refresh_slot];
-        let refresh_vote = Vote::new(refresh_tower.clone(), Hash::new_unique());
-        let refresh_ix = vote_instruction::vote(
-            &Pubkey::new_unique(), // vote_pubkey
-            &Pubkey::new_unique(), // authorized_voter_pubkey
-            refresh_vote.clone(),
-        );
-        let refresh_tx = Transaction::new_with_payer(
-            &[refresh_ix], // instructions
-            None,          // payer
-        );
+           // Now construct vote for the slot to be refreshed later
+           let refresh_slot = 7;
+           let refresh_tower = vec![1, 3, unrefresh_slot, refresh_slot];
+           let refresh_vote = Vote::new(refresh_tower.clone(), Hash::new_unique());
+           let refresh_ix = vote_instruction::vote(
+               &Pubkey::new_unique(), // vote_pubkey
+               &Pubkey::new_unique(), // authorized_voter_pubkey
+               refresh_vote.clone(),
+           );
+           let refresh_tx = Transaction::new_with_payer(
+               &[refresh_ix], // instructions
+               None,          // payer
+           );
 
-        // Trying to refresh vote when it doesn't yet exist in gossip
-        // shouldn't add the vote
-        cluster_info.refresh_vote(refresh_tx.clone(), refresh_slot);
-        let votes = cluster_info.get_votes(&mut cursor);
-        assert_eq!(votes, vec![]);
-        let votes = cluster_info.get_votes(&mut Cursor::default());
-        assert_eq!(votes.len(), 1);
-        assert!(votes.contains(&unrefresh_tx));
+           // Trying to refresh vote when it doesn't yet exist in gossip
+           // shouldn't add the vote
+           cluster_info.refresh_vote(refresh_tx.clone(), refresh_slot);
+           let votes = cluster_info.get_votes(&mut cursor);
+           assert_eq!(votes, vec![]);
+           let votes = cluster_info.get_votes(&mut Cursor::default());
+           assert_eq!(votes.len(), 1);
+           assert!(votes.contains(&unrefresh_tx));
 
-        // Push the new vote for `refresh_slot`
-        cluster_info.push_vote(&refresh_tower, refresh_tx.clone());
+           // Push the new vote for `refresh_slot`
+           cluster_info.push_vote(&refresh_tower, refresh_tx.clone());
 
-        // Should be two votes in gossip
-        let votes = cluster_info.get_votes(&mut Cursor::default());
-        assert_eq!(votes.len(), 2);
-        assert!(votes.contains(&unrefresh_tx));
-        assert!(votes.contains(&refresh_tx));
+           // Should be two votes in gossip
+           let votes = cluster_info.get_votes(&mut Cursor::default());
+           assert_eq!(votes.len(), 2);
+           assert!(votes.contains(&unrefresh_tx));
+           assert!(votes.contains(&refresh_tx));
 
-        // Refresh a few times, we should only have the latest update
-        let mut latest_refresh_tx = refresh_tx;
-        for _ in 0..10 {
-            let latest_refreshed_recent_blockhash = Hash::new_unique();
-            let new_signer = Keypair::new();
-            let refresh_ix = vote_instruction::vote(
-                &new_signer.pubkey(), // vote_pubkey
-                &new_signer.pubkey(), // authorized_voter_pubkey
-                refresh_vote.clone(),
-            );
-            latest_refresh_tx = Transaction::new_signed_with_payer(
-                &[refresh_ix],
-                None,
-                &[&new_signer],
-                latest_refreshed_recent_blockhash,
-            );
-            cluster_info.refresh_vote(latest_refresh_tx.clone(), refresh_slot);
-        }
-        // The diff since `max_ts` should only be the latest refreshed vote
-        let votes = cluster_info.get_votes(&mut cursor);
-        assert_eq!(votes.len(), 1);
-        assert_eq!(votes[0], latest_refresh_tx);
+           // Refresh a few times, we should only have the latest update
+           let mut latest_refresh_tx = refresh_tx;
+           for _ in 0..10 {
+               let latest_refreshed_recent_blockhash = Hash::new_unique();
+               let new_signer = Keypair::new();
+               let refresh_ix = vote_instruction::vote(
+                   &new_signer.pubkey(), // vote_pubkey
+                   &new_signer.pubkey(), // authorized_voter_pubkey
+                   refresh_vote.clone(),
+               );
+               latest_refresh_tx = Transaction::new_signed_with_payer(
+                   &[refresh_ix],
+                   None,
+                   &[&new_signer],
+                   latest_refreshed_recent_blockhash,
+               );
+               cluster_info.refresh_vote(latest_refresh_tx.clone(), refresh_slot);
+           }
+           // The diff since `max_ts` should only be the latest refreshed vote
+           let votes = cluster_info.get_votes(&mut cursor);
+           assert_eq!(votes.len(), 1);
+           assert_eq!(votes[0], latest_refresh_tx);
 
-        // Should still be two votes in gossip
-        let votes = cluster_info.get_votes(&mut Cursor::default());
-        assert_eq!(votes.len(), 2);
-        assert!(votes.contains(&unrefresh_tx));
-        assert!(votes.contains(&latest_refresh_tx));
-    }
- */
+           // Should still be two votes in gossip
+           let votes = cluster_info.get_votes(&mut Cursor::default());
+           assert_eq!(votes.len(), 2);
+           assert!(votes.contains(&unrefresh_tx));
+           assert!(votes.contains(&latest_refresh_tx));
+       }
+    */
     #[test]
     fn test_push_vote() {
         let mut rng = rand::thread_rng();

@@ -1,6 +1,5 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    log::*,
     domichain_cli_output::CliAccount,
     domichain_client::{
         connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
@@ -46,6 +45,7 @@ use {
         signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
     std::{
         collections::{HashMap, HashSet},
         fs::{remove_dir_all, File},

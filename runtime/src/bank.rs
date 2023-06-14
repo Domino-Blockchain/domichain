@@ -72,13 +72,6 @@ use {
     },
     byteorder::{ByteOrder, LittleEndian},
     dashmap::{DashMap, DashSet},
-    itertools::Itertools,
-    log::*,
-    rand::Rng,
-    rayon::{
-        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
-        ThreadPool, ThreadPoolBuilder,
-    },
     domichain_measure::{measure, measure::Measure},
     domichain_metrics::{inc_new_counter_debug, inc_new_counter_info},
     domichain_program_runtime::{
@@ -149,6 +142,13 @@ use {
         self, InflationPointCalculationEvent, PointValue, StakeState,
     },
     domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
+    itertools::Itertools,
+    log::*,
+    rand::Rng,
+    rayon::{
+        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+        ThreadPool, ThreadPoolBuilder,
+    },
     std::{
         borrow::Cow,
         cell::RefCell,
@@ -179,7 +179,9 @@ pub struct WeightVoteTracker {
 
 impl fmt::Debug for WeightVoteTracker {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("WeightVoteTracker").field("inner", &"<rw lock hidden>").finish()
+        f.debug_struct("WeightVoteTracker")
+            .field("inner", &"<rw lock hidden>")
+            .finish()
     }
 }
 
@@ -209,7 +211,10 @@ impl WeightSlotVoteTracker {
         self.voted_slot_updates.take()
     }
 
-    pub fn get_or_insert_optimistic_votes_tracker(&mut self, hash: Hash) -> &mut WeightVoteStakeTracker {
+    pub fn get_or_insert_optimistic_votes_tracker(
+        &mut self,
+        hash: Hash,
+    ) -> &mut WeightVoteStakeTracker {
         self.optimistic_votes_tracker.entry(hash).or_default()
     }
 }
@@ -1747,11 +1752,7 @@ impl Bank {
     }
 
     /// Create a new bank that points to an immutable checkpoint of another bank.
-    pub fn new_from_parent(
-        parent: &Arc<Bank>,
-        collector_id: &Pubkey,
-        slot: Slot,
-    ) -> Self {
+    pub fn new_from_parent(parent: &Arc<Bank>, collector_id: &Pubkey, slot: Slot) -> Self {
         let vote_tracker = parent.vote_tracker.clone();
 
         // {
@@ -2265,7 +2266,8 @@ impl Bank {
     ) -> Self {
         let parent_timestamp = parent.clock().unix_timestamp;
         // new_from_parent
-        let mut new = Bank::new_from_parent_with_vote_tracker(parent, collector_id, slot, vote_tracker);
+        let mut new =
+            Bank::new_from_parent_with_vote_tracker(parent, collector_id, slot, vote_tracker);
         new.apply_feature_activations(ApplyFeatureActivationsCaller::WarpFromParent, false);
         new.update_epoch_stakes(new.epoch_schedule().get_epoch(slot));
         new.tick_height.store(new.max_tick_height(), Relaxed);
@@ -3680,7 +3682,11 @@ impl Bank {
             *hash = self.hash_internal_state();
             self.rc.accounts.accounts_db.mark_slot_frozen(self.slot());
         }
-        info!("Bank frozen: slot={} collector_id={:?}", self.slot(), self.collector_id);
+        info!(
+            "Bank frozen: slot={} collector_id={:?}",
+            self.slot(),
+            self.collector_id
+        );
     }
 
     // dangerous; don't use this; this is only needed for ledger-tool's special command
@@ -3786,10 +3792,10 @@ impl Bank {
 
         let genesis_hash = genesis_config.hash();
         self.block_seed = genesis_hash;
-        self.blockhash_queue.write().unwrap().genesis_hash(
-            &genesis_hash,
-            self.fee_rate_governor.lamports_per_signature,
-        );
+        self.blockhash_queue
+            .write()
+            .unwrap()
+            .genesis_hash(&genesis_hash, self.fee_rate_governor.lamports_per_signature);
 
         self.hashes_per_tick = genesis_config.hashes_per_tick();
         self.ticks_per_slot = genesis_config.ticks_per_slot();
@@ -6288,7 +6294,8 @@ impl Bank {
     fn use_multi_epoch_collection_cycle(&self, epoch: Epoch) -> bool {
         // Force normal behavior, disabling multi epoch collection cycle for manual local testing
         #[cfg(not(test))]
-        if self.slot_count_per_normal_epoch() == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
+        if self.slot_count_per_normal_epoch()
+            == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
         {
             return false;
         }
@@ -6300,7 +6307,8 @@ impl Bank {
     pub(crate) fn use_fixed_collection_cycle(&self) -> bool {
         // Force normal behavior, disabling fixed collection cycle for manual local testing
         #[cfg(not(test))]
-        if self.slot_count_per_normal_epoch() == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
+        if self.slot_count_per_normal_epoch()
+            == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
         {
             return false;
         }
@@ -7314,7 +7322,10 @@ impl Bank {
         let new_seed = hashv(&[alpha.as_ref(), history.as_ref()]);
         info!("DEV: derived new seed {new_seed} from {}", self.block_seed);
 
-        warn!("DEV: measure took {} derived new seed", measure_start.elapsed().as_secs_f64());
+        warn!(
+            "DEV: measure took {} derived new seed",
+            measure_start.elapsed().as_secs_f64()
+        );
         new_seed
     }
 
@@ -7817,13 +7828,14 @@ impl Bank {
         };
 
         if reconfigure_token2_native_mint {
-            let mut native_mint_account = domichain_sdk::account::AccountSharedData::from(Account {
-                owner: inline_spl_token::id(),
-                data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
-                lamports: sol_to_lamports(1.),
-                executable: false,
-                rent_epoch: self.epoch() + 1,
-            });
+            let mut native_mint_account =
+                domichain_sdk::account::AccountSharedData::from(Account {
+                    owner: inline_spl_token::id(),
+                    data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
+                    lamports: sol_to_lamports(1.),
+                    executable: false,
+                    rent_epoch: self.epoch() + 1,
+                });
 
             // As a workaround for
             // https://Domino-Blockchain/domichain-program-library/issues/374, ensure that the
@@ -14171,7 +14183,9 @@ pub(crate) mod tests {
             bank.last_blockhash(),
         );
 
-        tx.message.account_keys.push(domichain_sdk::pubkey::new_rand());
+        tx.message
+            .account_keys
+            .push(domichain_sdk::pubkey::new_rand());
 
         bank.add_builtin(
             "mock_vote",
@@ -14277,7 +14291,9 @@ pub(crate) mod tests {
         );
 
         while tx.message.account_keys.len() <= MAX_TX_ACCOUNT_LOCKS {
-            tx.message.account_keys.push(domichain_sdk::pubkey::new_rand());
+            tx.message
+                .account_keys
+                .push(domichain_sdk::pubkey::new_rand());
         }
 
         let result = bank.process_transaction(&tx);
@@ -14369,7 +14385,9 @@ pub(crate) mod tests {
             bank.last_blockhash(),
         );
 
-        tx.message.account_keys.push(domichain_sdk::pubkey::new_rand());
+        tx.message
+            .account_keys
+            .push(domichain_sdk::pubkey::new_rand());
         assert_eq!(tx.message.account_keys.len(), 5);
         tx.message.instructions[0].accounts.remove(0);
         tx.message.instructions[0].accounts.push(4);
@@ -15163,7 +15181,8 @@ pub(crate) mod tests {
         domichain_logger::setup();
 
         let mut genesis_config =
-            create_genesis_config_with_leader(5, &domichain_sdk::pubkey::new_rand(), 0).genesis_config;
+            create_genesis_config_with_leader(5, &domichain_sdk::pubkey::new_rand(), 0)
+                .genesis_config;
 
         // ClusterType::Development - Native mint exists immediately
         assert_eq!(genesis_config.cluster_type, ClusterType::Development);
@@ -15225,7 +15244,8 @@ pub(crate) mod tests {
         domichain_logger::setup();
 
         let mut genesis_config =
-            create_genesis_config_with_leader(5, &domichain_sdk::pubkey::new_rand(), 0).genesis_config;
+            create_genesis_config_with_leader(5, &domichain_sdk::pubkey::new_rand(), 0)
+                .genesis_config;
 
         // Testnet - Storage rewards pool is purged at epoch 93
         // Also this is with bad capitalization

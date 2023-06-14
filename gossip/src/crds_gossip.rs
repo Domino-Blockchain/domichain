@@ -17,7 +17,6 @@ use {
         duplicate_shred::{self, DuplicateShredIndex, LeaderScheduleFn, MAX_DUPLICATE_SHREDS},
         ping_pong::PingCache,
     },
-    rayon::ThreadPool,
     domichain_ledger::shred::Shred,
     domichain_sdk::{
         hash::Hash,
@@ -26,6 +25,7 @@ use {
         timing::timestamp,
     },
     domichain_streamer::socket::SocketAddrSpace,
+    rayon::ThreadPool,
     std::{
         collections::{HashMap, HashSet},
         net::SocketAddr,

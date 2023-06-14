@@ -2,7 +2,6 @@ use {
     crate::cli_output::CliSignatureVerificationStatus,
     chrono::{DateTime, Local, NaiveDateTime, SecondsFormat, TimeZone, Utc},
     console::style,
-    indicatif::{ProgressBar, ProgressStyle},
     domichain_cli_config::SettingType,
     domichain_sdk::{
         clock::UnixTimestamp,
@@ -18,6 +17,7 @@ use {
         transaction_context::TransactionReturnData,
     },
     domichain_transaction_status::{Rewards, UiTransactionStatusMeta},
+    indicatif::{ProgressBar, ProgressStyle},
     spl_memo::{id as spl_memo_id, v1::id as spl_memo_v1_id},
     std::{collections::HashMap, fmt, io},
 };

@@ -3,9 +3,9 @@
 
 use {
     ahash::AHasher,
-    rand::{thread_rng, Rng},
     domichain_ledger::shred::Shred,
     domichain_perf::packet::Packet,
+    rand::{thread_rng, Rng},
     std::hash::Hasher,
 };
 

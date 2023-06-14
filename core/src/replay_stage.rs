@@ -11,9 +11,7 @@ use {
         cluster_slots::ClusterSlots,
         cluster_slots_service::ClusterSlotsUpdateSender,
         commitment_service::{AggregateCommitmentService, CommitmentAggregationData},
-        consensus::{
-            ComputedBankState, Stake, SwitchForkDecision, Tower, SWITCH_FORK_THRESHOLD,
-        },
+        consensus::{ComputedBankState, Stake, SwitchForkDecision, Tower, SWITCH_FORK_THRESHOLD},
         cost_update_service::CostUpdate,
         fork_choice::{ForkChoice, SelectVoteAndResetForkResult},
         heaviest_subtree_fork_choice::HeaviestSubtreeForkChoice,
@@ -40,7 +38,9 @@ use {
     },
     domichain_measure::measure::Measure,
     domichain_metrics::inc_new_counter_info,
-    domichain_poh::poh_recorder::{PohLeaderStatus, PohRecorder, GRACE_TICKS_FACTOR, MAX_GRACE_SLOTS},
+    domichain_poh::poh_recorder::{
+        PohLeaderStatus, PohRecorder, GRACE_TICKS_FACTOR, MAX_GRACE_SLOTS,
+    },
     domichain_program_runtime::timings::ExecuteTimings,
     domichain_rpc::{
         optimistically_confirmed_bank_tracker::{BankNotification, BankNotificationSender},
@@ -1970,7 +1970,8 @@ impl ReplayStage {
 
         info!("Replay_stage: bank slot: {bank_parent_slot}");
         info!("Replay_stage: bank seed: {block_parent_seed:?}");
-        let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
+        let vrf_proof =
+            vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
         vote.set_vrf_proof(Some(vrf_proof));
 
@@ -2980,19 +2981,22 @@ impl ReplayStage {
                     .clone();
                 let duration = prog.replay_stats.started.elapsed().as_millis();
                 let bank_hash = prog.fork_stats.bank_hash;
-                let is_slot_confirmed = bank.is_frozen() &&
-                    bank_hash.map(|bank_hash| tower.is_slot_confirmed(*slot, vote_tracker, bank_hash, total_weight)).unwrap_or(false);
+                let is_slot_confirmed = bank.is_frozen()
+                    && bank_hash
+                        .map(|bank_hash| {
+                            tower.is_slot_confirmed(*slot, vote_tracker, bank_hash, total_weight)
+                        })
+                        .unwrap_or(false);
                 info!("DEV: is_slot_confirmed={is_slot_confirmed}");
-                if is_slot_confirmed { // is_slot_confirmed
+                if is_slot_confirmed {
+                    // is_slot_confirmed
                     info!("validator fork confirmed {} {}ms", *slot, duration);
                     datapoint_info!("validator-confirmation", ("duration_ms", duration, i64));
                     confirmed_forks.push((*slot, bank.hash()));
                 } else {
                     debug!(
                         "validator fork not confirmed {} {}ms {:?}",
-                        *slot,
-                        duration,
-                        bank_hash,
+                        *slot, duration, bank_hash,
                     );
                 }
             }
@@ -4051,207 +4055,207 @@ pub(crate) mod tests {
         );
     }
 
-/*     #[test]
-    fn test_write_persist_transaction_status() {
-        let GenesisConfigInfo {
-            mut genesis_config,
-            mint_keypair,
-            ..
-        } = create_genesis_config(domichain_sdk::native_token::sol_to_lamports(1000.0));
-        genesis_config.rent.lamports_per_byte_year = 50;
-        genesis_config.rent.exemption_threshold = 2.0;
-        let (ledger_path, _) = create_new_tmp_ledger!(&genesis_config);
-        {
-            let blockstore = Blockstore::open(&ledger_path)
-                .expect("Expected to successfully open database ledger");
-            let blockstore = Arc::new(blockstore);
+    /*     #[test]
+       fn test_write_persist_transaction_status() {
+           let GenesisConfigInfo {
+               mut genesis_config,
+               mint_keypair,
+               ..
+           } = create_genesis_config(domichain_sdk::native_token::sol_to_lamports(1000.0));
+           genesis_config.rent.lamports_per_byte_year = 50;
+           genesis_config.rent.exemption_threshold = 2.0;
+           let (ledger_path, _) = create_new_tmp_ledger!(&genesis_config);
+           {
+               let blockstore = Blockstore::open(&ledger_path)
+                   .expect("Expected to successfully open database ledger");
+               let blockstore = Arc::new(blockstore);
 
-            let keypair1 = Keypair::new();
-            let keypair2 = Keypair::new();
-            let keypair3 = Keypair::new();
+               let keypair1 = Keypair::new();
+               let keypair2 = Keypair::new();
+               let keypair3 = Keypair::new();
 
-            let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
-            bank0
-                .transfer(
-                    bank0.get_minimum_balance_for_rent_exemption(0),
-                    &mint_keypair,
-                    &keypair2.pubkey(),
-                )
-                .unwrap();
+               let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
+               bank0
+                   .transfer(
+                       bank0.get_minimum_balance_for_rent_exemption(0),
+                       &mint_keypair,
+                       &keypair2.pubkey(),
+                   )
+                   .unwrap();
 
-            let bank1 = Arc::new(Bank::new_from_parent(&bank0, &Pubkey::default(), 1));
-            let slot = bank1.slot();
+               let bank1 = Arc::new(Bank::new_from_parent(&bank0, &Pubkey::default(), 1));
+               let slot = bank1.slot();
 
-            let (entries, test_signatures) = create_test_transaction_entries(
-                vec![&mint_keypair, &keypair1, &keypair2, &keypair3],
-                bank1.clone(),
-            );
-            populate_blockstore_for_tests(
-                entries,
-                bank1,
-                blockstore.clone(),
-                Arc::new(AtomicU64::default()),
-            );
+               let (entries, test_signatures) = create_test_transaction_entries(
+                   vec![&mint_keypair, &keypair1, &keypair2, &keypair3],
+                   bank1.clone(),
+               );
+               populate_blockstore_for_tests(
+                   entries,
+                   bank1,
+                   blockstore.clone(),
+                   Arc::new(AtomicU64::default()),
+               );
 
-            let mut test_signatures_iter = test_signatures.into_iter();
-            let confirmed_block = blockstore.get_rooted_block(slot, false).unwrap();
-            let actual_tx_results: Vec<_> = confirmed_block
-                .transactions
-                .into_iter()
-                .map(|VersionedTransactionWithStatusMeta { transaction, meta }| {
-                    (transaction.signatures[0], meta.status)
-                })
-                .collect();
-            let expected_tx_results = vec![
-                (test_signatures_iter.next().unwrap(), Ok(())),
-                (
-                    test_signatures_iter.next().unwrap(),
-                    Err(TransactionError::InstructionError(
-                        0,
-                        InstructionError::Custom(1),
-                    )),
-                ),
-            ];
-            assert_eq!(actual_tx_results, expected_tx_results);
-            assert!(test_signatures_iter.next().is_none());
-        }
-        Blockstore::destroy(&ledger_path).unwrap();
-    }
- */
-/*     #[test]
-    fn test_compute_bank_stats_confirmed() {
-        let vote_keypairs = ValidatorVoteKeypairs::new_rand();
-        let my_node_pubkey = vote_keypairs.node_keypair.pubkey();
-        let my_vote_pubkey = vote_keypairs.vote_keypair.pubkey();
-        let keypairs: HashMap<_, _> = vec![(my_node_pubkey, vote_keypairs)].into_iter().collect();
+               let mut test_signatures_iter = test_signatures.into_iter();
+               let confirmed_block = blockstore.get_rooted_block(slot, false).unwrap();
+               let actual_tx_results: Vec<_> = confirmed_block
+                   .transactions
+                   .into_iter()
+                   .map(|VersionedTransactionWithStatusMeta { transaction, meta }| {
+                       (transaction.signatures[0], meta.status)
+                   })
+                   .collect();
+               let expected_tx_results = vec![
+                   (test_signatures_iter.next().unwrap(), Ok(())),
+                   (
+                       test_signatures_iter.next().unwrap(),
+                       Err(TransactionError::InstructionError(
+                           0,
+                           InstructionError::Custom(1),
+                       )),
+                   ),
+               ];
+               assert_eq!(actual_tx_results, expected_tx_results);
+               assert!(test_signatures_iter.next().is_none());
+           }
+           Blockstore::destroy(&ledger_path).unwrap();
+       }
+    */
+    /*     #[test]
+       fn test_compute_bank_stats_confirmed() {
+           let vote_keypairs = ValidatorVoteKeypairs::new_rand();
+           let my_node_pubkey = vote_keypairs.node_keypair.pubkey();
+           let my_vote_pubkey = vote_keypairs.vote_keypair.pubkey();
+           let keypairs: HashMap<_, _> = vec![(my_node_pubkey, vote_keypairs)].into_iter().collect();
 
-        let (bank_forks, mut progress, mut heaviest_subtree_fork_choice) =
-            vote_simulator::initialize_state(&keypairs, 10_000);
-        let mut latest_validator_votes_for_frozen_banks =
-            LatestValidatorVotesForFrozenBanks::default();
-        let bank0 = bank_forks.get(0).unwrap();
-        let my_keypairs = keypairs.get(&my_node_pubkey).unwrap();
-        let vote_tx = vote_transaction::new_vote_transaction(
-            vec![0],
-            bank0.hash(),
-            bank0.last_blockhash(),
-            &my_keypairs.node_keypair,
-            &my_keypairs.vote_keypair,
-            &my_keypairs.vote_keypair,
-            None,
-        );
+           let (bank_forks, mut progress, mut heaviest_subtree_fork_choice) =
+               vote_simulator::initialize_state(&keypairs, 10_000);
+           let mut latest_validator_votes_for_frozen_banks =
+               LatestValidatorVotesForFrozenBanks::default();
+           let bank0 = bank_forks.get(0).unwrap();
+           let my_keypairs = keypairs.get(&my_node_pubkey).unwrap();
+           let vote_tx = vote_transaction::new_vote_transaction(
+               vec![0],
+               bank0.hash(),
+               bank0.last_blockhash(),
+               &my_keypairs.node_keypair,
+               &my_keypairs.vote_keypair,
+               &my_keypairs.vote_keypair,
+               None,
+           );
 
-        let bank_forks = RwLock::new(bank_forks);
-        let bank1 = Bank::new_from_parent(&bank0, &my_node_pubkey, 1);
-        bank1.process_transaction(&vote_tx).unwrap();
-        bank1.freeze();
+           let bank_forks = RwLock::new(bank_forks);
+           let bank1 = Bank::new_from_parent(&bank0, &my_node_pubkey, 1);
+           bank1.process_transaction(&vote_tx).unwrap();
+           bank1.freeze();
 
-        // Test confirmations
-        let ancestors = bank_forks.read().unwrap().ancestors();
-        let mut frozen_banks: Vec<_> = bank_forks
-            .read()
-            .unwrap()
-            .frozen_banks()
-            .values()
-            .cloned()
-            .collect();
-        let mut tower = Tower::new_for_tests(0, 0.67);
-        let newly_computed = ReplayStage::compute_bank_stats(
-            &my_vote_pubkey,
-            &ancestors,
-            &mut frozen_banks,
-            &mut tower,
-            &mut progress,
-            &VoteTracker::default(),
-            &ClusterSlots::default(),
-            &bank_forks,
-            &mut heaviest_subtree_fork_choice,
-            &mut latest_validator_votes_for_frozen_banks,
-        );
+           // Test confirmations
+           let ancestors = bank_forks.read().unwrap().ancestors();
+           let mut frozen_banks: Vec<_> = bank_forks
+               .read()
+               .unwrap()
+               .frozen_banks()
+               .values()
+               .cloned()
+               .collect();
+           let mut tower = Tower::new_for_tests(0, 0.67);
+           let newly_computed = ReplayStage::compute_bank_stats(
+               &my_vote_pubkey,
+               &ancestors,
+               &mut frozen_banks,
+               &mut tower,
+               &mut progress,
+               &VoteTracker::default(),
+               &ClusterSlots::default(),
+               &bank_forks,
+               &mut heaviest_subtree_fork_choice,
+               &mut latest_validator_votes_for_frozen_banks,
+           );
 
-        // bank 0 has no votes, should not send any votes on the channel
-        assert_eq!(newly_computed, vec![0]);
-        // The only vote is in bank 1, and bank_forks does not currently contain
-        // bank 1, so no slot should be confirmed.
-        {
-            let vote_tracker = VoteTracker::default();
-            let confirmed_forks = ReplayStage::confirm_forks(
-                &tower,
-                &progress,
-                &bank_forks,
-                &vote_tracker,
-                3000,
-            );
+           // bank 0 has no votes, should not send any votes on the channel
+           assert_eq!(newly_computed, vec![0]);
+           // The only vote is in bank 1, and bank_forks does not currently contain
+           // bank 1, so no slot should be confirmed.
+           {
+               let vote_tracker = VoteTracker::default();
+               let confirmed_forks = ReplayStage::confirm_forks(
+                   &tower,
+                   &progress,
+                   &bank_forks,
+                   &vote_tracker,
+                   3000,
+               );
 
-            assert!(confirmed_forks.is_empty());
-        }
+               assert!(confirmed_forks.is_empty());
+           }
 
-        // Insert the bank that contains a vote for slot 0, which confirms slot 0
-        bank_forks.write().unwrap().insert(bank1);
-        progress.insert(
-            1,
-            ForkProgress::new(bank0.last_blockhash(), None, None, 0, 0),
-        );
-        let ancestors = bank_forks.read().unwrap().ancestors();
-        let mut frozen_banks: Vec<_> = bank_forks
-            .read()
-            .unwrap()
-            .frozen_banks()
-            .values()
-            .cloned()
-            .collect();
-        let newly_computed = ReplayStage::compute_bank_stats(
-            &my_vote_pubkey,
-            &ancestors,
-            &mut frozen_banks,
-            &mut tower,
-            &mut progress,
-            &VoteTracker::default(),
-            &ClusterSlots::default(),
-            &bank_forks,
-            &mut heaviest_subtree_fork_choice,
-            &mut latest_validator_votes_for_frozen_banks,
-        );
+           // Insert the bank that contains a vote for slot 0, which confirms slot 0
+           bank_forks.write().unwrap().insert(bank1);
+           progress.insert(
+               1,
+               ForkProgress::new(bank0.last_blockhash(), None, None, 0, 0),
+           );
+           let ancestors = bank_forks.read().unwrap().ancestors();
+           let mut frozen_banks: Vec<_> = bank_forks
+               .read()
+               .unwrap()
+               .frozen_banks()
+               .values()
+               .cloned()
+               .collect();
+           let newly_computed = ReplayStage::compute_bank_stats(
+               &my_vote_pubkey,
+               &ancestors,
+               &mut frozen_banks,
+               &mut tower,
+               &mut progress,
+               &VoteTracker::default(),
+               &ClusterSlots::default(),
+               &bank_forks,
+               &mut heaviest_subtree_fork_choice,
+               &mut latest_validator_votes_for_frozen_banks,
+           );
 
-        // Bank 1 had one vote
-        assert_eq!(newly_computed, vec![1]);
-        {
-            let vote_tracker = VoteTracker::default();
-            let confirmed_forks = ReplayStage::confirm_forks(
-                &tower,
-                &progress,
-                &bank_forks,
-                &vote_tracker,
-                3000,
-            );
-            // No new stats should have been computed
-            assert_eq!(confirmed_forks, vec![(0, bank0.hash())]);
-        }
+           // Bank 1 had one vote
+           assert_eq!(newly_computed, vec![1]);
+           {
+               let vote_tracker = VoteTracker::default();
+               let confirmed_forks = ReplayStage::confirm_forks(
+                   &tower,
+                   &progress,
+                   &bank_forks,
+                   &vote_tracker,
+                   3000,
+               );
+               // No new stats should have been computed
+               assert_eq!(confirmed_forks, vec![(0, bank0.hash())]);
+           }
 
-        let ancestors = bank_forks.read().unwrap().ancestors();
-        let mut frozen_banks: Vec<_> = bank_forks
-            .read()
-            .unwrap()
-            .frozen_banks()
-            .values()
-            .cloned()
-            .collect();
-        let newly_computed = ReplayStage::compute_bank_stats(
-            &my_vote_pubkey,
-            &ancestors,
-            &mut frozen_banks,
-            &mut tower,
-            &mut progress,
-            &VoteTracker::default(),
-            &ClusterSlots::default(),
-            &bank_forks,
-            &mut heaviest_subtree_fork_choice,
-            &mut latest_validator_votes_for_frozen_banks,
-        );
-        // No new stats should have been computed
-        assert!(newly_computed.is_empty());
-    }
- */
+           let ancestors = bank_forks.read().unwrap().ancestors();
+           let mut frozen_banks: Vec<_> = bank_forks
+               .read()
+               .unwrap()
+               .frozen_banks()
+               .values()
+               .cloned()
+               .collect();
+           let newly_computed = ReplayStage::compute_bank_stats(
+               &my_vote_pubkey,
+               &ancestors,
+               &mut frozen_banks,
+               &mut tower,
+               &mut progress,
+               &VoteTracker::default(),
+               &ClusterSlots::default(),
+               &bank_forks,
+               &mut heaviest_subtree_fork_choice,
+               &mut latest_validator_votes_for_frozen_banks,
+           );
+           // No new stats should have been computed
+           assert!(newly_computed.is_empty());
+       }
+    */
     #[test]
     fn test_same_weight_select_lower_slot() {
         // Init state

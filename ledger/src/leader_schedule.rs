@@ -1,8 +1,8 @@
 use {
+    domichain_sdk::pubkey::Pubkey,
     itertools::Itertools,
     rand::distributions::{Distribution, WeightedIndex},
     rand_chacha::{rand_core::SeedableRng, ChaChaRng},
-    domichain_sdk::pubkey::Pubkey,
     std::{collections::HashMap, convert::identity, ops::Index, sync::Arc},
 };
 

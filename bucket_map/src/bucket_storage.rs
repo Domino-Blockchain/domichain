@@ -1,8 +1,8 @@
 use {
     crate::{bucket_stats::BucketStats, MaxSearch},
+    domichain_measure::measure::Measure,
     memmap2::MmapMut,
     rand::{thread_rng, Rng},
-    domichain_measure::measure::Measure,
     std::{
         fs::{remove_file, OpenOptions},
         io::{Seek, SeekFrom, Write},

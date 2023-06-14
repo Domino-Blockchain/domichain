@@ -820,7 +820,6 @@ mod tests {
     use {
         super::*,
         crate::StoredConfirmedBlock,
-        prost::Message,
         domichain_sdk::{
             hash::Hash, message::v0::LoadedAddresses, signature::Keypair, system_transaction,
             transaction::VersionedTransaction, transaction_context::TransactionReturnData,
@@ -830,6 +829,7 @@ mod tests {
             ConfirmedBlock, TransactionStatusMeta, TransactionWithStatusMeta,
             VersionedTransactionWithStatusMeta,
         },
+        prost::Message,
         std::convert::TryInto,
     };
 

@@ -1,7 +1,6 @@
 use {
     clap::{crate_name, value_t, value_t_or_exit, values_t_or_exit, App, Arg},
     crossbeam_channel::unbounded,
-    log::*,
     domichain_clap_utils::{
         input_parsers::{pubkey_of, pubkeys_of, value_of},
         input_validators::{
@@ -33,6 +32,7 @@ use {
         admin_rpc_service, dashboard::Dashboard, ledger_lockfile, lock_ledger, println_name_value,
         redirect_stderr_to_file,
     },
+    log::*,
     std::{
         collections::HashSet,
         fs, io,

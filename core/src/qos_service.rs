@@ -550,7 +550,6 @@ impl QosServiceMetrics {
 mod tests {
     use {
         super::*,
-        itertools::Itertools,
         domichain_runtime::genesis_utils::{create_genesis_config, GenesisConfigInfo},
         domichain_sdk::{
             hash::Hash,
@@ -558,6 +557,7 @@ mod tests {
             system_transaction,
         },
         domichain_vote_program::vote_transaction,
+        itertools::Itertools,
     };
 
     #[test]

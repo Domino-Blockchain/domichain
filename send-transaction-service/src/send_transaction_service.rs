@@ -1,7 +1,6 @@
 use {
     crate::tpu_info::TpuInfo,
     crossbeam_channel::{Receiver, RecvTimeoutError},
-    log::*,
     domichain_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
     domichain_measure::measure::Measure,
     domichain_metrics::datapoint_warn,
@@ -10,6 +9,7 @@ use {
         hash::Hash, nonce_account, pubkey::Pubkey, saturating_add_assign, signature::Signature,
         timing::AtomicInterval, transport::TransportError,
     },
+    log::*,
     std::{
         collections::{
             hash_map::{Entry, HashMap},

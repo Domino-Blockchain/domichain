@@ -1,6 +1,6 @@
+use domichain_runtime::contains::Contains;
 use std::collections::HashMap;
 use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
-use domichain_runtime::contains::Contains;
 
 #[derive(Default, Clone)]
 pub struct VoteStakeTracker {
@@ -42,8 +42,15 @@ impl VoteStakeTracker {
                 info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
                 old_weight <= threshold_weight && threshold_weight < new_weight
             };
-            println!("Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}", vote_pubkey, _stake, _total_stake, weight, total_weight);
-            println!("Test vote majority, majority check{:?}, quorum check{:?}", check(thresholds_to_check[0]), check(thresholds_to_check[1]));
+          /*   println!(
+                "Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}",
+                vote_pubkey, _stake, _total_stake, weight, total_weight
+            );
+            println!(
+                "Test vote majority, majority check {:?}, quorum check {:?}",
+                check(thresholds_to_check[0]),
+                check(thresholds_to_check[1])
+            ); */
             (
                 ReachedThresholdResults {
                     majority: check(thresholds_to_check[0]),
@@ -52,9 +59,18 @@ impl VoteStakeTracker {
                 is_new,
             )
         } else {
-            println!("-------------");
-            println!("Test vote majority {:?}, {:?}, {:?} donot add_vote_pubkey", vote_pubkey, _stake, weight);
-            (ReachedThresholdResults {majority: false, quorum: false}, is_new)
+            /* println!("-------------");
+            println!(
+                "Test vote majority {:?}, {:?}, {:?} donot add_vote_pubkey",
+                vote_pubkey, _stake, weight
+            ); */
+            (
+                ReachedThresholdResults {
+                    majority: false,
+                    quorum: false,
+                },
+                is_new,
+            )
         }
     }
 
@@ -121,5 +137,5 @@ mod test {
             }
             assert!(is_new);
         }
-    } 
+    }
 } */

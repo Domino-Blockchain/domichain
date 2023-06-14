@@ -26,9 +26,9 @@ use {
         mapref::entry::Entry::{Occupied, Vacant},
         DashMap,
     },
-    log::*,
-    rand::{thread_rng, Rng},
-    domichain_address_lookup_table_program::{error::AddressLookupError, state::AddressLookupTable},
+    domichain_address_lookup_table_program::{
+        error::AddressLookupError, state::AddressLookupTable,
+    },
     domichain_sdk::{
         account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
@@ -55,6 +55,8 @@ use {
         transaction::{Result, SanitizedTransaction, TransactionAccountLocks, TransactionError},
         transaction_context::TransactionAccount,
     },
+    log::*,
+    rand::{thread_rng, Rng},
     std::{
         cmp::Reverse,
         collections::{hash_map, BinaryHeap, HashMap, HashSet},

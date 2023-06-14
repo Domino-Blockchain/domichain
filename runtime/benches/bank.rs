@@ -4,7 +4,6 @@
 extern crate test;
 
 use {
-    log::*,
     domichain_program_runtime::invoke_context::InvokeContext,
     domichain_runtime::{
         bank::{test_utils::goto_end_of_slot, *},
@@ -21,6 +20,7 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
+    log::*,
     std::{sync::Arc, thread::sleep, time::Duration},
     test::Bencher,
 };
@@ -139,7 +139,11 @@ fn do_bench_transactions(
         &Pubkey::new(&BUILTIN_PROGRAM_ID),
         process_instruction,
     );
-    bank.add_builtin_account("domichain_noop_program", &Pubkey::new(&NOOP_PROGRAM_ID), false);
+    bank.add_builtin_account(
+        "domichain_noop_program",
+        &Pubkey::new(&NOOP_PROGRAM_ID),
+        false,
+    );
     let bank = Arc::new(bank);
     let bank_client = BankClient::new_shared(&bank);
     let transactions = create_transactions(&bank_client, &mint_keypair);

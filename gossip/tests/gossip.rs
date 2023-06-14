@@ -3,7 +3,6 @@
 extern crate log;
 
 use {
-    rayon::iter::*,
     domichain_gossip::{
         cluster_info::{ClusterInfo, Node},
         contact_info::ContactInfo,
@@ -24,6 +23,7 @@ use {
         socket::SocketAddrSpace,
     },
     domichain_vote_program::{vote_instruction, vote_state::Vote},
+    rayon::iter::*,
     std::{
         net::UdpSocket,
         sync::{

@@ -1,5 +1,4 @@
 use {
-    min_max_heap::MinMaxHeap,
     domichain_perf::packet::{Packet, PacketBatch},
     domichain_program_runtime::compute_budget::ComputeBudget,
     domichain_sdk::{
@@ -10,6 +9,7 @@ use {
         signature::Signature,
         transaction::{SanitizedVersionedTransaction, Transaction, VersionedTransaction},
     },
+    min_max_heap::MinMaxHeap,
     std::{
         cmp::Ordering,
         collections::{hash_map::Entry, HashMap},

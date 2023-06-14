@@ -6,11 +6,6 @@ extern crate test;
 
 use {
     crossbeam_channel::unbounded,
-    log::*,
-    rand::{
-        distributions::{Distribution, Uniform},
-        thread_rng, Rng,
-    },
     domichain_core::{
         sigverify::TransactionSigVerifier,
         sigverify_stage::{SigVerifier, SigVerifyStage},
@@ -25,6 +20,11 @@ use {
         signature::{Keypair, Signer},
         system_transaction,
         timing::duration_as_ms,
+    },
+    log::*,
+    rand::{
+        distributions::{Distribution, Uniform},
+        thread_rng, Rng,
     },
     std::time::{Duration, Instant},
     test::Bencher,

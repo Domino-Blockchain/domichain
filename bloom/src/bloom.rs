@@ -1,10 +1,10 @@
 //! Simple Bloom Filter
 use {
     bv::BitVec,
+    domichain_sdk::sanitize::{Sanitize, SanitizeError},
     fnv::FnvHasher,
     rand::{self, Rng},
     serde::{Deserialize, Serialize},
-    domichain_sdk::sanitize::{Sanitize, SanitizeError},
     std::{
         cmp, fmt,
         hash::Hasher,
@@ -237,8 +237,8 @@ impl<T: BloomHashIndex> From<AtomicBloom<T>> for Bloom<T> {
 mod test {
     use {
         super::*,
-        rayon::prelude::*,
         domichain_sdk::hash::{hash, Hash},
+        rayon::prelude::*,
     };
 
     #[test]
@@ -324,9 +324,10 @@ mod test {
     #[test]
     fn test_atomic_bloom() {
         let mut rng = rand::thread_rng();
-        let hash_values: Vec<_> = std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
-            .take(1200)
-            .collect();
+        let hash_values: Vec<_> =
+            std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
+                .take(1200)
+                .collect();
         let bloom: AtomicBloom<_> = Bloom::<Hash>::random(1287, 0.1, 7424).into();
         assert_eq!(bloom.keys.len(), 3);
         assert_eq!(bloom.num_bits, 6168);
@@ -353,9 +354,10 @@ mod test {
         let mut rng = rand::thread_rng();
         let keys: Vec<_> = std::iter::repeat_with(|| rng.gen()).take(5).collect();
         let mut bloom = Bloom::<Hash>::new(9731, keys.clone());
-        let hash_values: Vec<_> = std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
-            .take(1000)
-            .collect();
+        let hash_values: Vec<_> =
+            std::iter::repeat_with(|| domichain_sdk::hash::new_rand(&mut rng))
+                .take(1000)
+                .collect();
         for hash_value in &hash_values {
             bloom.add(hash_value);
         }

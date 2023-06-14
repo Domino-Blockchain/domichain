@@ -1,7 +1,6 @@
 /// Module responsible for notifying plugins of account updates
 use {
     crate::geyser_plugin_manager::GeyserPluginManager,
-    log::*,
     domichain_geyser_plugin_interface::geyser_plugin_interface::{
         ReplicaAccountInfoV2, ReplicaAccountInfoVersions,
     },
@@ -16,6 +15,7 @@ use {
         clock::Slot,
         signature::Signature,
     },
+    log::*,
     std::sync::{Arc, RwLock},
 };
 #[derive(Debug)]

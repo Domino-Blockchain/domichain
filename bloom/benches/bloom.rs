@@ -3,13 +3,13 @@
 extern crate test;
 use {
     bv::BitVec,
-    fnv::FnvHasher,
-    rand::Rng,
     domichain_bloom::bloom::{AtomicBloom, Bloom, BloomHashIndex},
     domichain_sdk::{
         hash::{hash, Hash},
         signature::Signature,
     },
+    fnv::FnvHasher,
+    rand::Rng,
     std::{collections::HashSet, hash::Hasher},
     test::Bencher,
 };

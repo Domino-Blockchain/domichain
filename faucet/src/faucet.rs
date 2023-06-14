@@ -8,8 +8,6 @@ use {
     bincode::{deserialize, serialize, serialized_size},
     byteorder::{ByteOrder, LittleEndian},
     crossbeam_channel::{unbounded, Sender},
-    log::*,
-    serde_derive::{Deserialize, Serialize},
     domichain_metrics::datapoint_info,
     domichain_sdk::{
         hash::Hash,
@@ -22,6 +20,8 @@ use {
         system_instruction,
         transaction::Transaction,
     },
+    log::*,
+    serde_derive::{Deserialize, Serialize},
     std::{
         collections::{HashMap, HashSet},
         io::{Read, Write},

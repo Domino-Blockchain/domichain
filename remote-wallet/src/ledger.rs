@@ -4,16 +4,16 @@ use {
     },
     console::Emoji,
     dialoguer::{theme::ColorfulTheme, Select},
-    semver::Version as FirmwareVersion,
     domichain_sdk::derivation_path::DerivationPath,
+    semver::Version as FirmwareVersion,
     std::{fmt, sync::Arc},
 };
 #[cfg(feature = "hidapi")]
 use {
     crate::{ledger_error::LedgerError, locator::Manufacturer},
+    domichain_sdk::{pubkey::Pubkey, signature::Signature},
     log::*,
     num_traits::FromPrimitive,
-    domichain_sdk::{pubkey::Pubkey, signature::Signature},
     std::{cmp::min, convert::TryFrom},
 };
 

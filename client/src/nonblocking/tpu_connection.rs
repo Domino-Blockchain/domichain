@@ -3,8 +3,8 @@
 use {
     crate::nonblocking::udp_client::UdpTpuConnection,
     async_trait::async_trait,
-    enum_dispatch::enum_dispatch,
     domichain_sdk::{transaction::VersionedTransaction, transport::Result as TransportResult},
+    enum_dispatch::enum_dispatch,
     std::net::SocketAddr,
 };
 

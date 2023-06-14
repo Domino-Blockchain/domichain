@@ -3,12 +3,6 @@
 #[cfg(target_os = "linux")]
 #[allow(deprecated)]
 use nix::sys::socket::InetAddr;
-#[cfg(target_os = "linux")]
-use {
-    itertools::izip,
-    libc::{iovec, mmsghdr, sockaddr_in, sockaddr_in6, sockaddr_storage},
-    std::os::unix::io::AsRawFd,
-};
 use {
     domichain_sdk::transport::TransportError,
     std::{
@@ -18,6 +12,12 @@ use {
         net::{SocketAddr, UdpSocket},
     },
     thiserror::Error,
+};
+#[cfg(target_os = "linux")]
+use {
+    itertools::izip,
+    libc::{iovec, mmsghdr, sockaddr_in, sockaddr_in6, sockaddr_storage},
+    std::os::unix::io::AsRawFd,
 };
 
 #[derive(Debug, Error)]

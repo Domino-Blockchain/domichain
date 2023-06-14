@@ -1,5 +1,4 @@
 use {
-    itertools::Itertools,
     domichain_gossip::{
         cluster_info::ClusterInfo, contact_info::ContactInfo, crds::Cursor, epoch_slots::EpochSlots,
     },
@@ -9,6 +8,7 @@ use {
         pubkey::Pubkey,
         timing::AtomicInterval,
     },
+    itertools::Itertools,
     std::{
         collections::{BTreeMap, HashMap},
         sync::{Arc, Mutex, RwLock},

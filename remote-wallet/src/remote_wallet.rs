@@ -6,13 +6,13 @@ use {
         ledger_error::LedgerError,
         locator::{Locator, LocatorError, Manufacturer},
     },
-    log::*,
-    parking_lot::RwLock,
     domichain_sdk::{
         derivation_path::{DerivationPath, DerivationPathError},
         pubkey::Pubkey,
         signature::{Signature, SignerError},
     },
+    log::*,
+    parking_lot::RwLock,
     std::{
         sync::Arc,
         time::{Duration, Instant},

@@ -1,6 +1,5 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    serial_test::serial,
     domichain_bench_tps::{
         bench::{do_bench_tps, generate_and_fund_keypairs},
         cli::Config,
@@ -24,6 +23,7 @@ use {
     },
     domichain_streamer::socket::SocketAddrSpace,
     domichain_test_validator::TestValidator,
+    serial_test::serial,
     std::{sync::Arc, time::Duration},
 };
 

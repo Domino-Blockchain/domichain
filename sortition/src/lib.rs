@@ -3,12 +3,7 @@ use statrs::distribution::{Binomial, DiscreteCDF};
 
 use domichain_program::hash::Hash;
 
-pub fn select(
-    money: u64,
-    total_money: u64,
-    expected_size: f64,
-    vrf_output: Hash,
-) -> u64 {
+pub fn select(money: u64, total_money: u64, expected_size: f64, vrf_output: Hash) -> u64 {
     let binomial_n = money;
     let binomial_p = expected_size / total_money as f64;
     let cratio = get_cratio(vrf_output);
@@ -35,8 +30,8 @@ fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use rand::{Fill, prelude::StdRng, SeedableRng};
     use super::*;
+    use rand::{prelude::StdRng, Fill, SeedableRng};
 
     #[test]
     fn test_random_select() {
@@ -58,12 +53,7 @@ mod tests {
                 vrf_output.try_fill(&mut rng).unwrap();
                 let vrf_output = Hash::new_from_array(vrf_output);
 
-                let selected = select(
-                    my_money,
-                    total_money,
-                    expected_size,
-                    vrf_output,
-                );
+                let selected = select(my_money, total_money, expected_size, vrf_output);
 
                 hitcount += selected
             }
@@ -78,7 +68,7 @@ mod tests {
                 ok += 1;
             }
         }
-        println!("ok: {ok}, err: {err}, avg: {avg}", avg=avg / 1000);
+        println!("ok: {ok}, err: {err}, avg: {avg}", avg = avg / 1000);
     }
 
     #[test]
@@ -96,12 +86,7 @@ mod tests {
             let (arr, _exp_cratio) = sample[i];
             let vrf_output = Hash::new_from_array(arr);
 
-            let selected = select(
-                my_money,
-                total_money,
-                total_expected_size,
-                vrf_output,
-            );
+            let selected = select(my_money, total_money, total_expected_size, vrf_output);
 
             hitcount += selected
         }
@@ -139,9 +124,18 @@ mod tests {
         }
 
         avg_cratio = avg_cratio / n as f64;
-        assert!((avg_cratio - 0.5).abs() < 0.01, "avg_cratio={avg_cratio} should be close to 0.5");
+        assert!(
+            (avg_cratio - 0.5).abs() < 0.01,
+            "avg_cratio={avg_cratio} should be close to 0.5"
+        );
 
-        assert!((min_cratio - 0.0).abs() < 0.01, "min_cratio={min_cratio} should be close to 0");
-        assert!((max_cratio - 1.0).abs() < 0.01, "max_cratio={max_cratio} should be close to 1");
+        assert!(
+            (min_cratio - 0.0).abs() < 0.01,
+            "min_cratio={min_cratio} should be close to 0"
+        );
+        assert!(
+            (max_cratio - 1.0).abs() < 0.01,
+            "max_cratio={max_cratio} should be close to 1"
+        );
     }
 }

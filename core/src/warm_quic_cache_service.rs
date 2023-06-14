@@ -2,10 +2,10 @@
 // by the time we need it.
 
 use {
-    rand::{thread_rng, Rng},
     domichain_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
     domichain_gossip::cluster_info::ClusterInfo,
     domichain_poh::poh_recorder::PohRecorder,
+    rand::{thread_rng, Rng},
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},

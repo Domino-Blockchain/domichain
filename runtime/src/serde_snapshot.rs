@@ -18,9 +18,6 @@ use {
         stakes::Stakes,
     },
     bincode::{self, config::Options, Error},
-    log::*,
-    rayon::prelude::*,
-    serde::{de::DeserializeOwned, Deserialize, Serialize},
     domichain_measure::measure::Measure,
     domichain_sdk::{
         clock::{Epoch, Slot, UnixTimestamp},
@@ -33,6 +30,9 @@ use {
         inflation::Inflation,
         pubkey::Pubkey,
     },
+    log::*,
+    rayon::prelude::*,
+    serde::{de::DeserializeOwned, Deserialize, Serialize},
     std::{
         collections::{HashMap, HashSet},
         io::{self, BufReader, BufWriter, Read, Write},
@@ -53,9 +53,9 @@ mod tests;
 mod utils;
 
 // a number of test cases in accounts_db use this
+use crate::bank::WeightVoteTracker;
 #[cfg(test)]
 pub(crate) use tests::reconstruct_accounts_db_via_serialization;
-use crate::bank::WeightVoteTracker;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub(crate) enum SerdeStyle {
@@ -329,7 +329,7 @@ where
                 vote_tracker,
             )?;
             Ok(bank)
-        },
+        }
     }
     .map_err(|err| {
         warn!("bankrc_from_stream error: {:?}", err);

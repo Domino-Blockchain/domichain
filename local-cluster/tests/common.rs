@@ -1,6 +1,5 @@
 #![allow(clippy::integer_arithmetic, dead_code)]
 use {
-    log::*,
     domichain_client::rpc_client::RpcClient,
     domichain_core::{
         broadcast_stage::BroadcastStageType,
@@ -31,6 +30,7 @@ use {
         signature::{Keypair, Signer},
     },
     domichain_streamer::socket::SocketAddrSpace,
+    log::*,
     std::{
         collections::HashSet,
         fs, iter,

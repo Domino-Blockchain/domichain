@@ -6,7 +6,6 @@ use {
     clap::{value_t, value_t_or_exit, App, AppSettings, Arg, ArgMatches, SubCommand},
     console::style,
     crossbeam_channel::unbounded,
-    serde::{Deserialize, Serialize},
     domichain_clap_utils::{
         input_parsers::*,
         input_validators::*,
@@ -63,6 +62,7 @@ use {
     },
     domichain_transaction_status::UiTransactionEncoding,
     domichain_vote_program::vote_state::VoteState,
+    serde::{Deserialize, Serialize},
     std::{
         collections::{BTreeMap, HashMap, VecDeque},
         fmt,

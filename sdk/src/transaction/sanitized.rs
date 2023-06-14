@@ -3,6 +3,7 @@
 use {
     super::SanitizedVersionedTransaction,
     crate::{
+        domichain_sdk::feature_set,
         hash::Hash,
         message::{
             v0::{self, LoadedAddresses, MessageAddressTableLookup},
@@ -12,7 +13,6 @@ use {
         pubkey::Pubkey,
         sanitize::Sanitize,
         signature::Signature,
-        domichain_sdk::feature_set,
         transaction::{Result, Transaction, TransactionError, VersionedTransaction},
     },
     domichain_program::message::SanitizedVersionedMessage,

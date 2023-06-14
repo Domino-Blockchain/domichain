@@ -1,7 +1,7 @@
 use {
     crate::{blockstore::*, blockstore_db::Result, blockstore_meta::SlotMeta},
-    log::*,
     domichain_sdk::clock::Slot,
+    log::*,
 };
 
 pub struct RootedSlotIterator<'a> {

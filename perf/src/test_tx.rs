@@ -1,5 +1,4 @@
 use {
-    rand::{CryptoRng, Rng, RngCore},
     domichain_sdk::{
         clock::Slot,
         hash::Hash,
@@ -11,6 +10,7 @@ use {
         transaction::Transaction,
     },
     domichain_vote_program::vote_transaction,
+    rand::{CryptoRng, Rng, RngCore},
 };
 
 pub fn test_tx() -> Transaction {
@@ -59,14 +59,16 @@ where
     let mut slots: Vec<Slot> = std::iter::repeat_with(|| rng.gen()).take(5).collect();
     slots.sort_unstable();
     slots.dedup();
-    let switch_proof_hash = rng.gen_bool(0.5).then(|| domichain_sdk::hash::new_rand(rng));
+    let switch_proof_hash = rng
+        .gen_bool(0.5)
+        .then(|| domichain_sdk::hash::new_rand(rng));
     vote_transaction::new_vote_transaction(
         slots,
         domichain_sdk::hash::new_rand(rng), // bank_hash
         domichain_sdk::hash::new_rand(rng), // blockhash
-        &Keypair::generate(rng),         // node_keypair
-        &Keypair::generate(rng),         // vote_keypair
-        &Keypair::generate(rng),         // authorized_voter_keypair
+        &Keypair::generate(rng),            // node_keypair
+        &Keypair::generate(rng),            // vote_keypair
+        &Keypair::generate(rng),            // authorized_voter_keypair
         switch_proof_hash,
     )
 }

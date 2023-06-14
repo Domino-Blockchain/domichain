@@ -17,7 +17,6 @@ use {
         serialization::{deserialize_parameters, serialize_parameters},
         syscalls::SyscallError,
     },
-    log::{log_enabled, trace, Level::Trace},
     domichain_measure::measure::Measure,
     domichain_program_runtime::{
         ic_logger_msg, ic_msg,
@@ -46,6 +45,7 @@ use {
         system_instruction::{self, MAX_PERMITTED_DATA_LENGTH},
         transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
+    log::{log_enabled, trace, Level::Trace},
     solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{HOST_ALIGN, MM_INPUT_START},
@@ -1327,7 +1327,6 @@ impl Executor for BpfExecutor {
 mod tests {
     use {
         super::*,
-        rand::Rng,
         domichain_program_runtime::invoke_context::mock_process_instruction,
         domichain_runtime::{bank::Bank, bank_client::BankClient},
         domichain_sdk::{
@@ -1349,6 +1348,7 @@ mod tests {
             system_program, sysvar,
             transaction::TransactionError,
         },
+        rand::Rng,
         solana_rbpf::{verifier::Verifier, vm::SyscallRegistry},
         std::{fs::File, io::Read, ops::Range, sync::Arc},
     };

@@ -1,5 +1,4 @@
 use {
-    serde::{Deserialize, Serialize},
     domichain_account_decoder::{
         parse_token::{real_number_string_trimmed, UiTokenAmount},
         StringAmount,
@@ -11,6 +10,7 @@ use {
     domichain_transaction_status::{
         InnerInstructions, Reward, RewardType, TransactionStatusMeta, TransactionTokenBalance,
     },
+    serde::{Deserialize, Serialize},
     std::str::FromStr,
 };
 

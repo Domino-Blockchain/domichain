@@ -5,10 +5,10 @@ use {
         tpu_connection::{ClientStats, Connection},
         udp_client::UdpTpuConnection,
     },
-    indexmap::map::{Entry, IndexMap},
-    rand::{thread_rng, Rng},
     domichain_measure::measure::Measure,
     domichain_sdk::{quic::QUIC_PORT_OFFSET, timing::AtomicInterval},
+    indexmap::map::{Entry, IndexMap},
+    rand::{thread_rng, Rng},
     std::{
         net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket},
         sync::{

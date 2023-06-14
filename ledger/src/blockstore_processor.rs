@@ -1,3 +1,4 @@
+use domichain_runtime::bank::WeightVoteTracker;
 use {
     crate::{
         block_error::BlockError, blockstore::Blockstore, blockstore_db::BlockstoreError,
@@ -5,10 +6,6 @@ use {
     },
     chrono_humanize::{Accuracy, HumanTime, Tense},
     crossbeam_channel::Sender,
-    itertools::Itertools,
-    log::*,
-    rand::{seq::SliceRandom, thread_rng},
-    rayon::{prelude::*, ThreadPool},
     domichain_entry::entry::{
         self, create_ticks, Entry, EntrySlice, EntryType, EntryVerificationStatus, VerifyRecyclers,
     },
@@ -53,6 +50,10 @@ use {
     domichain_transaction_status::token_balances::{
         collect_token_balances, TransactionTokenBalancesSet,
     },
+    itertools::Itertools,
+    log::*,
+    rand::{seq::SliceRandom, thread_rng},
+    rayon::{prelude::*, ThreadPool},
     std::{
         borrow::Cow,
         collections::{HashMap, HashSet},
@@ -63,7 +64,6 @@ use {
     },
     thiserror::Error,
 };
-use domichain_runtime::bank::WeightVoteTracker;
 
 // it tracks the block cost available capacity - number of compute-units allowed
 // by max block cost limit.

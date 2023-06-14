@@ -7,12 +7,12 @@ use {
         slot_status_observer::SlotStatusObserver, transaction_notifier::TransactionNotifierImpl,
     },
     crossbeam_channel::Receiver,
-    log::*,
     domichain_rpc::{
         optimistically_confirmed_bank_tracker::BankNotification,
         transaction_notifier_interface::TransactionNotifierLock,
     },
     domichain_runtime::accounts_update_notifier_interface::AccountsUpdateNotifier,
+    log::*,
     std::{
         fs::File,
         io::Read,

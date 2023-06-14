@@ -3,9 +3,9 @@
 extern crate test;
 
 use {
-    log::*,
     domichain_program_runtime::{pre_account::PreAccount, timings::ExecuteDetailsTimings},
     domichain_sdk::{account::AccountSharedData, pubkey, rent::Rent},
+    log::*,
     test::Bencher,
 };
 

@@ -1,8 +1,8 @@
 use {
     crate::{bank::Bank, cost_model::CostModel},
     crossbeam_channel::{Receiver, Sender},
-    log::*,
     domichain_sdk::{clock::Slot, signature::Signature, transaction::SanitizedTransaction},
+    log::*,
     std::{
         sync::{Arc, RwLock},
         thread::{self, Builder, JoinHandle},

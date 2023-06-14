@@ -14,7 +14,6 @@ pub use domichain_sdk::clock::Slot;
 use {
     crate::poh_service::PohService,
     crossbeam_channel::{unbounded, Receiver, RecvTimeoutError, SendError, Sender, TrySendError},
-    log::*,
     domichain_entry::{entry::Entry, poh::Poh},
     domichain_ledger::{
         blockstore::Blockstore,
@@ -22,12 +21,15 @@ use {
         leader_schedule_cache::LeaderScheduleCache,
     },
     domichain_measure::measure,
-    domichain_metrics::poh_timing_point::{send_poh_timing_point, PohTimingSender, SlotPohTimingInfo},
+    domichain_metrics::poh_timing_point::{
+        send_poh_timing_point, PohTimingSender, SlotPohTimingInfo,
+    },
     domichain_runtime::bank::Bank,
     domichain_sdk::{
         clock::NUM_CONSECUTIVE_LEADER_SLOTS, hash::Hash, poh_config::PohConfig, pubkey::Pubkey,
         transaction::VersionedTransaction,
     },
+    log::*,
     std::{
         cmp,
         sync::{
@@ -976,7 +978,9 @@ mod tests {
         super::*,
         bincode::serialize,
         crossbeam_channel::bounded,
-        domichain_ledger::{blockstore::Blockstore, blockstore_meta::SlotMeta, get_tmp_ledger_path},
+        domichain_ledger::{
+            blockstore::Blockstore, blockstore_meta::SlotMeta, get_tmp_ledger_path,
+        },
         domichain_perf::test_tx::test_tx,
         domichain_sdk::{clock::DEFAULT_TICKS_PER_SLOT, hash::hash},
     };

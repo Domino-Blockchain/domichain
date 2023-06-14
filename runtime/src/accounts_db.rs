@@ -60,10 +60,6 @@ use {
         mapref::entry::Entry::{Occupied, Vacant},
         DashMap, DashSet,
     },
-    log::*,
-    rand::{thread_rng, Rng},
-    rayon::{prelude::*, ThreadPool},
-    serde::{Deserialize, Serialize},
     domichain_measure::measure::Measure,
     domichain_rayon_threadlimit::get_thread_count,
     domichain_sdk::{
@@ -77,6 +73,10 @@ use {
         signature::Signature,
         timing::AtomicInterval,
     },
+    log::*,
+    rand::{thread_rng, Rng},
+    rayon::{prelude::*, ThreadPool},
+    serde::{Deserialize, Serialize},
     std::{
         borrow::{Borrow, Cow},
         boxed::Box,
@@ -5296,7 +5296,8 @@ impl AccountsDb {
         hasher.update(pubkey.as_ref());
 
         Hash::new_from_array(
-            <[u8; domichain_sdk::hash::HASH_BYTES]>::try_from(hasher.finalize().as_slice()).unwrap(),
+            <[u8; domichain_sdk::hash::HASH_BYTES]>::try_from(hasher.finalize().as_slice())
+                .unwrap(),
         )
     }
 
@@ -8711,7 +8712,6 @@ pub mod tests {
             inline_spl_token,
         },
         assert_matches::assert_matches,
-        rand::{prelude::SliceRandom, thread_rng, Rng},
         domichain_sdk::{
             account::{
                 accounts_equal, Account, AccountSharedData, ReadableAccount, WritableAccount,
@@ -8719,6 +8719,7 @@ pub mod tests {
             hash::HASH_BYTES,
             pubkey::PUBKEY_BYTES,
         },
+        rand::{prelude::SliceRandom, thread_rng, Rng},
         std::{
             iter::FromIterator,
             str::FromStr,
@@ -11582,7 +11583,8 @@ pub mod tests {
         let key = domichain_sdk::pubkey::new_rand();
         let lamports = 100;
         let data_len = 8190;
-        let account = AccountSharedData::new(lamports, data_len, &domichain_sdk::pubkey::new_rand());
+        let account =
+            AccountSharedData::new(lamports, data_len, &domichain_sdk::pubkey::new_rand());
         // pre-populate with a smaller empty store
         db.create_and_insert_store(1, 8192, "test_storage_finder");
         db.store_uncached(1, &[(&key, &account)]);

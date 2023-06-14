@@ -1,6 +1,7 @@
 //! The `validator` module hosts all the validator microservices.
 
 pub use domichain_perf::report_target_features;
+use domichain_runtime::bank::WeightVoteTracker;
 use {
     crate::{
         accounts_hash_verifier::AccountsHashVerifier,
@@ -24,7 +25,6 @@ use {
         tvu::{Tvu, TvuConfig, TvuSockets},
     },
     crossbeam_channel::{bounded, unbounded, Receiver},
-    rand::{thread_rng, Rng},
     domichain_client::connection_cache::{ConnectionCache, UseQUIC},
     domichain_entry::poh::compute_hash_time_ns,
     domichain_geyser_plugin_manager::geyser_plugin_service::GeyserPluginService,
@@ -100,6 +100,7 @@ use {
     domichain_send_transaction_service::send_transaction_service,
     domichain_streamer::socket::SocketAddrSpace,
     domichain_vote_program::vote_state::VoteState,
+    rand::{thread_rng, Rng},
     std::{
         collections::{HashMap, HashSet},
         net::SocketAddr,
@@ -112,7 +113,6 @@ use {
         time::{Duration, Instant},
     },
 };
-use domichain_runtime::bank::WeightVoteTracker;
 
 const MAX_COMPLETED_DATA_SETS_IN_CHANNEL: usize = 100_000;
 const WAIT_FOR_SUPERMAJORITY_THRESHOLD_PERCENT: u64 = 80;
@@ -2092,8 +2092,12 @@ mod tests {
     use {
         super::*,
         crossbeam_channel::{bounded, RecvTimeoutError},
-        domichain_client::connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
-        domichain_ledger::{create_new_tmp_ledger, genesis_utils::create_genesis_config_with_leader},
+        domichain_client::connection_cache::{
+            DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC,
+        },
+        domichain_ledger::{
+            create_new_tmp_ledger, genesis_utils::create_genesis_config_with_leader,
+        },
         domichain_sdk::{genesis_config::create_genesis_config, poh_config::PohConfig},
         std::{fs::remove_dir_all, thread, time::Duration},
     };

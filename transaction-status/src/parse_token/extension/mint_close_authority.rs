@@ -23,8 +23,8 @@ mod test {
     use {
         super::*,
         crate::parse_token::test::*,
-        serde_json::Value,
         domichain_sdk::pubkey::Pubkey,
+        serde_json::Value,
         spl_token_2022::{instruction::*, solana_program::message::Message},
     };
 

@@ -4,11 +4,11 @@
 extern crate test;
 
 use {
-    rand::distributions::{Distribution, Uniform},
     domichain_core::unprocessed_packet_batches::*,
     domichain_measure::measure::Measure,
     domichain_perf::packet::{Packet, PacketBatch},
     domichain_sdk::{hash::Hash, signature::Keypair, system_transaction},
+    rand::distributions::{Distribution, Uniform},
     test::Bencher,
 };
 

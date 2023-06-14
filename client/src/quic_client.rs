@@ -7,9 +7,9 @@ use {
         nonblocking::quic_client::{QuicClient, QuicLazyInitializedEndpoint},
         tpu_connection::{ClientStats, TpuConnection},
     },
+    domichain_sdk::transport::Result as TransportResult,
     lazy_static::lazy_static,
     log::*,
-    domichain_sdk::transport::Result as TransportResult,
     std::{net::SocketAddr, sync::Arc},
     tokio::runtime::Runtime,
 };

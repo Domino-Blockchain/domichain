@@ -846,7 +846,7 @@ mod tests {
         );
     }
 
-   /*  #[test]
+    /*  #[test]
     fn test_message_hash() {
         // when this test fails, it's most likely due to a new serialized format of a message.
         // in this case, the domain prefix `domichain-tx-message-v1` should be updated.

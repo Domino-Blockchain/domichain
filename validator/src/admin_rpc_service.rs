@@ -1,11 +1,4 @@
 use {
-    jsonrpc_core::{MetaIoHandler, Metadata, Result},
-    jsonrpc_core_client::{transports::ipc, RpcError},
-    jsonrpc_derive::rpc,
-    jsonrpc_ipc_server::{RequestContext, ServerBuilder},
-    jsonrpc_server_utils::tokio,
-    log::*,
-    serde::{Deserialize, Serialize},
     domichain_core::{
         consensus::Tower, tower_storage::TowerStorage, validator::ValidatorStartProgress,
     },
@@ -16,6 +9,13 @@ use {
         pubkey::Pubkey,
         signature::{read_keypair_file, Keypair, Signer},
     },
+    jsonrpc_core::{MetaIoHandler, Metadata, Result},
+    jsonrpc_core_client::{transports::ipc, RpcError},
+    jsonrpc_derive::rpc,
+    jsonrpc_ipc_server::{RequestContext, ServerBuilder},
+    jsonrpc_server_utils::tokio,
+    log::*,
+    serde::{Deserialize, Serialize},
     std::{
         fmt::{self, Display},
         net::SocketAddr,

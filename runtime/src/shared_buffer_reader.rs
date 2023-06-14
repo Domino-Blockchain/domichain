@@ -7,8 +7,8 @@
 //! The clients of SharedBufferReaders could be parallel instances which need access to the decompressed data.
 use {
     crate::waitable_condvar::WaitableCondvar,
-    log::*,
     domichain_measure::measure::Measure,
+    log::*,
     std::{
         io::*,
         sync::{

@@ -12,9 +12,6 @@ use {
     chrono::{Local, TimeZone},
     clap::ArgMatches,
     console::{style, Emoji},
-    inflector::cases::titlecase::to_title_case,
-    serde::{Deserialize, Serialize},
-    serde_json::{Map, Value},
     domichain_account_decoder::parse_token::UiTokenAccount,
     domichain_clap_utils::keypair::SignOnly,
     domichain_client::rpc_response::{
@@ -40,6 +37,9 @@ use {
         authorized_voters::AuthorizedVoters,
         vote_state::{BlockTimestamp, Lockout, MAX_EPOCH_CREDITS_HISTORY, MAX_LOCKOUT_HISTORY},
     },
+    inflector::cases::titlecase::to_title_case,
+    serde::{Deserialize, Serialize},
+    serde_json::{Map, Value},
     std::{
         collections::{BTreeMap, HashMap},
         fmt,
@@ -1723,7 +1723,11 @@ impl VerboseDisplay for CliSupply {}
 
 impl fmt::Display for CliSupply {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln_name_value(f, "Total:", &format!("{} DOMI", lamports_to_sol(self.total)))?;
+        writeln_name_value(
+            f,
+            "Total:",
+            &format!("{} DOMI", lamports_to_sol(self.total)),
+        )?;
         writeln_name_value(
             f,
             "Circulating:",

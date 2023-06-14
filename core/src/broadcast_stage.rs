@@ -13,7 +13,6 @@ use {
         result::{Error, Result},
     },
     crossbeam_channel::{unbounded, Receiver, RecvError, RecvTimeoutError, Sender},
-    itertools::Itertools,
     domichain_gossip::cluster_info::{ClusterInfo, ClusterInfoError, DATA_PLANE_FANOUT},
     domichain_ledger::{blockstore::Blockstore, shred::Shred},
     domichain_measure::measure::Measure,
@@ -30,6 +29,7 @@ use {
         sendmmsg::{batch_send, SendPktsError},
         socket::SocketAddrSpace,
     },
+    itertools::Itertools,
     std::{
         collections::{HashMap, HashSet},
         iter::repeat,

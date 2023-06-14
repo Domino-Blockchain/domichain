@@ -3,7 +3,9 @@
 /// In addition, the dynamic library must export a "C" function _create_plugin which
 /// creates the implementation of the plugin.
 use {
-    domichain_sdk::{clock::UnixTimestamp, signature::Signature, transaction::SanitizedTransaction},
+    domichain_sdk::{
+        clock::UnixTimestamp, signature::Signature, transaction::SanitizedTransaction,
+    },
     domichain_transaction_status::{Reward, TransactionStatusMeta},
     std::{any::Any, error, io},
     thiserror::Error,

@@ -19,12 +19,12 @@
 //! For more information on how features are picked up, see comments for `Feature`.
 
 use {
-    lazy_static::lazy_static,
     domichain_sdk::{
         clock::Slot,
         hash::{Hash, Hasher},
         pubkey::Pubkey,
     },
+    lazy_static::lazy_static,
     std::collections::{HashMap, HashSet},
 };
 

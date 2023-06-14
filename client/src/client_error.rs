@@ -1,11 +1,11 @@
 pub use reqwest;
 use {
     crate::{rpc_request, rpc_response},
-    quinn::{ConnectError, WriteError},
     domichain_faucet::faucet::FaucetError,
     domichain_sdk::{
         signature::SignerError, transaction::TransactionError, transport::TransportError,
     },
+    quinn::{ConnectError, WriteError},
     std::io,
     thiserror::Error,
 }; // export `reqwest` for clients

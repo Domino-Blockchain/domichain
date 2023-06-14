@@ -3,7 +3,6 @@
 extern crate log;
 use {
     clap::{crate_description, crate_name, value_t, App, Arg},
-    rayon::prelude::*,
     domichain_measure::measure::Measure,
     domichain_runtime::{
         accounts::{
@@ -18,6 +17,7 @@ use {
     domichain_sdk::{
         genesis_config::ClusterType, pubkey::Pubkey, sysvar::epoch_schedule::EpochSchedule,
     },
+    rayon::prelude::*,
     std::{env, fs, path::PathBuf},
 };
 

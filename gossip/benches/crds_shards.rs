@@ -3,13 +3,13 @@
 extern crate test;
 
 use {
-    rand::{thread_rng, Rng},
     domichain_gossip::{
         crds::{Crds, GossipRoute, VersionedCrdsValue},
         crds_shards::CrdsShards,
         crds_value::CrdsValue,
     },
     domichain_sdk::timing::timestamp,
+    rand::{thread_rng, Rng},
     std::iter::repeat_with,
     test::Bencher,
 };

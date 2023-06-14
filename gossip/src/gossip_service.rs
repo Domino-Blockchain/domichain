@@ -3,7 +3,6 @@
 use {
     crate::{cluster_info::ClusterInfo, contact_info::ContactInfo},
     crossbeam_channel::{unbounded, Sender},
-    rand::{thread_rng, Rng},
     domichain_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
     domichain_perf::recycler::Recycler,
     domichain_runtime::bank_forks::BankForks,
@@ -15,6 +14,7 @@ use {
         socket::SocketAddrSpace,
         streamer::{self, StreamerReceiveStats},
     },
+    rand::{thread_rng, Rng},
     std::{
         collections::HashSet,
         net::{SocketAddr, TcpListener, UdpSocket},
@@ -157,8 +157,9 @@ pub fn discover(
     if let Some(my_gossip_addr) = my_gossip_addr {
         info!("Gossip Address: {:?}", my_gossip_addr);
     }
-    let _ip_echo_server = ip_echo
-        .map(|tcp_listener| domichain_net_utils::ip_echo_server(tcp_listener, Some(my_shred_version)));
+    let _ip_echo_server = ip_echo.map(|tcp_listener| {
+        domichain_net_utils::ip_echo_server(tcp_listener, Some(my_shred_version))
+    });
     let (met_criteria, elapsed, all_peers, tvu_peers) = spy(
         spy_ref.clone(),
         num_nodes,
