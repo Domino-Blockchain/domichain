@@ -806,6 +806,8 @@ impl ClusterInfoVoteListener {
                     ));
                 }
 
+                println!("[{}:{}] slot = {slot}, weight = {weight},\t{reached_threshold_results:?}", file!(), line!());
+
                 if reached_threshold_results.majority { // Majority
                     if let Some(sender) = cluster_confirmed_slot_sender {
                         let _ = sender.send(vec![(last_vote_slot, last_vote_hash)]);

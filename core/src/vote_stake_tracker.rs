@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fmt::Write;
+use std::hash::Hasher;
 use {domichain_sdk::pubkey::Pubkey, std::collections::HashSet};
 use domichain_runtime::contains::Contains;
 
@@ -11,10 +13,25 @@ pub struct VoteStakeTracker {
     weight: u64,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone)]
 pub struct ReachedThresholdResults {
     pub majority: bool,
     pub quorum: bool,
+}
+
+impl std::fmt::Debug for ReachedThresholdResults {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("{")?;
+        if self.majority {
+            f.write_str(" majority ")?
+        }
+
+        if self.quorum {
+            f.write_str(" quorum ")?
+        }
+        f.write_str("}")?;
+        Ok(())
+    }
 }
 
 impl VoteStakeTracker {
