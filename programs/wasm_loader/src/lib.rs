@@ -1726,16 +1726,13 @@ impl Executor for WasmExecutor {
                 Err(wasm_error) => {
                     match wasm_error.trap_code() {
                         Some(wasmi::core::TrapCode::OutOfFuel) => {
-                            dbg!(&wasm_error);
                             // stable_log::program_failure(&log_collector, &program_id, &error);
                             Err(InstructionError::ComputationalBudgetExceeded)
                         }
                         Some(error) => {
-                            dbg!(error);
                             panic!("WASM exited with error \"{wasm_error}\"");
                         }
                         None => {
-                            dbg!(&wasm_error);
                             // stable_log::program_failure(&log_collector, &program_id, &error);
                             panic!("WASM exited with error \"{wasm_error}\"");
                         }
