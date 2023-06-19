@@ -698,8 +698,8 @@ impl ClusterInfoVoteListener {
         diff: &mut HashMap<Slot, HashMap<Pubkey, bool>>,
         new_optimistic_confirmed_slots: &mut ThresholdConfirmedSlots,
         is_gossip_vote: bool,
-        bank_notification_sender: &Option<BankNotificationSender>, // bank_notification_sender (quorum)
-        cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>, // cluster_confirmed_slot_sender (majority)
+        bank_notification_sender: &Option<BankNotificationSender>, // bank_notification_sender (quorum) -> OptimisticallyConfirmedBankTracker::new() (core/src/validator.rs:849)
+        cluster_confirmed_slot_sender: &Option<GossipDuplicateConfirmedSlotsSender>, // cluster_confirmed_slot_sender (majority) -> TVU (core/src/validator.rs:990)
         total_weight: u64,
     ) {
         if vote.is_empty() {
