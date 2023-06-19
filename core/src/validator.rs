@@ -1043,9 +1043,9 @@ impl Validator {
             gossip_verified_vote_hash_sender,
             replay_vote_receiver,
             replay_vote_sender,
-            bank_notification_sender,
+            bank_notification_sender, // quorum
             config.tpu_coalesce_ms,
-            cluster_confirmed_slot_sender,
+            cluster_confirmed_slot_sender, // majority
             &cost_model,
             &connection_cache,
             &identity_keypair,
