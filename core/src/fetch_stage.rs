@@ -1,26 +1,24 @@
 //! The `fetch_stage` batches input from a UDP socket and sends it to a channel.
 
 use {
-    crate::{
-        banking_stage::HOLD_TRANSACTIONS_SLOT_OFFSET,
-        result::{Error, Result},
-    },
+    crate::result::{Error, Result},
     crossbeam_channel::{unbounded, RecvTimeoutError},
     domichain_metrics::{inc_new_counter_debug, inc_new_counter_info},
     domichain_perf::{packet::PacketBatchRecycler, recycler::Recycler},
     domichain_poh::poh_recorder::PohRecorder,
     domichain_sdk::{
-        clock::DEFAULT_TICKS_PER_SLOT,
+        clock::{DEFAULT_TICKS_PER_SLOT, HOLD_TRANSACTIONS_SLOT_OFFSET},
         packet::{Packet, PacketFlags},
     },
     domichain_streamer::streamer::{
         self, PacketBatchReceiver, PacketBatchSender, StreamerReceiveStats,
     },
+    domichain_tpu_client::tpu_client::DEFAULT_TPU_ENABLE_UDP,
     std::{
         net::UdpSocket,
         sync::{
             atomic::{AtomicBool, Ordering},
-            Arc, Mutex,
+            Arc, RwLock,
         },
         thread::{self, sleep, Builder, JoinHandle},
         time::Duration,
@@ -32,14 +30,13 @@ pub struct FetchStage {
 }
 
 impl FetchStage {
-    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         sockets: Vec<UdpSocket>,
         tpu_forwards_sockets: Vec<UdpSocket>,
         tpu_vote_sockets: Vec<UdpSocket>,
         exit: &Arc<AtomicBool>,
-        poh_recorder: &Arc<Mutex<PohRecorder>>,
-        coalesce_ms: u64,
+        poh_recorder: &Arc<RwLock<PohRecorder>>,
+        coalesce: Duration,
     ) -> (Self, PacketBatchReceiver, PacketBatchReceiver) {
         let (sender, receiver) = unbounded();
         let (vote_sender, vote_receiver) = unbounded();
@@ -55,8 +52,9 @@ impl FetchStage {
                 &forward_sender,
                 forward_receiver,
                 poh_recorder,
-                coalesce_ms,
+                coalesce,
                 None,
+                DEFAULT_TPU_ENABLE_UDP,
             ),
             receiver,
             vote_receiver,
@@ -73,9 +71,10 @@ impl FetchStage {
         vote_sender: &PacketBatchSender,
         forward_sender: &PacketBatchSender,
         forward_receiver: PacketBatchReceiver,
-        poh_recorder: &Arc<Mutex<PohRecorder>>,
-        coalesce_ms: u64,
+        poh_recorder: &Arc<RwLock<PohRecorder>>,
+        coalesce: Duration,
         in_vote_only_mode: Option<Arc<AtomicBool>>,
+        tpu_enable_udp: bool,
     ) -> Self {
         let tx_sockets = sockets.into_iter().map(Arc::new).collect();
         let tpu_forwards_sockets = tpu_forwards_sockets.into_iter().map(Arc::new).collect();
@@ -90,18 +89,19 @@ impl FetchStage {
             forward_sender,
             forward_receiver,
             poh_recorder,
-            coalesce_ms,
+            coalesce,
             in_vote_only_mode,
+            tpu_enable_udp,
         )
     }
 
     fn handle_forwarded_packets(
         recvr: &PacketBatchReceiver,
         sendr: &PacketBatchSender,
-        poh_recorder: &Arc<Mutex<PohRecorder>>,
+        poh_recorder: &Arc<RwLock<PohRecorder>>,
     ) -> Result<()> {
         let mark_forwarded = |packet: &mut Packet| {
-            packet.meta.flags |= PacketFlags::FORWARDED;
+            packet.meta_mut().flags |= PacketFlags::FORWARDED;
         };
 
         let mut packet_batch = recvr.recv()?;
@@ -119,7 +119,7 @@ impl FetchStage {
         }
 
         if poh_recorder
-            .lock()
+            .read()
             .unwrap()
             .would_be_leader(HOLD_TRANSACTIONS_SLOT_OFFSET.saturating_mul(DEFAULT_TICKS_PER_SLOT))
         {
@@ -147,45 +147,55 @@ impl FetchStage {
         vote_sender: &PacketBatchSender,
         forward_sender: &PacketBatchSender,
         forward_receiver: PacketBatchReceiver,
-        poh_recorder: &Arc<Mutex<PohRecorder>>,
-        coalesce_ms: u64,
+        poh_recorder: &Arc<RwLock<PohRecorder>>,
+        coalesce: Duration,
         in_vote_only_mode: Option<Arc<AtomicBool>>,
+        tpu_enable_udp: bool,
     ) -> Self {
         let recycler: PacketBatchRecycler = Recycler::warmed(1000, 1024);
 
         let tpu_stats = Arc::new(StreamerReceiveStats::new("tpu_receiver"));
-        let tpu_threads: Vec<_> = tpu_sockets
-            .into_iter()
-            .map(|socket| {
-                streamer::receiver(
-                    socket,
-                    exit.clone(),
-                    sender.clone(),
-                    recycler.clone(),
-                    tpu_stats.clone(),
-                    coalesce_ms,
-                    true,
-                    in_vote_only_mode.clone(),
-                )
-            })
-            .collect();
+
+        let tpu_threads: Vec<_> = if tpu_enable_udp {
+            tpu_sockets
+                .into_iter()
+                .map(|socket| {
+                    streamer::receiver(
+                        socket,
+                        exit.clone(),
+                        sender.clone(),
+                        recycler.clone(),
+                        tpu_stats.clone(),
+                        coalesce,
+                        true,
+                        in_vote_only_mode.clone(),
+                    )
+                })
+                .collect()
+        } else {
+            Vec::default()
+        };
 
         let tpu_forward_stats = Arc::new(StreamerReceiveStats::new("tpu_forwards_receiver"));
-        let tpu_forwards_threads: Vec<_> = tpu_forwards_sockets
-            .into_iter()
-            .map(|socket| {
-                streamer::receiver(
-                    socket,
-                    exit.clone(),
-                    forward_sender.clone(),
-                    recycler.clone(),
-                    tpu_forward_stats.clone(),
-                    coalesce_ms,
-                    true,
-                    in_vote_only_mode.clone(),
-                )
-            })
-            .collect();
+        let tpu_forwards_threads: Vec<_> = if tpu_enable_udp {
+            tpu_forwards_sockets
+                .into_iter()
+                .map(|socket| {
+                    streamer::receiver(
+                        socket,
+                        exit.clone(),
+                        forward_sender.clone(),
+                        recycler.clone(),
+                        tpu_forward_stats.clone(),
+                        coalesce,
+                        true,
+                        in_vote_only_mode.clone(),
+                    )
+                })
+                .collect()
+        } else {
+            Vec::default()
+        };
 
         let tpu_vote_stats = Arc::new(StreamerReceiveStats::new("tpu_vote_receiver"));
         let tpu_vote_threads: Vec<_> = tpu_vote_sockets
@@ -197,7 +207,7 @@ impl FetchStage {
                     vote_sender.clone(),
                     recycler.clone(),
                     tpu_vote_stats.clone(),
-                    coalesce_ms,
+                    coalesce,
                     true,
                     None,
                 )
@@ -208,7 +218,7 @@ impl FetchStage {
         let poh_recorder = poh_recorder.clone();
 
         let fwd_thread_hdl = Builder::new()
-            .name("domichain-fetch-stage-fwd-rcvr".to_string())
+            .name("domiFetchStgFwRx".to_string())
             .spawn(move || loop {
                 if let Err(e) =
                     Self::handle_forwarded_packets(&forward_receiver, &sender, &poh_recorder)
@@ -226,7 +236,7 @@ impl FetchStage {
 
         let exit = exit.clone();
         let metrics_thread_hdl = Builder::new()
-            .name("domichain-fetch-stage-metrics".to_string())
+            .name("domiFetchStgMetr".to_string())
             .spawn(move || loop {
                 sleep(Duration::from_secs(1));
 

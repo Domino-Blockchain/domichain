@@ -1,22 +1,22 @@
 [package]
-name = "domichain-banks-interface"
-version = "1.11.1"
-description = "Domichain banks RPC interface"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
-documentation = "https://docs.rs/domichain-banks-interface"
-edition = "2021"
+name = "solana-banks-interface"
+description = "Solana banks RPC interface"
+documentation = "https://docs.rs/solana-banks-interface"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-serde = { version = "1.0.137", features = ["derive"] }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-tarpc = { version = "0.29.0", features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+solana-sdk = { workspace = true }
+tarpc = { workspace = true, features = ["full"] }
 
 [lib]
 crate-type = ["lib"]
-name = "domichain_banks_interface"
+name = "solana_banks_interface"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

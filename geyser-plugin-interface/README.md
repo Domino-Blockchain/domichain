@@ -22,4 +22,4 @@ an external PostgreSQL databases.
 
 More information about Domichain is available in the [Domichain documentation](https://docs.domichain.com/).
 
-Still have questions?  Ask us on [Discord](https://discordapp.com/invite/pquxPsq)
+Still have questions?  Ask us on [Stack Exchange](https://sola.na/sse)

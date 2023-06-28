@@ -1,133 +1,41 @@
 use {
+    crate::immutable_deserialized_packet::{DeserializedPacketError, ImmutableDeserializedPacket},
     min_max_heap::MinMaxHeap,
-    domichain_perf::packet::{Packet, PacketBatch},
-    domichain_program_runtime::compute_budget::ComputeBudget,
-    domichain_sdk::{
-        hash::Hash,
-        message::{Message, SanitizedVersionedMessage},
-        sanitize::SanitizeError,
-        short_vec::decode_shortu16_len,
-        signature::Signature,
-        transaction::{SanitizedVersionedTransaction, Transaction, VersionedTransaction},
-    },
+    domichain_perf::packet::Packet,
+    domichain_sdk::hash::Hash,
     std::{
         cmp::Ordering,
         collections::{hash_map::Entry, HashMap},
-        mem::size_of,
-        rc::Rc,
+        sync::Arc,
     },
-    thiserror::Error,
 };
-
-#[derive(Debug, Error)]
-pub enum DeserializedPacketError {
-    #[error("ShortVec Failed to Deserialize")]
-    // short_vec::decode_shortu16_len() currently returns () on error
-    ShortVecError(()),
-    #[error("Deserialization Error: {0}")]
-    DeserializationError(#[from] bincode::Error),
-    #[error("overflowed on signature size {0}")]
-    SignatureOverflowed(usize),
-    #[error("packet failed sanitization {0}")]
-    SanitizeError(#[from] SanitizeError),
-    #[error("transaction failed prioritization")]
-    PrioritizationFailure,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct TransactionPriorityDetails {
-    priority: u64,
-    compute_unit_limit: u64,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ImmutableDeserializedPacket {
-    original_packet: Packet,
-    transaction: SanitizedVersionedTransaction,
-    message_hash: Hash,
-    is_simple_vote: bool,
-    priority_details: TransactionPriorityDetails,
-}
-
-impl ImmutableDeserializedPacket {
-    pub fn original_packet(&self) -> &Packet {
-        &self.original_packet
-    }
-
-    pub fn transaction(&self) -> &SanitizedVersionedTransaction {
-        &self.transaction
-    }
-
-    pub fn sender_stake(&self) -> u64 {
-        self.original_packet.meta.sender_stake
-    }
-
-    pub fn message_hash(&self) -> &Hash {
-        &self.message_hash
-    }
-
-    pub fn is_simple_vote(&self) -> bool {
-        self.is_simple_vote
-    }
-
-    pub fn priority(&self) -> u64 {
-        self.priority_details.priority
-    }
-
-    pub fn compute_unit_limit(&self) -> u64 {
-        self.priority_details.compute_unit_limit
-    }
-}
 
 /// Holds deserialized messages, as well as computed message_hash and other things needed to create
 /// SanitizedTransaction
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeserializedPacket {
-    immutable_section: Rc<ImmutableDeserializedPacket>,
+    immutable_section: Arc<ImmutableDeserializedPacket>,
     pub forwarded: bool,
 }
 
 impl DeserializedPacket {
+    pub fn from_immutable_section(immutable_section: ImmutableDeserializedPacket) -> Self {
+        Self {
+            immutable_section: Arc::new(immutable_section),
+            forwarded: false,
+        }
+    }
+
     pub fn new(packet: Packet) -> Result<Self, DeserializedPacketError> {
-        Self::new_internal(packet, None)
-    }
-
-    #[cfg(test)]
-    fn new_with_priority_details(
-        packet: Packet,
-        priority_details: TransactionPriorityDetails,
-    ) -> Result<Self, DeserializedPacketError> {
-        Self::new_internal(packet, Some(priority_details))
-    }
-
-    pub fn new_internal(
-        packet: Packet,
-        priority_details: Option<TransactionPriorityDetails>,
-    ) -> Result<Self, DeserializedPacketError> {
-        let versioned_transaction: VersionedTransaction = packet.deserialize_slice(..)?;
-        let sanitized_transaction = SanitizedVersionedTransaction::try_from(versioned_transaction)?;
-        let message_bytes = packet_message(&packet)?;
-        let message_hash = Message::hash_raw_message(message_bytes);
-        let is_simple_vote = packet.meta.is_simple_vote_tx();
-
-        // drop transaction if prioritization fails.
-        let priority_details = priority_details
-            .or_else(|| get_priority_details(sanitized_transaction.get_message()))
-            .ok_or(DeserializedPacketError::PrioritizationFailure)?;
+        let immutable_section = ImmutableDeserializedPacket::new(packet)?;
 
         Ok(Self {
-            immutable_section: Rc::new(ImmutableDeserializedPacket {
-                original_packet: packet,
-                transaction: sanitized_transaction,
-                message_hash,
-                is_simple_vote,
-                priority_details,
-            }),
+            immutable_section: Arc::new(immutable_section),
             forwarded: false,
         })
     }
 
-    pub fn immutable_section(&self) -> &Rc<ImmutableDeserializedPacket> {
+    pub fn immutable_section(&self) -> &Arc<ImmutableDeserializedPacket> {
         &self.immutable_section
     }
 }
@@ -140,41 +48,24 @@ impl PartialOrd for DeserializedPacket {
 
 impl Ord for DeserializedPacket {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self
-            .immutable_section()
+        self.immutable_section()
             .priority()
             .cmp(&other.immutable_section().priority())
-        {
-            Ordering::Equal => self
-                .immutable_section()
-                .sender_stake()
-                .cmp(&other.immutable_section().sender_stake()),
-            ordering => ordering,
-        }
     }
 }
 
-impl PartialOrd for ImmutableDeserializedPacket {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for ImmutableDeserializedPacket {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match self.priority().cmp(&other.priority()) {
-            Ordering::Equal => self.sender_stake().cmp(&other.sender_stake()),
-            ordering => ordering,
-        }
-    }
+#[derive(Debug)]
+pub struct PacketBatchInsertionMetrics {
+    pub(crate) num_dropped_packets: usize,
+    pub(crate) num_dropped_tracer_packets: usize,
 }
 
 /// Currently each banking_stage thread has a `UnprocessedPacketBatches` buffer to store
 /// PacketBatch's received from sigverify. Banking thread continuously scans the buffer
 /// to pick proper packets to add to the block.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct UnprocessedPacketBatches {
-    pub packet_priority_queue: MinMaxHeap<Rc<ImmutableDeserializedPacket>>,
+    pub packet_priority_queue: MinMaxHeap<Arc<ImmutableDeserializedPacket>>,
     pub message_hash_to_transaction: HashMap<Hash, DeserializedPacket>,
     batch_limit: usize,
 }
@@ -203,14 +94,14 @@ impl UnprocessedPacketBatches {
     }
 
     /// Insert new `deserialized_packet_batch` into inner `MinMaxHeap<DeserializedPacket>`,
-    /// weighted first by the tx priority, then the stake of the sender.
-    /// If buffer is at the max limit, the lowest weighted packet is dropped
+    /// ordered by the tx priority.
+    /// If buffer is at the max limit, the lowest priority packet is dropped
     ///
     /// Returns tuple of number of packets dropped
     pub fn insert_batch(
         &mut self,
         deserialized_packets: impl Iterator<Item = DeserializedPacket>,
-    ) -> (usize, usize) {
+    ) -> PacketBatchInsertionMetrics {
         let mut num_dropped_packets = 0;
         let mut num_dropped_tracer_packets = 0;
         for deserialized_packet in deserialized_packets {
@@ -219,16 +110,23 @@ impl UnprocessedPacketBatches {
                 if dropped_packet
                     .immutable_section()
                     .original_packet()
-                    .meta
+                    .meta()
                     .is_tracer_packet()
                 {
                     num_dropped_tracer_packets += 1;
                 }
             }
         }
-        (num_dropped_packets, num_dropped_tracer_packets)
+        PacketBatchInsertionMetrics {
+            num_dropped_packets,
+            num_dropped_tracer_packets,
+        }
     }
 
+    /// Pushes a new `deserialized_packet` into the unprocessed packet batches if it does not already
+    /// exist.
+    ///
+    /// Returns and drops the lowest priority packet if the buffer is at capacity.
     pub fn push(&mut self, deserialized_packet: DeserializedPacket) -> Option<DeserializedPacket> {
         if self
             .message_hash_to_transaction
@@ -259,8 +157,8 @@ impl UnprocessedPacketBatches {
         F: FnMut(&mut DeserializedPacket) -> bool,
     {
         // TODO: optimize this only when number of packets
-        // with oudated blockhash is high
-        let new_packet_priority_queue: MinMaxHeap<Rc<ImmutableDeserializedPacket>> = self
+        // with outdated blockhash is high
+        let new_packet_priority_queue: MinMaxHeap<Arc<ImmutableDeserializedPacket>> = self
             .packet_priority_queue
             .drain()
             .filter(|immutable_packet| {
@@ -335,7 +233,8 @@ impl UnprocessedPacketBatches {
         }
     }
 
-    pub fn pop_max(&mut self) -> Option<DeserializedPacket> {
+    #[cfg(test)]
+    fn pop_max(&mut self) -> Option<DeserializedPacket> {
         self.packet_priority_queue
             .pop_max()
             .map(|immutable_packet| {
@@ -347,7 +246,8 @@ impl UnprocessedPacketBatches {
 
     /// Pop up to the next `n` highest priority transactions from the queue.
     /// Returns `None` if the queue is empty
-    pub fn pop_max_n(&mut self, n: usize) -> Option<Vec<DeserializedPacket>> {
+    #[cfg(test)]
+    fn pop_max_n(&mut self, n: usize) -> Option<Vec<DeserializedPacket>> {
         let current_len = self.len();
         if self.is_empty() {
             None
@@ -364,105 +264,75 @@ impl UnprocessedPacketBatches {
     pub fn capacity(&self) -> usize {
         self.packet_priority_queue.capacity()
     }
-}
 
-pub fn deserialize_packets<'a>(
-    packet_batch: &'a PacketBatch,
-    packet_indexes: &'a [usize],
-) -> impl Iterator<Item = DeserializedPacket> + 'a {
-    packet_indexes.iter().filter_map(move |packet_index| {
-        DeserializedPacket::new(packet_batch[*packet_index].clone()).ok()
-    })
-}
+    pub fn is_forwarded(&self, immutable_packet: &ImmutableDeserializedPacket) -> bool {
+        self.message_hash_to_transaction
+            .get(immutable_packet.message_hash())
+            .map_or(true, |p| p.forwarded)
+    }
 
-/// Read the transaction message from packet data
-pub fn packet_message(packet: &Packet) -> Result<&[u8], DeserializedPacketError> {
-    let (sig_len, sig_size) = packet
-        .data(..)
-        .and_then(|bytes| decode_shortu16_len(bytes).ok())
-        .ok_or(DeserializedPacketError::ShortVecError(()))?;
-    sig_len
-        .checked_mul(size_of::<Signature>())
-        .and_then(|v| v.checked_add(sig_size))
-        .and_then(|msg_start| packet.data(msg_start..))
-        .ok_or(DeserializedPacketError::SignatureOverflowed(sig_size))
-}
-
-fn get_priority_details(message: &SanitizedVersionedMessage) -> Option<TransactionPriorityDetails> {
-    let mut compute_budget = ComputeBudget::default();
-    let prioritization_fee_details = compute_budget
-        .process_instructions(
-            message.program_instructions_iter(),
-            true, // don't reject txs that use request heap size ix
-            true, // use default units per instruction
-            true, // don't reject txs that use set compute unit price ix
-        )
-        .ok()?;
-    Some(TransactionPriorityDetails {
-        priority: prioritization_fee_details.get_priority(),
-        compute_unit_limit: compute_budget.compute_unit_limit,
-    })
-}
-
-pub fn transactions_to_deserialized_packets(
-    transactions: &[Transaction],
-) -> Result<Vec<DeserializedPacket>, DeserializedPacketError> {
-    transactions
-        .iter()
-        .map(|transaction| {
-            let packet = Packet::from_data(None, transaction)?;
-            DeserializedPacket::new(packet)
-        })
-        .collect()
+    pub fn mark_accepted_packets_as_forwarded(
+        &mut self,
+        packets_to_process: &[Arc<ImmutableDeserializedPacket>],
+        accepted_packet_indexes: &[usize],
+    ) {
+        accepted_packet_indexes
+            .iter()
+            .for_each(|accepted_packet_index| {
+                let accepted_packet = packets_to_process[*accepted_packet_index].clone();
+                if let Some(deserialized_packet) = self
+                    .message_hash_to_transaction
+                    .get_mut(accepted_packet.message_hash())
+                {
+                    deserialized_packet.forwarded = true;
+                }
+            });
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use {
         super::*,
+        domichain_perf::packet::PacketFlags,
         domichain_sdk::{
-            compute_budget::ComputeBudgetInstruction, message::VersionedMessage, pubkey::Pubkey,
-            signature::Keypair, system_instruction, system_transaction,
+            compute_budget::ComputeBudgetInstruction,
+            message::Message,
+            signature::{Keypair, Signer},
+            system_instruction, system_transaction,
+            transaction::{SimpleAddressLoader, Transaction},
         },
-        std::net::IpAddr,
+        domichain_vote_program::vote_transaction,
+        std::sync::Arc,
     };
 
-    fn packet_with_sender_stake(sender_stake: u64, ip: Option<IpAddr>) -> DeserializedPacket {
+    fn simple_deserialized_packet() -> DeserializedPacket {
         let tx = system_transaction::transfer(
             &Keypair::new(),
             &domichain_sdk::pubkey::new_rand(),
             1,
             Hash::new_unique(),
         );
-        let mut packet = Packet::from_data(None, &tx).unwrap();
-        packet.meta.sender_stake = sender_stake;
-        if let Some(ip) = ip {
-            packet.meta.addr = ip;
-        }
+        let packet = Packet::from_data(None, tx).unwrap();
         DeserializedPacket::new(packet).unwrap()
     }
 
     fn packet_with_priority_details(priority: u64, compute_unit_limit: u64) -> DeserializedPacket {
-        let tx = system_transaction::transfer(
-            &Keypair::new(),
-            &domichain_sdk::pubkey::new_rand(),
-            1,
-            Hash::new_unique(),
-        );
-        let packet = Packet::from_data(None, &tx).unwrap();
-        DeserializedPacket::new_with_priority_details(
-            packet,
-            TransactionPriorityDetails {
-                priority,
-                compute_unit_limit,
-            },
-        )
-        .unwrap()
+        let from_account = domichain_sdk::pubkey::new_rand();
+        let tx = Transaction::new_unsigned(Message::new(
+            &[
+                ComputeBudgetInstruction::set_compute_unit_limit(compute_unit_limit as u32),
+                ComputeBudgetInstruction::set_compute_unit_price(priority),
+                system_instruction::transfer(&from_account, &domichain_sdk::pubkey::new_rand(), 1),
+            ],
+            Some(&from_account),
+        ));
+        DeserializedPacket::new(Packet::from_data(None, tx).unwrap()).unwrap()
     }
 
     #[test]
     fn test_unprocessed_packet_batches_insert_pop_same_packet() {
-        let packet = packet_with_sender_stake(1, None);
+        let packet = simple_deserialized_packet();
         let mut unprocessed_packet_batches = UnprocessedPacketBatches::with_capacity(2);
         unprocessed_packet_batches.push(packet.clone());
         unprocessed_packet_batches.push(packet.clone());
@@ -508,8 +378,7 @@ mod tests {
     #[test]
     fn test_unprocessed_packet_batches_pop_max_n() {
         let num_packets = 10;
-        let packets_iter =
-            std::iter::repeat_with(|| packet_with_sender_stake(1, None)).take(num_packets);
+        let packets_iter = std::iter::repeat_with(simple_deserialized_packet).take(num_packets);
         let mut unprocessed_packet_batches =
             UnprocessedPacketBatches::from_iter(packets_iter.clone(), num_packets);
 
@@ -558,69 +427,125 @@ mod tests {
         assert!(unprocessed_packet_batches.pop_max_n(0).is_none());
     }
 
-    #[test]
-    fn test_get_priority_with_valid_request_heap_frame_tx() {
-        let payer = Pubkey::new_unique();
-        let message = SanitizedVersionedMessage::try_from(VersionedMessage::Legacy(Message::new(
-            &[
-                system_instruction::transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1),
-                ComputeBudgetInstruction::request_heap_frame(32 * 1024),
-            ],
-            Some(&payer),
-        )))
-        .unwrap();
-        assert_eq!(
-            get_priority_details(&message),
-            Some(TransactionPriorityDetails {
-                priority: 0,
-                compute_unit_limit:
-                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
-                        as u64
-            })
-        );
+    #[cfg(test)]
+    fn make_test_packets(
+        transactions: Vec<Transaction>,
+        vote_indexes: Vec<usize>,
+    ) -> Vec<DeserializedPacket> {
+        let capacity = transactions.len();
+        let mut packet_vector = Vec::with_capacity(capacity);
+        for tx in transactions.iter() {
+            packet_vector.push(Packet::from_data(None, tx).unwrap());
+        }
+        for index in vote_indexes.iter() {
+            packet_vector[*index].meta_mut().flags |= PacketFlags::SIMPLE_VOTE_TX;
+        }
+
+        packet_vector
+            .into_iter()
+            .map(|p| DeserializedPacket::new(p).unwrap())
+            .collect()
     }
 
     #[test]
-    fn test_get_priority_with_valid_set_compute_units_limit() {
-        let requested_cu = 101u32;
-        let payer = Pubkey::new_unique();
-        let message = SanitizedVersionedMessage::try_from(VersionedMessage::Legacy(Message::new(
-            &[
-                system_instruction::transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1),
-                ComputeBudgetInstruction::set_compute_unit_limit(requested_cu),
-            ],
-            Some(&payer),
-        )))
-        .unwrap();
-        assert_eq!(
-            get_priority_details(&message),
-            Some(TransactionPriorityDetails {
-                priority: 0,
-                compute_unit_limit: requested_cu as u64,
-            })
+    fn test_transaction_from_deserialized_packet() {
+        use domichain_sdk::feature_set::FeatureSet;
+        let keypair = Keypair::new();
+        let transfer_tx =
+            system_transaction::transfer(&keypair, &keypair.pubkey(), 1, Hash::default());
+        let vote_tx = vote_transaction::new_vote_transaction(
+            vec![42],
+            Hash::default(),
+            Hash::default(),
+            &keypair,
+            &keypair,
+            &keypair,
+            None,
         );
-    }
 
-    #[test]
-    fn test_get_priority_with_valid_set_compute_unit_price() {
-        let requested_price = 1_000;
-        let payer = Pubkey::new_unique();
-        let message = SanitizedVersionedMessage::try_from(VersionedMessage::Legacy(Message::new(
-            &[
-                system_instruction::transfer(&Pubkey::new_unique(), &Pubkey::new_unique(), 1),
-                ComputeBudgetInstruction::set_compute_unit_price(requested_price),
-            ],
-            Some(&payer),
-        )))
-        .unwrap();
-        assert_eq!(
-            get_priority_details(&message),
-            Some(TransactionPriorityDetails {
-                priority: requested_price,
-                compute_unit_limit:
-                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
-                        as u64
-            })
-        );
+        // packets with no votes
+        {
+            let vote_indexes = vec![];
+            let packet_vector =
+                make_test_packets(vec![transfer_tx.clone(), transfer_tx.clone()], vote_indexes);
+
+            let mut votes_only = false;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(2, txs.count());
+
+            votes_only = true;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(0, txs.count());
+        }
+
+        // packets with some votes
+        {
+            let vote_indexes = vec![0, 2];
+            let packet_vector = make_test_packets(
+                vec![vote_tx.clone(), transfer_tx, vote_tx.clone()],
+                vote_indexes,
+            );
+
+            let mut votes_only = false;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(3, txs.count());
+
+            votes_only = true;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(2, txs.count());
+        }
+
+        // packets with all votes
+        {
+            let vote_indexes = vec![0, 1, 2];
+            let packet_vector = make_test_packets(
+                vec![vote_tx.clone(), vote_tx.clone(), vote_tx],
+                vote_indexes,
+            );
+
+            let mut votes_only = false;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(3, txs.count());
+
+            votes_only = true;
+            let txs = packet_vector.iter().filter_map(|tx| {
+                tx.immutable_section().build_sanitized_transaction(
+                    &Arc::new(FeatureSet::default()),
+                    votes_only,
+                    SimpleAddressLoader::Disabled,
+                )
+            });
+            assert_eq!(3, txs.count());
+        }
     }
 }

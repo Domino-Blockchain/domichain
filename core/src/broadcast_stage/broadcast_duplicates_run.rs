@@ -3,8 +3,7 @@ use {
     crate::cluster_nodes::ClusterNodesCache,
     itertools::Itertools,
     domichain_entry::entry::Entry,
-    domichain_gossip::cluster_info::DATA_PLANE_FANOUT,
-    domichain_ledger::shred::Shredder,
+    domichain_ledger::shred::{ProcessShredsStats, ReedSolomonCache, Shredder},
     domichain_sdk::{
         hash::Hash,
         signature::{Keypair, Signature, Signer},
@@ -36,6 +35,7 @@ pub(super) struct BroadcastDuplicatesRun {
     cluster_nodes_cache: Arc<ClusterNodesCache<BroadcastStage>>,
     original_last_data_shreds: Arc<Mutex<HashSet<Signature>>>,
     partition_last_data_shreds: Arc<Mutex<HashSet<Signature>>>,
+    reed_solomon_cache: Arc<ReedSolomonCache>,
 }
 
 impl BroadcastDuplicatesRun {
@@ -56,6 +56,7 @@ impl BroadcastDuplicatesRun {
             cluster_nodes_cache,
             original_last_data_shreds: Arc::<Mutex<HashSet<Signature>>>::default(),
             partition_last_data_shreds: Arc::<Mutex<HashSet<Signature>>>::default(),
+            reed_solomon_cache: Arc::<ReedSolomonCache>::default(),
         }
     }
 }
@@ -163,6 +164,9 @@ impl BroadcastRun for BroadcastDuplicatesRun {
             last_tick_height == bank.max_tick_height() && last_entries.is_none(),
             self.next_shred_index,
             self.next_code_index,
+            false, // merkle_variant
+            &self.reed_solomon_cache,
+            &mut ProcessShredsStats::default(),
         );
 
         self.next_shred_index += data_shreds.len() as u32;
@@ -177,6 +181,9 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                     true,
                     self.next_shred_index,
                     self.next_code_index,
+                    false, // merkle_variant
+                    &self.reed_solomon_cache,
+                    &mut ProcessShredsStats::default(),
                 );
                 // Don't mark the last shred as last so that validators won't
                 // know that they've gotten all the shreds, and will continue
@@ -187,6 +194,9 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                     true,
                     self.next_shred_index,
                     self.next_code_index,
+                    false, // merkle_variant
+                    &self.reed_solomon_cache,
+                    &mut ProcessShredsStats::default(),
                 );
                 let sigs: Vec<_> = partition_last_data_shred
                     .iter()
@@ -267,12 +277,6 @@ impl BroadcastRun for BroadcastDuplicatesRun {
             (bank_forks.root_bank(), bank_forks.working_bank())
         };
         let self_pubkey = cluster_info.id();
-        let nodes: Vec<_> = cluster_info
-            .all_peers()
-            .into_iter()
-            .map(|(node, _)| node)
-            .collect();
-
         // Create cluster partition.
         let cluster_partition: HashSet<Pubkey> = {
             let mut cumilative_stake = 0;
@@ -299,24 +303,20 @@ impl BroadcastRun for BroadcastDuplicatesRun {
         let packets: Vec<_> = shreds
             .iter()
             .filter_map(|shred| {
-                let addr = cluster_nodes
-                    .get_broadcast_addrs(shred, &root_bank, DATA_PLANE_FANOUT, socket_addr_space)
-                    .first()
-                    .copied()?;
-                let node = nodes.iter().find(|node| node.tvu == addr)?;
-                if !socket_addr_space.check(&node.tvu) {
+                let node = cluster_nodes.get_broadcast_peer(&shred.id())?;
+                if !socket_addr_space.check(&node.tvu(Protocol::UDP).ok()?) {
                     return None;
                 }
                 if self
                     .original_last_data_shreds
                     .lock()
                     .unwrap()
-                    .remove(&shred.signature())
+                    .remove(shred.signature())
                 {
-                    if cluster_partition.contains(&node.id) {
+                    if cluster_partition.contains(node.pubkey()) {
                         info!(
                             "skipping node {} for original shred index {}, slot {}",
-                            node.id,
+                            node.pubkey(),
                             shred.index(),
                             shred.slot()
                         );
@@ -326,7 +326,7 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                     .partition_last_data_shreds
                     .lock()
                     .unwrap()
-                    .remove(&shred.signature())
+                    .remove(shred.signature())
                 {
                     // If the shred is part of the partition, broadcast it directly to the
                     // partition node. This is to account for cases when the partition stake
@@ -337,14 +337,15 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                             .iter()
                             .filter_map(|pubkey| {
                                 let tvu = cluster_info
-                                    .lookup_contact_info(pubkey, |contact_info| contact_info.tvu)?;
+                                    .lookup_contact_info(pubkey, |node| node.tvu(Protocol::UDP))?
+                                    .ok()?;
                                 Some((shred.payload(), tvu))
                             })
                             .collect(),
                     );
                 }
 
-                Some(vec![(shred.payload(), node.tvu)])
+                Some(vec![(shred.payload(), node.tvu(Protocol::UDP).ok()?)])
             })
             .flatten()
             .collect();

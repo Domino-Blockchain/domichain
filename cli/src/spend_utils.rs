@@ -5,7 +5,7 @@ use {
     },
     clap::ArgMatches,
     domichain_clap_utils::{input_parsers::lamports_of_sol, offline::SIGN_ONLY_ARG},
-    domichain_client::rpc_client::RpcClient,
+    domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig, hash::Hash, message::Message,
         native_token::lamports_to_sol, pubkey::Pubkey,

@@ -1,4 +1,4 @@
-FROM domichainlabs/rust:1.60.0
+FROM domichainlabs/rust:1.69.0
 ARG date
 
 RUN set -x \

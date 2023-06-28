@@ -1,34 +1,34 @@
 [package]
 name = "domichain-entry"
-version = "1.11.1"
 description = "Domichain Entry"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-poh"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bincode = "1.3.3"
-crossbeam-channel = "0.5"
-dlopen = "0.1.8"
-dlopen_derive = "0.1.4"
-lazy_static = "1.4.0"
-log = "0.4.17"
-rand = "0.7.0"
-rayon = "1.5.3"
-serde = "1.0.137"
-domichain-measure = { path = "../measure", version = "=1.11.1" }
-domichain-merkle-tree = { path = "../merkle-tree", version = "=1.11.1" }
-domichain-metrics = { path = "../metrics", version = "=1.11.1" }
-domichain-perf = { path = "../perf", version = "=1.11.1" }
-domichain-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+bincode = { workspace = true }
+crossbeam-channel = { workspace = true }
+dlopen = { workspace = true }
+dlopen_derive = { workspace = true }
+lazy_static = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-merkle-tree = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-perf = { workspace = true }
+domichain-rayon-threadlimit = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [dev-dependencies]
-matches = "0.1.9"
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+matches = { workspace = true }
+domichain-logger = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

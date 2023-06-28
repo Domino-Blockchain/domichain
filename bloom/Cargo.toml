@@ -1,25 +1,25 @@
 [package]
 name = "domichain-bloom"
-version = "1.11.1"
 description = "Domichain bloom filter"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
-documentation = "https://docs.rs/domichain-bloom"
-edition = "2021"
+documentation = "https://docs.rs/solana-bloom"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bv = { version = "0.11.1", features = ["serde"] }
-fnv = "1.0.7"
-log = "0.4.17"
-rand = "0.7.0"
-rayon = "1.5.3"
-serde = { version = "1.0.137", features = ["rc"] }
-serde_derive = "1.0.103"
-domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+bv = { workspace = true, features = ["serde"] }
+fnv = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_derive = { workspace = true }
+domichain-frozen-abi = { workspace = true }
+domichain-frozen-abi-macro = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]
@@ -29,4 +29,4 @@ name = "domichain_bloom"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [build-dependencies]
-rustc_version = "0.4"
+rustc_version = { workspace = true }

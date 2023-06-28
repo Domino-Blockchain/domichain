@@ -1,25 +1,27 @@
 //! The `shred_fetch_stage` pulls shreds from UDP sockets and sends it to a channel.
 
 use {
-    crate::packet_hasher::PacketHasher,
+    crate::{cluster_nodes::check_feature_activation, serve_repair::ServeRepair},
     crossbeam_channel::{unbounded, Sender},
-    lru::LruCache,
-    domichain_ledger::shred::{self, get_shred_slot_index_type, ShredFetchStats},
-    domichain_perf::packet::{Packet, PacketBatch, PacketBatchRecycler, PacketFlags},
-    domichain_runtime::bank_forks::BankForks,
-    domichain_sdk::clock::{Slot, DEFAULT_MS_PER_SLOT},
+    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_ledger::shred::{should_discard_shred, ShredFetchStats},
+    domichain_perf::packet::{PacketBatch, PacketBatchRecycler, PacketFlags},
+    domichain_runtime::{bank::Bank, bank_forks::BankForks},
+    domichain_sdk::{
+        clock::{Slot, DEFAULT_MS_PER_SLOT},
+        feature_set,
+    },
     domichain_streamer::streamer::{self, PacketBatchReceiver, StreamerReceiveStats},
     std::{
         net::UdpSocket,
-        ops::RangeBounds,
-        sync::{atomic::AtomicBool, Arc, RwLock},
+        sync::{
+            atomic::{AtomicBool, Ordering},
+            Arc, RwLock,
+        },
         thread::{self, Builder, JoinHandle},
         time::{Duration, Instant},
     },
 };
-
-const DEFAULT_LRU_SIZE: usize = 10_000;
-type ShredsReceived = LruCache<u64, ()>;
 
 pub(crate) struct ShredFetchStage {
     thread_hdls: Vec<JoinHandle<()>>,
@@ -29,71 +31,98 @@ impl ShredFetchStage {
     // updates packets received on a channel and sends them on another channel
     fn modify_packets(
         recvr: PacketBatchReceiver,
-        sendr: Sender<Vec<PacketBatch>>,
+        sendr: Sender<PacketBatch>,
         bank_forks: &RwLock<BankForks>,
         shred_version: u16,
         name: &'static str,
         flags: PacketFlags,
+        repair_context: Option<(&UdpSocket, &ClusterInfo)>,
+        turbine_disabled: Arc<AtomicBool>,
     ) {
         const STATS_SUBMIT_CADENCE: Duration = Duration::from_secs(1);
-        let mut shreds_received = LruCache::new(DEFAULT_LRU_SIZE);
         let mut last_updated = Instant::now();
+        let mut keypair = repair_context
+            .as_ref()
+            .map(|(_, cluster_info)| cluster_info.keypair().clone());
 
         // In the case of bank_forks=None, setup to accept any slot range
+        let mut root_bank = bank_forks.read().unwrap().root_bank();
         let mut last_root = 0;
         let mut last_slot = std::u64::MAX;
         let mut slots_per_epoch = 0;
 
         let mut stats = ShredFetchStats::default();
-        let mut packet_hasher = PacketHasher::default();
 
-        while let Some(mut packet_batch) = recvr.iter().next() {
+        for mut packet_batch in recvr {
             if last_updated.elapsed().as_millis() as u64 > DEFAULT_MS_PER_SLOT {
                 last_updated = Instant::now();
-                packet_hasher.reset();
-                shreds_received.clear();
                 {
                     let bank_forks_r = bank_forks.read().unwrap();
                     last_root = bank_forks_r.root();
                     let working_bank = bank_forks_r.working_bank();
                     last_slot = working_bank.slot();
-                    let root_bank = bank_forks_r.root_bank();
+                    root_bank = bank_forks_r.root_bank();
                     slots_per_epoch = root_bank.get_slots_in_epoch(root_bank.epoch());
                 }
+                keypair = repair_context
+                    .as_ref()
+                    .map(|(_, cluster_info)| cluster_info.keypair().clone());
             }
             stats.shred_count += packet_batch.len();
+
+            if let Some((udp_socket, _)) = repair_context {
+                debug_assert_eq!(flags, PacketFlags::REPAIR);
+                debug_assert!(keypair.is_some());
+                if let Some(ref keypair) = keypair {
+                    ServeRepair::handle_repair_response_pings(
+                        udp_socket,
+                        keypair,
+                        &mut packet_batch,
+                        &mut stats,
+                    );
+                }
+            }
+
             // Limit shreds to 2 epochs away.
-            let slot_bounds = (last_root + 1)..(last_slot + 2 * slots_per_epoch);
-            for packet in packet_batch.iter_mut() {
-                if should_discard_packet(
-                    packet,
-                    slot_bounds.clone(),
-                    shred_version,
-                    &packet_hasher,
-                    &mut shreds_received,
-                    &mut stats,
-                ) {
-                    packet.meta.set_discard(true);
+            let max_slot = last_slot + 2 * slots_per_epoch;
+            let should_drop_merkle_shreds =
+                |shred_slot| should_drop_merkle_shreds(shred_slot, &root_bank);
+            let turbine_disabled = turbine_disabled.load(Ordering::Relaxed);
+            for packet in packet_batch.iter_mut().filter(|p| !p.meta().discard()) {
+                if turbine_disabled
+                    || should_discard_shred(
+                        packet,
+                        last_root,
+                        max_slot,
+                        shred_version,
+                        should_drop_merkle_shreds,
+                        &mut stats,
+                    )
+                {
+                    packet.meta_mut().set_discard(true);
                 } else {
-                    packet.meta.flags.insert(flags);
+                    packet.meta_mut().flags.insert(flags);
                 }
             }
             stats.maybe_submit(name, STATS_SUBMIT_CADENCE);
-            if sendr.send(vec![packet_batch]).is_err() {
+            if sendr.send(packet_batch).is_err() {
                 break;
             }
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn packet_modifier(
         sockets: Vec<Arc<UdpSocket>>,
         exit: &Arc<AtomicBool>,
-        sender: Sender<Vec<PacketBatch>>,
+        sender: Sender<PacketBatch>,
         recycler: PacketBatchRecycler,
         bank_forks: Arc<RwLock<BankForks>>,
         shred_version: u16,
         name: &'static str,
         flags: PacketFlags,
+        repair_context: Option<(Arc<UdpSocket>, Arc<ClusterInfo>)>,
+        turbine_disabled: Arc<AtomicBool>,
     ) -> (Vec<JoinHandle<()>>, JoinHandle<()>) {
         let (packet_sender, packet_receiver) = unbounded();
         let streamers = sockets
@@ -105,16 +134,18 @@ impl ShredFetchStage {
                     packet_sender.clone(),
                     recycler.clone(),
                     Arc::new(StreamerReceiveStats::new("packet_modifier")),
-                    1,
+                    Duration::from_millis(1), // coalesce
                     true,
                     None,
                 )
             })
             .collect();
-
         let modifier_hdl = Builder::new()
-            .name("domichain-tvu-fetch-stage-packet-modifier".to_string())
+            .name("domiTvuFetchPMod".to_string())
             .spawn(move || {
+                let repair_context = repair_context
+                    .as_ref()
+                    .map(|(socket, cluster_info)| (socket.as_ref(), cluster_info.as_ref()));
                 Self::modify_packets(
                     packet_receiver,
                     sender,
@@ -122,6 +153,8 @@ impl ShredFetchStage {
                     shred_version,
                     name,
                     flags,
+                    repair_context,
+                    turbine_disabled,
                 )
             })
             .unwrap();
@@ -132,9 +165,11 @@ impl ShredFetchStage {
         sockets: Vec<Arc<UdpSocket>>,
         forward_sockets: Vec<Arc<UdpSocket>>,
         repair_socket: Arc<UdpSocket>,
-        sender: Sender<Vec<PacketBatch>>,
+        sender: Sender<PacketBatch>,
         shred_version: u16,
         bank_forks: Arc<RwLock<BankForks>>,
+        cluster_info: Arc<ClusterInfo>,
+        turbine_disabled: Arc<AtomicBool>,
         exit: &Arc<AtomicBool>,
     ) -> Self {
         let recycler = PacketBatchRecycler::warmed(100, 1024);
@@ -148,6 +183,8 @@ impl ShredFetchStage {
             shred_version,
             "shred_fetch",
             PacketFlags::empty(),
+            None, // repair_context
+            turbine_disabled.clone(),
         );
 
         let (tvu_forwards_threads, fwd_thread_hdl) = Self::packet_modifier(
@@ -159,10 +196,12 @@ impl ShredFetchStage {
             shred_version,
             "shred_fetch_tvu_forwards",
             PacketFlags::FORWARDED,
+            None, // repair_context
+            turbine_disabled.clone(),
         );
 
         let (repair_receiver, repair_handler) = Self::packet_modifier(
-            vec![repair_socket],
+            vec![repair_socket.clone()],
             exit,
             sender,
             recycler,
@@ -170,6 +209,8 @@ impl ShredFetchStage {
             shred_version,
             "shred_fetch_repair",
             PacketFlags::REPAIR,
+            Some((repair_socket, cluster_info)),
+            turbine_disabled,
         );
 
         tvu_threads.extend(tvu_forwards_threads.into_iter());
@@ -191,38 +232,17 @@ impl ShredFetchStage {
     }
 }
 
-// Returns true if the packet should be marked as discard.
 #[must_use]
-fn should_discard_packet(
-    packet: &Packet,
-    // Range of slots to ingest shreds for.
-    slot_bounds: impl RangeBounds<Slot>,
-    shred_version: u16,
-    packet_hasher: &PacketHasher,
-    shreds_received: &mut ShredsReceived,
-    stats: &mut ShredFetchStats,
-) -> bool {
-    let slot = match get_shred_slot_index_type(packet, stats) {
-        None => return true,
-        Some((slot, _index, _shred_type)) => slot,
-    };
-    if !slot_bounds.contains(&slot) {
-        stats.slot_out_of_range += 1;
-        return true;
-    }
-    let shred = shred::layout::get_shred(packet);
-    if shred.and_then(shred::layout::get_version) != Some(shred_version) {
-        stats.shred_version_mismatch += 1;
-        return true;
-    }
-    let hash = packet_hasher.hash_packet(packet);
-    match shreds_received.put(hash, ()) {
-        None => false,
-        Some(()) => {
-            stats.duplicate_shred += 1;
-            true
-        }
-    }
+fn should_drop_merkle_shreds(shred_slot: Slot, root_bank: &Bank) -> bool {
+    check_feature_activation(
+        &feature_set::keep_merkle_shreds::id(),
+        shred_slot,
+        root_bank,
+    ) && !check_feature_activation(
+        &feature_set::drop_merkle_shreds::id(),
+        shred_slot,
+        root_bank,
+    )
 }
 
 #[cfg(test)]
@@ -231,23 +251,23 @@ mod tests {
         super::*,
         domichain_ledger::{
             blockstore::MAX_DATA_SHREDS_PER_SLOT,
-            shred::{Shred, ShredFlags},
+            shred::{ReedSolomonCache, Shred, ShredFlags},
         },
+        domichain_sdk::packet::Packet,
     };
 
     #[test]
     fn test_data_code_same_index() {
         domichain_logger::setup();
-        let mut shreds_received = LruCache::new(DEFAULT_LRU_SIZE);
         let mut packet = Packet::default();
         let mut stats = ShredFetchStats::default();
 
-        let slot = 1;
+        let slot = 2;
         let shred_version = 45189;
         let shred = Shred::new_from_data(
             slot,
             3,   // shred index
-            0,   // parent offset
+            1,   // parent offset
             &[], // data
             ShredFlags::LAST_SHRED_IN_SLOT,
             0, // reference_tick
@@ -256,32 +276,30 @@ mod tests {
         );
         shred.copy_to_packet(&mut packet);
 
-        let hasher = PacketHasher::default();
-
         let last_root = 0;
         let last_slot = 100;
         let slots_per_epoch = 10;
-        let slot_bounds = (last_root + 1)..(last_slot + 2 * slots_per_epoch);
-        assert!(!should_discard_packet(
+        let max_slot = last_slot + 2 * slots_per_epoch;
+        assert!(!should_discard_shred(
             &packet,
-            slot_bounds.clone(),
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
         let coding = domichain_ledger::shred::Shredder::generate_coding_shreds(
             &[shred],
-            false, // is_last_in_slot
-            3,     // next_code_index
+            3, // next_code_index
+            &ReedSolomonCache::default(),
         );
         coding[0].copy_to_packet(&mut packet);
-        assert!(!should_discard_packet(
+        assert!(!should_discard_shred(
             &packet,
-            slot_bounds,
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
     }
@@ -289,80 +307,66 @@ mod tests {
     #[test]
     fn test_shred_filter() {
         domichain_logger::setup();
-        let mut shreds_received = LruCache::new(DEFAULT_LRU_SIZE);
         let mut packet = Packet::default();
         let mut stats = ShredFetchStats::default();
         let last_root = 0;
         let last_slot = 100;
         let slots_per_epoch = 10;
         let shred_version = 59445;
-        let slot_bounds = (last_root + 1)..(last_slot + 2 * slots_per_epoch);
-
-        let hasher = PacketHasher::default();
+        let max_slot = last_slot + 2 * slots_per_epoch;
 
         // packet size is 0, so cannot get index
-        assert!(should_discard_packet(
+        assert!(should_discard_shred(
             &packet,
-            slot_bounds.clone(),
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
         assert_eq!(stats.index_overrun, 1);
         let shred = Shred::new_from_data(
-            1,
-            3,
-            0,
-            &[],
+            2,   // slot
+            3,   // index
+            1,   // parent_offset
+            &[], // data
             ShredFlags::LAST_SHRED_IN_SLOT,
-            0,
+            0, // reference_tick
             shred_version,
-            0,
+            0, // fec_set_index
         );
         shred.copy_to_packet(&mut packet);
 
-        // rejected slot is 1, root is 3
-        assert!(should_discard_packet(
+        // rejected slot is 2, root is 3
+        assert!(should_discard_shred(
             &packet,
-            3..slot_bounds.end,
+            3,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
         assert_eq!(stats.slot_out_of_range, 1);
 
-        assert!(should_discard_packet(
+        assert!(should_discard_shred(
             &packet,
-            slot_bounds.clone(),
-            345, // shred_version
-            &hasher,
-            &mut shreds_received,
+            last_root,
+            max_slot,
+            345,       // shred_version
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
         assert_eq!(stats.shred_version_mismatch, 1);
 
         // Accepted for 1,3
-        assert!(!should_discard_packet(
+        assert!(!should_discard_shred(
             &packet,
-            slot_bounds.clone(),
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
-
-        // shreds_received should filter duplicate
-        assert!(should_discard_packet(
-            &packet,
-            slot_bounds.clone(),
-            shred_version,
-            &hasher,
-            &mut shreds_received,
-            &mut stats,
-        ));
-        assert_eq!(stats.duplicate_shred, 1);
 
         let shred = Shred::new_from_data(
             1_000_000,
@@ -377,24 +381,24 @@ mod tests {
         shred.copy_to_packet(&mut packet);
 
         // Slot 1 million is too high
-        assert!(should_discard_packet(
+        assert!(should_discard_shred(
             &packet,
-            slot_bounds.clone(),
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
 
         let index = MAX_DATA_SHREDS_PER_SLOT as u32;
         let shred = Shred::new_from_data(5, index, 0, &[], ShredFlags::LAST_SHRED_IN_SLOT, 0, 0, 0);
         shred.copy_to_packet(&mut packet);
-        assert!(should_discard_packet(
+        assert!(should_discard_shred(
             &packet,
-            slot_bounds,
+            last_root,
+            max_slot,
             shred_version,
-            &hasher,
-            &mut shreds_received,
+            |_| false, // should_drop_merkle_shreds
             &mut stats,
         ));
     }

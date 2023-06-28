@@ -1,7 +1,7 @@
 use {
     super::*,
     crate::cluster_nodes::ClusterNodesCache,
-    domichain_ledger::shred::Shredder,
+    domichain_ledger::shred::{ProcessShredsStats, ReedSolomonCache, Shredder},
     domichain_sdk::{hash::Hash, signature::Keypair},
     std::{thread::sleep, time::Duration},
 };
@@ -17,6 +17,7 @@ pub(super) struct FailEntryVerificationBroadcastRun {
     next_shred_index: u32,
     next_code_index: u32,
     cluster_nodes_cache: Arc<ClusterNodesCache<BroadcastStage>>,
+    reed_solomon_cache: Arc<ReedSolomonCache>,
 }
 
 impl FailEntryVerificationBroadcastRun {
@@ -32,6 +33,7 @@ impl FailEntryVerificationBroadcastRun {
             next_shred_index: 0,
             next_code_index: 0,
             cluster_nodes_cache,
+            reed_solomon_cache: Arc::<ReedSolomonCache>::default(),
         }
     }
 }
@@ -60,8 +62,7 @@ impl BroadcastRun for FailEntryVerificationBroadcastRun {
         // and make progress
         if bank.slot() > SLOT_TO_RESOLVE && !self.good_shreds.is_empty() {
             info!("Resolving bad shreds");
-            let mut shreds = vec![];
-            std::mem::swap(&mut shreds, &mut self.good_shreds);
+            let shreds = std::mem::take(&mut self.good_shreds);
             blockstore_sender.send((Arc::new(shreds), None))?;
         }
 
@@ -92,6 +93,9 @@ impl BroadcastRun for FailEntryVerificationBroadcastRun {
             last_tick_height == bank.max_tick_height() && last_entries.is_none(),
             self.next_shred_index,
             self.next_code_index,
+            true, // merkle_variant
+            &self.reed_solomon_cache,
+            &mut ProcessShredsStats::default(),
         );
 
         self.next_shred_index += data_shreds.len() as u32;
@@ -105,6 +109,9 @@ impl BroadcastRun for FailEntryVerificationBroadcastRun {
                 true,
                 self.next_shred_index,
                 self.next_code_index,
+                true, // merkle_variant
+                &self.reed_solomon_cache,
+                &mut ProcessShredsStats::default(),
             );
             // Don't mark the last shred as last so that validators won't know
             // that they've gotten all the shreds, and will continue trying to
@@ -115,6 +122,9 @@ impl BroadcastRun for FailEntryVerificationBroadcastRun {
                 false,
                 self.next_shred_index,
                 self.next_code_index,
+                true, // merkle_variant
+                &self.reed_solomon_cache,
+                &mut ProcessShredsStats::default(),
             );
             self.next_shred_index += 1;
             (good_last_data_shred, bad_last_data_shred)

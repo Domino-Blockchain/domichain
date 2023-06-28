@@ -4,14 +4,17 @@ use {
             log_instruction_custom_error, request_and_confirm_airdrop, CliCommand, CliCommandInfo,
             CliConfig, CliError, ProcessResult,
         },
+        compute_unit_price::WithComputeUnitPrice,
         memo::WithMemo,
         nonce::check_nonce_account,
         spend_utils::{resolve_spend_tx_and_check_account_balances, SpendAmount},
     },
     clap::{value_t_or_exit, App, Arg, ArgMatches, SubCommand},
-    domichain_account_decoder::{UiAccount, UiAccountEncoding},
+    hex::FromHex,
     domichain_clap_utils::{
+        compute_unit_price::{compute_unit_price_arg, COMPUTE_UNIT_PRICE_ARG},
         fee_payer::*,
+        hidden_unless_forced,
         input_parsers::*,
         input_validators::*,
         keypair::{DefaultSigner, SignerIndex},
@@ -20,18 +23,19 @@ use {
         offline::*,
     },
     domichain_cli_output::{
-        display::build_balance_message, return_signers_with_config, CliAccount,
+        display::{build_balance_message, BuildBalanceMessageConfig},
+        return_signers_with_config, CliAccount, CliBalance, CliFindProgramDerivedAddress,
         CliSignatureVerificationStatus, CliTransaction, CliTransactionConfirmation, OutputFormat,
         ReturnSignersConfig,
     },
-    domichain_client::{
-        blockhash_query::BlockhashQuery, nonce_utils, rpc_client::RpcClient,
-        rpc_config::RpcTransactionConfig, rpc_response::RpcKeyedAccount,
-    },
     domichain_remote_wallet::remote_wallet::RemoteWalletManager,
+    domichain_rpc_client::rpc_client::RpcClient,
+    domichain_rpc_client_api::config::RpcTransactionConfig,
+    domichain_rpc_client_nonce_utils::blockhash_query::BlockhashQuery,
     domichain_sdk::{
         commitment_config::CommitmentConfig,
         message::Message,
+        offchain_message::OffchainMessage,
         pubkey::Pubkey,
         signature::Signature,
         stake,
@@ -43,7 +47,7 @@ use {
         EncodableWithMeta, EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         TransactionBinaryEncoding, UiTransactionEncoding,
     },
-    std::{fmt::Write as FmtWrite, fs::File, io::Write, sync::Arc},
+    std::{fmt::Write as FmtWrite, fs::File, io::Write, str::FromStr, sync::Arc},
 };
 
 pub trait WalletSubCommands {
@@ -148,7 +152,10 @@ impl WalletSubCommands for App<'_, '_> {
         )
         .subcommand(
             SubCommand::with_name("create-address-with-seed")
-                .about("Generate a derived account address with a seed")
+                .about(
+                    "Generate a derived account address with a seed. \
+                    For program derived addresses (PDAs), use the find-program-derived-address command instead"
+                )
                 .arg(
                     Arg::with_name("seed")
                         .index(1)
@@ -177,6 +184,37 @@ impl WalletSubCommands for App<'_, '_> {
                         "From (base) key, [default: cli config keypair]. "),
                 ),
         )
+            .subcommand(
+                SubCommand::with_name("find-program-derived-address")
+                    .about("Generate a program derived account address with a seed")
+                    .arg(
+                        Arg::with_name("program_id")
+                                .index(1)
+                                .value_name("PROGRAM_ID")
+                                .takes_value(true)
+                                .required(true)
+                                .help(
+                                    "The program_id that the address will ultimately be used for, \n\
+                                    or one of NONCE, STAKE, and VOTE keywords",
+                                ),
+                        )
+                    .arg(
+                        Arg::with_name("seeds")
+                            .min_values(0)
+                            .value_name("SEED")
+                            .takes_value(true)
+                            .validator(is_structured_seed)
+                            .help(
+                                "The seeds. \n\
+                                Each one must match the pattern PREFIX:VALUE. \n\
+                                PREFIX can be one of [string, pubkey, hex, u8] \n\
+                                or matches the pattern [u,i][16,32,64,128][le,be] (for example u64le) for number values \n\
+                                [u,i] - represents whether the number is unsigned or signed, \n\
+                                [16,32,64,128] - represents the bit length, and \n\
+                                [le,be] - represents the byte order - little endian or big endian"
+                            ),
+                    ),
+            )
         .subcommand(
             SubCommand::with_name("decode-transaction")
                 .about("Decode a serialized transaction")
@@ -251,7 +289,7 @@ impl WalletSubCommands for App<'_, '_> {
                         .value_name("SEED_STRING")
                         .requires("derived_address_program_id")
                         .validator(is_derived_address_seed)
-                        .hidden(true)
+                        .hidden(hidden_unless_forced())
                 )
                 .arg(
                     Arg::with_name("derived_address_program_id")
@@ -259,7 +297,7 @@ impl WalletSubCommands for App<'_, '_> {
                         .takes_value(true)
                         .value_name("PROGRAM_ID")
                         .requires("derived_address_seed")
-                        .hidden(true)
+                        .hidden(hidden_unless_forced())
                 )
                 .arg(
                     Arg::with_name("allow_unfunded_recipient")
@@ -270,7 +308,73 @@ impl WalletSubCommands for App<'_, '_> {
                 .offline_args()
                 .nonce_args(false)
                 .arg(memo_arg())
-                .arg(fee_payer_arg()),
+                .arg(fee_payer_arg())
+                .arg(compute_unit_price_arg()),
+        )
+        .subcommand(
+            SubCommand::with_name("sign-offchain-message")
+                .about("Sign off-chain message")
+                .arg(
+                    Arg::with_name("message")
+                        .index(1)
+                        .takes_value(true)
+                        .value_name("STRING")
+                        .required(true)
+                        .help("The message text to be signed")
+                )
+                .arg(
+                    Arg::with_name("version")
+                        .long("version")
+                        .takes_value(true)
+                        .value_name("VERSION")
+                        .required(false)
+                        .default_value("0")
+                        .validator(|p| match p.parse::<u8>() {
+                            Err(_) => Err(String::from("Must be unsigned integer")),
+                            Ok(_) => { Ok(()) }
+                        })
+                        .help("The off-chain message version")
+                )
+        )
+        .subcommand(
+            SubCommand::with_name("verify-offchain-signature")
+                .about("Verify off-chain message signature")
+                .arg(
+                    Arg::with_name("message")
+                        .index(1)
+                        .takes_value(true)
+                        .value_name("STRING")
+                        .required(true)
+                        .help("The text of the original message")
+                )
+                .arg(
+                    Arg::with_name("signature")
+                        .index(2)
+                        .value_name("SIGNATURE")
+                        .takes_value(true)
+                        .required(true)
+                        .help("The message signature to verify")
+                )
+                .arg(
+                    Arg::with_name("version")
+                        .long("version")
+                        .takes_value(true)
+                        .value_name("VERSION")
+                        .required(false)
+                        .default_value("0")
+                        .validator(|p| match p.parse::<u8>() {
+                            Err(_) => Err(String::from("Must be unsigned integer")),
+                            Ok(_) => { Ok(()) }
+                        })
+                        .help("The off-chain message version")
+                )
+                .arg(
+                    pubkey!(Arg::with_name("signer")
+                        .long("signer")
+                        .value_name("PUBKEY")
+                        .required(false),
+                        "The pubkey of the message signer (if different from config default)")
+                )
         )
     }
 }
@@ -389,6 +493,52 @@ pub fn parse_create_address_with_seed(
     })
 }
 
+pub fn parse_find_program_derived_address(
+    matches: &ArgMatches<'_>,
+) -> Result<CliCommandInfo, CliError> {
+    let program_id = resolve_derived_address_program_id(matches, "program_id")
+        .ok_or_else(|| CliError::BadParameter("PROGRAM_ID".to_string()))?;
+    let seeds = matches
+        .values_of("seeds")
+        .map(|seeds| {
+            seeds
+                .map(|value| {
+                    let (prefix, value) = value.split_once(':').unwrap();
+                    match prefix {
+                        "pubkey" => Pubkey::from_str(value).unwrap().to_bytes().to_vec(),
+                        "string" => value.as_bytes().to_vec(),
+                        "hex" => Vec::<u8>::from_hex(value).unwrap(),
+                        "u8" => u8::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "u16le" => u16::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "u32le" => u32::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "u64le" => u64::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "u128le" => u128::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "i16le" => i16::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "i32le" => i32::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "i64le" => i64::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "i128le" => i128::from_str(value).unwrap().to_le_bytes().to_vec(),
+                        "u16be" => u16::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "u32be" => u32::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "u64be" => u64::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "u128be" => u128::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "i16be" => i16::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "i32be" => i32::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "i64be" => i64::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        "i128be" => i128::from_str(value).unwrap().to_be_bytes().to_vec(),
+                        // Must be unreachable due to arg validator
+                        _ => unreachable!("parse_find_program_derived_address: {prefix}:{value}"),
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    Ok(CliCommandInfo {
+        command: CliCommand::FindProgramDerivedAddress { seeds, program_id },
+        signers: vec![],
+    })
+}
+
 pub fn parse_transfer(
     matches: &ArgMatches<'_>,
     default_signer: &DefaultSigner,
@@ -415,6 +565,7 @@ pub fn parse_transfer(
 
     let signer_info =
         default_signer.generate_unique_signers(bulk_signers, matches, wallet_manager)?;
+    let compute_unit_price = value_of(matches, COMPUTE_UNIT_PRICE_ARG.name);
 
     let derived_address_seed = matches
         .value_of("derived_address_seed")
@@ -438,8 +589,57 @@ pub fn parse_transfer(
             from: signer_info.index_of(from_pubkey).unwrap(),
             derived_address_seed,
             derived_address_program_id,
+            compute_unit_price,
         },
         signers: signer_info.signers,
+    })
+}
+
+pub fn parse_sign_offchain_message(
+    matches: &ArgMatches<'_>,
+    default_signer: &DefaultSigner,
+    wallet_manager: &mut Option<Arc<RemoteWalletManager>>,
+) -> Result<CliCommandInfo, CliError> {
+    let version: u8 = value_of(matches, "version").unwrap();
+    let message_text: String = value_of(matches, "message")
+        .ok_or_else(|| CliError::BadParameter("MESSAGE".to_string()))?;
+    let message = OffchainMessage::new(version, message_text.as_bytes())
+        .map_err(|_| CliError::BadParameter("VERSION or MESSAGE".to_string()))?;
+
+    Ok(CliCommandInfo {
+        command: CliCommand::SignOffchainMessage { message },
+        signers: vec![default_signer.signer_from_path(matches, wallet_manager)?],
+    })
+}
+
+pub fn parse_verify_offchain_signature(
+    matches: &ArgMatches<'_>,
+    default_signer: &DefaultSigner,
+    wallet_manager: &mut Option<Arc<RemoteWalletManager>>,
+) -> Result<CliCommandInfo, CliError> {
+    let version: u8 = value_of(matches, "version").unwrap();
+    let message_text: String = value_of(matches, "message")
+        .ok_or_else(|| CliError::BadParameter("MESSAGE".to_string()))?;
+    let message = OffchainMessage::new(version, message_text.as_bytes())
+        .map_err(|_| CliError::BadParameter("VERSION or MESSAGE".to_string()))?;
+
+    let signer_pubkey = pubkey_of_signer(matches, "signer", wallet_manager)?;
+    let signers = if signer_pubkey.is_some() {
+        vec![]
+    } else {
+        vec![default_signer.signer_from_path(matches, wallet_manager)?]
+    };
+
+    let signature = value_of(matches, "signature")
+        .ok_or_else(|| CliError::BadParameter("SIGNATURE".to_string()))?;
+
+    Ok(CliCommandInfo {
+        command: CliCommand::VerifyOffchainSignature {
+            signer_pubkey,
+            signature,
+            message,
+        },
+        signers,
     })
 }
 
@@ -451,20 +651,8 @@ pub fn process_show_account(
     use_lamports_unit: bool,
 ) -> ProcessResult {
     let account = rpc_client.get_account(account_pubkey)?;
-    let data = account.data.clone();
-    let cli_account = CliAccount {
-        keyed_account: RpcKeyedAccount {
-            pubkey: account_pubkey.to_string(),
-            account: UiAccount::encode(
-                account_pubkey,
-                &account,
-                UiAccountEncoding::Base64,
-                None,
-                None,
-            ),
-        },
-        use_lamports_unit,
-    };
+    let data = &account.data;
+    let cli_account = CliAccount::new(account_pubkey, &account, use_lamports_unit);
 
     let mut account_string = config.output_format.formatted_string(&cli_account);
 
@@ -474,15 +662,15 @@ pub fn process_show_account(
                 let mut f = File::create(output_file)?;
                 f.write_all(account_string.as_bytes())?;
                 writeln!(&mut account_string)?;
-                writeln!(&mut account_string, "Wrote account to {}", output_file)?;
+                writeln!(&mut account_string, "Wrote account to {output_file}")?;
             }
         }
         OutputFormat::Display | OutputFormat::DisplayVerbose => {
             if let Some(output_file) = output_file {
                 let mut f = File::create(output_file)?;
-                f.write_all(&data)?;
+                f.write_all(data)?;
                 writeln!(&mut account_string)?;
-                writeln!(&mut account_string, "Wrote account data to {}", output_file)?;
+                writeln!(&mut account_string, "Wrote account data to {output_file}")?;
             } else if !data.is_empty() {
                 use pretty_hex::*;
                 writeln!(&mut account_string, "{:?}", data.hex_dump())?;
@@ -515,13 +703,13 @@ pub fn process_airdrop(
     let result = request_and_confirm_airdrop(rpc_client, config, &pubkey, lamports);
     if let Ok(signature) = result {
         let signature_cli_message = log_instruction_custom_error::<SystemError>(result, config)?;
-        println!("{}", signature_cli_message);
+        println!("{signature_cli_message}");
 
         let current_balance = rpc_client.get_balance(&pubkey)?;
 
         if current_balance < pre_balance.saturating_add(lamports) {
             println!("Balance unchanged");
-            println!("Run `domichain confirm -v {:?}` for more info", signature);
+            println!("Run `domichain confirm -v {signature:?}` for more info");
             Ok("".to_string())
         } else {
             Ok(build_balance_message(current_balance, false, true))
@@ -543,7 +731,16 @@ pub fn process_balance(
         config.pubkey()?
     };
     let balance = rpc_client.get_balance(&pubkey)?;
-    Ok(build_balance_message(balance, use_lamports_unit, true))
+    let balance_output = CliBalance {
+        lamports: balance,
+        config: BuildBalanceMessageConfig {
+            use_lamports_unit,
+            show_unit: true,
+            trim_trailing_zeros: true,
+        },
+    };
+
+    Ok(config.output_format.formatted_string(&balance_output))
 }
 
 pub fn process_confirm(
@@ -587,7 +784,7 @@ pub fn process_confirm(
                             });
                         }
                         Err(err) => {
-                            get_transaction_error = Some(format!("{:?}", err));
+                            get_transaction_error = Some(format!("{err:?}"));
                         }
                     }
                 }
@@ -607,7 +804,7 @@ pub fn process_confirm(
             };
             Ok(config.output_format.formatted_string(&cli_transaction))
         }
-        Err(err) => Err(CliError::RpcRequestError(format!("Unable to confirm: {}", err)).into()),
+        Err(err) => Err(CliError::RpcRequestError(format!("Unable to confirm: {err}")).into()),
     }
 }
 
@@ -644,6 +841,23 @@ pub fn process_create_address_with_seed(
     Ok(address.to_string())
 }
 
+pub fn process_find_program_derived_address(
+    config: &CliConfig,
+    seeds: &Vec<Vec<u8>>,
+    program_id: &Pubkey,
+) -> ProcessResult {
+    if config.verbose {
+        println!("Seeds: {seeds:?}");
+    }
+    let seeds_slice = seeds.iter().map(|x| &x[..]).collect::<Vec<_>>();
+    let (address, bump_seed) = Pubkey::find_program_address(&seeds_slice[..], program_id);
+    let result = CliFindProgramDerivedAddress {
+        address: address.to_string(),
+        bump_seed,
+    };
+    Ok(config.output_format.formatted_string(&result))
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn process_transfer(
     rpc_client: &RpcClient,
@@ -662,6 +876,7 @@ pub fn process_transfer(
     fee_payer: SignerIndex,
     derived_address_seed: Option<String>,
     derived_address_program_id: Option<&Pubkey>,
+    compute_unit_price: Option<&u64>,
 ) -> ProcessResult {
     let from = config.signers[from];
     let mut from_pubkey = from.pubkey();
@@ -674,10 +889,9 @@ pub fn process_transfer(
             .value;
         if recipient_balance == 0 {
             return Err(format!(
-                "The recipient address ({}) is not funded. \
+                "The recipient address ({to}) is not funded. \
                                 Add `--allow-unfunded-recipient` to complete the transfer \
-                               ",
-                to
+                               "
             )
             .into());
         }
@@ -706,8 +920,11 @@ pub fn process_transfer(
                 lamports,
             )]
             .with_memo(memo)
+            .with_compute_unit_price(compute_unit_price)
         } else {
-            vec![system_instruction::transfer(&from_pubkey, to, lamports)].with_memo(memo)
+            vec![system_instruction::transfer(&from_pubkey, to, lamports)]
+                .with_memo(memo)
+                .with_compute_unit_price(compute_unit_price)
         };
 
         if let Some(nonce_account) = &nonce_account {
@@ -745,7 +962,7 @@ pub fn process_transfer(
         )
     } else {
         if let Some(nonce_account) = &nonce_account {
-            let nonce_account = nonce_utils::get_account_with_commitment(
+            let nonce_account = domichain_rpc_client_nonce_utils::get_account_with_commitment(
                 rpc_client,
                 nonce_account,
                 config.commitment,
@@ -760,5 +977,31 @@ pub fn process_transfer(
             rpc_client.send_and_confirm_transaction_with_spinner(&tx)
         };
         log_instruction_custom_error::<SystemError>(result, config)
+    }
+}
+
+pub fn process_sign_offchain_message(
+    config: &CliConfig,
+    message: &OffchainMessage,
+) -> ProcessResult {
+    Ok(message.sign(config.signers[0])?.to_string())
+}
+
+pub fn process_verify_offchain_signature(
+    config: &CliConfig,
+    signer_pubkey: &Option<Pubkey>,
+    signature: &Signature,
+    message: &OffchainMessage,
+) -> ProcessResult {
+    let signer = if let Some(pubkey) = signer_pubkey {
+        *pubkey
+    } else {
+        config.signers[0].pubkey()
+    };
+
+    if message.verify(&signer, signature)? {
+        Ok("Signature is valid".to_string())
+    } else {
+        Err(CliError::InvalidSignature.into())
     }
 }

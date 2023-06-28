@@ -1,18 +1,20 @@
 [package]
 name = "domichain-genesis-utils"
-version = "1.11.1"
 description = "Domichain Genesis Utils"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-download-utils"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-domichain-download-utils = { path = "../download-utils", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+log = { workspace = true }
+domichain-download-utils = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

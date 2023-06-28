@@ -1,21 +1,21 @@
 [package]
 name = "domichain-download-utils"
-version = "1.11.1"
 description = "Domichain Download Utils"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-download-utils"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-console = "0.15.0"
-indicatif = "0.16.2"
-log = "0.4.17"
-reqwest = { version = "0.11.10", default-features = false, features = ["blocking", "rustls-tls", "json"] }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+console = { workspace = true }
+indicatif = { workspace = true }
+log = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "brotli", "deflate", "gzip", "rustls-tls", "json"] }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

@@ -1,8 +1,8 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     domichain_cli::cli::{process_command, CliCommand, CliConfig},
-    domichain_client::rpc_client::RpcClient,
     domichain_faucet::faucet::run_local_faucet,
+    domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig,
         native_token::sol_to_lamports,

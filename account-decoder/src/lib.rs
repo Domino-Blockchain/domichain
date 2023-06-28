@@ -5,6 +5,7 @@ extern crate lazy_static;
 extern crate serde_derive;
 
 pub mod parse_account_data;
+pub mod parse_address_lookup_table;
 pub mod parse_bpf_loader;
 pub mod parse_config;
 pub mod parse_nonce;
@@ -17,6 +18,7 @@ pub mod validator_info;
 
 use {
     crate::parse_account_data::{parse_account_data, AccountAdditionalData, ParsedAccount},
+    base64::{prelude::BASE64_STANDARD, Engine},
     domichain_sdk::{
         account::{ReadableAccount, WritableAccount},
         clock::Epoch,
@@ -42,6 +44,7 @@ pub struct UiAccount {
     pub owner: String,
     pub executable: bool,
     pub rent_epoch: Epoch,
+    pub space: Option<u64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -82,6 +85,7 @@ impl UiAccount {
         additional_data: Option<AccountAdditionalData>,
         data_slice_config: Option<UiDataSliceConfig>,
     ) -> Self {
+        let space = account.data().len();
         let data = match encoding {
             UiAccountEncoding::Binary => {
                 let data = Self::encode_bs58(account, data_slice_config);
@@ -92,7 +96,7 @@ impl UiAccount {
                 UiAccountData::Binary(data, encoding)
             }
             UiAccountEncoding::Base64 => UiAccountData::Binary(
-                base64::encode(slice_data(account.data(), data_slice_config)),
+                BASE64_STANDARD.encode(slice_data(account.data(), data_slice_config)),
                 encoding,
             ),
             UiAccountEncoding::Base64Zstd => {
@@ -101,9 +105,11 @@ impl UiAccount {
                     .write_all(slice_data(account.data(), data_slice_config))
                     .and_then(|()| encoder.finish())
                 {
-                    Ok(zstd_data) => UiAccountData::Binary(base64::encode(zstd_data), encoding),
+                    Ok(zstd_data) => {
+                        UiAccountData::Binary(BASE64_STANDARD.encode(zstd_data), encoding)
+                    }
                     Err(_) => UiAccountData::Binary(
-                        base64::encode(slice_data(account.data(), data_slice_config)),
+                        BASE64_STANDARD.encode(slice_data(account.data(), data_slice_config)),
                         UiAccountEncoding::Base64,
                     ),
                 }
@@ -115,7 +121,7 @@ impl UiAccount {
                     UiAccountData::Json(parsed_data)
                 } else {
                     UiAccountData::Binary(
-                        base64::encode(&account.data()),
+                        BASE64_STANDARD.encode(slice_data(account.data(), data_slice_config)),
                         UiAccountEncoding::Base64,
                     )
                 }
@@ -127,6 +133,7 @@ impl UiAccount {
             owner: account.owner().to_string(),
             executable: account.executable(),
             rent_epoch: account.rent_epoch(),
+            space: Some(space as u64),
         }
     }
 
@@ -136,14 +143,16 @@ impl UiAccount {
             UiAccountData::LegacyBinary(blob) => bs58::decode(blob).into_vec().ok(),
             UiAccountData::Binary(blob, encoding) => match encoding {
                 UiAccountEncoding::Base58 => bs58::decode(blob).into_vec().ok(),
-                UiAccountEncoding::Base64 => base64::decode(blob).ok(),
-                UiAccountEncoding::Base64Zstd => base64::decode(blob).ok().and_then(|zstd_data| {
-                    let mut data = vec![];
-                    zstd::stream::read::Decoder::new(zstd_data.as_slice())
-                        .and_then(|mut reader| reader.read_to_end(&mut data))
-                        .map(|_| data)
-                        .ok()
-                }),
+                UiAccountEncoding::Base64 => BASE64_STANDARD.decode(blob).ok(),
+                UiAccountEncoding::Base64Zstd => {
+                    BASE64_STANDARD.decode(blob).ok().and_then(|zstd_data| {
+                        let mut data = vec![];
+                        zstd::stream::read::Decoder::new(zstd_data.as_slice())
+                            .and_then(|mut reader| reader.read_to_end(&mut data))
+                            .map(|_| data)
+                            .ok()
+                    })
+                }
                 UiAccountEncoding::Binary | UiAccountEncoding::JsonParsed => None,
             },
         }?;

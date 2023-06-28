@@ -14,7 +14,10 @@ use {
     },
     crossbeam_channel::{unbounded, Receiver, RecvError, RecvTimeoutError, Sender},
     itertools::Itertools,
-    domichain_gossip::cluster_info::{ClusterInfo, ClusterInfoError, DATA_PLANE_FANOUT},
+    domichain_gossip::{
+        cluster_info::{ClusterInfo, ClusterInfoError},
+        contact_info::Protocol,
+    },
     domichain_ledger::{blockstore::Blockstore, shred::Shred},
     domichain_measure::measure::Measure,
     domichain_metrics::{inc_new_counter_error, inc_new_counter_info},
@@ -32,7 +35,7 @@ use {
     },
     std::{
         collections::{HashMap, HashSet},
-        iter::repeat,
+        iter::repeat_with,
         net::UdpSocket,
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -233,7 +236,6 @@ impl BroadcastStage {
     /// which will then close FetchStage in the Tpu, and then the rest of the Tpu,
     /// completing the cycle.
     #[allow(clippy::too_many_arguments)]
-    #[allow(clippy::same_item_push)]
     fn new(
         socks: Vec<UdpSocket>,
         cluster_info: Arc<ClusterInfo>,
@@ -253,7 +255,7 @@ impl BroadcastStage {
             let blockstore = blockstore.clone();
             let cluster_info = cluster_info.clone();
             Builder::new()
-                .name("domichain-broadcaster".to_string())
+                .name("domiBroadcast".to_string())
                 .spawn(move || {
                     let _finalizer = Finalizer::new(exit);
                     Self::run(
@@ -269,44 +271,45 @@ impl BroadcastStage {
         };
         let mut thread_hdls = vec![thread_hdl];
         let socket_receiver = Arc::new(Mutex::new(socket_receiver));
-        for sock in socks.into_iter() {
+        thread_hdls.extend(socks.into_iter().map(|sock| {
             let socket_receiver = socket_receiver.clone();
             let mut bs_transmit = broadcast_stage_run.clone();
             let cluster_info = cluster_info.clone();
             let bank_forks = bank_forks.clone();
-            let t = Builder::new()
-                .name("domichain-broadcaster-transmit".to_string())
-                .spawn(move || loop {
-                    let res =
-                        bs_transmit.transmit(&socket_receiver, &cluster_info, &sock, &bank_forks);
-                    let res = Self::handle_error(res, "domichain-broadcaster-transmit");
-                    if let Some(res) = res {
-                        return res;
-                    }
-                })
-                .unwrap();
-            thread_hdls.push(t);
-        }
+            let run_transmit = move || loop {
+                let res = bs_transmit.transmit(&socket_receiver, &cluster_info, &sock, &bank_forks);
+                let res = Self::handle_error(res, "domichain-broadcaster-transmit");
+                if let Some(res) = res {
+                    return res;
+                }
+            };
+            Builder::new()
+                .name("domiBroadcastTx".to_string())
+                .spawn(run_transmit)
+                .unwrap()
+        }));
         let blockstore_receiver = Arc::new(Mutex::new(blockstore_receiver));
-        for _ in 0..NUM_INSERT_THREADS {
-            let blockstore_receiver = blockstore_receiver.clone();
-            let mut bs_record = broadcast_stage_run.clone();
-            let btree = blockstore.clone();
-            let t = Builder::new()
-                .name("domichain-broadcaster-record".to_string())
-                .spawn(move || loop {
+        thread_hdls.extend(
+            repeat_with(|| {
+                let blockstore_receiver = blockstore_receiver.clone();
+                let mut bs_record = broadcast_stage_run.clone();
+                let btree = blockstore.clone();
+                let run_record = move || loop {
                     let res = bs_record.record(&blockstore_receiver, &btree);
                     let res = Self::handle_error(res, "domichain-broadcaster-record");
                     if let Some(res) = res {
                         return res;
                     }
-                })
-                .unwrap();
-            thread_hdls.push(t);
-        }
-
+                };
+                Builder::new()
+                    .name("domiBroadcastRec".to_string())
+                    .spawn(run_record)
+                    .unwrap()
+            })
+            .take(NUM_INSERT_THREADS),
+        );
         let retransmit_thread = Builder::new()
-            .name("domichain-broadcaster-retransmit".to_string())
+            .name("domiBroadcastRtx".to_string())
             .spawn(move || loop {
                 if let Some(res) = Self::handle_error(
                     Self::check_retransmit_signals(
@@ -379,19 +382,12 @@ fn update_peer_stats(
     last_datapoint_submit: &AtomicInterval,
 ) {
     if last_datapoint_submit.should_update(1000) {
-        let now = timestamp();
-        let num_live_peers = cluster_nodes.num_peers_live(now);
-        let broadcast_len = cluster_nodes.num_peers() + 1;
-        datapoint_info!(
-            "cluster_info-num_nodes",
-            ("live_count", num_live_peers, i64),
-            ("broadcast_count", broadcast_len, i64)
-        );
+        cluster_nodes.submit_metrics("cluster_nodes_broadcast", timestamp());
     }
 }
 
-/// broadcast messages from the leader to layer 1 nodes
-/// # Remarks
+/// Broadcasts shreds from the leader (i.e. this node) to the root of the
+/// turbine retransmit tree for each shred.
 pub fn broadcast_shreds(
     s: &UdpSocket,
     shreds: &[Shred],
@@ -416,14 +412,13 @@ pub fn broadcast_shreds(
             let cluster_nodes =
                 cluster_nodes_cache.get(slot, &root_bank, &working_bank, cluster_info);
             update_peer_stats(&cluster_nodes, last_datapoint_submit);
-            let root_bank = root_bank.clone();
-            shreds.flat_map(move |shred| {
-                repeat(shred.payload()).zip(cluster_nodes.get_broadcast_addrs(
-                    shred,
-                    &root_bank,
-                    DATA_PLANE_FANOUT,
-                    socket_addr_space,
-                ))
+            shreds.filter_map(move |shred| {
+                cluster_nodes
+                    .get_broadcast_peer(&shred.id())?
+                    .tvu(Protocol::UDP)
+                    .ok()
+                    .filter(|addr| socket_addr_space.check(addr))
+                    .map(|addr| (shred.payload(), addr))
             })
         })
         .collect();
@@ -449,15 +444,14 @@ pub mod test {
         domichain_entry::entry::create_ticks,
         domichain_gossip::cluster_info::{ClusterInfo, Node},
         domichain_ledger::{
-            blockstore::{make_slot_entries, Blockstore},
+            blockstore::Blockstore,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
             get_tmp_ledger_path,
-            shred::{max_ticks_per_n_shreds, ProcessShredsStats, Shredder},
+            shred::{max_ticks_per_n_shreds, ProcessShredsStats, ReedSolomonCache, Shredder},
         },
         domichain_runtime::bank::Bank,
         domichain_sdk::{
             hash::Hash,
-            pubkey::Pubkey,
             signature::{Keypair, Signer},
         },
         std::{
@@ -479,16 +473,21 @@ pub mod test {
         Vec<Arc<Vec<Shred>>>,
     ) {
         let num_entries = max_ticks_per_n_shreds(num, None);
-        let (data_shreds, _) = make_slot_entries(slot, 0, num_entries);
-        let keypair = Keypair::new();
-        let coding_shreds = Shredder::data_shreds_to_coding_shreds(
-            &keypair,
-            &data_shreds[0..],
-            true, // is_last_in_slot
-            0,    // next_code_index
-            &mut ProcessShredsStats::default(),
+        let entries = create_ticks(num_entries, /*hashes_per_tick:*/ 0, Hash::default());
+        let shredder = Shredder::new(
+            slot, /*parent_slot:*/ 0, /*reference_tick:*/ 0, /*version:*/ 0,
         )
         .unwrap();
+        let (data_shreds, coding_shreds) = shredder.entries_to_shreds(
+            &Keypair::new(),
+            &entries,
+            true, // is_last_in_slot
+            0,    // next_shred_index,
+            0,    // next_code_index
+            true, // merkle_variant
+            &ReedSolomonCache::default(),
+            &mut ProcessShredsStats::default(),
+        );
         (
             data_shreds.clone(),
             coding_shreds.clone(),
@@ -580,7 +579,7 @@ pub mod test {
     }
 
     fn setup_dummy_broadcast_service(
-        leader_pubkey: &Pubkey,
+        leader_keypair: Arc<Keypair>,
         ledger_path: &Path,
         entry_receiver: Receiver<WorkingBankEntry>,
         retransmit_slots_receiver: RetransmitSlotsReceiver,
@@ -589,7 +588,7 @@ pub mod test {
         let blockstore = Arc::new(Blockstore::open(ledger_path).unwrap());
 
         // Make the leader node and scheduler
-        let leader_info = Node::new_localhost_with_pubkey(leader_pubkey);
+        let leader_info = Node::new_localhost_with_pubkey(&leader_keypair.pubkey());
 
         // Make a node to broadcast to
         let buddy_keypair = Keypair::new();
@@ -598,7 +597,7 @@ pub mod test {
         // Fill the cluster_info with the buddy's info
         let cluster_info = ClusterInfo::new(
             leader_info.info.clone(),
-            Arc::new(Keypair::new()),
+            leader_keypair,
             SocketAddrSpace::Unspecified,
         );
         cluster_info.insert_info(broadcast_buddy.info);
@@ -637,12 +636,12 @@ pub mod test {
 
         {
             // Create the leader scheduler
-            let leader_keypair = Keypair::new();
+            let leader_keypair = Arc::new(Keypair::new());
 
             let (entry_sender, entry_receiver) = unbounded();
             let (retransmit_slots_sender, retransmit_slots_receiver) = unbounded();
             let broadcast_service = setup_dummy_broadcast_service(
-                &leader_keypair.pubkey(),
+                leader_keypair,
                 &ledger_path,
                 entry_receiver,
                 retransmit_slots_receiver,
@@ -652,7 +651,7 @@ pub mod test {
             let ticks_per_slot;
             let slot;
             {
-                let bank = broadcast_service.bank.clone();
+                let bank = broadcast_service.bank;
                 start_tick_height = bank.tick_height();
                 max_tick_height = bank.max_tick_height();
                 ticks_per_slot = bank.ticks_per_slot();
