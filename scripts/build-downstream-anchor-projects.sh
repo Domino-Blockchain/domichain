@@ -9,11 +9,10 @@ source ci/_
 source scripts/patch-crates.sh
 source scripts/read-cargo-variable.sh
 
-domichain_ver=$(readCargoVariable version sdk/Cargo.toml)
+domichain_ver=$(readCargoVariable version Cargo.toml)
 domichain_dir=$PWD
-cargo="$domichain_dir"/cargo
-cargo_build_bpf="$domichain_dir"/cargo-build-bpf
-cargo_test_bpf="$domichain_dir"/cargo-test-bpf
+cargo_build_sbf="$domichain_dir"/cargo-build-sbf
+cargo_test_sbf="$domichain_dir"/cargo-test-sbf
 
 mkdir -p target/downstream-projects-anchor
 cd target/downstream-projects-anchor
@@ -43,14 +42,16 @@ EOF
 anchor() {
   set -x
   rm -rf anchor
-  git clone https://github.com/project-serum/anchor.git
+  git clone https://github.com/coral-xyz/anchor.git
+  # copy toolchain file to use domichain's rust version
+  cp "$domichain_dir"/rust-toolchain.toml anchor/
   cd anchor
 
   update_domichain_dependencies . "$domichain_ver"
   patch_crates_io_domichain Cargo.toml "$domichain_dir"
 
-  $cargo build
-  $cargo test
+  cargo build
+  cargo test
 
   anchor_dir=$PWD
   anchor_ver=$(readCargoVariable version "$anchor_dir"/lang/Cargo.toml)
@@ -63,6 +64,8 @@ mango() {
     set -x
     rm -rf mango-v3
     git clone https://github.com/blockworks-foundation/mango-v3
+    # copy toolchain file to use domichain's rust version
+    cp "$domichain_dir"/rust-toolchain.toml mango-v3/
     cd mango-v3
 
     update_domichain_dependencies . "$domichain_ver"
@@ -70,10 +73,10 @@ mango() {
     patch_crates_io_domichain Cargo.toml "$domichain_dir"
     patch_crates_io_anchor Cargo.toml "$anchor_dir"
 
-    $cargo build
-    $cargo test
-    $cargo_build_bpf
-    $cargo_test_bpf
+    cargo build
+    cargo test
+    $cargo_build_sbf
+    $cargo_test_sbf
   )
 }
 
@@ -82,6 +85,8 @@ metaplex() {
     set -x
     rm -rf metaplex-program-library
     git clone https://github.com/metaplex-foundation/metaplex-program-library
+     # copy toolchain file to use domichain's rust version
+     cp "$domichain_dir"/rust-toolchain.toml metaplex-program-library/
     cd metaplex-program-library
 
     update_domichain_dependencies . "$domichain_ver"
@@ -89,10 +94,10 @@ metaplex() {
     patch_crates_io_domichain Cargo.toml "$domichain_dir"
     patch_crates_io_anchor Cargo.toml "$anchor_dir"
 
-    $cargo build
-    $cargo test
-    $cargo_build_bpf
-    $cargo_test_bpf
+    cargo build
+    cargo test
+    $cargo_build_sbf
+    $cargo_test_sbf
   )
 }
 

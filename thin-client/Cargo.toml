@@ -1,0 +1,25 @@
+[package]
+name = "domichain-thin-client"
+description = "Domichain Thin Client"
+documentation = "https://docs.rs/domichain-thin-client"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+bincode = { workspace = true }
+log = { workspace = true }
+rayon = { workspace = true }
+domichain-connection-cache = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-rpc-client-api = { workspace = true }
+domichain-sdk = { workspace = true }
+
+[dev-dependencies]
+domichain-logger = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

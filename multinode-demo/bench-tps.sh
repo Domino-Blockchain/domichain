@@ -19,15 +19,12 @@ usage() {
   exit 1
 }
 
-if [[ -z $1 ]]; then # default behavior
-  $domichain_bench_tps \
-    --entrypoint 127.0.0.1:8001 \
-    --faucet 127.0.0.1:9900 \
-    --duration 20 \
-    --tx_count 500 \
-    --thread-batch-sleep-ms 0 \
-    --keypair-multiplier 2 \
+args=("$@")
+default_arg --entrypoint "127.0.0.1:8001"
+default_arg --faucet "127.0.0.1:9900"
+default_arg --duration 20
+default_arg --tx-count 500
+default_arg --thread-batch-sleep-ms 0
+default_arg --keypair-multiplier 2
 
-else
-  $domichain_bench_tps "$@"
-fi
+$domichain_bench_tps "${args[@]}"

@@ -1,12 +1,6 @@
-use {
-    domichain_program_runtime::invoke_context::InvokeContext,
-    domichain_sdk::instruction::InstructionError,
-};
+use domichain_program_runtime::declare_process_instruction;
 
-pub fn process_instruction(
-    _first_instruction_account: usize,
-    _invoke_context: &mut InvokeContext,
-) -> Result<(), InstructionError> {
+declare_process_instruction!(process_instruction, 150, |_invoke_context| {
     // Do nothing, compute budget instructions handled by the runtime
     Ok(())
-}
+});

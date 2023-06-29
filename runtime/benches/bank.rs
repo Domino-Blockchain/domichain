@@ -5,7 +5,7 @@ extern crate test;
 
 use {
     log::*,
-    domichain_program_runtime::invoke_context::InvokeContext,
+    domichain_program_runtime::declare_process_instruction,
     domichain_runtime::{
         bank::{test_utils::goto_end_of_slot, *},
         bank_client::BankClient,
@@ -15,7 +15,6 @@ use {
         client::{AsyncClient, SyncClient},
         clock::MAX_RECENT_BLOCKHASHES,
         genesis_config::create_genesis_config,
-        instruction::InstructionError,
         message::Message,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
@@ -35,19 +34,11 @@ const NOOP_PROGRAM_ID: [u8; 32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 ];
 
-#[allow(clippy::unnecessary_wraps)]
-fn process_instruction(
-    _first_instruction_account: usize,
-    _invoke_context: &mut InvokeContext,
-) -> Result<(), InstructionError> {
-    Ok(())
-}
-
 pub fn create_builtin_transactions(
     bank_client: &BankClient,
     mint_keypair: &Keypair,
 ) -> Vec<Transaction> {
-    let program_id = Pubkey::new(&BUILTIN_PROGRAM_ID);
+    let program_id = Pubkey::from(BUILTIN_PROGRAM_ID);
 
     (0..4096)
         .map(|_| {
@@ -69,7 +60,7 @@ pub fn create_native_loader_transactions(
     bank_client: &BankClient,
     mint_keypair: &Keypair,
 ) -> Vec<Transaction> {
-    let program_id = Pubkey::new(&NOOP_PROGRAM_ID);
+    let program_id = Pubkey::from(NOOP_PROGRAM_ID);
 
     (0..4096)
         .map(|_| {
@@ -119,6 +110,7 @@ fn async_bencher(bank: &Arc<Bank>, bank_client: &BankClient, transactions: &[Tra
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn do_bench_transactions(
     bencher: &mut Bencher,
     bench_work: &dyn Fn(&Arc<Bank>, &BankClient, &[Transaction]),
@@ -133,13 +125,14 @@ fn do_bench_transactions(
     // freeze bank so that slot hashes is populated
     bank.freeze();
 
+    declare_process_instruction!(process_instruction, 1, |_invoke_context| {
+        // Do nothing
+        Ok(())
+    });
+
     let mut bank = Bank::new_from_parent(&Arc::new(bank), &Pubkey::default(), 1);
-    bank.add_builtin(
-        "builtin_program",
-        &Pubkey::new(&BUILTIN_PROGRAM_ID),
-        process_instruction,
-    );
-    bank.add_builtin_account("domichain_noop_program", &Pubkey::new(&NOOP_PROGRAM_ID), false);
+    bank.add_mockup_builtin(Pubkey::from(BUILTIN_PROGRAM_ID), process_instruction);
+    bank.add_builtin_account("domichain_noop_program", &Pubkey::from(NOOP_PROGRAM_ID), false);
     let bank = Arc::new(bank);
     let bank_client = BankClient::new_shared(&bank);
     let transactions = create_transactions(&bank_client, &mint_keypair);
@@ -154,7 +147,7 @@ fn do_bench_transactions(
         bench_work(&bank, &bank_client, &transactions);
     });
 
-    let summary = bencher.bench(|_bencher| {}).unwrap();
+    let summary = bencher.bench(|_bencher| Ok(())).unwrap().unwrap();
     info!("  {:?} transactions", transactions.len());
     info!("  {:?} ns/iter median", summary.median as u64);
     assert!(0f64 != summary.median);

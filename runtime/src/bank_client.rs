@@ -4,6 +4,7 @@ use {
     domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
+        clock,
         commitment_config::CommitmentConfig,
         epoch_info::EpochInfo,
         fee_calculator::{FeeCalculator, FeeRateGovernor},
@@ -14,6 +15,7 @@ use {
         signature::{Keypair, Signature, Signer},
         signers::Signers,
         system_instruction,
+        sysvar::{Sysvar, SysvarId},
         transaction::{self, Transaction, VersionedTransaction},
         transport::{Result, TransportError},
     },
@@ -50,7 +52,7 @@ impl AsyncClient for BankClient {
 }
 
 impl SyncClient for BankClient {
-    fn send_and_confirm_message<T: Signers>(
+    fn send_and_confirm_message<T: Signers + ?Sized>(
         &self,
         keypairs: &T,
         message: Message,
@@ -312,7 +314,7 @@ impl BankClient {
         let thread_bank = bank.clone();
         let bank = bank.clone();
         Builder::new()
-            .name("domichain-bank-client".to_string())
+            .name("domiBankClient".to_string())
             .spawn(move || Self::run(&thread_bank, transaction_receiver))
             .unwrap();
         Self {
@@ -323,6 +325,23 @@ impl BankClient {
 
     pub fn new(bank: Bank) -> Self {
         Self::new_shared(&Arc::new(bank))
+    }
+
+    pub fn set_sysvar_for_tests<T: Sysvar + SysvarId>(&self, sysvar: &T) {
+        self.bank.set_sysvar_for_tests(sysvar);
+    }
+
+    pub fn advance_slot(&mut self, by: u64, collector_id: &Pubkey) -> Option<Arc<Bank>> {
+        self.bank = Arc::new(Bank::new_from_parent(
+            &self.bank,
+            collector_id,
+            self.bank.slot().checked_add(by)?,
+        ));
+        self.set_sysvar_for_tests(&clock::Clock {
+            slot: self.bank.slot(),
+            ..clock::Clock::default()
+        });
+        Some(self.bank.clone())
     }
 }
 

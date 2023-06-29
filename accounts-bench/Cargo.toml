@@ -1,5 +1,5 @@
 [package]
-name = "solana-accounts-bench"
+name = "domichain-accounts-bench"
 publish = false
 version = { workspace = true }
 authors = { workspace = true }
@@ -12,11 +12,11 @@ edition = { workspace = true }
 clap = { workspace = true }
 log = { workspace = true }
 rayon = { workspace = true }
-solana-logger = { workspace = true }
-solana-measure = { workspace = true }
-solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
-solana-version = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-version = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

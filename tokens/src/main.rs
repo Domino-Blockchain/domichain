@@ -1,6 +1,7 @@
 use {
+    domichain_clap_utils::input_validators::normalize_to_url_if_moniker,
     domichain_cli_config::{Config, CONFIG_FILE},
-    domichain_client::rpc_client::RpcClient,
+    domichain_rpc_client::rpc_client::RpcClient,
     domichain_tokens::{arg_parser::parse_args, args::Command, commands, spl_token},
     std::{
         env,
@@ -26,14 +27,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Config::default()
     };
-    let json_rpc_url = command_args.url.unwrap_or(config.json_rpc_url);
+    let json_rpc_url = normalize_to_url_if_moniker(command_args.url.unwrap_or(config.json_rpc_url));
     let client = RpcClient::new(json_rpc_url);
 
     let exit = Arc::new(AtomicBool::default());
-    let _exit = exit.clone();
     // Initialize CTRL-C handler to ensure db changes are written before exit.
-    ctrlc::set_handler(move || {
-        _exit.store(true, Ordering::SeqCst);
+    ctrlc::set_handler({
+        let exit = exit.clone();
+        move || {
+            exit.store(true, Ordering::SeqCst);
+        }
     })
     .expect("Error setting Ctrl-C handler");
 
@@ -44,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Command::Balances(mut args) => {
             spl_token::update_decimals(&client, &mut args.spl_token_args)?;
-            commands::process_balances(&client, &args)?;
+            commands::process_balances(&client, &args, exit)?;
         }
         Command::TransactionLog(args) => {
             commands::process_transaction_log(&args)?;

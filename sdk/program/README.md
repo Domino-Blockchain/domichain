@@ -12,4 +12,4 @@ More information about Domichain is available in the [Domichain documentation](h
 
 [Helloworld](https://Domino-Blockchain/example-helloworld) and the [Domichain Program Library](https://Domino-Blockchain/domichain-program-library) provide examples of how to use this crate.
 
-Still have questions?  Ask us on [Discord](https://discordapp.com/invite/pquxPsq)
+Still have questions?  Ask us on [Stack Exchange](https://sola.na/sse)

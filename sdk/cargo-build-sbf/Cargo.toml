@@ -1,27 +1,31 @@
 [package]
 name = "domichain-cargo-build-sbf"
-version = "1.11.1"
 description = "Compile a local package and all of its dependencies using the Domichain SBF SDK"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-homepage = "https://domichain.com/"
-license = "Apache-2.0"
-edition = "2021"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bzip2 = "0.4.3"
-cargo_metadata = "0.14.2"
+bzip2 = { workspace = true }
+cargo_metadata = { workspace = true }
 clap = { version = "3.1.5", features = ["cargo", "env"] }
-log = { version = "0.4.14", features = ["std"] }
-regex = "1.5.6"
-domichain-download-utils = { path = "../../download-utils", version = "=1.11.1" }
-domichain-logger = { path = "../../logger", version = "=1.11.1" }
-domichain-sdk = { path = "..", version = "=1.11.1" }
-tar = "0.4.38"
+log = { workspace = true, features = ["std"] }
+regex = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "rustls-tls"] }
+semver = { workspace = true }
+domichain-download-utils = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-sdk = { workspace = true }
+tar = { workspace = true }
 
 [dev-dependencies]
-serial_test = "*"
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
+serial_test = { workspace = true }
 
 [features]
 program = []

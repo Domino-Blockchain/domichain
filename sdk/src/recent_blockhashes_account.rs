@@ -1,3 +1,5 @@
+//! Helpers for the recent blockhashes sysvar.
+
 #[allow(deprecated)]
 use domichain_program::sysvar::recent_blockhashes::{
     IntoIterSorted, IterItem, RecentBlockhashes, MAX_ENTRIES,

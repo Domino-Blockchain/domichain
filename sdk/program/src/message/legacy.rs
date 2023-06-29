@@ -7,7 +7,7 @@
 //!
 //! [`legacy`]: crate::message::legacy
 //! [`v0`]: crate::message::v0
-//! [future message format]: https://docs.domichain.com/proposals/transactions-v2
+//! [future message format]: https://docs.domichain.com/proposals/versioned-transactions
 
 #![allow(clippy::integer_arithmetic)]
 
@@ -16,7 +16,7 @@ use {
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
         hash::Hash,
         instruction::{CompiledInstruction, Instruction},
-        message::{CompiledKeys, MessageHeader},
+        message::{compiled_keys::CompiledKeys, MessageHeader},
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
         short_vec, system_instruction, system_program, sysvar, wasm_bindgen,
@@ -169,18 +169,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
@@ -240,18 +240,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
@@ -336,18 +336,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     hash::Hash,
     ///     instruction::Instruction,
@@ -627,7 +627,7 @@ mod tests {
         let keys: HashSet<Pubkey> = BUILTIN_PROGRAMS_KEYS.iter().copied().collect();
         assert_eq!(keys.len(), 10);
         for k in keys {
-            let k = format!("{}", k);
+            let k = format!("{k}");
             assert!(k.ends_with("11111111111111111111111"));
         }
     }

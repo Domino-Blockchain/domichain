@@ -1,0 +1,37 @@
+[package]
+name = "domichain-quic-client"
+description = "Domichain Quic Client"
+documentation = "https://docs.rs/domichain-quic-client"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+async-mutex = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+itertools = { workspace = true }
+lazy_static = { workspace = true }
+log = { workspace = true }
+quinn = { workspace = true }
+quinn-proto = { workspace = true }
+quinn-udp = { workspace = true }
+rcgen = { workspace = true }
+rustls = { workspace = true, features = ["dangerous_configuration"] }
+domichain-connection-cache = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-net-utils = { workspace = true }
+domichain-rpc-client-api = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-streamer = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+crossbeam-channel = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-perf = { workspace = true }

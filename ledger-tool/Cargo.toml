@@ -45,7 +45,7 @@ domichain-streamer = { workspace = true }
 domichain-transaction-status = { workspace = true }
 domichain-version = { workspace = true }
 domichain-vote-program = { workspace = true }
-domichain_rbpf = { workspace = true, features = ["debugger"] }
+solana_rbpf = { workspace = true, features = ["debugger"] }
 tokio = { workspace = true, features = ["full"] }
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]

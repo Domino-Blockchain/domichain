@@ -1,25 +1,25 @@
 [package]
 name = "domichain-storage-proto"
-version = "1.11.1"
 description = "Domichain Storage Protobuf Definitions"
-authors = ["Domichain Maintainers <maintainers@domichain.com>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-storage-proto"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bincode = "1.3.3"
-bs58 = "0.4.0"
-prost = "0.10.4"
-serde = "1.0.137"
-domichain-account-decoder = { path = "../account-decoder", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-transaction-status = { path = "../transaction-status", version = "=1.11.1" }
+bincode = { workspace = true }
+bs58 = { workspace = true }
+prost = { workspace = true }
+serde = { workspace = true }
+domichain-account-decoder = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-transaction-status = { workspace = true }
 
 [dev-dependencies]
-enum-iterator = "0.8.1"
+enum-iterator = { workspace = true }
 
 [lib]
 crate-type = ["lib"]
@@ -29,4 +29,9 @@ name = "domichain_storage_proto"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [build-dependencies]
-tonic-build = "0.7.2"
+tonic-build = { workspace = true }
+
+# windows users should install the protobuf compiler manually and set the PROTOC
+# envar to point to the installed binary
+[target."cfg(not(windows))".build-dependencies]
+protobuf-src = { workspace = true }

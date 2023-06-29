@@ -1,5 +1,5 @@
 use {
-    domichain_client::rpc_client::RpcClient,
+    domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::signature::{Keypair, Signer},
     domichain_streamer::socket::SocketAddrSpace,
     domichain_test_validator::TestValidator,

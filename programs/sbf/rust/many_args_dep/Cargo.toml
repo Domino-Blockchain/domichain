@@ -1,0 +1,16 @@
+[package]
+name = "domichain-sbf-rust-many-args-dep"
+documentation = "https://docs.rs/domichain-sbf-rust-many-args-dep"
+version = { workspace = true }
+description = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+domichain-program = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

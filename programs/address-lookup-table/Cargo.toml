@@ -1,32 +1,32 @@
 [package]
 name = "domichain-address-lookup-table-program"
-version = "1.11.1"
 description = "Domichain address lookup table program"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-address-loookup-table-program"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bincode = "1.3.3"
-bytemuck = "1.9.1"
-log = "0.4.17"
-num-derive = "0.3"
-num-traits = "0.2"
-serde = { version = "1.0.137", features = ["derive"] }
-domichain-frozen-abi = { path = "../../frozen-abi", version = "=1.11.1" }
-domichain-frozen-abi-macro = { path = "../../frozen-abi/macro", version = "=1.11.1" }
-domichain-program = { path = "../../sdk/program", version = "=1.11.1" }
-thiserror = "1.0"
+bincode = { workspace = true }
+bytemuck = { workspace = true }
+log = { workspace = true }
+num-derive = { workspace = true }
+num-traits = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+domichain-frozen-abi = { workspace = true }
+domichain-frozen-abi-macro = { workspace = true }
+domichain-program = { workspace = true }
+thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "domichain"))'.dependencies]
-domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
+domichain-program-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [build-dependencies]
-rustc_version = "0.4"
+rustc_version = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

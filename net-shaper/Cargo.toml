@@ -1,20 +1,20 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-edition = "2021"
 name = "domichain-net-shaper"
 description = "The domichain cluster network shaping tool"
-version = "1.11.1"
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-rand = "0.7.0"
 clap = { version = "3.1.5", features = ["cargo"] }
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+rand = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+domichain-logger = { workspace = true }
 
 [[bin]]
 name = "domichain-net-shaper"

@@ -6,9 +6,10 @@ use {
             LOOKUP_TABLE_MAX_ADDRESSES, LOOKUP_TABLE_META_SIZE,
         },
     },
-    domichain_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    domichain_program_runtime::{declare_process_instruction, ic_msg, invoke_context::InvokeContext},
     domichain_sdk::{
         clock::Slot,
+        feature_set,
         instruction::InstructionError,
         program_utils::limited_deserialize,
         pubkey::{Pubkey, PUBKEY_BYTES},
@@ -17,10 +18,7 @@ use {
     std::convert::TryFrom,
 };
 
-pub fn process_instruction(
-    _first_instruction_account: usize,
-    invoke_context: &mut InvokeContext,
-) -> Result<(), InstructionError> {
+declare_process_instruction!(process_instruction, 750, |invoke_context| {
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let instruction_data = instruction_context.get_instruction_data();
@@ -38,7 +36,7 @@ pub fn process_instruction(
         }
         ProgramInstruction::CloseLookupTable => Processor::close_lookup_table(invoke_context),
     }
-}
+});
 
 fn checked_add(a: usize, b: usize) -> Result<usize, InstructionError> {
     a.checked_add(b).ok_or(InstructionError::ArithmeticOverflow)
@@ -58,7 +56,12 @@ impl Processor {
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
         let lookup_table_lamports = lookup_table_account.get_lamports();
         let table_key = *lookup_table_account.get_key();
-        if !lookup_table_account.get_data().is_empty() {
+        let lookup_table_owner = *lookup_table_account.get_owner();
+        if !invoke_context
+            .feature_set
+            .is_active(&feature_set::relax_authority_signer_check_for_lookup_table_creation::id())
+            && !lookup_table_account.get_data().is_empty()
+        {
             ic_msg!(invoke_context, "Table account must not be allocated");
             return Err(InstructionError::AccountAlreadyInitialized);
         }
@@ -67,7 +70,11 @@ impl Processor {
         let authority_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 1)?;
         let authority_key = *authority_account.get_key();
-        if !authority_account.is_signer() {
+        if !invoke_context
+            .feature_set
+            .is_active(&feature_set::relax_authority_signer_check_for_lookup_table_creation::id())
+            && !authority_account.is_signer()
+        {
             ic_msg!(invoke_context, "Authority account must be a signer");
             return Err(InstructionError::MissingRequiredSignature);
         }
@@ -116,6 +123,14 @@ impl Processor {
             return Err(InstructionError::InvalidArgument);
         }
 
+        if invoke_context
+            .feature_set
+            .is_active(&feature_set::relax_authority_signer_check_for_lookup_table_creation::id())
+            && crate::check_id(&lookup_table_owner)
+        {
+            return Ok(());
+        }
+
         let table_account_data_len = LOOKUP_TABLE_META_SIZE;
         let rent = invoke_context.get_sysvar_cache().get_rent()?;
         let required_lamports = rent
@@ -125,18 +140,18 @@ impl Processor {
 
         if required_lamports > 0 {
             invoke_context.native_invoke(
-                system_instruction::transfer(&payer_key, &table_key, required_lamports),
+                system_instruction::transfer(&payer_key, &table_key, required_lamports).into(),
                 &[payer_key],
             )?;
         }
 
         invoke_context.native_invoke(
-            system_instruction::allocate(&table_key, table_account_data_len as u64),
+            system_instruction::allocate(&table_key, table_account_data_len as u64).into(),
             &[table_key],
         )?;
 
         invoke_context.native_invoke(
-            system_instruction::assign(&table_key, &crate::id()),
+            system_instruction::assign(&table_key, &crate::id()).into(),
             &[table_key],
         )?;
 
@@ -285,14 +300,14 @@ impl Processor {
             LOOKUP_TABLE_META_SIZE,
             new_table_addresses_len.saturating_mul(PUBKEY_BYTES),
         )?;
-
         {
-            let mut table_data = lookup_table_account.get_data_mut()?.to_vec();
-            AddressLookupTable::overwrite_meta_data(&mut table_data, lookup_table_meta)?;
+            AddressLookupTable::overwrite_meta_data(
+                lookup_table_account.get_data_mut()?,
+                lookup_table_meta,
+            )?;
             for new_address in new_addresses {
-                table_data.extend_from_slice(new_address.as_ref());
+                lookup_table_account.extend_from_slice(new_address.as_ref())?;
             }
-            lookup_table_account.set_data(&table_data)?;
         }
         drop(lookup_table_account);
 
@@ -313,7 +328,7 @@ impl Processor {
             drop(payer_account);
 
             invoke_context.native_invoke(
-                system_instruction::transfer(&payer_key, &table_key, required_lamports),
+                system_instruction::transfer(&payer_key, &table_key, required_lamports).into(),
                 &[payer_key],
             )?;
         }
@@ -443,7 +458,7 @@ impl Processor {
 
         let mut lookup_table_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
-        lookup_table_account.set_data(&[])?;
+        lookup_table_account.set_data_length(0)?;
         lookup_table_account.set_lamports(0)?;
 
         Ok(())

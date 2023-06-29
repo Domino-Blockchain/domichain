@@ -1,12 +1,49 @@
 //! Instructions and constructors for the system program.
 //!
+//! The system program is responsible for the creation of accounts and [nonce
+//! accounts][na]. It is responsible for transferring lamports from accounts
+//! owned by the system program, including typical user wallet accounts.
+//!
+//! [na]: https://docs.domichain.com/implemented-proposals/durable-tx-nonces
+//!
+//! Account creation typically involves three steps: [`allocate`] space,
+//! [`transfer`] lamports for rent, [`assign`] to its owning program. The
+//! [`create_account`] function does all three at once. All new accounts must
+//! contain enough lamports to be [rent exempt], or else the creation
+//! instruction will fail.
+//!
+//! [rent exempt]: https://docs.domichain.com/developing/programming-model/accounts#rent-exemption
+//!
+//! The accounts created by the system program can either be user-controlled,
+//! where the secret keys are held outside the blockchain,
+//! or they can be [program derived addresses][pda],
+//! where write access to accounts is granted by an owning program.
+//!
+//! [pda]: crate::pubkey::Pubkey::find_program_address
+//!
 //! The system program ID is defined in [`system_program`].
+//!
+//! Most of the functions in this module construct an [`Instruction`], that must
+//! be submitted to the runtime for execution, either via RPC, typically with
+//! [`RpcClient`], or through [cross-program invocation][cpi].
+//!
+//! When invoking through CPI, the [`invoke`] or [`invoke_signed`] instruction
+//! requires all account references to be provided explicitly as [`AccountInfo`]
+//! values. The account references required are specified in the documentation
+//! for the [`SystemInstruction`] variants for each system program instruction,
+//! and these variants are linked from the documentation for their constructors.
+//!
+//! [`RpcClient`]: https://docs.rs/domichain-client/latest/domichain_client/rpc_client/struct.RpcClient.html
+//! [cpi]: crate::program
+//! [`invoke`]: crate::program::invoke
+//! [`invoke_signed`]: crate::program::invoke_signed
+//! [`AccountInfo`]: crate::account_info::AccountInfo
 
 #[allow(deprecated)]
 use {
     crate::{
         decode_error::DecodeError,
-        instruction::{AccountMeta, Instruction, InstructionError},
+        instruction::{AccountMeta, Instruction},
         nonce,
         pubkey::Pubkey,
         system_program,
@@ -44,104 +81,26 @@ impl<T> DecodeError<T> for SystemError {
     }
 }
 
-#[derive(Error, Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
-pub enum NonceError {
-    #[error("recent blockhash list is empty")]
-    NoRecentBlockhashes,
-    #[error("stored nonce is still in recent_blockhashes")]
-    NotExpired,
-    #[error("specified nonce does not match stored nonce")]
-    UnexpectedValue,
-    #[error("cannot handle request in current account state")]
-    BadAccountState,
-}
-
-impl<E> DecodeError<E> for NonceError {
-    fn type_of() -> &'static str {
-        "NonceError"
-    }
-}
-
-#[derive(Error, Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
-enum NonceErrorAdapter {
-    #[error("recent blockhash list is empty")]
-    NoRecentBlockhashes,
-    #[error("stored nonce is still in recent_blockhashes")]
-    NotExpired,
-    #[error("specified nonce does not match stored nonce")]
-    UnexpectedValue,
-    #[error("cannot handle request in current account state")]
-    BadAccountState,
-}
-
-impl<E> DecodeError<E> for NonceErrorAdapter {
-    fn type_of() -> &'static str {
-        "NonceErrorAdapter"
-    }
-}
-
-impl From<NonceErrorAdapter> for NonceError {
-    fn from(e: NonceErrorAdapter) -> Self {
-        match e {
-            NonceErrorAdapter::NoRecentBlockhashes => NonceError::NoRecentBlockhashes,
-            NonceErrorAdapter::NotExpired => NonceError::NotExpired,
-            NonceErrorAdapter::UnexpectedValue => NonceError::UnexpectedValue,
-            NonceErrorAdapter::BadAccountState => NonceError::BadAccountState,
-        }
-    }
-}
-
-pub fn nonce_to_instruction_error(error: NonceError, use_system_variant: bool) -> InstructionError {
-    if use_system_variant {
-        match error {
-            NonceError::NoRecentBlockhashes => SystemError::NonceNoRecentBlockhashes.into(),
-            NonceError::NotExpired => SystemError::NonceBlockhashNotExpired.into(),
-            NonceError::UnexpectedValue => SystemError::NonceUnexpectedBlockhashValue.into(),
-            NonceError::BadAccountState => InstructionError::InvalidAccountData,
-        }
-    } else {
-        match error {
-            NonceError::NoRecentBlockhashes => NonceErrorAdapter::NoRecentBlockhashes.into(),
-            NonceError::NotExpired => NonceErrorAdapter::NotExpired.into(),
-            NonceError::UnexpectedValue => NonceErrorAdapter::UnexpectedValue.into(),
-            NonceError::BadAccountState => NonceErrorAdapter::BadAccountState.into(),
-        }
-    }
-}
-
-pub fn instruction_to_nonce_error(
-    error: &InstructionError,
-    use_system_variant: bool,
-) -> Option<NonceError> {
-    if use_system_variant {
-        match error {
-            InstructionError::Custom(discriminant) => {
-                match SystemError::decode_custom_error_to_enum(*discriminant) {
-                    Some(SystemError::NonceNoRecentBlockhashes) => {
-                        Some(NonceError::NoRecentBlockhashes)
-                    }
-                    Some(SystemError::NonceBlockhashNotExpired) => Some(NonceError::NotExpired),
-                    Some(SystemError::NonceUnexpectedBlockhashValue) => {
-                        Some(NonceError::UnexpectedValue)
-                    }
-                    _ => None,
-                }
-            }
-            InstructionError::InvalidAccountData => Some(NonceError::BadAccountState),
-            _ => None,
-        }
-    } else if let InstructionError::Custom(discriminant) = error {
-        let maybe: Option<NonceErrorAdapter> =
-            NonceErrorAdapter::decode_custom_error_to_enum(*discriminant);
-        maybe.map(NonceError::from)
-    } else {
-        None
-    }
-}
-
-/// maximum permitted size of data: 10 MB
+/// Maximum permitted size of account data (10 MiB).
 pub const MAX_PERMITTED_DATA_LENGTH: u64 = 10 * 1024 * 1024;
 
+/// Maximum permitted size of new allocations per transaction, in bytes.
+///
+/// The value was chosen such that at least one max sized account could be created,
+/// plus some additional resize allocations.
+pub const MAX_PERMITTED_ACCOUNTS_DATA_ALLOCATIONS_PER_TRANSACTION: i64 =
+    MAX_PERMITTED_DATA_LENGTH as i64 * 2;
+
+// SBF program entrypoint assumes that the max account data length
+// will fit inside a u32. If this constant no longer fits in a u32,
+// the entrypoint deserialization code in the SDK must be updated.
+#[cfg(test)]
+static_assertions::const_assert!(MAX_PERMITTED_DATA_LENGTH <= u32::MAX as u64);
+
+#[cfg(test)]
+static_assertions::const_assert_eq!(MAX_PERMITTED_DATA_LENGTH, 10_485_760);
+
+/// An instruction to the system program.
 #[frozen_abi(digest = "5e22s2kFu9Do77hdcCyxyhuKHD8ThAB6Q6dNaLTCjL5M")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, AbiExample, AbiEnumVisitor)]
 pub enum SystemInstruction {
@@ -316,6 +275,164 @@ pub enum SystemInstruction {
     UpgradeNonceAccount,
 }
 
+/// Create an account.
+///
+/// This function produces an [`Instruction`] which must be submitted in a
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::CreateAccount`].
+///
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
+/// [invoked]: crate::program::invoke
+///
+/// Account creation typically involves three steps: [`allocate`] space,
+/// [`transfer`] lamports for rent, [`assign`] to its owning program. The
+/// [`create_account`] function does all three at once.
+///
+/// # Required signers
+///
+/// The `from_pubkey` and `to_pubkey` signers must sign the transaction.
+///
+/// # Examples
+///
+/// These examples use a single invocation of
+/// [`SystemInstruction::CreateAccount`] to create a new account, allocate some
+/// space, transfer it the minimum lamports for rent exemption, and assign it to
+/// the system program,
+///
+/// ## Example: client-side RPC
+///
+/// This example submits the instruction from an RPC client.
+/// The `payer` and `new_account` are signers.
+///
+/// ```
+/// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
+/// use domichain_rpc_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
+///     pubkey::Pubkey,
+///     signature::{Keypair, Signer},
+///     system_instruction,
+///     system_program,
+///     transaction::Transaction,
+/// };
+/// use anyhow::Result;
+///
+/// fn create_account(
+///     client: &RpcClient,
+///     payer: &Keypair,
+///     new_account: &Keypair,
+///     space: u64,
+/// ) -> Result<()> {
+///     let rent = client.get_minimum_balance_for_rent_exemption(space.try_into()?)?;
+///     let instr = system_instruction::create_account(
+///         &payer.pubkey(),
+///         &new_account.pubkey(),
+///         rent,
+///         space,
+///         &system_program::ID,
+///     );
+///
+///     let blockhash = client.get_latest_blockhash()?;
+///     let tx = Transaction::new_signed_with_payer(
+///         &[instr],
+///         Some(&payer.pubkey()),
+///         &[payer, new_account],
+///         blockhash,
+///     );
+///
+///     let _sig = client.send_and_confirm_transaction(&tx)?;
+///
+///     Ok(())
+/// }
+/// # let payer = Keypair::new();
+/// # let new_account = Keypair::new();
+/// # let client = RpcClient::new(String::new());
+/// # create_account(&client, &payer, &new_account, 0);
+/// #
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// ## Example: on-chain program
+///
+/// This example submits the instruction from an on-chain Domichain program. The
+/// created account is a [program derived address][pda]. The `payer` and
+/// `new_account_pda` are signers, with `new_account_pda` being signed for
+/// virtually by the program itself via [`invoke_signed`], `payer` being signed
+/// for by the client that submitted the transaction.
+///
+/// [pda]: Pubkey::find_program_address
+/// [`invoke_signed`]: crate::program::invoke_signed
+///
+/// ```
+/// # use borsh::{BorshDeserialize, BorshSerialize};
+/// use domichain_program::{
+///     account_info::{next_account_info, AccountInfo},
+///     entrypoint,
+///     entrypoint::ProgramResult,
+///     msg,
+///     program::invoke_signed,
+///     pubkey::Pubkey,
+///     system_instruction,
+///     system_program,
+///     sysvar::rent::Rent,
+///     sysvar::Sysvar,
+/// };
+///
+/// #[derive(BorshSerialize, BorshDeserialize, Debug)]
+/// pub struct CreateAccountInstruction {
+///     /// The PDA seed used to distinguish the new account from other PDAs
+///     pub new_account_seed: [u8; 16],
+///     /// The PDA bump seed
+///     pub new_account_bump_seed: u8,
+///     /// The amount of space to allocate for `new_account_pda`
+///     pub space: u64,
+/// }
+///
+/// entrypoint!(process_instruction);
+///
+/// fn process_instruction(
+///     program_id: &Pubkey,
+///     accounts: &[AccountInfo],
+///     instruction_data: &[u8],
+/// ) -> ProgramResult {
+///     let instr = CreateAccountInstruction::deserialize(&mut &instruction_data[..])?;
+///
+///     let account_info_iter = &mut accounts.iter();
+///
+///     let payer = next_account_info(account_info_iter)?;
+///     let new_account_pda = next_account_info(account_info_iter)?;
+///     let system_account = next_account_info(account_info_iter)?;
+///
+///     assert!(payer.is_signer);
+///     assert!(payer.is_writable);
+///     // Note that `new_account_pda` is not a signer yet.
+///     // This program will sign for it via `invoke_signed`.
+///     assert!(!new_account_pda.is_signer);
+///     assert!(new_account_pda.is_writable);
+///     assert!(system_program::check_id(system_account.key));
+///
+///     let new_account_seed = &instr.new_account_seed;
+///     let new_account_bump_seed = instr.new_account_bump_seed;
+///
+///     let rent = Rent::get()?
+///         .minimum_balance(instr.space.try_into().expect("overflow"));
+///
+///     invoke_signed(
+///         &system_instruction::create_account(
+///             payer.key,
+///             new_account_pda.key,
+///             rent,
+///             instr.space,
+///             &system_program::ID
+///         ),
+///         &[payer.clone(), new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     Ok(())
+/// }
+///
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn create_account(
     from_pubkey: &Pubkey,
     to_pubkey: &Pubkey,
@@ -368,6 +485,186 @@ pub fn create_account_with_seed(
     )
 }
 
+/// Assign ownership of an account from the system program.
+///
+/// This function produces an [`Instruction`] which must be submitted in a
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::Assign`].
+///
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
+/// [invoked]: crate::program::invoke
+///
+/// # Required signers
+///
+/// The `pubkey` signer must sign the transaction.
+///
+/// # Examples
+///
+/// These examples allocate space for an account, transfer it the minimum
+/// balance for rent exemption, and assign the account to a program.
+///
+/// ## Example: client-side RPC
+///
+/// This example submits the instructions from an RPC client.
+/// It assigns the account to a provided program account.
+/// The `payer` and `new_account` are signers.
+///
+/// ```
+/// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
+/// use domichain_rpc_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
+///     pubkey::Pubkey,
+///     signature::{Keypair, Signer},
+///     system_instruction,
+///     transaction::Transaction,
+/// };
+/// use anyhow::Result;
+///
+/// fn create_account(
+///     client: &RpcClient,
+///     payer: &Keypair,
+///     new_account: &Keypair,
+///     owning_program: &Pubkey,
+///     space: u64,
+/// ) -> Result<()> {
+///     let rent = client.get_minimum_balance_for_rent_exemption(space.try_into()?)?;
+///
+///     let transfer_instr = system_instruction::transfer(
+///         &payer.pubkey(),
+///         &new_account.pubkey(),
+///         rent,
+///     );
+///
+///     let allocate_instr = system_instruction::allocate(
+///         &new_account.pubkey(),
+///         space,
+///     );
+///
+///     let assign_instr = system_instruction::assign(
+///         &new_account.pubkey(),
+///         owning_program,
+///     );
+///
+///     let blockhash = client.get_latest_blockhash()?;
+///     let tx = Transaction::new_signed_with_payer(
+///         &[transfer_instr, allocate_instr, assign_instr],
+///         Some(&payer.pubkey()),
+///         &[payer, new_account],
+///         blockhash,
+///     );
+///
+///     let _sig = client.send_and_confirm_transaction(&tx)?;
+///
+///     Ok(())
+/// }
+/// # let client = RpcClient::new(String::new());
+/// # let payer = Keypair::new();
+/// # let new_account = Keypair::new();
+/// # let owning_program = Pubkey::new_unique();
+/// # create_account(&client, &payer, &new_account, &owning_program, 1);
+/// #
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// ## Example: on-chain program
+///
+/// This example submits the instructions from an on-chain Domichain program. The
+/// created account is a [program derived address][pda], funded by `payer`, and
+/// assigned to the running program. The `payer` and `new_account_pda` are
+/// signers, with `new_account_pda` being signed for virtually by the program
+/// itself via [`invoke_signed`], `payer` being signed for by the client that
+/// submitted the transaction.
+///
+/// [pda]: Pubkey::find_program_address
+/// [`invoke_signed`]: crate::program::invoke_signed
+///
+/// ```
+/// # use borsh::{BorshDeserialize, BorshSerialize};
+/// use domichain_program::{
+///     account_info::{next_account_info, AccountInfo},
+///     entrypoint,
+///     entrypoint::ProgramResult,
+///     msg,
+///     program::invoke_signed,
+///     pubkey::Pubkey,
+///     system_instruction,
+///     system_program,
+///     sysvar::rent::Rent,
+///     sysvar::Sysvar,
+/// };
+///
+/// #[derive(BorshSerialize, BorshDeserialize, Debug)]
+/// pub struct CreateAccountInstruction {
+///     /// The PDA seed used to distinguish the new account from other PDAs
+///     pub new_account_seed: [u8; 16],
+///     /// The PDA bump seed
+///     pub new_account_bump_seed: u8,
+///     /// The amount of space to allocate for `new_account_pda`
+///     pub space: u64,
+/// }
+///
+/// entrypoint!(process_instruction);
+///
+/// fn process_instruction(
+///     program_id: &Pubkey,
+///     accounts: &[AccountInfo],
+///     instruction_data: &[u8],
+/// ) -> ProgramResult {
+///     let instr = CreateAccountInstruction::deserialize(&mut &instruction_data[..])?;
+///
+///     let account_info_iter = &mut accounts.iter();
+///
+///     let payer = next_account_info(account_info_iter)?;
+///     let new_account_pda = next_account_info(account_info_iter)?;
+///     let system_account = next_account_info(account_info_iter)?;
+///
+///     assert!(payer.is_signer);
+///     assert!(payer.is_writable);
+///     // Note that `new_account_pda` is not a signer yet.
+///     // This program will sign for it via `invoke_signed`.
+///     assert!(!new_account_pda.is_signer);
+///     assert!(new_account_pda.is_writable);
+///     assert!(system_program::check_id(system_account.key));
+///
+///     let new_account_seed = &instr.new_account_seed;
+///     let new_account_bump_seed = instr.new_account_bump_seed;
+///
+///     let rent = Rent::get()?
+///         .minimum_balance(instr.space.try_into().expect("overflow"));
+///
+///     invoke_signed(
+///         &system_instruction::transfer(
+///             payer.key,
+///             new_account_pda.key,
+///             rent,
+///         ),
+///         &[payer.clone(), new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::allocate(
+///             new_account_pda.key,
+///             instr.space,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::assign(
+///             new_account_pda.key,
+///             &program_id,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     Ok(())
+/// }
+///
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn assign(pubkey: &Pubkey, owner: &Pubkey) -> Instruction {
     let account_metas = vec![AccountMeta::new(*pubkey, true)];
     Instruction::new_with_bincode(
@@ -398,6 +695,186 @@ pub fn assign_with_seed(
     )
 }
 
+/// Transfer lamports from an account owned by the system program.
+///
+/// This function produces an [`Instruction`] which must be submitted in a
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::Transfer`].
+///
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
+/// [invoked]: crate::program::invoke
+///
+/// # Required signers
+///
+/// The `from_pubkey` signer must sign the transaction.
+///
+/// # Examples
+///
+/// These examples allocate space for an account, transfer it the minimum
+/// balance for rent exemption, and assign the account to a program.
+///
+/// # Example: client-side RPC
+///
+/// This example submits the instructions from an RPC client.
+/// It assigns the account to a provided program account.
+/// The `payer` and `new_account` are signers.
+///
+/// ```
+/// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
+/// use domichain_rpc_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
+///     pubkey::Pubkey,
+///     signature::{Keypair, Signer},
+///     system_instruction,
+///     transaction::Transaction,
+/// };
+/// use anyhow::Result;
+///
+/// fn create_account(
+///     client: &RpcClient,
+///     payer: &Keypair,
+///     new_account: &Keypair,
+///     owning_program: &Pubkey,
+///     space: u64,
+/// ) -> Result<()> {
+///     let rent = client.get_minimum_balance_for_rent_exemption(space.try_into()?)?;
+///
+///     let transfer_instr = system_instruction::transfer(
+///         &payer.pubkey(),
+///         &new_account.pubkey(),
+///         rent,
+///     );
+///
+///     let allocate_instr = system_instruction::allocate(
+///         &new_account.pubkey(),
+///         space,
+///     );
+///
+///     let assign_instr = system_instruction::assign(
+///         &new_account.pubkey(),
+///         owning_program,
+///     );
+///
+///     let blockhash = client.get_latest_blockhash()?;
+///     let tx = Transaction::new_signed_with_payer(
+///         &[transfer_instr, allocate_instr, assign_instr],
+///         Some(&payer.pubkey()),
+///         &[payer, new_account],
+///         blockhash,
+///     );
+///
+///     let _sig = client.send_and_confirm_transaction(&tx)?;
+///
+///     Ok(())
+/// }
+/// # let client = RpcClient::new(String::new());
+/// # let payer = Keypair::new();
+/// # let new_account = Keypair::new();
+/// # let owning_program = Pubkey::new_unique();
+/// # create_account(&client, &payer, &new_account, &owning_program, 1);
+/// #
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// ## Example: on-chain program
+///
+/// This example submits the instructions from an on-chain Domichain program. The
+/// created account is a [program derived address][pda], funded by `payer`, and
+/// assigned to the running program. The `payer` and `new_account_pda` are
+/// signers, with `new_account_pda` being signed for virtually by the program
+/// itself via [`invoke_signed`], `payer` being signed for by the client that
+/// submitted the transaction.
+///
+/// [pda]: Pubkey::find_program_address
+/// [`invoke_signed`]: crate::program::invoke_signed
+///
+/// ```
+/// # use borsh::{BorshDeserialize, BorshSerialize};
+/// use domichain_program::{
+///     account_info::{next_account_info, AccountInfo},
+///     entrypoint,
+///     entrypoint::ProgramResult,
+///     msg,
+///     program::invoke_signed,
+///     pubkey::Pubkey,
+///     system_instruction,
+///     system_program,
+///     sysvar::rent::Rent,
+///     sysvar::Sysvar,
+/// };
+///
+/// #[derive(BorshSerialize, BorshDeserialize, Debug)]
+/// pub struct CreateAccountInstruction {
+///     /// The PDA seed used to distinguish the new account from other PDAs
+///     pub new_account_seed: [u8; 16],
+///     /// The PDA bump seed
+///     pub new_account_bump_seed: u8,
+///     /// The amount of space to allocate for `new_account_pda`
+///     pub space: u64,
+/// }
+///
+/// entrypoint!(process_instruction);
+///
+/// fn process_instruction(
+///     program_id: &Pubkey,
+///     accounts: &[AccountInfo],
+///     instruction_data: &[u8],
+/// ) -> ProgramResult {
+///     let instr = CreateAccountInstruction::deserialize(&mut &instruction_data[..])?;
+///
+///     let account_info_iter = &mut accounts.iter();
+///
+///     let payer = next_account_info(account_info_iter)?;
+///     let new_account_pda = next_account_info(account_info_iter)?;
+///     let system_account = next_account_info(account_info_iter)?;
+///
+///     assert!(payer.is_signer);
+///     assert!(payer.is_writable);
+///     // Note that `new_account_pda` is not a signer yet.
+///     // This program will sign for it via `invoke_signed`.
+///     assert!(!new_account_pda.is_signer);
+///     assert!(new_account_pda.is_writable);
+///     assert!(system_program::check_id(system_account.key));
+///
+///     let new_account_seed = &instr.new_account_seed;
+///     let new_account_bump_seed = instr.new_account_bump_seed;
+///
+///     let rent = Rent::get()?
+///         .minimum_balance(instr.space.try_into().expect("overflow"));
+///
+///     invoke_signed(
+///         &system_instruction::transfer(
+///             payer.key,
+///             new_account_pda.key,
+///             rent,
+///         ),
+///         &[payer.clone(), new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::allocate(
+///             new_account_pda.key,
+///             instr.space,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::assign(
+///             new_account_pda.key,
+///             &program_id,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     Ok(())
+/// }
+///
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn transfer(from_pubkey: &Pubkey, to_pubkey: &Pubkey, lamports: u64) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(*from_pubkey, true),
@@ -434,6 +911,189 @@ pub fn transfer_with_seed(
     )
 }
 
+/// Allocate space for an account.
+///
+/// This function produces an [`Instruction`] which must be submitted in a
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::Allocate`].
+///
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
+/// [invoked]: crate::program::invoke
+///
+/// The transaction will fail if the account already has size greater than 0,
+/// or if the requested size is greater than [`MAX_PERMITTED_DATA_LENGTH`].
+///
+/// # Required signers
+///
+/// The `pubkey` signer must sign the transaction.
+///
+/// # Examples
+///
+/// These examples allocate space for an account, transfer it the minimum
+/// balance for rent exemption, and assign the account to a program.
+///
+/// # Example: client-side RPC
+///
+/// This example submits the instructions from an RPC client.
+/// It assigns the account to a provided program account.
+/// The `payer` and `new_account` are signers.
+///
+/// ```
+/// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
+/// use domichain_rpc_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
+///     pubkey::Pubkey,
+///     signature::{Keypair, Signer},
+///     system_instruction,
+///     transaction::Transaction,
+/// };
+/// use anyhow::Result;
+///
+/// fn create_account(
+///     client: &RpcClient,
+///     payer: &Keypair,
+///     new_account: &Keypair,
+///     owning_program: &Pubkey,
+///     space: u64,
+/// ) -> Result<()> {
+///     let rent = client.get_minimum_balance_for_rent_exemption(space.try_into()?)?;
+///
+///     let transfer_instr = system_instruction::transfer(
+///         &payer.pubkey(),
+///         &new_account.pubkey(),
+///         rent,
+///     );
+///
+///     let allocate_instr = system_instruction::allocate(
+///         &new_account.pubkey(),
+///         space,
+///     );
+///
+///     let assign_instr = system_instruction::assign(
+///         &new_account.pubkey(),
+///         owning_program,
+///     );
+///
+///     let blockhash = client.get_latest_blockhash()?;
+///     let tx = Transaction::new_signed_with_payer(
+///         &[transfer_instr, allocate_instr, assign_instr],
+///         Some(&payer.pubkey()),
+///         &[payer, new_account],
+///         blockhash,
+///     );
+///
+///     let _sig = client.send_and_confirm_transaction(&tx)?;
+///
+///     Ok(())
+/// }
+/// # let client = RpcClient::new(String::new());
+/// # let payer = Keypair::new();
+/// # let new_account = Keypair::new();
+/// # let owning_program = Pubkey::new_unique();
+/// # create_account(&client, &payer, &new_account, &owning_program, 1);
+/// #
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// ## Example: on-chain program
+///
+/// This example submits the instructions from an on-chain Domichain program. The
+/// created account is a [program derived address][pda], funded by `payer`, and
+/// assigned to the running program. The `payer` and `new_account_pda` are
+/// signers, with `new_account_pda` being signed for virtually by the program
+/// itself via [`invoke_signed`], `payer` being signed for by the client that
+/// submitted the transaction.
+///
+/// [pda]: Pubkey::find_program_address
+/// [`invoke_signed`]: crate::program::invoke_signed
+///
+/// ```
+/// # use borsh::{BorshDeserialize, BorshSerialize};
+/// use domichain_program::{
+///     account_info::{next_account_info, AccountInfo},
+///     entrypoint,
+///     entrypoint::ProgramResult,
+///     msg,
+///     program::invoke_signed,
+///     pubkey::Pubkey,
+///     system_instruction,
+///     system_program,
+///     sysvar::rent::Rent,
+///     sysvar::Sysvar,
+/// };
+///
+/// #[derive(BorshSerialize, BorshDeserialize, Debug)]
+/// pub struct CreateAccountInstruction {
+///     /// The PDA seed used to distinguish the new account from other PDAs
+///     pub new_account_seed: [u8; 16],
+///     /// The PDA bump seed
+///     pub new_account_bump_seed: u8,
+///     /// The amount of space to allocate for `new_account_pda`
+///     pub space: u64,
+/// }
+///
+/// entrypoint!(process_instruction);
+///
+/// fn process_instruction(
+///     program_id: &Pubkey,
+///     accounts: &[AccountInfo],
+///     instruction_data: &[u8],
+/// ) -> ProgramResult {
+///     let instr = CreateAccountInstruction::deserialize(&mut &instruction_data[..])?;
+///
+///     let account_info_iter = &mut accounts.iter();
+///
+///     let payer = next_account_info(account_info_iter)?;
+///     let new_account_pda = next_account_info(account_info_iter)?;
+///     let system_account = next_account_info(account_info_iter)?;
+///
+///     assert!(payer.is_signer);
+///     assert!(payer.is_writable);
+///     // Note that `new_account_pda` is not a signer yet.
+///     // This program will sign for it via `invoke_signed`.
+///     assert!(!new_account_pda.is_signer);
+///     assert!(new_account_pda.is_writable);
+///     assert!(system_program::check_id(system_account.key));
+///
+///     let new_account_seed = &instr.new_account_seed;
+///     let new_account_bump_seed = instr.new_account_bump_seed;
+///
+///     let rent = Rent::get()?
+///         .minimum_balance(instr.space.try_into().expect("overflow"));
+///
+///     invoke_signed(
+///         &system_instruction::transfer(
+///             payer.key,
+///             new_account_pda.key,
+///             rent,
+///         ),
+///         &[payer.clone(), new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::allocate(
+///             new_account_pda.key,
+///             instr.space,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     invoke_signed(
+///         &system_instruction::assign(
+///             new_account_pda.key,
+///             &program_id,
+///         ),
+///         &[new_account_pda.clone()],
+///         &[&[payer.key.as_ref(), new_account_seed, &[new_account_bump_seed]]],
+///     )?;
+///
+///     Ok(())
+/// }
+///
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn allocate(pubkey: &Pubkey, space: u64) -> Instruction {
     let account_metas = vec![AccountMeta::new(*pubkey, true)];
     Instruction::new_with_bincode(
@@ -466,7 +1126,146 @@ pub fn allocate_with_seed(
     )
 }
 
-/// Create and sign new SystemInstruction::Transfer transaction to many destinations
+/// Transfer lamports from an account owned by the system program to multiple accounts.
+///
+/// This function produces a vector of [`Instruction`]s which must be submitted
+/// in a [`Transaction`] or [invoked] to take effect, containing serialized
+/// [`SystemInstruction::Transfer`]s.
+///
+/// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
+/// [invoked]: crate::program::invoke
+///
+/// # Required signers
+///
+/// The `from_pubkey` signer must sign the transaction.
+///
+/// # Examples
+///
+/// ## Example: client-side RPC
+///
+/// This example performs multiple transfers in a single transaction.
+///
+/// ```
+/// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
+/// use domichain_rpc_client::rpc_client::RpcClient;
+/// use domichain_sdk::{
+///     pubkey::Pubkey,
+///     signature::{Keypair, Signer},
+///     system_instruction,
+///     transaction::Transaction,
+/// };
+/// use anyhow::Result;
+///
+/// fn transfer_lamports_to_many(
+///     client: &RpcClient,
+///     from: &Keypair,
+///     to_and_amount: &[(Pubkey, u64)],
+/// ) -> Result<()> {
+///     let instrs = system_instruction::transfer_many(&from.pubkey(), to_and_amount);
+///
+///     let blockhash = client.get_latest_blockhash()?;
+///     let tx = Transaction::new_signed_with_payer(
+///         &instrs,
+///         Some(&from.pubkey()),
+///         &[from],
+///         blockhash,
+///     );
+///
+///     let _sig = client.send_and_confirm_transaction(&tx)?;
+///
+///     Ok(())
+/// }
+/// # let from = Keypair::new();
+/// # let to_and_amount = vec![
+/// #     (Pubkey::new_unique(), 1_000),
+/// #     (Pubkey::new_unique(), 2_000),
+/// #     (Pubkey::new_unique(), 3_000),
+/// # ];
+/// # let client = RpcClient::new(String::new());
+/// # transfer_lamports_to_many(&client, &from, &to_and_amount);
+/// #
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// ## Example: on-chain program
+///
+/// This example makes multiple transfers out of a "bank" account,
+/// a [program derived address][pda] owned by the calling program.
+/// This example submits the instructions from an on-chain Domichain program. The
+/// created account is a [program derived address][pda], and it is assigned to
+/// the running program. The `payer` and `new_account_pda` are signers, with
+/// `new_account_pda` being signed for virtually by the program itself via
+/// [`invoke_signed`], `payer` being signed for by the client that submitted the
+/// transaction.
+///
+/// [pda]: Pubkey::find_program_address
+/// [`invoke_signed`]: crate::program::invoke_signed
+///
+/// ```
+/// # use borsh::{BorshDeserialize, BorshSerialize};
+/// use domichain_program::{
+///     account_info::{next_account_info, next_account_infos, AccountInfo},
+///     entrypoint,
+///     entrypoint::ProgramResult,
+///     msg,
+///     program::invoke_signed,
+///     pubkey::Pubkey,
+///     system_instruction,
+///     system_program,
+/// };
+///
+/// /// # Accounts
+/// ///
+/// /// - 0: bank_pda - writable
+/// /// - 1: system_program - executable
+/// /// - *: to - writable
+/// #[derive(BorshSerialize, BorshDeserialize, Debug)]
+/// pub struct TransferLamportsToManyInstruction {
+///     pub bank_pda_bump_seed: u8,
+///     pub amount_list: Vec<u64>,
+/// }
+///
+/// entrypoint!(process_instruction);
+///
+/// fn process_instruction(
+///     program_id: &Pubkey,
+///     accounts: &[AccountInfo],
+///     instruction_data: &[u8],
+/// ) -> ProgramResult {
+///     let instr = TransferLamportsToManyInstruction::deserialize(&mut &instruction_data[..])?;
+///
+///     let account_info_iter = &mut accounts.iter();
+///
+///     let bank_pda = next_account_info(account_info_iter)?;
+///     let bank_pda_bump_seed = instr.bank_pda_bump_seed;
+///     let system_account = next_account_info(account_info_iter)?;
+///
+///     assert!(system_program::check_id(system_account.key));
+///
+///     let to_accounts = next_account_infos(account_info_iter, account_info_iter.len())?;
+///
+///     for to_account in to_accounts {
+///          assert!(to_account.is_writable);
+///          // ... do other verification ...
+///     }
+///
+///     let to_and_amount = to_accounts
+///         .iter()
+///         .zip(instr.amount_list.iter())
+///         .map(|(to, amount)| (*to.key, *amount))
+///         .collect::<Vec<(Pubkey, u64)>>();
+///
+///     let instrs = system_instruction::transfer_many(bank_pda.key, to_and_amount.as_ref());
+///
+///     for instr in instrs {
+///         invoke_signed(&instr, accounts, &[&[b"bank", &[bank_pda_bump_seed]]])?;
+///     }
+///
+///     Ok(())
+/// }
+///
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn transfer_many(from_pubkey: &Pubkey, to_lamports: &[(Pubkey, u64)]) -> Vec<Instruction> {
     to_lamports
         .iter()
@@ -508,7 +1307,9 @@ pub fn create_nonce_account_with_seed(
 /// Create an account containing a durable transaction nonce.
 ///
 /// This function produces a vector of [`Instruction`]s which must be submitted
-/// in a [`Transaction`] or [invoked] to take effect.
+/// in a [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::CreateAccount`] and
+/// [`SystemInstruction::InitializeNonceAccount`].
 ///
 /// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
@@ -572,8 +1373,8 @@ pub fn create_nonce_account_with_seed(
 ///
 /// ```
 /// # use domichain_program::example_mocks::domichain_sdk;
-/// # use domichain_program::example_mocks::domichain_client;
-/// use domichain_client::rpc_client::RpcClient;
+/// # use domichain_program::example_mocks::domichain_rpc_client;
+/// use domichain_rpc_client::rpc_client::RpcClient;
 /// use domichain_sdk::{
 /// #   pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
@@ -644,7 +1445,8 @@ pub fn create_nonce_account(
 /// Advance the value of a durable transaction nonce.
 ///
 /// This function produces an [`Instruction`] which must be submitted in a
-/// [`Transaction`] or [invoked] to take effect.
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::AdvanceNonceAccount`].
 ///
 /// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
@@ -662,7 +1464,7 @@ pub fn create_nonce_account(
 /// setting it to a recent blockhash, the value of the nonce must be retreived
 /// and deserialized from the nonce account, and that value specified as the
 /// "recent blockhash". A nonce account can be deserialized with the
-/// [`domichain_client::nonce_utils::data_from_account`][dfa] function.
+/// [`domichain_rpc_client_nonce_utils::data_from_account`][dfa] function.
 ///
 /// For further description of durable transaction nonces see
 /// [`create_nonce_account`].
@@ -670,7 +1472,7 @@ pub fn create_nonce_account(
 /// [`Message`]: crate::message::Message
 /// [`Message::new_with_nonce`]: crate::message::Message::new_with_nonce
 /// [`recent_blockhash`]: crate::message::Message::recent_blockhash
-/// [dfa]: https://docs.rs/domichain-client/latest/domichain_client/nonce_utils/fn.data_from_account.html
+/// [dfa]: https://docs.rs/domichain-rpc-client-nonce-utils/latest/domichain_rpc_client_nonce_utils/fn.data_from_account.html
 ///
 /// # Required signers
 ///
@@ -682,11 +1484,9 @@ pub fn create_nonce_account(
 ///
 /// ```
 /// # use domichain_program::example_mocks::domichain_sdk;
-/// # use domichain_program::example_mocks::domichain_client;
-/// use domichain_client::{
-///     rpc_client::RpcClient,
-///     nonce_utils,
-/// };
+/// # use domichain_program::example_mocks::domichain_rpc_client;
+/// # use domichain_program::example_mocks::domichain_rpc_client_nonce_utils;
+/// use domichain_rpc_client::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     message::Message,
 ///     pubkey::Pubkey,
@@ -742,7 +1542,7 @@ pub fn create_nonce_account(
 ///     #   rent_epoch: 1,
 ///     # });
 ///     let nonce_account = client.get_account(nonce_account_pubkey)?;
-///     let nonce_data = nonce_utils::data_from_account(&nonce_account)?;
+///     let nonce_data = domichain_rpc_client_nonce_utils::data_from_account(&nonce_account)?;
 ///     let blockhash = nonce_data.blockhash();
 ///
 ///     tx.try_sign(&[payer], blockhash)?;
@@ -782,7 +1582,8 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 /// Withdraw lamports from a durable transaction nonce account.
 ///
 /// This function produces an [`Instruction`] which must be submitted in a
-/// [`Transaction`] or [invoked] to take effect.
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::WithdrawNonceAccount`].
 ///
 /// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
@@ -808,8 +1609,8 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 ///
 /// ```
 /// # use domichain_program::example_mocks::domichain_sdk;
-/// # use domichain_program::example_mocks::domichain_client;
-/// use domichain_client::rpc_client::RpcClient;
+/// # use domichain_program::example_mocks::domichain_rpc_client;
+/// use domichain_rpc_client::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
@@ -874,7 +1675,8 @@ pub fn withdraw_nonce_account(
 /// Change the authority of a durable transaction nonce account.
 ///
 /// This function produces an [`Instruction`] which must be submitted in a
-/// [`Transaction`] or [invoked] to take effect.
+/// [`Transaction`] or [invoked] to take effect, containing a serialized
+/// [`SystemInstruction::AuthorizeNonceAccount`].
 ///
 /// [`Transaction`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
@@ -890,8 +1692,8 @@ pub fn withdraw_nonce_account(
 ///
 /// ```
 /// # use domichain_program::example_mocks::domichain_sdk;
-/// # use domichain_program::example_mocks::domichain_client;
-/// use domichain_client::rpc_client::RpcClient;
+/// # use domichain_program::example_mocks::domichain_rpc_client;
+/// use domichain_rpc_client::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
@@ -960,11 +1762,7 @@ pub fn upgrade_nonce_account(nonce_pubkey: Pubkey) -> Instruction {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*,
-        crate::instruction::{Instruction, InstructionError},
-        num_traits::ToPrimitive,
-    };
+    use {super::*, crate::instruction::Instruction};
 
     fn get_keys(instruction: &Instruction) -> Vec<Pubkey> {
         instruction.accounts.iter().map(|x| x.pubkey).collect()
@@ -995,166 +1793,5 @@ mod tests {
         let pubkeys: Vec<_> = ix.accounts.iter().map(|am| am.pubkey).collect();
         assert!(pubkeys.contains(&from_pubkey));
         assert!(pubkeys.contains(&nonce_pubkey));
-    }
-
-    #[test]
-    fn test_nonce_error_decode() {
-        use num_traits::FromPrimitive;
-        fn pretty_err<T>(err: InstructionError) -> String
-        where
-            T: 'static + std::error::Error + DecodeError<T> + FromPrimitive,
-        {
-            if let InstructionError::Custom(code) = err {
-                let specific_error: T = T::decode_custom_error_to_enum(code).unwrap();
-                format!(
-                    "{:?}: {}::{:?} - {}",
-                    err,
-                    T::type_of(),
-                    specific_error,
-                    specific_error,
-                )
-            } else {
-                "".to_string()
-            }
-        }
-        assert_eq!(
-            "Custom(0): NonceError::NoRecentBlockhashes - recent blockhash list is empty",
-            pretty_err::<NonceError>(NonceError::NoRecentBlockhashes.into())
-        );
-        assert_eq!(
-            "Custom(1): NonceError::NotExpired - stored nonce is still in recent_blockhashes",
-            pretty_err::<NonceError>(NonceError::NotExpired.into())
-        );
-        assert_eq!(
-            "Custom(2): NonceError::UnexpectedValue - specified nonce does not match stored nonce",
-            pretty_err::<NonceError>(NonceError::UnexpectedValue.into())
-        );
-        assert_eq!(
-            "Custom(3): NonceError::BadAccountState - cannot handle request in current account state",
-            pretty_err::<NonceError>(NonceError::BadAccountState.into())
-        );
-    }
-
-    #[test]
-    fn test_nonce_to_instruction_error() {
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::NoRecentBlockhashes, false),
-            NonceError::NoRecentBlockhashes.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::NotExpired, false),
-            NonceError::NotExpired.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::UnexpectedValue, false),
-            NonceError::UnexpectedValue.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::BadAccountState, false),
-            NonceError::BadAccountState.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::NoRecentBlockhashes, true),
-            SystemError::NonceNoRecentBlockhashes.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::NotExpired, true),
-            SystemError::NonceBlockhashNotExpired.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::UnexpectedValue, true),
-            SystemError::NonceUnexpectedBlockhashValue.into(),
-        );
-        assert_eq!(
-            nonce_to_instruction_error(NonceError::BadAccountState, true),
-            InstructionError::InvalidAccountData,
-        );
-    }
-
-    #[test]
-    fn test_instruction_to_nonce_error() {
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(NonceErrorAdapter::NoRecentBlockhashes.to_u32().unwrap(),),
-                false,
-            ),
-            Some(NonceError::NoRecentBlockhashes),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(NonceErrorAdapter::NotExpired.to_u32().unwrap(),),
-                false,
-            ),
-            Some(NonceError::NotExpired),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(NonceErrorAdapter::UnexpectedValue.to_u32().unwrap(),),
-                false,
-            ),
-            Some(NonceError::UnexpectedValue),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(NonceErrorAdapter::BadAccountState.to_u32().unwrap(),),
-                false,
-            ),
-            Some(NonceError::BadAccountState),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(&InstructionError::Custom(u32::MAX), false),
-            None,
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(SystemError::NonceNoRecentBlockhashes.to_u32().unwrap(),),
-                true,
-            ),
-            Some(NonceError::NoRecentBlockhashes),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(SystemError::NonceBlockhashNotExpired.to_u32().unwrap(),),
-                true,
-            ),
-            Some(NonceError::NotExpired),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(
-                &InstructionError::Custom(
-                    SystemError::NonceUnexpectedBlockhashValue.to_u32().unwrap(),
-                ),
-                true,
-            ),
-            Some(NonceError::UnexpectedValue),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(&InstructionError::InvalidAccountData, true),
-            Some(NonceError::BadAccountState),
-        );
-        assert_eq!(
-            instruction_to_nonce_error(&InstructionError::Custom(u32::MAX), true),
-            None,
-        );
-    }
-
-    #[test]
-    fn test_nonce_error_adapter_compat() {
-        assert_eq!(
-            NonceError::NoRecentBlockhashes.to_u32(),
-            NonceErrorAdapter::NoRecentBlockhashes.to_u32(),
-        );
-        assert_eq!(
-            NonceError::NotExpired.to_u32(),
-            NonceErrorAdapter::NotExpired.to_u32(),
-        );
-        assert_eq!(
-            NonceError::UnexpectedValue.to_u32(),
-            NonceErrorAdapter::UnexpectedValue.to_u32(),
-        );
-        assert_eq!(
-            NonceError::BadAccountState.to_u32(),
-            NonceErrorAdapter::BadAccountState.to_u32(),
-        );
     }
 }
