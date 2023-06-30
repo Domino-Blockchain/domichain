@@ -65,7 +65,7 @@ The same is true on Solana. Specifically:
 ### Why burn some fees?
 
 As mentioned above, a fixed proportion of each transaction fee is _burned_
-(destroyed). This is intended to cement the economic value of SOL and thus
+(destroyed). This is intended to cement the economic value of DOMI and thus
 sustain the network's security. Unlike a scheme where transactions fees are
 completely burned, leaders are still incentivized to include as many
 transactions as possible in their slots.

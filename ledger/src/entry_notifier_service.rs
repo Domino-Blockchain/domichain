@@ -1,7 +1,7 @@
 use {
     crate::entry_notifier_interface::EntryNotifierLock,
     crossbeam_channel::{unbounded, Receiver, RecvTimeoutError, Sender},
-    solana_entry::entry::EntrySummary,
+    domichain_entry::entry::EntrySummary,
     domichain_sdk::clock::Slot,
     std::{
         sync::{

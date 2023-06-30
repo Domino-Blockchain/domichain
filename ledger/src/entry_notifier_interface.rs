@@ -1,5 +1,5 @@
 use {
-    solana_entry::entry::EntrySummary,
+    domichain_entry::entry::EntrySummary,
     domichain_sdk::clock::Slot,
     std::sync::{Arc, RwLock},
 };

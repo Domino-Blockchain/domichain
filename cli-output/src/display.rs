@@ -10,7 +10,7 @@ use {
         hash::Hash,
         instruction::CompiledInstruction,
         message::v0::MessageAddressTableLookup,
-        native_token::lamports_to_sol,
+        native_token::lamports_to_domi,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
         signature::Signature,
@@ -53,7 +53,7 @@ pub fn build_balance_message_with_config(
     let value = if config.use_lamports_unit {
         lamports.to_string()
     } else {
-        let domi = lamports_to_sol(lamports);
+        let domi = lamports_to_domi(lamports);
         let domi_str = format!("{domi:.9}");
         if config.trim_trailing_zeros {
             domi_str
@@ -529,8 +529,8 @@ fn write_rewards<W: io::Write>(
                         "-".to_string()
                     },
                     sign,
-                    lamports_to_sol(reward.lamports.unsigned_abs()),
-                    lamports_to_sol(reward.post_balance)
+                    lamports_to_domi(reward.lamports.unsigned_abs()),
+                    lamports_to_domi(reward.post_balance)
                 )?;
             }
         }
@@ -555,7 +555,7 @@ fn write_status<W: io::Write>(
 }
 
 fn write_fees<W: io::Write>(w: &mut W, transaction_fee: u64, prefix: &str) -> io::Result<()> {
-    writeln!(w, "{}  Fee: ◎{}", prefix, lamports_to_sol(transaction_fee))
+    writeln!(w, "{}  Fee: ◎{}", prefix, lamports_to_domi(transaction_fee))
 }
 
 fn write_balances<W: io::Write>(
@@ -579,7 +579,7 @@ fn write_balances<W: io::Write>(
                 "{}  Account {} balance: ◎{}",
                 prefix,
                 i,
-                lamports_to_sol(*pre)
+                lamports_to_domi(*pre)
             )?;
         } else {
             writeln!(
@@ -587,8 +587,8 @@ fn write_balances<W: io::Write>(
                 "{}  Account {} balance: ◎{} -> ◎{}",
                 prefix,
                 i,
-                lamports_to_sol(*pre),
-                lamports_to_sol(*post)
+                lamports_to_domi(*pre),
+                lamports_to_domi(*post)
             )?;
         }
     }

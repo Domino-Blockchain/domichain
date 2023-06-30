@@ -296,35 +296,35 @@ const storageCost = await connection.getMinimumBalanceForRentExemption(
 Listed below are several example costs, for different tree sizes, including how
 many leaf nodes are possible for each:
 
-**Example #1: 16,384 nodes costing 0.222 SOL**
+**Example #1: 16,384 nodes costing 0.222 DOMI**
 
 - max depth of `14` and max buffer size of `64`
 - maximum number of leaf nodes: `16,384`
-- canopy depth of `0` costs approximately `0.222 SOL` to create
+- canopy depth of `0` costs approximately `0.222 DOMI` to create
 
-**Example #2: 16,384 nodes costing 1.134 SOL**
+**Example #2: 16,384 nodes costing 1.134 DOMI**
 
 - max depth of `14` and max buffer size of `64`
 - maximum number of leaf nodes: `16,384`
-- canopy depth of `11` costs approximately `1.134 SOL` to create
+- canopy depth of `11` costs approximately `1.134 DOMI` to create
 
-**Example #3: 1,048,576 nodes costing 1.673 SOL**
-
-- max depth of `20` and max buffer size of `256`
-- maximum number of leaf nodes: `1,048,576`
-- canopy depth of `10` costs approximately `1.673 SOL` to create
-
-**Example #4: 1,048,576 nodes costing 15.814 SOL**
+**Example #3: 1,048,576 nodes costing 1.673 DOMI**
 
 - max depth of `20` and max buffer size of `256`
 - maximum number of leaf nodes: `1,048,576`
-- canopy depth of `15` costs approximately `15.814 SOL` to create
+- canopy depth of `10` costs approximately `1.673 DOMI` to create
+
+**Example #4: 1,048,576 nodes costing 15.814 DOMI**
+
+- max depth of `20` and max buffer size of `256`
+- maximum number of leaf nodes: `1,048,576`
+- canopy depth of `15` costs approximately `15.814 DOMI` to create
 
 ## Compressed NFTs
 
 Compressed NFTs are one of the most popular use cases for State Compression on
 Solana. With compression, a one million NFT collection could be minted for
-`~50 SOL`, vice `~12,000 SOL` for its uncompressed equivalent collection.
+`~50 DOMI`, vice `~12,000 DOMI` for its uncompressed equivalent collection.
 
 :::info Developer Guide
 

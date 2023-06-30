@@ -17,7 +17,7 @@ use {
     },
 };
 
-const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::LAMPORTS_PER_SOL;
+const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::LAMPORTS_PER_DOMI;
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum ExternalClientType {
@@ -369,7 +369,7 @@ pub fn build_args<'a>(version: &'_ str) -> App<'a, '_> {
                 .long("bind-address")
                 .value_name("HOST")
                 .takes_value(true)
-                .validator(solana_net_utils::is_host)
+                .validator(domichain_net_utils::is_host)
                 .requires("client_node_id")
                 .help("IP address to use with connection cache"),
         )
@@ -534,7 +534,7 @@ pub fn parse_args(matches: &ArgMatches) -> Result<Config, &'static str> {
             .parse()
             .map_err(|_| "Can't parse padded instruction data size")?;
         args.instruction_padding_config = Some(InstructionPaddingConfig {
-            program_id,
+            program_id: program_id.into(),
             data_size,
         });
     }
@@ -548,7 +548,7 @@ pub fn parse_args(matches: &ArgMatches) -> Result<Config, &'static str> {
 
     if let Some(addr) = matches.value_of("bind_address") {
         args.bind_address =
-            solana_net_utils::parse_host(addr).map_err(|_| "Failed to parse bind-address")?;
+            domichain_net_utils::parse_host(addr).map_err(|_| "Failed to parse bind-address")?;
     }
 
     if let Some(client_node_id_filename) = matches.value_of("client_node_id") {

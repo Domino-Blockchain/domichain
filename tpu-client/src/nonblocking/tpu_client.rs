@@ -4,16 +4,16 @@ use {
     bincode::serialize,
     futures_util::{future::join_all, stream::StreamExt},
     log::*,
-    solana_connection_cache::{
+    domichain_connection_cache::{
         connection_cache::{
             ConnectionCache, ConnectionManager, ConnectionPool, NewConnectionConfig, Protocol,
             DEFAULT_CONNECTION_POOL_SIZE,
         },
         nonblocking::client_connection::ClientConnection,
     },
-    solana_pubsub_client::nonblocking::pubsub_client::{PubsubClient, PubsubClientError},
-    solana_rpc_client::nonblocking::rpc_client::RpcClient,
-    solana_rpc_client_api::{
+    domichain_pubsub_client::nonblocking::pubsub_client::{PubsubClient, PubsubClientError},
+    domichain_rpc_client::nonblocking::rpc_client::RpcClient,
+    domichain_rpc_client_api::{
         client_error::{Error as ClientError, Result as ClientResult},
         response::{RpcContactInfo, SlotUpdate},
     },
@@ -46,8 +46,8 @@ use {
 use {
     crate::tpu_client::{SEND_TRANSACTION_INTERVAL, TRANSACTION_RESEND_INTERVAL},
     indicatif::ProgressBar,
-    solana_rpc_client::spinner,
-    solana_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS,
+    domichain_rpc_client::spinner,
+    domichain_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS,
     domichain_sdk::{message::Message, signers::Signers, transaction::TransactionError},
 };
 

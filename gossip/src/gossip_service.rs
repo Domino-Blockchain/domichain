@@ -227,31 +227,6 @@ pub fn get_multi_client(
     )
 }
 
-/// Non panicking version of `get_multi_client`
-pub fn try_get_multi_client(
-    nodes: &[ContactInfo],
-    socket_addr_space: &SocketAddrSpace,
-    connection_cache: Arc<ConnectionCache>,
-) -> Result<(ThinClient, usize), ()> {
-    let addrs: Vec<_> = nodes
-        .iter()
-        .filter_map(|node| ContactInfo::valid_client_facing_addr(node, socket_addr_space))
-        .collect();
-    let rpc_addrs: Vec<_> = addrs.iter().map(|addr| addr.0).collect();
-    let tpu_addrs: Vec<_> = addrs.iter().map(|addr| addr.1).collect();
-
-    let num_nodes = tpu_addrs.len();
-
-    if !rpc_addrs.is_empty() && rpc_addrs.len() == tpu_addrs.len() {
-        Ok((
-            ThinClient::new_from_addrs(rpc_addrs, tpu_addrs, connection_cache),
-            num_nodes,
-        ))
-    } else {
-        Err(())
-    }
-}
-
 fn spy(
     spy_ref: Arc<ClusterInfo>,
     num_nodes: Option<usize>,

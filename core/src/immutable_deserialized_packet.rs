@@ -1,6 +1,6 @@
 use {
-    solana_perf::packet::Packet,
-    solana_runtime::transaction_priority_details::{
+    domichain_perf::packet::Packet,
+    domichain_runtime::transaction_priority_details::{
         GetTransactionPriorityDetails, TransactionPriorityDetails,
     },
     domichain_sdk::{

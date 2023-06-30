@@ -7,7 +7,7 @@ use {
         sysvar,
     },
     domichain_sdk::{signature::Signer, transaction::Transaction},
-    solana_validator::test_validator::*,
+    domichain_validator::test_validator::*,
 };
 
 #[test]

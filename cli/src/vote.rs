@@ -32,7 +32,7 @@ use {
     domichain_rpc_client_nonce_utils::blockhash_query::BlockhashQuery,
     domichain_sdk::{
         account::Account, commitment_config::CommitmentConfig, feature, message::Message,
-        native_token::lamports_to_sol, pubkey::Pubkey, system_instruction::SystemError,
+        native_token::lamports_to_domi, pubkey::Pubkey, system_instruction::SystemError,
         transaction::Transaction,
     },
     domichain_vote_program::{
@@ -1327,7 +1327,7 @@ pub fn process_withdraw_from_vote_account(
             let balance_remaining = current_balance.saturating_sub(withdraw_amount);
             if balance_remaining < minimum_balance && balance_remaining != 0 {
                 return Err(CliError::BadParameter(format!(
-                    "Withdraw amount too large. The vote account balance must be at least {} DOMI to remain rent exempt", lamports_to_sol(minimum_balance)
+                    "Withdraw amount too large. The vote account balance must be at least {} DOMI to remain rent exempt", lamports_to_domi(minimum_balance)
                 ))
                 .into());
             }

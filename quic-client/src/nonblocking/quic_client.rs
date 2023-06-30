@@ -11,13 +11,13 @@ use {
         ClientConfig, ConnectError, Connection, ConnectionError, Endpoint, EndpointConfig,
         IdleTimeout, TokioRuntime, TransportConfig, WriteError,
     },
-    solana_connection_cache::{
+    domichain_connection_cache::{
         client_connection::ClientStats, connection_cache_stats::ConnectionCacheStats,
         nonblocking::client_connection::ClientConnection,
     },
     domichain_measure::measure::Measure,
-    solana_net_utils::VALIDATOR_PORT_RANGE,
-    solana_rpc_client_api::client_error::ErrorKind as ClientErrorKind,
+    domichain_net_utils::VALIDATOR_PORT_RANGE,
+    domichain_rpc_client_api::client_error::ErrorKind as ClientErrorKind,
     domichain_sdk::{
         quic::{
             QUIC_CONNECTION_HANDSHAKE_TIMEOUT, QUIC_KEEP_ALIVE, QUIC_MAX_TIMEOUT,
@@ -26,7 +26,7 @@ use {
         signature::Keypair,
         transport::Result as TransportResult,
     },
-    solana_streamer::{
+    domichain_streamer::{
         nonblocking::quic::ALPN_TPU_PROTOCOL_ID, tls_certificates::new_self_signed_tls_certificate,
     },
     std::{
@@ -104,7 +104,7 @@ impl QuicLazyInitializedEndpoint {
         let mut endpoint = if let Some(endpoint) = &self.client_endpoint {
             endpoint.clone()
         } else {
-            let client_socket = solana_net_utils::bind_in_range(
+            let client_socket = domichain_net_utils::bind_in_range(
                 IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                 VALIDATOR_PORT_RANGE,
             )

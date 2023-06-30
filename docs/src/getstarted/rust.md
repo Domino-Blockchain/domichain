@@ -146,7 +146,7 @@ Program Id: EFH95fWg49vkFNbAdw9vy75tM7sWZ2hQbTTUmuACGip3
 
 You have successfully setup, built, and deployed a Solana program using the Rust language.
 
-> PS: Check your Solana wallet's balance again after you deployed. See how much SOL it cost to deploy your simple program?
+> PS: Check your Solana wallet's balance again after you deployed. See how much DOMI it cost to deploy your simple program?
 
 ## Next steps
 

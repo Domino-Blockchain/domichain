@@ -4,14 +4,14 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_clap_utils::{
+    domichain_clap_utils::{
         hidden_unless_forced, input_parsers::pubkey_of, input_validators::is_url_or_moniker,
     },
-    solana_cli_config::{ConfigInput, CONFIG_FILE},
-    solana_client::transaction_executor::TransactionExecutor,
-    solana_gossip::gossip_service::discover,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_runtime::inline_spl_token,
+    domichain_cli_config::{ConfigInput, CONFIG_FILE},
+    domichain_client::transaction_executor::TransactionExecutor,
+    domichain_gossip::gossip_service::discover,
+    domichain_rpc_client::rpc_client::RpcClient,
+    domichain_runtime::inline_spl_token,
     domichain_sdk::{
         commitment_config::CommitmentConfig,
         hash::Hash,
@@ -22,7 +22,7 @@ use {
         system_instruction, system_program,
         transaction::Transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         cmp::min,
         process::exit,
@@ -157,23 +157,25 @@ fn make_create_message(
                 space,
                 &program_id,
             )];
-            if let Some(mint_address) = mint {
-                instructions.push(
-                    spl_token::instruction::initialize_account(
-                        &spl_token::id(),
-                        &to_pubkey,
-                        &mint_address,
-                        &base_keypair.pubkey(),
-                    )
-                    .unwrap(),
-                );
-            }
+            todo!();
+            // if let Some(mint_address) = mint {
+            //     instructions.push(
+            //         spl_token::instruction::initialize_account(
+            //             &spl_token::id(),
+            //             &to_pubkey.into(),
+            //             &mint_address.into(),
+            //             &base_keypair.pubkey().into(),
+            //         )
+            //         .unwrap(),
+            //     );
+            // }
 
             instructions
         })
         .collect();
 
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    todo!()
+    // Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 fn make_close_message(
@@ -185,46 +187,50 @@ fn make_close_message(
     balance: u64,
     spl_token: bool,
 ) -> Message {
-    let instructions: Vec<_> = (0..num_instructions)
-        .filter_map(|_| {
-            let program_id = if spl_token {
-                inline_spl_token::id()
-            } else {
-                system_program::id()
-            };
-            let max_created_seed = max_created.load(Ordering::Relaxed);
-            let max_closed_seed = max_closed.load(Ordering::Relaxed);
-            if max_closed_seed >= max_created_seed {
-                return None;
-            }
-            let seed = max_closed.fetch_add(1, Ordering::Relaxed).to_string();
-            let address =
-                Pubkey::create_with_seed(&base_keypair.pubkey(), &seed, &program_id).unwrap();
-            if spl_token {
-                Some(
-                    spl_token::instruction::close_account(
-                        &spl_token::id(),
-                        &address,
-                        &keypair.pubkey(),
-                        &base_keypair.pubkey(),
-                        &[],
-                    )
-                    .unwrap(),
-                )
-            } else {
-                Some(system_instruction::transfer_with_seed(
-                    &address,
-                    &base_keypair.pubkey(),
-                    seed,
-                    &program_id,
-                    &keypair.pubkey(),
-                    balance,
-                ))
-            }
-        })
-        .collect();
-
-    Message::new(&instructions, Some(&keypair.pubkey()))
+    todo!()
+    // let instructions: Vec<_> = (0..num_instructions)
+    //     .filter_map(|_| {
+    //         let program_id = if spl_token {
+    //             inline_spl_token::id()
+    //         } else {
+    //             system_program::id()
+    //         };
+    //         let max_created_seed = max_created.load(Ordering::Relaxed);
+    //         let max_closed_seed = max_closed.load(Ordering::Relaxed);
+    //         todo!()
+    //         // if max_closed_seed >= max_created_seed {
+    //         //     return None;
+    //         // }
+    //         // let seed = max_closed.fetch_add(1, Ordering::Relaxed).to_string();
+    //         // let address =
+    //         //     Pubkey::create_with_seed(&base_keypair.pubkey(), &seed, &program_id).unwrap();
+    //         //
+    //         // if spl_token {
+    //         //     Some(
+    //         //         spl_token::instruction::close_account(
+    //         //             &spl_token::id(),
+    //         //             &address.into(),
+    //         //             &keypair.pubkey().into(),
+    //         //             &base_keypair.pubkey().into(),
+    //         //             &[],
+    //         //         )
+    //         //         .unwrap(),
+    //         //     )
+    //         // } else {
+    //         //     Some(system_instruction::transfer_with_seed(
+    //         //         &address,
+    //         //         &base_keypair.pubkey(),
+    //         //         seed,
+    //         //         &program_id,
+    //         //         &keypair.pubkey(),
+    //         //         balance,
+    //         //     ))
+    //         // }
+    //     })
+    //     .collect();
+    //
+    // todo!()
+    // Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -635,7 +641,7 @@ fn main() {
     }
 
     let client = if let Some(addr) = matches.value_of("entrypoint") {
-        let entrypoint_addr = solana_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
+        let entrypoint_addr = domichain_net_utils::parse_host_port(addr).unwrap_or_else(|e| {
             eprintln!("failed to parse entrypoint address: {e}");
             exit(1)
         });
@@ -671,9 +677,9 @@ fn main() {
         ))
     } else {
         let config = if let Some(config_file) = matches.value_of("config_file") {
-            solana_cli_config::Config::load(config_file).unwrap_or_default()
+            domichain_cli_config::Config::load(config_file).unwrap_or_default()
         } else {
-            solana_cli_config::Config::default()
+            domichain_cli_config::Config::default()
         };
         let (_, json_rpc_url) = ConfigInput::compute_json_rpc_url_setting(
             matches.value_of("json_rpc_url").unwrap_or(""),
@@ -710,10 +716,10 @@ pub mod test {
             validator_configs::make_identical_validator_configs,
         },
         domichain_measure::measure::Measure,
-        domichain_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
+        domichain_sdk::{native_token::domi_to_lamports, poh_config::PohConfig},
         domichain_test_validator::TestValidator,
         spl_token::{
-            domichain_program::program_pack::Pack,
+            solana_program::program_pack::Pack,
             state::{Account, Mint},
         },
     };
@@ -783,7 +789,7 @@ pub mod test {
         let signature = rpc_client
             .request_airdrop_with_blockhash(
                 &funder.pubkey(),
-                sol_to_lamports(1.0),
+                domi_to_lamports(1.0),
                 &latest_blockhash,
             )
             .unwrap();

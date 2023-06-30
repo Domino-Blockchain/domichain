@@ -18,12 +18,12 @@ use {
 
 // Returns all known SPL Token program ids
 pub fn spl_token_ids() -> Vec<Pubkey> {
-    vec![spl_token::id(), spl_token_2022::id()]
+    vec![spl_token::id().into(), spl_token_2022::id().into()]
 }
 
 // Check if the provided program id as a known SPL Token program id
 pub fn is_known_spl_token_id(program_id: &Pubkey) -> bool {
-    *program_id == spl_token::id() || *program_id == spl_token_2022::id()
+    *program_id == spl_token::id().into() || *program_id == spl_token_2022::id().into()
 }
 
 // A helper function to convert spl_token::native_mint::id() as spl_sdk::pubkey::Pubkey to
@@ -42,7 +42,7 @@ pub fn spl_token_native_mint() -> Pubkey {
     note = "Pubkey conversions no longer needed. Please use spl_token::id() directly"
 )]
 pub fn spl_token_native_mint_program_id() -> Pubkey {
-    spl_token::id()
+    spl_token::id().into()
 }
 
 // A helper function to convert a domichain_sdk::pubkey::Pubkey to spl_sdk::pubkey::Pubkey

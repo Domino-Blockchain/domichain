@@ -52,11 +52,7 @@ use {
         system_program,
         transaction::{Transaction, TransactionError},
     },
-    solana_rbpf::{
-        elf::Executable,
-        verifier::RequisiteVerifier,
-        vm::{Config, VerifiedExecutable},
-    },
+    solana_rbpf::vm::Config,
     std::{
         fs::File,
         io::{Read, Write},

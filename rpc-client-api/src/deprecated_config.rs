@@ -4,7 +4,7 @@ use {
         EncodingConfig, RpcBlockConfig, RpcEncodingConfigWrapper, RpcTransactionConfig,
     },
     domichain_sdk::{clock::Slot, commitment_config::CommitmentConfig},
-    solana_transaction_status::{TransactionDetails, UiTransactionEncoding},
+    domichain_transaction_status::{TransactionDetails, UiTransactionEncoding},
 };
 
 #[deprecated(

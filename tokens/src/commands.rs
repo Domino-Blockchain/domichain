@@ -38,7 +38,7 @@ use {
     },
     domichain_transaction_status::TransactionStatus,
     spl_associated_token_account::get_associated_token_address,
-    spl_token::domichain_program::program_error::ProgramError,
+    spl_token::solana_program::program_error::ProgramError,
     std::{
         cmp::{self},
         io,
@@ -307,7 +307,7 @@ fn build_messages(
                 .iter()
                 .map(|x| {
                     let wallet_address = x.recipient.parse().unwrap();
-                    get_associated_token_address(&wallet_address, &spl_token_args.mint)
+                    get_associated_token_address(&wallet_address, &spl_token_args.mint.into()).into()
                 })
                 .collect::<Vec<_>>();
             let mut maybe_accounts = client.get_multiple_accounts(&associated_token_addresses)?;

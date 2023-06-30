@@ -280,14 +280,14 @@ fn main() {
 
     let from = get_bench_keypairs(
         client.clone(),
-        id,
+        &id,
         1,
-        *num_lamports_per_account + nonce_rent * n as u64,
+        num_lamports_per_account + nonce_rent * n as u64,
     ).into_iter().nth(0).unwrap();
 
     let to = get_bench_keypairs(
         client.clone(),
-        id,
+        &id,
         1,
         0,
     ).into_iter().nth(0).unwrap();

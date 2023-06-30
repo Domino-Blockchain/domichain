@@ -30,7 +30,7 @@ use {
         clock::{Epoch, Slot, UnixTimestamp},
         epoch_info::EpochInfo,
         hash::Hash,
-        native_token::lamports_to_sol,
+        native_token::lamports_to_domi,
         pubkey::Pubkey,
         signature::Signature,
         stake::state::{Authorized, Lockup},
@@ -1027,8 +1027,8 @@ impl fmt::Display for CliKeyedEpochRewards {
                         f,
                         "  {:<44}  ◎{:<17.9}  ◎{:<17.9}  {:>13.9}%  {:>14}  {:>10}",
                         keyed_reward.address,
-                        lamports_to_sol(reward.amount),
-                        lamports_to_sol(reward.post_balance),
+                        lamports_to_domi(reward.amount),
+                        lamports_to_domi(reward.post_balance),
                         reward.percent_change,
                         reward
                             .apr
@@ -1170,8 +1170,8 @@ fn show_epoch_rewards(
                 reward.epoch,
                 reward.effective_slot,
                 Local.timestamp_opt(reward.block_time, 0).unwrap(),
-                lamports_to_sol(reward.amount),
-                lamports_to_sol(reward.post_balance),
+                lamports_to_domi(reward.amount),
+                lamports_to_domi(reward.post_balance),
                 reward.percent_change,
                 reward
                     .apr
@@ -1871,7 +1871,7 @@ impl fmt::Display for CliAccountBalances {
                 f,
                 "{:<44}  {}",
                 account.address,
-                &format!("{} DOMI", lamports_to_sol(account.lamports))
+                &format!("{} DOMI", lamports_to_domi(account.lamports))
             )?;
         }
         Ok(())
@@ -1906,16 +1906,16 @@ impl VerboseDisplay for CliSupply {}
 
 impl fmt::Display for CliSupply {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln_name_value(f, "Total:", &format!("{} DOMI", lamports_to_sol(self.total)))?;
+        writeln_name_value(f, "Total:", &format!("{} DOMI", lamports_to_domi(self.total)))?;
         writeln_name_value(
             f,
             "Circulating:",
-            &format!("{} DOMI", lamports_to_sol(self.circulating)),
+            &format!("{} DOMI", lamports_to_domi(self.circulating)),
         )?;
         writeln_name_value(
             f,
             "Non-Circulating:",
-            &format!("{} DOMI", lamports_to_sol(self.non_circulating)),
+            &format!("{} DOMI", lamports_to_domi(self.non_circulating)),
         )?;
         if self.print_accounts {
             writeln!(f)?;
@@ -2570,14 +2570,14 @@ impl fmt::Display for CliBlock {
                     format!(
                         "{}◎{:<14.9}",
                         sign,
-                        lamports_to_sol(reward.lamports.unsigned_abs())
+                        lamports_to_domi(reward.lamports.unsigned_abs())
                     ),
                     if reward.post_balance == 0 {
                         "          -                 -".to_string()
                     } else {
                         format!(
                             "◎{:<19.9}  {:>13.9}%",
-                            lamports_to_sol(reward.post_balance),
+                            lamports_to_domi(reward.post_balance),
                             (reward.lamports.abs() as f64
                                 / (reward.post_balance as f64 - reward.lamports as f64))
                                 * 100.0
@@ -2595,7 +2595,7 @@ impl fmt::Display for CliBlock {
                 f,
                 "Total Rewards: {}◎{:<12.9}",
                 sign,
-                lamports_to_sol(total_rewards.unsigned_abs())
+                lamports_to_domi(total_rewards.unsigned_abs())
             )?;
         }
         for (index, transaction_with_meta) in

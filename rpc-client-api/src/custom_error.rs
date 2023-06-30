@@ -3,7 +3,7 @@ use {
     crate::response::RpcSimulateTransactionResult,
     jsonrpc_core::{Error, ErrorCode},
     domichain_sdk::clock::Slot,
-    solana_transaction_status::EncodeError,
+    domichain_transaction_status::EncodeError,
     thiserror::Error,
 };
 

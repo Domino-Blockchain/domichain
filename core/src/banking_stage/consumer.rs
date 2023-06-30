@@ -12,14 +12,14 @@ use {
         unprocessed_transaction_storage::{ConsumeScannerPayload, UnprocessedTransactionStorage},
     },
     itertools::Itertools,
-    solana_ledger::token_balances::collect_token_balances,
+    domichain_ledger::token_balances::collect_token_balances,
     domichain_measure::{measure::Measure, measure_us},
-    solana_poh::poh_recorder::{
+    domichain_poh::poh_recorder::{
         BankStart, PohRecorderError, RecordTransactionsSummary, RecordTransactionsTimings,
         TransactionRecorder,
     },
     domichain_program_runtime::timings::ExecuteTimings,
-    solana_runtime::{
+    domichain_runtime::{
         bank::{Bank, LoadAndExecuteTransactionsOutput, TransactionCheckResult},
         transaction_batch::TransactionBatch,
         transaction_error_metrics::TransactionErrorMetrics,
@@ -730,19 +730,19 @@ mod tests {
         },
         crossbeam_channel::{unbounded, Receiver},
         domichain_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
-        solana_entry::entry::{next_entry, next_versioned_entry},
-        solana_ledger::{
+        domichain_entry::entry::{next_entry, next_versioned_entry},
+        domichain_ledger::{
             blockstore::{entries_to_test_shreds, Blockstore},
             blockstore_processor::TransactionStatusSender,
             genesis_utils::GenesisConfigInfo,
             get_tmp_ledger_path_auto_delete,
             leader_schedule_cache::LeaderScheduleCache,
         },
-        solana_perf::packet::Packet,
-        solana_poh::poh_recorder::{PohRecorder, WorkingBankEntry},
+        domichain_perf::packet::Packet,
+        domichain_poh::poh_recorder::{PohRecorder, WorkingBankEntry},
         domichain_program_runtime::timings::ProgramTiming,
-        solana_rpc::transaction_status_service::TransactionStatusService,
-        solana_runtime::{cost_model::CostModel, prioritization_fee_cache::PrioritizationFeeCache},
+        domichain_rpc::transaction_status_service::TransactionStatusService,
+        domichain_runtime::{cost_model::CostModel, prioritization_fee_cache::PrioritizationFeeCache},
         domichain_sdk::{
             account::AccountSharedData,
             instruction::InstructionError,
@@ -754,7 +754,7 @@ mod tests {
             system_transaction,
             transaction::{MessageHash, Transaction, VersionedTransaction},
         },
-        solana_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
+        domichain_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
         std::{
             borrow::Cow,
             path::Path,
@@ -1536,7 +1536,7 @@ mod tests {
             mut genesis_config,
             mint_keypair,
             ..
-        } = create_slow_genesis_config(domichain_sdk::native_token::sol_to_lamports(1000.0));
+        } = create_slow_genesis_config(domichain_sdk::native_token::domi_to_lamports(1000.0));
         genesis_config.rent.lamports_per_byte_year = 50;
         genesis_config.rent.exemption_threshold = 2.0;
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));

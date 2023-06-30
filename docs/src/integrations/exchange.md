@@ -340,7 +340,7 @@ list the starting and ending balances of each account in
 [lamports](../terminology.md#lamport), indexed to the `accountKeys` list. For
 example, if the deposit address of interest is
 `G1wZ113tiUHdSpQEBcid8n1x8BAvcWZoZgxPKxgE5B7o`, this transaction represents a
-transfer of 1040000000 - 1030000000 = 10,000,000 lamports = 0.01 SOL
+transfer of 1040000000 - 1030000000 = 10,000,000 lamports = 0.01 DOMI
 
 If you need more information about the transaction type or other specifics, you
 can request the block from RPC in binary format, and parse it using either our

@@ -1,5 +1,5 @@
 use {
-    solana_runtime::bank::Bank,
+    domichain_runtime::bank::Bank,
     domichain_sdk::slot_history::Slot,
     std::{
         sync::{Arc, Condvar, Mutex, MutexGuard, Weak},

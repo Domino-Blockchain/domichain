@@ -12,7 +12,7 @@ extern crate test;
 
 use {
     byteorder::{ByteOrder, LittleEndian, WriteBytesExt},
-    solana_bpf_loader_program::{
+    domichain_bpf_loader_program::{
         create_vm, serialization::serialize_parameters,
         syscalls::create_program_runtime_environment,
     },
@@ -25,7 +25,7 @@ use {
         verifier::{RequisiteVerifier, TautologyVerifier},
         vm::ContextObject,
     },
-    solana_runtime::{
+    domichain_runtime::{
         bank::Bank,
         bank_client::BankClient,
         genesis_utils::{create_genesis_config, GenesisConfigInfo},

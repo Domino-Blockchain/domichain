@@ -726,7 +726,7 @@ impl StakeSubCommands for App<'_, '_> {
                     Arg::with_name("lamports")
                         .long("lamports")
                         .takes_value(false)
-                        .help("Display minimum delegation in lamports instead of SOL")
+                        .help("Display minimum delegation in lamports instead of DOMI")
                 )
         )
     }

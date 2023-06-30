@@ -18,9 +18,9 @@
 //!
 //! ```
 //! # use domichain_program::example_mocks::domichain_sdk;
-//! # use domichain_program::example_mocks::solana_rpc_client;
+//! # use domichain_program::example_mocks::domichain_rpc_client;
 //! # use domichain_sdk::account::Account;
-//! # use solana_rpc_client::rpc_client::RpcClient;
+//! # use domichain_rpc_client::rpc_client::RpcClient;
 //! # use domichain_sdk::sysvar::slot_history::{self, SlotHistory};
 //! # use anyhow::Result;
 //! #

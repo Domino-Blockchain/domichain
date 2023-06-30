@@ -351,13 +351,13 @@ mod tests {
         super::*,
         domichain_sdk::{
             genesis_config::create_genesis_config, instruction::AccountMeta,
-            native_token::sol_to_lamports,
+            native_token::domi_to_lamports,
         },
     };
 
     #[test]
     fn test_bank_client_new_with_keypairs() {
-        let (genesis_config, john_doe_keypair) = create_genesis_config(sol_to_lamports(1.0));
+        let (genesis_config, john_doe_keypair) = create_genesis_config(domi_to_lamports(1.0));
         let john_pubkey = john_doe_keypair.pubkey();
         let jane_doe_keypair = Keypair::new();
         let jane_pubkey = jane_doe_keypair.pubkey();

@@ -768,7 +768,7 @@ impl ReplayStage {
                 compute_bank_stats_time.stop();
 
                 let mut compute_slot_stats_time = Measure::start("compute_slot_stats_time");
-                for _slot in newly_computed_slot_stats {
+                for slot in newly_computed_slot_stats {
                     let fork_stats = progress.get_fork_stats(slot).unwrap();
                     let confirmed_forks = Self::confirm_forks(
                         &tower,

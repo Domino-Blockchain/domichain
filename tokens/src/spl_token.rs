@@ -11,7 +11,7 @@ use {
         get_associated_token_address, instruction::create_associated_token_account,
     },
     spl_token::{
-        domichain_program::program_pack::Pack,
+        solana_program::program_pack::Pack,
         state::{Account as SplTokenAccount, Mint},
     },
 };
@@ -21,7 +21,7 @@ pub fn update_token_args(client: &RpcClient, args: &mut Option<SplTokenArgs>) ->
         let sender_account = client
             .get_account(&spl_token_args.token_account_address)
             .unwrap_or_default();
-        spl_token_args.mint = SplTokenAccount::unpack(&sender_account.data)?.mint;
+        spl_token_args.mint = SplTokenAccount::unpack(&sender_account.data)?.mint.into();
         update_decimals(client, args)?;
     }
     Ok(())
@@ -51,29 +51,30 @@ pub fn build_spl_token_instructions(
         .expect("spl_token_args must be some");
     let wallet_address = allocation.recipient.parse().unwrap();
     let associated_token_address =
-        get_associated_token_address(&wallet_address, &spl_token_args.mint);
+        get_associated_token_address(&wallet_address, &spl_token_args.mint.into());
     let mut instructions = vec![];
-    if do_create_associated_token_account {
-        instructions.push(create_associated_token_account(
-            &args.fee_payer.pubkey(),
-            &wallet_address,
-            &spl_token_args.mint,
-            &spl_token::id(),
-        ));
-    }
-    instructions.push(
-        spl_token::instruction::transfer_checked(
-            &spl_token::id(),
-            &spl_token_args.token_account_address,
-            &spl_token_args.mint,
-            &associated_token_address,
-            &args.sender_keypair.pubkey(),
-            &[],
-            allocation.amount,
-            spl_token_args.decimals,
-        )
-        .unwrap(),
-    );
+    todo!();
+    // if do_create_associated_token_account {
+    //     instructions.push(create_associated_token_account(
+    //         &args.fee_payer.pubkey().into(),
+    //         &wallet_address,
+    //         &spl_token_args.mint.into(),
+    //         &spl_token::id(),
+    //     ));
+    // }
+    // instructions.push(
+    //     spl_token::instruction::transfer_checked(
+    //         &spl_token::id(),
+    //         &spl_token_args.token_account_address.into(),
+    //         &spl_token_args.mint.into(),
+    //         &associated_token_address,
+    //         &args.sender_keypair.pubkey().into(),
+    //         &[],
+    //         allocation.amount,
+    //         spl_token_args.decimals,
+    //     )
+    //     .unwrap(),
+    // );
     instructions
 }
 
@@ -121,9 +122,9 @@ pub fn print_token_balances(
 ) -> Result<(), Error> {
     let address = allocation.recipient.parse().unwrap();
     let expected = allocation.amount;
-    let associated_token_address = get_associated_token_address(&address, &spl_token_args.mint);
+    let associated_token_address = get_associated_token_address(&address, &spl_token_args.mint.into());
     let recipient_account = client
-        .get_account(&associated_token_address)
+        .get_account(&associated_token_address.into())
         .unwrap_or_default();
     let (actual, difference) = if let Ok(recipient_token) =
         SplTokenAccount::unpack(&recipient_account.data)

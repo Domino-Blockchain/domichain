@@ -391,8 +391,7 @@ impl ClusterInfoVoteListener {
                     Ok(vrf_hash) => {
                         let vote_accounts = epoch_stakes.stakes().vote_accounts();
                         let stake = vote_accounts
-                            .get(&vote_account_key)
-                            .map(|(stake, _)| *stake)
+                            .get_stake(&vote_account_key)
                             .unwrap_or_default(); // Stake
                         let total_stake = epoch_stakes.total_stake(); // Total stake
 

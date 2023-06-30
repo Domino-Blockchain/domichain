@@ -1,5 +1,5 @@
 use {
-    solana_poh::poh_recorder::{BankStart, PohRecorder},
+    domichain_poh::poh_recorder::{BankStart, PohRecorder},
     domichain_sdk::{
         clock::{
             DEFAULT_TICKS_PER_SLOT, FORWARD_TRANSACTIONS_TO_LEADER_AT_SLOT_OFFSET,
@@ -106,7 +106,7 @@ mod tests {
     use {
         super::*,
         core::panic,
-        solana_runtime::bank::Bank,
+        domichain_runtime::bank::Bank,
         std::{sync::Arc, time::Instant},
     };
 

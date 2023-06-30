@@ -335,10 +335,10 @@ impl Secp256k1Pubkey {
 /// The RPC client program:
 ///
 /// ```no_run
-/// # use domichain_program::example_mocks::solana_rpc_client;
+/// # use domichain_program::example_mocks::domichain_rpc_client;
 /// # use domichain_program::example_mocks::domichain_sdk;
 /// use anyhow::Result;
-/// use solana_rpc_client::rpc_client::RpcClient;
+/// use domichain_rpc_client::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     instruction::Instruction,
 ///     keccak,

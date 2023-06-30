@@ -1,6 +1,6 @@
 use {
     domichain_account_decoder::parse_token::real_number_string_trimmed,
-    domichain_sdk::native_token::lamports_to_sol,
+    domichain_sdk::native_token::lamports_to_domi,
     std::{
         fmt::{Debug, Display, Formatter, Result},
         ops::Add,
@@ -25,7 +25,7 @@ impl Token {
     fn write_with_symbol(&self, f: &mut Formatter) -> Result {
         match &self.token_type {
             TokenType::Domi => {
-                let amount = lamports_to_sol(self.amount);
+                let amount = lamports_to_domi(self.amount);
                 write!(f, "{SOL_SYMBOL}{amount}")
             }
             TokenType::SplToken => {

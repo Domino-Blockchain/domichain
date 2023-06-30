@@ -4,8 +4,8 @@ use {
         duplicate_shred_listener::DuplicateShredHandlerTrait,
     },
     log::error,
-    solana_ledger::{blockstore::Blockstore, leader_schedule_cache::LeaderScheduleCache},
-    solana_runtime::bank_forks::BankForks,
+    domichain_ledger::{blockstore::Blockstore, leader_schedule_cache::LeaderScheduleCache},
+    domichain_runtime::bank_forks::BankForks,
     domichain_sdk::{
         clock::{Epoch, Slot},
         pubkey::Pubkey,
@@ -211,12 +211,12 @@ mod tests {
             cluster_info::DUPLICATE_SHRED_MAX_PAYLOAD_SIZE,
             duplicate_shred::{from_shred, tests::new_rand_shred},
         },
-        solana_ledger::{
+        domichain_ledger::{
             genesis_utils::{create_genesis_config_with_leader, GenesisConfigInfo},
             get_tmp_ledger_path_auto_delete,
             shred::Shredder,
         },
-        solana_runtime::bank::Bank,
+        domichain_runtime::bank::Bank,
         domichain_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,

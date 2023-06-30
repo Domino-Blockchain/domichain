@@ -4,12 +4,12 @@ use {
     log::*,
     serde::{Deserialize, Serialize},
     serde_json::Result,
-    solana_bpf_loader_program::{
+    domichain_bpf_loader_program::{
         create_vm, load_program_from_bytes, serialization::serialize_parameters,
         syscalls::create_program_runtime_environment,
     },
-    solana_clap_utils::input_parsers::pubkeys_of,
-    solana_ledger::{
+    domichain_clap_utils::input_parsers::pubkeys_of,
+    domichain_ledger::{
         blockstore_options::{AccessType, BlockstoreRecoveryMode},
         blockstore_processor::ProcessOptions,
     },
@@ -22,7 +22,7 @@ use {
         assembler::assemble, elf::Executable, static_analysis::Analysis,
         verifier::RequisiteVerifier,
     },
-    solana_runtime::{bank::Bank, runtime_config::RuntimeConfig},
+    domichain_runtime::{bank::Bank, runtime_config::RuntimeConfig},
     domichain_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,

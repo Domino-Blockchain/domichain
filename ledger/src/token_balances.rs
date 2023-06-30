@@ -17,7 +17,7 @@ use {
 };
 
 fn get_mint_decimals(bank: &Bank, mint: &Pubkey) -> Option<u8> {
-    if mint == &spl_token::native_mint::id() {
+    if mint == &Pubkey::from(spl_token::native_mint::id()) {
         Some(spl_token::native_mint::DECIMALS)
     } else {
         let mint_account = bank.get_account(mint)?;
@@ -102,9 +102,9 @@ fn collect_token_balance_from_account(
     let token_account = StateWithExtensions::<TokenAccount>::unpack(account.data()).ok()?;
     let mint = token_account.base.mint;
 
-    let decimals = mint_decimals.get(&mint).cloned().or_else(|| {
-        let decimals = get_mint_decimals(bank, &mint)?;
-        mint_decimals.insert(mint, decimals);
+    let decimals = mint_decimals.get(&mint.into()).cloned().or_else(|| {
+        let decimals = get_mint_decimals(bank, &mint.into())?;
+        mint_decimals.insert(mint.into(), decimals);
         Some(decimals)
     })?;
 

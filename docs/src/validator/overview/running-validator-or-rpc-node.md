@@ -7,21 +7,21 @@ Operators who run a [consensus validator](./what-is-a-validator.md) have much di
 
 ## Consensus Validators
 
-As a validator your primary focus is maintaining the network and making sure that your node is performing optimally so that you can fully participate in the cluster consensus. You will want to attract a delegation of SOL to your validator which will allow your validator the opportunity to produce more blocks and earn rewards.
+As a validator your primary focus is maintaining the network and making sure that your node is performing optimally so that you can fully participate in the cluster consensus. You will want to attract a delegation of DOMI to your validator which will allow your validator the opportunity to produce more blocks and earn rewards.
 
 Each staked validator earns inflation rewards from [vote credits](../../terminology.md#vote-credit). Vote credits are assigned to validators that vote on [blocks](../../terminology.md#block) produced by the [leader](../../terminology.md#leader). The vote credits are given to all validators that successfully vote on blocks that are added to the blockchain. Additionally, when the validator is the leader, it can earn transaction fees and storage [rent fees](../../developing/programming-model/accounts.md#rent) for each block that it produces that is added to the blockchain.
 
-Since all votes in Solana happen on the blockchain, a validator incurs a transaction cost for each vote that it makes. These transaction fees amount to approximately 1.0 SOL per day.
+Since all votes in Solana happen on the blockchain, a validator incurs a transaction cost for each vote that it makes. These transaction fees amount to approximately 1.0 DOMI per day.
 
-> It is important to make sure your validator always has enough SOL in its identity account to pay for these transactions!
+> It is important to make sure your validator always has enough DOMI in its identity account to pay for these transactions!
 
 ### Economics of running a consensus validator
 
 As an operator, it is important to understand how a consensus validator spends and earns sol through the protocol.
 
-All validators who vote (consensus validators) must pay vote transaction fees for blocks that they agree with.  The cost of voting can be up to 1.1 SOL per day.
+All validators who vote (consensus validators) must pay vote transaction fees for blocks that they agree with.  The cost of voting can be up to 1.1 DOMI per day.
 
-A voting validator can earn SOL through 2 methods:
+A voting validator can earn DOMI through 2 methods:
 
 1. Inflationary rewards paid at the end of an epoch. See [staking rewards](./../../implemented-proposals/staking-rewards.md)
 2. Earning 50% of transaction fees for the blocks produced by the validator.  See [transaction fee basic economic design](../../transaction_fees.md#basic-economic-design)

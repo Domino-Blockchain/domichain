@@ -6814,7 +6814,7 @@ mod tests {
             1, /* lamports */
             &VoteStateVersions::new_current(VoteState::default()),
             VoteState::size_of(),
-            &solana_vote_program::id(),
+            &domichain_vote_program::id(),
         )
         .unwrap();
 

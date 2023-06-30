@@ -6,14 +6,14 @@
 use {
     log::*,
     rayon::iter::{IntoParallelIterator, ParallelIterator},
-    solana_connection_cache::{
+    domichain_connection_cache::{
         client_connection::ClientConnection,
         connection_cache::{
             ConnectionCache, ConnectionManager, ConnectionPool, NewConnectionConfig,
         },
     },
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_api::{config::RpcProgramAccountsConfig, response::Response},
+    domichain_rpc_client::rpc_client::RpcClient,
+    domichain_rpc_client_api::{config::RpcProgramAccountsConfig, response::Response},
     domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},

@@ -3,7 +3,7 @@
 pub mod blockhash_query;
 
 use {
-    solana_rpc_client::nonblocking::rpc_client::RpcClient,
+    domichain_rpc_client::nonblocking::rpc_client::RpcClient,
     domichain_sdk::{
         account::{Account, ReadableAccount},
         account_utils::StateMut,
@@ -99,8 +99,8 @@ pub fn account_identity_ok<T: ReadableAccount>(account: &T) -> Result<(), Error>
 /// Determine if a nonce account is initialized:
 ///
 /// ```no_run
-/// use solana_rpc_client_nonce_utils::nonblocking;
-/// use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+/// use domichain_rpc_client_nonce_utils::nonblocking;
+/// use domichain_rpc_client::nonblocking::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     nonce::State,
 ///     pubkey::Pubkey,
@@ -149,8 +149,8 @@ pub fn state_from_account<T: ReadableAccount + StateMut<Versions>>(
 /// Create and sign a transaction with a durable nonce:
 ///
 /// ```no_run
-/// use solana_rpc_client_nonce_utils::nonblocking;
-/// use solana_rpc_client::nonblocking::rpc_client::RpcClient;
+/// use domichain_rpc_client_nonce_utils::nonblocking;
+/// use domichain_rpc_client::nonblocking::rpc_client::RpcClient;
 /// use domichain_sdk::{
 ///     message::Message,
 ///     pubkey::Pubkey,

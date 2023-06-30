@@ -2,12 +2,12 @@ use {
     clap::{value_t, value_t_or_exit, values_t_or_exit, ArgMatches},
     crossbeam_channel::unbounded,
     log::*,
-    solana_core::{
+    domichain_core::{
         accounts_hash_verifier::AccountsHashVerifier, validator::BlockVerificationMethod,
     },
-    solana_geyser_plugin_manager::geyser_plugin_service::GeyserPluginService,
-    solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
-    solana_ledger::{
+    domichain_geyser_plugin_manager::geyser_plugin_service::GeyserPluginService,
+    domichain_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
+    domichain_ledger::{
         bank_forks_utils,
         blockstore::{Blockstore, BlockstoreError},
         blockstore_options::{
@@ -19,11 +19,11 @@ use {
         },
     },
     domichain_measure::measure::Measure,
-    solana_rpc::{
+    domichain_rpc::{
         transaction_notifier_interface::TransactionNotifierLock,
         transaction_status_service::TransactionStatusService,
     },
-    solana_runtime::{
+    domichain_runtime::{
         accounts_background_service::{
             AbsRequestHandlers, AbsRequestSender, AccountsBackgroundService,
             PrunedBanksRequestHandler, SnapshotRequestHandler,
@@ -42,7 +42,7 @@ use {
         genesis_config::GenesisConfig, signature::Signer, signer::keypair::Keypair,
         timing::timestamp,
     },
-    solana_streamer::socket::SocketAddrSpace,
+    domichain_streamer::socket::SocketAddrSpace,
     std::{
         path::{Path, PathBuf},
         process::exit,

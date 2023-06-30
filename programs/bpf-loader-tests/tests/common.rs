@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use {
-    solana_bpf_loader_program::process_instruction,
+    domichain_bpf_loader_program::process_instruction,
     domichain_program_test::*,
     domichain_sdk::{
         account::AccountSharedData,

@@ -11,7 +11,7 @@ import {
   EpochSchedule,
   SystemProgram,
   Transaction,
-  LAMPORTS_PER_SOL,
+  LAMPORTS_PER_DOMI,
   Lockup,
   PublicKey,
   StakeProgram,
@@ -207,27 +207,27 @@ describe('Connection', function () {
       await helpers.airdrop({
         connection,
         address: account1.publicKey,
-        amount: LAMPORTS_PER_SOL,
+        amount: LAMPORTS_PER_DOMI,
       });
 
       await helpers.airdrop({
         connection,
         address: account2.publicKey,
-        amount: LAMPORTS_PER_SOL,
+        amount: LAMPORTS_PER_DOMI,
       });
     }
 
     const value = [
       {
         owner: '11111111111111111111111111111111',
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: ['', 'base64'],
         executable: false,
         rentEpoch: 0,
       },
       {
         owner: '11111111111111111111111111111111',
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: ['', 'base64'],
         executable: false,
         rentEpoch: 0,
@@ -252,14 +252,14 @@ describe('Connection', function () {
     const expectedValue = [
       {
         owner: new PublicKey('11111111111111111111111111111111'),
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: Buffer.from([]),
         executable: false,
         rentEpoch: 0,
       },
       {
         owner: new PublicKey('11111111111111111111111111111111'),
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: Buffer.from([]),
         executable: false,
         rentEpoch: 0,
@@ -278,7 +278,7 @@ describe('Connection', function () {
       await helpers.airdrop({
         connection,
         address: account0.publicKey,
-        amount: LAMPORTS_PER_SOL,
+        amount: LAMPORTS_PER_DOMI,
       });
 
       const transaction = new Transaction().add(
@@ -300,7 +300,7 @@ describe('Connection', function () {
       await helpers.airdrop({
         connection,
         address: account1.publicKey,
-        amount: 0.5 * LAMPORTS_PER_SOL,
+        amount: 0.5 * LAMPORTS_PER_DOMI,
       });
 
       const transaction = new Transaction().add(
@@ -333,7 +333,7 @@ describe('Connection', function () {
             account: {
               data: ['', 'base64'],
               executable: false,
-              lamports: LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+              lamports: LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -344,7 +344,7 @@ describe('Connection', function () {
               data: ['', 'base64'],
               executable: false,
               lamports:
-                0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+                0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -363,12 +363,12 @@ describe('Connection', function () {
       programAccounts.forEach(function (keyedAccount) {
         if (keyedAccount.pubkey.equals(account0.publicKey)) {
           expect(keyedAccount.account.lamports).to.eq(
-            LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         } else {
           expect(keyedAccount.pubkey).to.eql(account1.publicKey);
           expect(keyedAccount.account.lamports).to.eq(
-            0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         }
       });
@@ -386,7 +386,7 @@ describe('Connection', function () {
             account: {
               data: ['', 'base64'],
               executable: false,
-              lamports: LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+              lamports: LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -397,7 +397,7 @@ describe('Connection', function () {
               data: ['', 'base64'],
               executable: false,
               lamports:
-                0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+                0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -414,12 +414,12 @@ describe('Connection', function () {
       programAccounts.forEach(function (keyedAccount) {
         if (keyedAccount.pubkey.equals(account0.publicKey)) {
           expect(keyedAccount.account.lamports).to.eq(
-            LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         } else {
           expect(keyedAccount.pubkey).to.eql(account1.publicKey);
           expect(keyedAccount.account.lamports).to.eq(
-            0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         }
       });
@@ -445,7 +445,7 @@ describe('Connection', function () {
             account: {
               data: ['', 'base64'],
               executable: false,
-              lamports: LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+              lamports: LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -456,7 +456,7 @@ describe('Connection', function () {
               data: ['', 'base64'],
               executable: false,
               lamports:
-                0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+                0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -524,7 +524,7 @@ describe('Connection', function () {
             account: {
               data: ['', 'base64'],
               executable: false,
-              lamports: LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+              lamports: LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -535,7 +535,7 @@ describe('Connection', function () {
               data: ['', 'base64'],
               executable: false,
               lamports:
-                0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+                0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -555,12 +555,12 @@ describe('Connection', function () {
       programAccounts.forEach(function (element) {
         if (element.pubkey.equals(account0.publicKey)) {
           expect(element.account.lamports).to.eq(
-            LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         } else {
           expect(element.pubkey).to.eql(account1.publicKey);
           expect(element.account.lamports).to.eq(
-            0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+            0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
           );
         }
       });
@@ -615,7 +615,7 @@ describe('Connection', function () {
             account: {
               data: ['', 'base64'],
               executable: false,
-              lamports: LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+              lamports: LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -626,7 +626,7 @@ describe('Connection', function () {
               data: ['', 'base64'],
               executable: false,
               lamports:
-                0.5 * LAMPORTS_PER_SOL - feeCalculator.lamportsPerSignature,
+                0.5 * LAMPORTS_PER_DOMI - feeCalculator.lamportsPerSignature,
               owner: programId.publicKey.toBase58(),
               rentEpoch: 20,
             },
@@ -915,7 +915,7 @@ describe('Connection', function () {
             connection.confirmTransaction(
               await connection.requestAirdrop(
                 keypair.publicKey,
-                LAMPORTS_PER_SOL,
+                LAMPORTS_PER_DOMI,
               ),
             ),
             helpers.latestBlockhash({connection}),
@@ -3444,14 +3444,14 @@ describe('Connection', function () {
       const recipient = Keypair.generate();
       let signature = await connection.requestAirdrop(
         sender.publicKey,
-        2 * LAMPORTS_PER_SOL,
+        2 * LAMPORTS_PER_DOMI,
       );
       await connection.confirmTransaction(signature, 'singleGossip');
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: sender.publicKey,
           toPubkey: recipient.publicKey,
-          lamports: LAMPORTS_PER_SOL,
+          lamports: LAMPORTS_PER_DOMI,
         }),
       );
       await sendAndConfirmTransaction(connection, transaction, [sender]);
@@ -3487,7 +3487,7 @@ describe('Connection', function () {
   if (process.env.TEST_LIVE) {
     it('stake activation should return activating for new accounts', async () => {
       // todo: use `Connection.getMinimumStakeDelegation` when implemented
-      const MIN_STAKE_DELEGATION = LAMPORTS_PER_SOL;
+      const MIN_STAKE_DELEGATION = LAMPORTS_PER_DOMI;
       const STAKE_ACCOUNT_MIN_BALANCE =
         await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
 
@@ -3500,7 +3500,7 @@ describe('Connection', function () {
       const authorized = Keypair.generate();
       let signature = await connection.requestAirdrop(
         authorized.publicKey,
-        2 * LAMPORTS_PER_SOL,
+        2 * LAMPORTS_PER_DOMI,
       );
       await connection.confirmTransaction(signature, 'confirmed');
 
@@ -3612,18 +3612,18 @@ describe('Connection', function () {
     await helpers.airdrop({
       connection,
       address: account.publicKey,
-      amount: LAMPORTS_PER_SOL,
+      amount: LAMPORTS_PER_DOMI,
     });
 
     await mockRpcResponse({
       method: 'getBalance',
       params: [account.publicKey.toBase58(), {commitment: 'confirmed'}],
-      value: LAMPORTS_PER_SOL,
+      value: LAMPORTS_PER_DOMI,
       withContext: true,
     });
 
     const balance = await connection.getBalance(account.publicKey, 'confirmed');
-    expect(balance).to.eq(LAMPORTS_PER_SOL);
+    expect(balance).to.eq(LAMPORTS_PER_DOMI);
 
     await mockRpcResponse({
       method: 'getAccountInfo',
@@ -3633,7 +3633,7 @@ describe('Connection', function () {
       ],
       value: {
         owner: '11111111111111111111111111111111',
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: ['', 'base64'],
         executable: false,
         rentEpoch: 20,
@@ -3649,7 +3649,7 @@ describe('Connection', function () {
       expect(accountInfo).not.to.be.null;
       return;
     }
-    expect(accountInfo.lamports).to.eq(LAMPORTS_PER_SOL);
+    expect(accountInfo.lamports).to.eq(LAMPORTS_PER_DOMI);
     expect(accountInfo.data).to.have.length(0);
     expect(accountInfo.owner).to.eql(SystemProgram.programId);
 
@@ -3661,7 +3661,7 @@ describe('Connection', function () {
       ],
       value: {
         owner: '11111111111111111111111111111111',
-        lamports: LAMPORTS_PER_SOL,
+        lamports: LAMPORTS_PER_DOMI,
         data: ['', 'base64'],
         executable: false,
         rentEpoch: 20,
@@ -3679,7 +3679,7 @@ describe('Connection', function () {
       expect(parsedAccountInfo.data.parsed).not.to.be.ok;
       return;
     }
-    expect(parsedAccountInfo.lamports).to.eq(LAMPORTS_PER_SOL);
+    expect(parsedAccountInfo.lamports).to.eq(LAMPORTS_PER_DOMI);
     expect(parsedAccountInfo.data).to.have.length(0);
     expect(parsedAccountInfo.owner).to.eql(SystemProgram.programId);
   });
@@ -3690,7 +3690,7 @@ describe('Connection', function () {
     await helpers.airdrop({
       connection,
       address: payer.publicKey,
-      amount: LAMPORTS_PER_SOL,
+      amount: LAMPORTS_PER_DOMI,
     });
 
     const newAccount = Keypair.generate();
@@ -3698,7 +3698,7 @@ describe('Connection', function () {
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
         newAccountPubkey: newAccount.publicKey,
-        lamports: LAMPORTS_PER_SOL / 2,
+        lamports: LAMPORTS_PER_DOMI / 2,
         space: 0,
         programId: SystemProgram.programId,
       }),
@@ -3754,13 +3754,13 @@ describe('Connection', function () {
       await helpers.airdrop({
         connection,
         address: account1.publicKey,
-        amount: LAMPORTS_PER_SOL,
+        amount: LAMPORTS_PER_DOMI,
       });
 
       await helpers.airdrop({
         connection,
         address: account2.publicKey,
-        amount: LAMPORTS_PER_SOL,
+        amount: LAMPORTS_PER_DOMI,
       });
 
       const recentBlockhash = await (
@@ -3921,11 +3921,11 @@ describe('Connection', function () {
 
       let signature = await connection.requestAirdrop(
         accountFrom.publicKey,
-        LAMPORTS_PER_SOL,
+        LAMPORTS_PER_DOMI,
       );
       await connection.confirmTransaction(signature);
       expect(await connection.getBalance(accountFrom.publicKey)).to.eq(
-        LAMPORTS_PER_SOL,
+        LAMPORTS_PER_DOMI,
       );
 
       const minimumAmount = await connection.getMinimumBalanceForRentExemption(
@@ -3978,12 +3978,12 @@ describe('Connection', function () {
         expect(response).not.to.be.null;
       }
 
-      // accountFrom may have less than LAMPORTS_PER_SOL due to transaction fees
+      // accountFrom may have less than LAMPORTS_PER_DOMI due to transaction fees
       expect(
         await connection.getBalance(accountFrom.publicKey),
       ).to.be.greaterThan(0);
       expect(await connection.getBalance(accountFrom.publicKey)).to.be.at.most(
-        LAMPORTS_PER_SOL,
+        LAMPORTS_PER_DOMI,
       );
 
       expect(await connection.getBalance(accountTo.publicKey)).to.eq(
@@ -4021,9 +4021,9 @@ describe('Connection', function () {
               );
             },
           );
-          connection.requestAirdrop(owner.publicKey, LAMPORTS_PER_SOL);
+          connection.requestAirdrop(owner.publicKey, LAMPORTS_PER_DOMI);
           const accountInfo = await accountInfoPromise;
-          expect(accountInfo.lamports).to.eq(LAMPORTS_PER_SOL);
+          expect(accountInfo.lamports).to.eq(LAMPORTS_PER_DOMI);
           expect(accountInfo.owner.equals(SystemProgram.programId)).to.be.true;
         } finally {
           if (subscriptionId != null) {
@@ -4054,7 +4054,7 @@ describe('Connection', function () {
           await helpers.airdrop({
             connection,
             address: owner.publicKey,
-            amount: LAMPORTS_PER_SOL,
+            amount: LAMPORTS_PER_DOMI,
           });
 
           const transaction = new Transaction().add(
@@ -4128,7 +4128,7 @@ describe('Connection', function () {
         const owner = Keypair.generate();
         const signature = await connection.requestAirdrop(
           owner.publicKey,
-          LAMPORTS_PER_SOL,
+          LAMPORTS_PER_DOMI,
         );
         const signatureResult = await new Promise<SignatureResult>(resolve => {
           // NOTE: Signature subscriptions auto-remove themselves, so there's no
@@ -4155,7 +4155,7 @@ describe('Connection', function () {
           });
 
           // Execute a transaction so that we can pickup its logs.
-          await connection.requestAirdrop(owner.publicKey, LAMPORTS_PER_SOL);
+          await connection.requestAirdrop(owner.publicKey, LAMPORTS_PER_DOMI);
 
           const [logsRes, ctx] = await logPromise;
           expect(ctx.slot).to.be.greaterThan(0);

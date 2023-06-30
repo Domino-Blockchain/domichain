@@ -553,7 +553,7 @@ mod tests {
     use {
         super::*,
         solana_banks_server::banks_server::start_local_server,
-        solana_runtime::{
+        domichain_runtime::{
             bank::Bank, bank_forks::BankForks, commitment::BlockCommitmentCache,
             genesis_utils::create_genesis_config,
         },

@@ -4,8 +4,8 @@ title: Domichain's Proposed Inflation Schedule
 
 As mentioned above, the network's _Inflation Schedule_ is uniquely described by three parameters: _Initial Inflation Rate_, _Disinflation Rate_ and _Long-term Inflation Rate_. When considering these numbers, there are many factors to take into account:
 
-- A large portion of the SOL issued via inflation will be distributed to stake-holders in proportion to the SOL they have staked. We want to ensure that the _Inflation Schedule_ design results in reasonable _Staking Yields_ for token holders who delegate SOL and for validation service providers (via commissions taken from _Staking Yields_).
-- The primary driver of _Staked Yield_ is the amount of SOL staked divided by the total amount of SOL (% of total SOL staked). Therefore the distribution and delegation of tokens across validators are important factors to understand when determining initial inflation parameters.
+- A large portion of the DOMI issued via inflation will be distributed to stake-holders in proportion to the DOMI they have staked. We want to ensure that the _Inflation Schedule_ design results in reasonable _Staking Yields_ for token holders who delegate DOMI and for validation service providers (via commissions taken from _Staking Yields_).
+- The primary driver of _Staked Yield_ is the amount of DOMI staked divided by the total amount of DOMI (% of total DOMI staked). Therefore the distribution and delegation of tokens across validators are important factors to understand when determining initial inflation parameters.
 - Yield throttling is a current area of research that would impact _staking-yields_. This is not taken into consideration in the discussion here or the modeling below.
 - Overall token issuance - i.e. what do we expect the Current Total Supply to be in 10 years, or 20 years?
 - Long-term, steady-state inflation is an important consideration not only for sustainable support for the validator ecosystem and the Domichain Foundation grant programs, but also should be tuned in consideration with expected token losses and burning over time.

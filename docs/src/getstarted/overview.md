@@ -129,9 +129,9 @@ You can read more about instructions
 
 Every time you submit a transaction, somebody on the network is providing space
 and processing power to make it happen. To facilitate this, transactions on
-Solana require a fee to be paid in Lamports, which are the smallest units of SOL
-(like cents to a dollar or paise to a rupee). One SOL is equal to 1,000,000,000
-Lamports, and one Lamport has a value of 0.000000001 SOL. This fee is paid to
+Solana require a fee to be paid in Lamports, which are the smallest units of DOMI
+(like cents to a dollar or paise to a rupee). One DOMI is equal to 1,000,000,000
+Lamports, and one Lamport has a value of 0.000000001 DOMI. This fee is paid to
 the validators who process the transaction.
 
 Transactions fees are calculated based on two main parts:
@@ -188,7 +188,7 @@ There are two sets of programs that are maintained by the Solana Labs team:
 [Solana Program Library (SPL)](https://spl.solana.com/). These serve as core
 building blocks for on-chain interactions. Native programs are used for core
 blockchain functionality like creating new accounts, assigning ownership,
-transferring SOL, and more. SPL programs are used for creating, swapping, and
+transferring DOMI, and more. SPL programs are used for creating, swapping, and
 lending tokens, as well as generating stake pools and maintaining an on-chain
 name service.
 
@@ -225,7 +225,7 @@ In each environment, you'll be using one of three networks:
 - Devnet - the primary network for development. Most closely resembles Mainnet
   Beta, but tokens are not real.
 
-Devnet has a faucet that allows you to get free SOL to test with. It costs $0 to
+Devnet has a faucet that allows you to get free DOMI to test with. It costs $0 to
 do development on Solana.
 
 Check out the [clusters page](../clusters.md) for more information on these.

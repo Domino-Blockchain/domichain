@@ -2,7 +2,7 @@ use {
     crate::bench_tps_client::*,
     log::*,
     rayon::prelude::*,
-    solana_core::gen_keys::GenKeys,
+    domichain_core::gen_keys::GenKeys,
     domichain_measure::measure::Measure,
     domichain_sdk::{
         commitment_config::CommitmentConfig,

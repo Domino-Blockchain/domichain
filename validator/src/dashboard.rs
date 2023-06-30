@@ -8,7 +8,7 @@ use {
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_rpc_client_api::{client_error, request, response::RpcContactInfo},
     domichain_sdk::{
-        clock::Slot, commitment_config::CommitmentConfig, exit::Exit, native_token::Sol,
+        clock::Slot, commitment_config::CommitmentConfig, exit::Exit, native_token::Domi,
         pubkey::Pubkey,
     },
     std::{

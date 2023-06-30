@@ -108,9 +108,14 @@ impl VoteAccounts {
             .clone()
     }
 
-    pub(crate) fn get(&self, pubkey: &Pubkey) -> Option<&VoteAccount> {
+    pub fn get(&self, pubkey: &Pubkey) -> Option<&VoteAccount> {
         let (_stake, vote_account) = self.vote_accounts.get(pubkey)?;
         Some(vote_account)
+    }
+
+    pub fn get_stake(&self, pubkey: &Pubkey) -> Option<u64> {
+        let (stake, _vote_account) = self.vote_accounts.get(pubkey)?;
+        Some(*stake)
     }
 
     pub fn get_delegated_stake(&self, pubkey: &Pubkey) -> u64 {

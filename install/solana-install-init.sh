@@ -102,28 +102,28 @@ main() {
     fi
 
     download_url="$SOLANA_DOWNLOAD_ROOT/$release/solana-install-init-$TARGET"
-    solana_install_init="$temp_dir/solana-install-init"
+    domichain_install_init="$temp_dir/solana-install-init"
 
     printf 'downloading %s installer\n' "$release" 1>&2
 
     ensure mkdir -p "$temp_dir"
-    ensure downloader "$download_url" "$solana_install_init"
-    ensure chmod u+x "$solana_install_init"
-    if [ ! -x "$solana_install_init" ]; then
-        printf '%s\n' "Cannot execute $solana_install_init (likely because of mounting /tmp as noexec)." 1>&2
+    ensure downloader "$download_url" "$domichain_install_init"
+    ensure chmod u+x "$domichain_install_init"
+    if [ ! -x "$domichain_install_init" ]; then
+        printf '%s\n' "Cannot execute $domichain_install_init (likely because of mounting /tmp as noexec)." 1>&2
         printf '%s\n' "Please copy the file to a location where you can execute binaries and run ./solana-install-init." 1>&2
         exit 1
     fi
 
     if [ -z "$1" ]; then
       #shellcheck disable=SC2086
-      ignore "$solana_install_init" $SOLANA_INSTALL_INIT_ARGS
+      ignore "$domichain_install_init" $DOMICHAIN_INSTALL_INIT_ARGS
     else
-      ignore "$solana_install_init" "$@"
+      ignore "$domichain_install_init" "$@"
     fi
     retval=$?
 
-    ignore rm "$solana_install_init"
+    ignore rm "$domichain_install_init"
     ignore rm -rf "$temp_dir"
 
     return "$retval"

@@ -294,38 +294,39 @@ where
             use_durable_nonce,
         );
 
-        let balances: u64 = source_keypair_chunks.iter()
-            .flatten()
-            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
-            .sum();
-        info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
-
-        datapoint_info!(
-            "blockhash_stats",
-            (
-                "time_elapsed_since_last_generate_txs",
-                last_generate_txs_time.elapsed().as_millis(),
-                i64
-            )
-        );
-
-        last_generate_txs_time = Instant::now();
-
-        // In sustained mode, overlap the transfers with generation. This has higher average
-        // performance but lower peak performance in tested environments.
-        if sustained {
-            // Ensure that we don't generate more transactions than we can handle.
-            while shared_txs.read().unwrap().len() > 2 * threads {
-                sleep(Duration::from_millis(1));
-            }
-        } else {
-            while !shared_txs.read().unwrap().is_empty()
-                || shared_tx_active_thread_count.load(Ordering::Relaxed) > 0
-            {
-                sleep(Duration::from_millis(1));
-            }
-        }
-        chunk_generator.advance();
+        todo!()
+        // let balances: u64 = source_keypair_chunks.iter()
+        //     .flatten()
+        //     .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+        //     .sum();
+        // info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
+        //
+        // datapoint_info!(
+        //     "blockhash_stats",
+        //     (
+        //         "time_elapsed_since_last_generate_txs",
+        //         last_generate_txs_time.elapsed().as_millis(),
+        //         i64
+        //     )
+        // );
+        //
+        // last_generate_txs_time = Instant::now();
+        //
+        // // In sustained mode, overlap the transfers with generation. This has higher average
+        // // performance but lower peak performance in tested environments.
+        // if sustained {
+        //     // Ensure that we don't generate more transactions than we can handle.
+        //     while shared_txs.read().unwrap().len() > 2 * threads {
+        //         sleep(Duration::from_millis(1));
+        //     }
+        // } else {
+        //     while !shared_txs.read().unwrap().is_empty()
+        //         || shared_tx_active_thread_count.load(Ordering::Relaxed) > 0
+        //     {
+        //         sleep(Duration::from_millis(1));
+        //     }
+        // }
+        // chunk_generator.advance();
     }
 }
 
@@ -595,26 +596,27 @@ fn transfer_with_compute_unit_price_and_padding(
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
     let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
-    let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
-        wrap_instruction(
-            instruction_padding_config.program_id,
-            transfer_instruction,
-            vec![],
-            instruction_padding_config.data_size,
-        )
-        .expect("Could not create padded instruction")
-    } else {
-        transfer_instruction
-    };
-    let mut instructions = vec![instruction];
-    if let Some(compute_unit_price) = compute_unit_price {
-        instructions.extend_from_slice(&[
-            ComputeBudgetInstruction::set_compute_unit_limit(TRANSFER_TRANSACTION_COMPUTE_UNIT),
-            ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price),
-        ])
-    }
-    let message = Message::new(&instructions, Some(&from_pubkey));
-    Transaction::new(&[from_keypair], message, recent_blockhash)
+    todo!()
+    // let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
+    //     wrap_instruction(
+    //         instruction_padding_config.program_id,
+    //         transfer_instruction,
+    //         vec![],
+    //         instruction_padding_config.data_size,
+    //     )
+    //     .expect("Could not create padded instruction")
+    // } else {
+    //     transfer_instruction
+    // };
+    // let mut instructions = vec![instruction];
+    // if let Some(compute_unit_price) = compute_unit_price {
+    //     instructions.extend_from_slice(&[
+    //         ComputeBudgetInstruction::set_compute_unit_limit(TRANSFER_TRANSACTION_COMPUTE_UNIT),
+    //         ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price),
+    //     ])
+    // }
+    // let message = Message::new(&instructions, Some(&from_pubkey));
+    // Transaction::new(&[from_keypair], message, recent_blockhash)
 }
 
 fn get_nonce_accounts<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
@@ -688,24 +690,25 @@ fn nonced_transfer_with_padding(
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
     let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
-    let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
-        wrap_instruction(
-            instruction_padding_config.program_id,
-            transfer_instruction,
-            vec![],
-            instruction_padding_config.data_size,
-        )
-        .expect("Could not create padded instruction")
-    } else {
-        transfer_instruction
-    };
-    let message = Message::new_with_nonce(
-        vec![instruction],
-        Some(&from_pubkey),
-        nonce_account,
-        &nonce_authority.pubkey(),
-    );
-    Transaction::new(&[from_keypair, nonce_authority], message, nonce_hash)
+    todo!()
+    // let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
+    //     wrap_instruction(
+    //         instruction_padding_config.program_id,
+    //         transfer_instruction,
+    //         vec![],
+    //         instruction_padding_config.data_size,
+    //     )
+    //     .expect("Could not create padded instruction")
+    // } else {
+    //     transfer_instruction
+    // };
+    // let message = Message::new_with_nonce(
+    //     vec![instruction],
+    //     Some(&from_pubkey),
+    //     nonce_account,
+    //     &nonce_authority.pubkey(),
+    // );
+    // Transaction::new(&[from_keypair, nonce_authority], message, nonce_hash)
 }
 
 fn generate_nonced_system_txs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
@@ -1115,13 +1118,13 @@ mod tests {
         domichain_runtime::{bank::Bank, bank_client::BankClient},
         domichain_sdk::{
             commitment_config::CommitmentConfig, fee_calculator::FeeRateGovernor,
-            genesis_config::create_genesis_config, native_token::sol_to_lamports, nonce::State,
+            genesis_config::create_genesis_config, native_token::domi_to_lamports, nonce::State,
         },
     };
 
     #[test]
     fn test_bench_tps_bank_client() {
-        let (genesis_config, id) = create_genesis_config(sol_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
 
@@ -1141,7 +1144,7 @@ mod tests {
 
     #[test]
     fn test_bench_tps_fund_keys() {
-        let (genesis_config, id) = create_genesis_config(sol_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
         let keypair_count = 20;
@@ -1163,7 +1166,7 @@ mod tests {
 
     #[test]
     fn test_bench_tps_fund_keys_with_fees() {
-        let (mut genesis_config, id) = create_genesis_config(sol_to_lamports(10_000.0));
+        let (mut genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
         let fee_rate_governor = FeeRateGovernor::new(11, 0);
         genesis_config.fee_rate_governor = fee_rate_governor;
         let bank = Bank::new_for_tests(&genesis_config);
@@ -1182,7 +1185,7 @@ mod tests {
 
     #[test]
     fn test_bench_tps_create_durable_nonce() {
-        let (genesis_config, id) = create_genesis_config(sol_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
         let keypair_count = 10;

@@ -4,8 +4,8 @@ use {
         scheduler_messages::{ConsumeWork, FinishedConsumeWork},
     },
     crossbeam_channel::{Receiver, RecvError, SendError, Sender},
-    solana_poh::leader_bank_notifier::LeaderBankNotifier,
-    solana_runtime::bank::Bank,
+    domichain_poh::leader_bank_notifier::LeaderBankNotifier,
+    domichain_runtime::bank::Bank,
     std::{sync::Arc, time::Duration},
     thiserror::Error,
 };
@@ -135,12 +135,12 @@ mod tests {
             qos_service::QosService,
         },
         crossbeam_channel::unbounded,
-        solana_ledger::{
+        domichain_ledger::{
             blockstore::Blockstore, genesis_utils::GenesisConfigInfo,
             get_tmp_ledger_path_auto_delete, leader_schedule_cache::LeaderScheduleCache,
         },
-        solana_poh::poh_recorder::{PohRecorder, WorkingBankEntry},
-        solana_runtime::{
+        domichain_poh::poh_recorder::{PohRecorder, WorkingBankEntry},
+        domichain_runtime::{
             bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
             vote_sender_types::ReplayVoteReceiver,
         },

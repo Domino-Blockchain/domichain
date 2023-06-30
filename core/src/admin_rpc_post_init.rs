@@ -1,6 +1,6 @@
 use {
-    solana_gossip::cluster_info::ClusterInfo,
-    solana_runtime::bank_forks::BankForks,
+    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_runtime::bank_forks::BankForks,
     domichain_sdk::pubkey::Pubkey,
     std::{
         collections::HashSet,

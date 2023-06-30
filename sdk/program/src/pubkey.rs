@@ -6,6 +6,7 @@ use {
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     bytemuck::{Pod, Zeroable},
     num_derive::{FromPrimitive, ToPrimitive},
+    spl_token::solana_program::pubkey::Pubkey as SplTokenPubkey,
     std::{
         convert::{Infallible, TryFrom},
         fmt, mem,
@@ -130,6 +131,20 @@ impl From<[u8; 32]> for Pubkey {
     #[inline]
     fn from(from: [u8; 32]) -> Self {
         Self(from)
+    }
+}
+
+impl From<SplTokenPubkey> for Pubkey {
+    #[inline]
+    fn from(from: SplTokenPubkey) -> Self {
+        Self::try_from(from.as_ref()).unwrap()
+    }
+}
+
+impl From<Pubkey> for SplTokenPubkey {
+    #[inline]
+    fn from(from: Pubkey) -> Self {
+        Self::try_from(from.as_ref()).unwrap()
     }
 }
 

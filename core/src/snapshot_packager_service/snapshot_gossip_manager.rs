@@ -1,6 +1,6 @@
 use {
-    solana_gossip::cluster_info::ClusterInfo,
-    solana_runtime::{
+    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_runtime::{
         snapshot_hash::{
             FullSnapshotHash, IncrementalSnapshotHash, SnapshotHash, StartingSnapshotHashes,
         },

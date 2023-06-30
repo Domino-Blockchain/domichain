@@ -687,6 +687,7 @@ impl TryFrom<ConfirmedBlock> for VersionedConfirmedBlock {
             rewards: block.rewards,
             block_time: block.block_time,
             block_height: block.block_height,
+            seed: block.seed,
         })
     }
 }

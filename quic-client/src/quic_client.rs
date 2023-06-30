@@ -7,7 +7,7 @@ use {
     },
     lazy_static::lazy_static,
     log::*,
-    solana_connection_cache::{
+    domichain_connection_cache::{
         client_connection::{ClientConnection, ClientStats},
         connection_cache_stats::ConnectionCacheStats,
         nonblocking::client_connection::ClientConnection as NonblockingClientConnection,

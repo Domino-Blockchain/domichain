@@ -16,7 +16,7 @@ use {
     },
     quinn::Endpoint,
     rcgen::RcgenError,
-    solana_connection_cache::{
+    domichain_connection_cache::{
         connection_cache::{
             BaseClientConnection, ClientError, ConnectionManager, ConnectionPool,
             ConnectionPoolError, NewConnectionConfig, Protocol,
@@ -24,7 +24,7 @@ use {
         connection_cache_stats::ConnectionCacheStats,
     },
     domichain_sdk::{pubkey::Pubkey, signature::Keypair},
-    solana_streamer::{
+    domichain_streamer::{
         nonblocking::quic::{compute_max_allowed_uni_streams, ConnectionPeerType},
         streamer::StakedNodes,
         tls_certificates::new_self_signed_tls_certificate,

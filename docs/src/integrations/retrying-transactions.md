@@ -41,7 +41,7 @@ transaction can be sent to leaders:
    [sendTransaction](../api/http#sendtransaction)
    JSON-RPC method
 2. Directly to leaders via a
-   [TPU Client](https://docs.rs/solana-client/1.7.3/solana_client/tpu_client/index.html)
+   [TPU Client](https://docs.rs/solana-client/1.7.3/domichain_client/tpu_client/index.html)
 
 The vast majority of end-users will submit transactions via an RPC server. When
 a client submits a transaction, the receiving RPC node will in turn attempt to
@@ -234,7 +234,7 @@ transactions at a constant interval until some timeout has occurred.
 import {
   Keypair,
   Connection,
-  LAMPORTS_PER_SOL,
+  LAMPORTS_PER_DOMI,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
@@ -252,7 +252,7 @@ const sleep = async (ms: number) => {
 
   const airdropSignature = await connection.requestAirdrop(
     payer.publicKey,
-    LAMPORTS_PER_SOL,
+    LAMPORTS_PER_DOMI,
   );
 
   await connection.confirmTransaction({ signature: airdropSignature });

@@ -5,22 +5,22 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_client::connection_cache::ConnectionCache,
-    solana_core::{
+    domichain_client::connection_cache::ConnectionCache,
+    domichain_core::{
         banking_stage::BankingStage,
         banking_trace::{BankingPacketBatch, BankingTracer, BANKING_TRACE_DIR_DEFAULT_BYTE_LIMIT},
     },
-    solana_gossip::cluster_info::{ClusterInfo, Node},
-    solana_ledger::{
+    domichain_gossip::cluster_info::{ClusterInfo, Node},
+    domichain_ledger::{
         blockstore::Blockstore,
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         get_tmp_ledger_path,
         leader_schedule_cache::LeaderScheduleCache,
     },
     domichain_measure::measure::Measure,
-    solana_perf::packet::{to_packet_batches, PacketBatch},
-    solana_poh::poh_recorder::{create_test_recorder, PohRecorder, WorkingBankEntry},
-    solana_runtime::{
+    domichain_perf::packet::{to_packet_batches, PacketBatch},
+    domichain_poh::poh_recorder::{create_test_recorder, PohRecorder, WorkingBankEntry},
+    domichain_runtime::{
         bank::Bank, bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
     },
     domichain_sdk::{
@@ -33,8 +33,8 @@ use {
         timing::{duration_as_us, timestamp},
         transaction::Transaction,
     },
-    solana_streamer::socket::SocketAddrSpace,
-    solana_tpu_client::tpu_client::DEFAULT_TPU_CONNECTION_POOL_SIZE,
+    domichain_streamer::socket::SocketAddrSpace,
+    domichain_tpu_client::tpu_client::DEFAULT_TPU_CONNECTION_POOL_SIZE,
     std::{
         sync::{atomic::Ordering, Arc, RwLock},
         thread::sleep,
@@ -233,7 +233,7 @@ fn main() {
 
     let matches = Command::new(crate_name!())
         .about(crate_description!())
-        .version(solana_version::version!())
+        .version(domichain_version::version!())
         .arg(
             Arg::new("iterations")
                 .long("iterations")

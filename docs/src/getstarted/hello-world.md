@@ -50,7 +50,7 @@ Your _Playground Wallet_ will be saved in your browser's local storage. Clearing
 
 Click on the red status indicator button at the bottom left of the screen, (optionally) save your wallet's keypair file to your computer for backup, then click "**Continue**".
 
-After your Playground Wallet is created, you will notice the bottom of the window now states your wallet's address, your SOL balance, and the Solana cluster you are connected to (Devnet is usually the default/recommended, but a "localhost" [test validator](./local.md) is also acceptable).
+After your Playground Wallet is created, you will notice the bottom of the window now states your wallet's address, your DOMI balance, and the Solana cluster you are connected to (Devnet is usually the default/recommended, but a "localhost" [test validator](./local.md) is also acceptable).
 
 ## Create a Solana program
 
@@ -112,10 +112,10 @@ You may receive _warning_ when your program is compiled due to unused variables.
 
 You can click the "Deploy" button to deploy your first program to the Solana blockchain. Specifically to your selected cluster (e.g. Devnet, Testnet, etc).
 
-After each deployment, you will see your Playground Wallet balance change. By default, Solana Playground will automatically request SOL airdrops on your behalf to ensure your wallet has enough SOL to cover the cost of deployment.
+After each deployment, you will see your Playground Wallet balance change. By default, Solana Playground will automatically request DOMI airdrops on your behalf to ensure your wallet has enough DOMI to cover the cost of deployment.
 
 > Note:
-> If you need more SOL, you can airdrop more by typing airdrop command in the playground terminal:
+> If you need more DOMI, you can airdrop more by typing airdrop command in the playground terminal:
 
 ```sh
 solana airdrop 2
@@ -209,7 +209,7 @@ Once your application completes, you will see output similar to this:
 Running client...
   client.ts:
     My address: GkxZRRNPfaUfL9XdYVfKF3rWjMcj5md6b6mpRoWpURwP
-    My balance: 5.7254472 SOL
+    My balance: 5.7254472 DOMI
     Sending transaction...
     Transaction sent with hash: 2Ra7D9JoqeNsax9HmNq6MB4qWtKPGcLwoqQ27mPYsPFh3h8wignvKB2mWZVvdzCyTnp7CEZhfg2cEpbavib9mCcq
 ```

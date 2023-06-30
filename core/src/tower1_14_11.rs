@@ -1,7 +1,7 @@
 use {
     crate::consensus::SwitchForkDecision,
     domichain_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
-    solana_vote_program::vote_state::{
+    domichain_vote_program::vote_state::{
         vote_state_1_14_11::VoteState1_14_11, BlockTimestamp, VoteTransaction,
     },
 };
