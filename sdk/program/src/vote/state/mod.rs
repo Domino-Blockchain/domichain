@@ -673,12 +673,16 @@ pub mod serde_compact_vote_state_update {
     }
 
     #[derive(Deserialize, Serialize)]
+    struct VrfProof(#[serde(with = "short_vec")] pub Vec<u8>);
+
+    #[derive(Deserialize, Serialize)]
     struct CompactVoteStateUpdate {
         root: Slot,
         #[serde(with = "short_vec")]
         lockout_offsets: Vec<LockoutOffset>,
         hash: Hash,
         timestamp: Option<UnixTimestamp>,
+        vrf_proof: Option<VrfProof>,
     }
 
     pub fn serialize<S>(
@@ -714,6 +718,7 @@ pub mod serde_compact_vote_state_update {
             lockout_offsets: lockout_offsets.collect::<Result<_, _>>()?,
             hash: vote_state_update.hash,
             timestamp: vote_state_update.timestamp,
+            vrf_proof: vote_state_update.vrf_proof.as_ref().map(|vrf_proof| VrfProof(vrf_proof.clone())),
         };
         compact_vote_state_update.serialize(serializer)
     }
@@ -727,6 +732,7 @@ pub mod serde_compact_vote_state_update {
             lockout_offsets,
             hash,
             timestamp,
+            vrf_proof,
         } = CompactVoteStateUpdate::deserialize(deserializer)?;
         let root = (root != Slot::MAX).then_some(root);
         let lockouts =
@@ -750,7 +756,7 @@ pub mod serde_compact_vote_state_update {
             lockouts: lockouts.collect::<Result<_, _>>()?,
             hash,
             timestamp,
-            vrf_proof: None,
+            vrf_proof: vrf_proof.map(|vrf_proof| vrf_proof.0),
         })
     }
 }
