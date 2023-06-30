@@ -8,7 +8,7 @@ mod tests {
         solana_quic_client::nonblocking::quic_client::{
             QuicClientCertificate, QuicLazyInitializedEndpoint,
         },
-        solana_sdk::{net::DEFAULT_TPU_COALESCE, packet::PACKET_DATA_SIZE, signature::Keypair},
+        domichain_sdk::{net::DEFAULT_TPU_COALESCE, packet::PACKET_DATA_SIZE, signature::Keypair},
         solana_streamer::{
             nonblocking::quic::DEFAULT_WAIT_FOR_CHUNK_TIMEOUT, streamer::StakedNodes,
             tls_certificates::new_self_signed_tls_certificate,

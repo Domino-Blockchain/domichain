@@ -1,7 +1,7 @@
 use {
     crate::cli::{CliCommand, CliCommandInfo, CliConfig, CliError, ProcessResult},
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
-    solana_address_lookup_table_program::{
+    domichain_address_lookup_table_program::{
         instruction::{
             close_lookup_table, create_lookup_table, create_lookup_table_signed,
             deactivate_lookup_table, extend_lookup_table, freeze_lookup_table,
@@ -13,7 +13,7 @@ use {
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::config::RpcSendTransactionConfig,
-    solana_sdk::{
+    domichain_sdk::{
         account::from_account, clock::Clock, commitment_config::CommitmentConfig, message::Message,
         pubkey::Pubkey, signer::Signer, sysvar, transaction::Transaction,
     },
@@ -604,7 +604,7 @@ fn process_freeze_lookup_table(
     let lookup_table_account = get_lookup_table_result.value.ok_or_else(|| {
         format!("Lookup table account {lookup_table_pubkey} not found, was it already closed?")
     })?;
-    if !solana_address_lookup_table_program::check_id(&lookup_table_account.owner) {
+    if !domichain_address_lookup_table_program::check_id(&lookup_table_account.owner) {
         return Err(format!(
                     "Lookup table account {lookup_table_pubkey} is not owned by the Address Lookup Table program",
                 )
@@ -662,7 +662,7 @@ fn process_extend_lookup_table(
     let lookup_table_account = get_lookup_table_result.value.ok_or_else(|| {
         format!("Lookup table account {lookup_table_pubkey} not found, was it already closed?")
     })?;
-    if !solana_address_lookup_table_program::check_id(&lookup_table_account.owner) {
+    if !domichain_address_lookup_table_program::check_id(&lookup_table_account.owner) {
         return Err(format!(
                     "Lookup table account {lookup_table_pubkey} is not owned by the Address Lookup Table program",
                 )
@@ -721,7 +721,7 @@ fn process_deactivate_lookup_table(
     let lookup_table_account = get_lookup_table_result.value.ok_or_else(|| {
         format!("Lookup table account {lookup_table_pubkey} not found, was it already closed?")
     })?;
-    if !solana_address_lookup_table_program::check_id(&lookup_table_account.owner) {
+    if !domichain_address_lookup_table_program::check_id(&lookup_table_account.owner) {
         return Err(format!(
                     "Lookup table account {lookup_table_pubkey} is not owned by the Address Lookup Table program",
                 )
@@ -774,7 +774,7 @@ fn process_close_lookup_table(
     let lookup_table_account = get_lookup_table_result.value.ok_or_else(|| {
         format!("Lookup table account {lookup_table_pubkey} not found, was it already closed?")
     })?;
-    if !solana_address_lookup_table_program::check_id(&lookup_table_account.owner) {
+    if !domichain_address_lookup_table_program::check_id(&lookup_table_account.owner) {
         return Err(format!(
                     "Lookup table account {lookup_table_pubkey} is not owned by the Address Lookup Table program",
                 )
@@ -827,7 +827,7 @@ fn process_show_lookup_table(
     let lookup_table_account = get_lookup_table_result.value.ok_or_else(|| {
         format!("Lookup table account {lookup_table_pubkey} not found, was it already closed?")
     })?;
-    if !solana_address_lookup_table_program::check_id(&lookup_table_account.owner) {
+    if !domichain_address_lookup_table_program::check_id(&lookup_table_account.owner) {
         return Err(format!(
                     "Lookup table account {lookup_table_pubkey} is not owned by the Address Lookup Table program",
                 )

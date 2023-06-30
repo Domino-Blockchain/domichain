@@ -8,9 +8,9 @@ use {
     itertools::Itertools,
     log::{debug, log_enabled, trace},
     percentage::PercentageInteger,
-    solana_measure::measure::Measure,
+    domichain_measure::measure::Measure,
     solana_rbpf::{elf::Executable, verifier::RequisiteVerifier, vm::BuiltinProgram},
-    solana_sdk::{
+    domichain_sdk::{
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, clock::Slot, loader_v4,
         pubkey::Pubkey, saturating_add_assign,
     },
@@ -789,7 +789,7 @@ mod tests {
         },
         percentage::Percentage,
         solana_rbpf::vm::{BuiltinProgram, Config},
-        solana_sdk::{clock::Slot, pubkey::Pubkey},
+        domichain_sdk::{clock::Slot, pubkey::Pubkey},
         std::{
             ops::ControlFlow,
             sync::{

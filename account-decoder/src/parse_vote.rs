@@ -123,7 +123,7 @@ struct UiEpochCredits {
 
 #[cfg(test)]
 mod test {
-    use {super::*, solana_sdk::vote::state::VoteStateVersions};
+    use {super::*, domichain_sdk::vote::state::VoteStateVersions};
 
     #[test]
     fn test_parse_vote() {

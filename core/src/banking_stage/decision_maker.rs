@@ -1,6 +1,6 @@
 use {
     solana_poh::poh_recorder::{BankStart, PohRecorder},
-    solana_sdk::{
+    domichain_sdk::{
         clock::{
             DEFAULT_TICKS_PER_SLOT, FORWARD_TRANSACTIONS_TO_LEADER_AT_SLOT_OFFSET,
             HOLD_TRANSACTIONS_SLOT_OFFSET,
@@ -129,8 +129,8 @@ mod tests {
 
     #[test]
     fn test_should_process_or_forward_packets() {
-        let my_pubkey = solana_sdk::pubkey::new_rand();
-        let my_pubkey1 = solana_sdk::pubkey::new_rand();
+        let my_pubkey = domichain_sdk::pubkey::new_rand();
+        let my_pubkey1 = domichain_sdk::pubkey::new_rand();
         let bank = Arc::new(Bank::default_for_tests());
         let bank_start = Some(BankStart {
             working_bank: bank,

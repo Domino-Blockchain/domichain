@@ -564,7 +564,7 @@ pub fn parse_args(matches: &ArgMatches) -> Result<Config, &'static str> {
 mod tests {
     use {
         super::*,
-        solana_sdk::signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
+        domichain_sdk::signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
         std::{
             net::{IpAddr, Ipv4Addr, SocketAddr},
             time::Duration,

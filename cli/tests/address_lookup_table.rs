@@ -8,7 +8,7 @@ use {
     },
     solana_cli_output::{CliAddressLookupTable, CliAddressLookupTableCreated, OutputFormat},
     solana_faucet::faucet::run_local_faucet,
-    solana_sdk::{
+    domichain_sdk::{
         native_token::LAMPORTS_PER_SOL,
         pubkey::Pubkey,
         signature::{Keypair, Signer},

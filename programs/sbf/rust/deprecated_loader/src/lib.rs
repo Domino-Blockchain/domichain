@@ -3,8 +3,8 @@
 #![allow(unreachable_code)]
 #![allow(clippy::integer_arithmetic)]
 
-extern crate solana_program;
-use solana_program::{
+extern crate domichain_program;
+use domichain_program::{
     account_info::AccountInfo, bpf_loader, entrypoint_deprecated::ProgramResult, log::*, msg,
     pubkey::Pubkey,
 };
@@ -27,7 +27,7 @@ fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     msg!(&format!("{info}"));
 }
 
-solana_program::entrypoint_deprecated!(process_instruction);
+domichain_program::entrypoint_deprecated!(process_instruction);
 #[allow(clippy::unnecessary_wraps)]
 fn process_instruction(
     program_id: &Pubkey,

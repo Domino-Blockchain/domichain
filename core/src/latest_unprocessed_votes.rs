@@ -7,7 +7,7 @@ use {
     rand::{thread_rng, Rng},
     solana_perf::packet::Packet,
     solana_runtime::bank::Bank,
-    solana_sdk::{
+    domichain_sdk::{
         clock::{Slot, UnixTimestamp},
         program_utils::limited_deserialize,
         pubkey::Pubkey,
@@ -353,7 +353,7 @@ mod tests {
             bank::Bank,
             genesis_utils::{self, ValidatorVoteKeypairs},
         },
-        solana_sdk::{hash::Hash, signature::Signer, system_transaction::transfer},
+        domichain_sdk::{hash::Hash, signature::Signer, system_transaction::transfer},
         solana_vote_program::{
             vote_state::VoteStateUpdate,
             vote_transaction::{new_vote_state_update_transaction, new_vote_transaction},

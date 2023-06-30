@@ -89,10 +89,10 @@ test-stable-sbf)
   # solana-program is performed when simulation crate is built. This
   # last compiled solana-program is of different version, normally the
   # latest mainbeta release version.
-  solana_program_count=$(grep -c 'solana-program v' cargo.log)
+  domichain_program_count=$(grep -c 'solana-program v' cargo.log)
   rm -f cargo.log
-  if ((solana_program_count > 14)); then
-      echo "Regression of build redundancy ${solana_program_count}."
+  if ((domichain_program_count > 14)); then
+      echo "Regression of build redundancy ${domichain_program_count}."
       echo "Review dependency features that trigger redundant rebuilds of solana-program."
       exit 1
   fi
@@ -215,7 +215,7 @@ esac
 
 (
   export CARGO_TOOLCHAIN=+"$rust_stable"
-  export RUST_LOG="solana_metrics=warn,info,$RUST_LOG"
+  export RUST_LOG="domichain_metrics=warn,info,$RUST_LOG"
   echo --- ci/localnet-sanity.sh
   ci/localnet-sanity.sh -x
 

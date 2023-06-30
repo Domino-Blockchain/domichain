@@ -2,8 +2,8 @@
 
 use {
     solana_bpf_loader_program::process_instruction,
-    solana_program_test::*,
-    solana_sdk::{
+    domichain_program_test::*,
+    domichain_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,
         bpf_loader_upgradeable::{id, UpgradeableLoaderState},

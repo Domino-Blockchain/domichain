@@ -190,7 +190,7 @@ mod tests {
     use {
         super::*,
         crate::rent_collector::RentCollector,
-        solana_program_runtime::{declare_process_instruction, loaded_programs::LoadedProgram},
+        domichain_program_runtime::{declare_process_instruction, loaded_programs::LoadedProgram},
         domichain_sdk::{
             account::{AccountSharedData, ReadableAccount},
             instruction::{AccountMeta, Instruction, InstructionError},

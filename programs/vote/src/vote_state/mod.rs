@@ -107,14 +107,20 @@ impl VoteTransaction {
     pub fn vrf_proof(&self) -> Option<&[u8]> {
         match self {
             VoteTransaction::Vote(vote) => vote.vrf_proof.as_ref().map(|v| v.as_slice()),
-            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof.as_ref().map(|v| v.as_slice()),
+            VoteTransaction::VoteStateUpdate(vote_state_update)
+            | VoteTransaction::CompactVoteStateUpdate(vote_state_update) => {
+                vote_state_update.vrf_proof.as_ref().map(|v| v.as_slice())
+            }
         }
     }
 
     pub fn set_vrf_proof(&mut self, vrf_proof: Option<Vec<u8>>) {
         match self {
             VoteTransaction::Vote(vote) => vote.vrf_proof = vrf_proof,
-            VoteTransaction::VoteStateUpdate(vote_state_update) => vote_state_update.vrf_proof = vrf_proof,
+            VoteTransaction::VoteStateUpdate(vote_state_update)
+            | VoteTransaction::CompactVoteStateUpdate(vote_state_update) => {
+                vote_state_update.vrf_proof = vrf_proof
+            }
         }
     }
 

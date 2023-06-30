@@ -226,7 +226,7 @@ mod target_arch {
     ) -> Option<PodRistrettoPoint> {
         let mut result_point = PodRistrettoPoint::zeroed();
         let result = unsafe {
-            solana_program::syscalls::sol_curve_multiscalar_mul(
+            domichain_program::syscalls::sol_curve_multiscalar_mul(
                 CURVE25519_RISTRETTO,
                 scalars.as_ptr() as *const u8,
                 points.as_ptr() as *const u8,

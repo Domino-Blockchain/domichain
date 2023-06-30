@@ -1,18 +1,18 @@
 #![cfg(feature = "test-bpf")]
 
 use {
-    solana_program::{
+    domichain_program::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         sysvar,
     },
-    solana_sdk::{signature::Signer, transaction::Transaction},
+    domichain_sdk::{signature::Signer, transaction::Transaction},
     solana_validator::test_validator::*,
 };
 
 #[test]
 fn no_panic_rpc_client() {
-    domichain_logger::setup_with_default("solana_program_runtime=debug");
+    domichain_logger::setup_with_default("domichain_program_runtime=debug");
     let program_id = Pubkey::new_unique();
 
     let (test_validator, payer) = TestValidatorGenesis::default()

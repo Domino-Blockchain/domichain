@@ -2,8 +2,8 @@
 
 #![allow(clippy::integer_arithmetic)]
 
-extern crate solana_program;
-use solana_program::{custom_heap_default, custom_panic_default, entrypoint::SUCCESS};
+extern crate domichain_program;
+use domichain_program::{custom_heap_default, custom_panic_default, entrypoint::SUCCESS};
 
 #[no_mangle]
 pub extern "C" fn entrypoint(_input: *mut u8) -> u64 {

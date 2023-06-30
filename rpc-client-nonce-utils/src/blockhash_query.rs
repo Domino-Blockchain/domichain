@@ -6,7 +6,7 @@ use {
         offline::*,
     },
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{
+    domichain_sdk::{
         commitment_config::CommitmentConfig, fee_calculator::FeeCalculator, hash::Hash,
         pubkey::Pubkey,
     },
@@ -193,7 +193,7 @@ mod tests {
             request::RpcRequest,
             response::{Response, RpcFeeCalculator, RpcFees, RpcResponseContext},
         },
-        solana_sdk::{
+        domichain_sdk::{
             account::Account,
             hash::hash,
             nonce::{self, state::DurableNonce},

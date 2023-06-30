@@ -3,7 +3,7 @@
 use {
     crate::accounts_db::{AccountStorageEntry, AppendVecId},
     dashmap::DashMap,
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::sync::Arc,
 };
 

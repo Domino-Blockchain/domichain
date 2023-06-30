@@ -456,7 +456,7 @@ impl Default for ProgramTest {
     ///
     fn default() -> Self {
         domichain_logger::setup_with_default(
-            "domichain_rbpf::vm=debug,\
+            "solana_rbpf::vm=debug,\
              domichain_runtime::message_processor=debug,\
              domichain_runtime::system_instruction_processor=trace,\
              domichain_program_test=info",

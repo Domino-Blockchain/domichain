@@ -12,7 +12,7 @@ use {
             MAX_PERMITTED_ACCOUNTS_DATA_ALLOCATIONS_PER_TRANSACTION, MAX_PERMITTED_DATA_LENGTH,
         },
     },
-    solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
+    domichain_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
     std::mem::MaybeUninit,
 };
 use {

@@ -14,7 +14,7 @@ use {
     },
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::{config::RpcProgramAccountsConfig, response::Response},
-    solana_sdk::{
+    domichain_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
         clock::{Slot, MAX_PROCESSING_AGE},

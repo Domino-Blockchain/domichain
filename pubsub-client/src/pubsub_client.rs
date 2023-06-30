@@ -46,10 +46,10 @@
 //!
 //! ```
 //! use anyhow::Result;
-//! use solana_sdk::commitment_config::CommitmentConfig;
+//! use domichain_sdk::commitment_config::CommitmentConfig;
 //! use solana_pubsub_client::pubsub_client::PubsubClient;
 //! use solana_rpc_client_api::config::RpcAccountInfoConfig;
-//! use solana_sdk::pubkey::Pubkey;
+//! use domichain_sdk::pubkey::Pubkey;
 //! use std::thread;
 //!
 //! fn get_account_updates(account_pubkey: Pubkey) -> Result<()> {
@@ -82,7 +82,7 @@
 //!     Ok(())
 //! }
 //! #
-//! # get_account_updates(solana_sdk::pubkey::new_rand());
+//! # get_account_updates(domichain_sdk::pubkey::new_rand());
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
@@ -109,7 +109,7 @@ use {
             RpcSignatureResult, RpcVote, SlotInfo, SlotUpdate,
         },
     },
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
+    domichain_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     std::{
         marker::PhantomData,
         net::TcpStream,

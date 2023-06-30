@@ -11,7 +11,7 @@ pub use self::{
 };
 #[allow(deprecated)]
 use {
-    solana_program_runtime::{
+    domichain_program_runtime::{
         compute_budget::ComputeBudget, ic_logger_msg, ic_msg, invoke_context::InvokeContext,
         stable_log, timings::ExecuteTimings,
     },
@@ -19,7 +19,7 @@ use {
         memory_region::{AccessType, MemoryMapping},
         vm::{BuiltinProgram, Config, ProgramResult, PROGRAM_ENVIRONMENT_KEY_SHIFT},
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::{ReadableAccount, WritableAccount},
         account_info::AccountInfo,
         alt_bn128::prelude::{
@@ -925,7 +925,7 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        use solana_zk_token_sdk::curve25519::{curve_syscall_traits::*, edwards, ristretto};
+        use domichain_zk_token_sdk::curve25519::{curve_syscall_traits::*, edwards, ristretto};
         match curve_id {
             CURVE25519_EDWARDS => {
                 let cost = invoke_context
@@ -982,7 +982,7 @@ declare_syscall!(
         result_point_addr: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        use solana_zk_token_sdk::curve25519::{
+        use domichain_zk_token_sdk::curve25519::{
             curve_syscall_traits::*, edwards, ristretto, scalar,
         };
         match curve_id {
@@ -1183,7 +1183,7 @@ declare_syscall!(
         result_point_addr: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        use solana_zk_token_sdk::curve25519::{
+        use domichain_zk_token_sdk::curve25519::{
             curve_syscall_traits::*, edwards, ristretto, scalar,
         };
         match curve_id {
@@ -1627,7 +1627,7 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        use solana_sdk::alt_bn128::prelude::{ALT_BN128_ADD, ALT_BN128_MUL, ALT_BN128_PAIRING};
+        use domichain_sdk::alt_bn128::prelude::{ALT_BN128_ADD, ALT_BN128_MUL, ALT_BN128_PAIRING};
         let budget = invoke_context.get_compute_budget();
         let (cost, output): (u64, usize) = match group_op {
             ALT_BN128_ADD => (
@@ -1779,18 +1779,18 @@ declare_syscall!(
 #[allow(clippy::indexing_slicing)]
 mod tests {
     #[allow(deprecated)]
-    use solana_sdk::sysvar::fees::Fees;
+    use domichain_sdk::sysvar::fees::Fees;
     use {
         super::*,
         crate::mock_create_vm,
         core::slice,
-        solana_program_runtime::{invoke_context::InvokeContext, with_mock_invoke_context},
+        domichain_program_runtime::{invoke_context::InvokeContext, with_mock_invoke_context},
         solana_rbpf::{
             error::EbpfError,
             memory_region::MemoryRegion,
             vm::{BuiltinFunction, Config},
         },
-        solana_sdk::{
+        domichain_sdk::{
             account::{create_account_shared_data_for_test, AccountSharedData},
             bpf_loader,
             fee_calculator::FeeCalculator,
@@ -1886,7 +1886,7 @@ mod tests {
         let config = Config::default();
 
         // Pubkey
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = domichain_sdk::pubkey::new_rand();
         let memory_mapping = MemoryMapping::new(
             vec![MemoryRegion::new_readonly(bytes_of(&pubkey), 0x100000000)],
             &config,
@@ -1898,9 +1898,9 @@ mod tests {
 
         // Instruction
         let instruction = Instruction::new_with_bincode(
-            solana_sdk::pubkey::new_rand(),
+            domichain_sdk::pubkey::new_rand(),
             &"foobar",
-            vec![AccountMeta::new(solana_sdk::pubkey::new_rand(), false)],
+            vec![AccountMeta::new(domichain_sdk::pubkey::new_rand(), false)],
         );
         let instruction = StableInstruction::from(instruction);
         let memory_region = MemoryRegion::new_readonly(bytes_of(&instruction), 0x100000000);
@@ -1980,7 +1980,7 @@ mod tests {
         );
 
         // Pubkeys
-        let mut data = vec![solana_sdk::pubkey::new_rand(); 5];
+        let mut data = vec![domichain_sdk::pubkey::new_rand(); 5];
         let memory_mapping = MemoryMapping::new(
             vec![MemoryRegion::new_readonly(
                 unsafe {
@@ -1995,7 +1995,7 @@ mod tests {
             translate_slice::<Pubkey>(&memory_mapping, 0x100000000, data.len() as u64, true, true)
                 .unwrap();
         assert_eq!(data, translated_data);
-        *data.first_mut().unwrap() = solana_sdk::pubkey::new_rand(); // Both should point to same place
+        *data.first_mut().unwrap() = domichain_sdk::pubkey::new_rand(); // Both should point to same place
         assert_eq!(data, translated_data);
     }
 
@@ -2277,7 +2277,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                domichain_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2289,7 +2289,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                domichain_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2328,7 +2328,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                domichain_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2354,7 +2354,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                domichain_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2511,7 +2511,7 @@ mod tests {
 
     #[test]
     fn test_syscall_edwards_curve_point_validation() {
-        use solana_zk_token_sdk::curve25519::curve_syscall_traits::CURVE25519_EDWARDS;
+        use domichain_zk_token_sdk::curve25519::curve_syscall_traits::CURVE25519_EDWARDS;
 
         let config = Config::default();
         prepare_mockup!(invoke_context, program_id, bpf_loader::id());
@@ -2589,7 +2589,7 @@ mod tests {
 
     #[test]
     fn test_syscall_ristretto_curve_point_validation() {
-        use solana_zk_token_sdk::curve25519::curve_syscall_traits::CURVE25519_RISTRETTO;
+        use domichain_zk_token_sdk::curve25519::curve_syscall_traits::CURVE25519_RISTRETTO;
 
         let config = Config::default();
         prepare_mockup!(invoke_context, program_id, bpf_loader::id());
@@ -2667,7 +2667,7 @@ mod tests {
 
     #[test]
     fn test_syscall_edwards_curve_group_ops() {
-        use solana_zk_token_sdk::curve25519::curve_syscall_traits::{
+        use domichain_zk_token_sdk::curve25519::curve_syscall_traits::{
             ADD, CURVE25519_EDWARDS, MUL, SUB,
         };
 
@@ -2837,7 +2837,7 @@ mod tests {
 
     #[test]
     fn test_syscall_ristretto_curve_group_ops() {
-        use solana_zk_token_sdk::curve25519::curve_syscall_traits::{
+        use domichain_zk_token_sdk::curve25519::curve_syscall_traits::{
             ADD, CURVE25519_RISTRETTO, MUL, SUB,
         };
 
@@ -3009,7 +3009,7 @@ mod tests {
 
     #[test]
     fn test_syscall_multiscalar_multiplication() {
-        use solana_zk_token_sdk::curve25519::curve_syscall_traits::{
+        use domichain_zk_token_sdk::curve25519::curve_syscall_traits::{
             CURVE25519_EDWARDS, CURVE25519_RISTRETTO,
         };
 
@@ -3644,7 +3644,7 @@ mod tests {
 
     #[test]
     fn test_create_program_address() {
-        // These tests duplicate the direct tests in solana_program::pubkey
+        // These tests duplicate the direct tests in domichain_program::pubkey
 
         prepare_mockup!(invoke_context, program_id, bpf_loader::id());
         let address = bpf_loader_upgradeable::id();

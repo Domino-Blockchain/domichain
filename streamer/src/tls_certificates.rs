@@ -1,7 +1,7 @@
 use {
     pkcs8::{der::Document, AlgorithmIdentifier, ObjectIdentifier},
     rcgen::{CertificateParams, DistinguishedName, DnType, RcgenError, SanType},
-    solana_sdk::{pubkey::Pubkey, signature::Keypair},
+    domichain_sdk::{pubkey::Pubkey, signature::Keypair},
     std::net::IpAddr,
     x509_parser::{prelude::*, public_key::PublicKey},
 };
@@ -65,7 +65,7 @@ pub fn get_pubkey_from_tls_certificate(der_cert: &rustls::Certificate) -> Option
 
 #[cfg(test)]
 mod tests {
-    use {super::*, solana_sdk::signer::Signer, std::net::Ipv4Addr};
+    use {super::*, domichain_sdk::signer::Signer, std::net::Ipv4Addr};
 
     #[test]
     fn test_generate_tls_certificate() {

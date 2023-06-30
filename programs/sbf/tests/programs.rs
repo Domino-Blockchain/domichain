@@ -16,7 +16,7 @@ use {
         parse_bpf_upgradeable_loader, BpfUpgradeableLoaderAccountType,
     },
     solana_ledger::token_balances::collect_token_balances,
-    solana_program_runtime::{compute_budget::ComputeBudget, timings::ExecuteTimings},
+    domichain_program_runtime::{compute_budget::ComputeBudget, timings::ExecuteTimings},
     solana_rbpf::vm::ContextObject,
     solana_runtime::{
         bank::{
@@ -32,7 +32,7 @@ use {
     solana_sbf_rust_invoke::instructions::*,
     solana_sbf_rust_realloc::instructions::*,
     solana_sbf_rust_realloc_invoke::instructions::*,
-    solana_sdk::{
+    domichain_sdk::{
         account::{ReadableAccount, WritableAccount},
         account_utils::StateMut,
         bpf_loader_upgradeable,
@@ -56,7 +56,7 @@ use {
     std::collections::HashMap,
 };
 use {
-    solana_program_runtime::invoke_context::mock_process_instruction,
+    domichain_program_runtime::invoke_context::mock_process_instruction,
     solana_runtime::{
         bank::Bank,
         bank_client::BankClient,
@@ -65,7 +65,7 @@ use {
             create_genesis_config_with_leader_ex, GenesisConfigInfo,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::AccountSharedData,
         bpf_loader, bpf_loader_deprecated,
         client::SyncClient,
@@ -376,7 +376,7 @@ fn test_program_sbf_loader_deprecated() {
         } = create_genesis_config(50);
         genesis_config
             .accounts
-            .remove(&solana_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id())
+            .remove(&domichain_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id())
             .unwrap();
         let bank = Bank::new_for_tests(&genesis_config);
         let program_id = create_program(&bank, &bpf_loader_deprecated::id(), program);
@@ -449,7 +449,7 @@ fn test_sol_alloc_free_no_longer_deployable() {
     );
 
     // Enable _sol_alloc_free syscall
-    bank.deactivate_feature(&solana_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id());
+    bank.deactivate_feature(&domichain_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id());
     bank.clear_signatures();
     bank.clear_program_cache();
 
@@ -462,7 +462,7 @@ fn test_sol_alloc_free_no_longer_deployable() {
     assert!(bank.process_transaction(&invoke_tx).is_ok());
 
     // disable _sol_alloc_free
-    bank.activate_feature(&solana_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id());
+    bank.activate_feature(&domichain_sdk::feature_set::disable_deploy_of_alloc_free_syscall::id());
     bank.clear_signatures();
 
     // invoke should still succeed because cached
@@ -822,7 +822,7 @@ fn test_program_sbf_invoke_sanity() {
             AccountMeta::new_readonly(derived_key3, false),
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new(from_keypair.pubkey(), true),
-            AccountMeta::new_readonly(solana_sdk::ed25519_program::id(), false),
+            AccountMeta::new_readonly(domichain_sdk::ed25519_program::id(), false),
             AccountMeta::new_readonly(invoke_program_id, false),
         ];
 
@@ -2353,10 +2353,10 @@ fn test_program_sbf_disguised_as_sbf_loader() {
         // disable native_programs_consume_cu feature to allow test program
         // not consume units.
         let mut feature_set = FeatureSet::all_enabled();
-        feature_set.deactivate(&solana_sdk::feature_set::native_programs_consume_cu::id());
+        feature_set.deactivate(&domichain_sdk::feature_set::native_programs_consume_cu::id());
         bank.feature_set = Arc::new(feature_set);
         bank.deactivate_feature(
-            &solana_sdk::feature_set::remove_bpf_loader_incorrect_program_id::id(),
+            &domichain_sdk::feature_set::remove_bpf_loader_incorrect_program_id::id(),
         );
         let bank_client = BankClient::new(bank);
 
@@ -3101,7 +3101,7 @@ fn test_program_sbf_realloc() {
             )
             .unwrap();
         let account = bank.get_account(&pubkey).unwrap();
-        assert_eq!(&solana_sdk::system_program::id(), account.owner());
+        assert_eq!(&domichain_sdk::system_program::id(), account.owner());
         let data = bank_client.get_account_data(&pubkey).unwrap().unwrap();
         assert_eq!(MAX_PERMITTED_DATA_INCREASE, data.len());
 
@@ -3131,7 +3131,7 @@ fn test_program_sbf_realloc() {
                             &[REALLOC_AND_ASSIGN_TO_SELF_VIA_SYSTEM_PROGRAM],
                             vec![
                                 AccountMeta::new(pubkey, true),
-                                AccountMeta::new(solana_sdk::system_program::id(), false),
+                                AccountMeta::new(domichain_sdk::system_program::id(), false),
                             ],
                         )],
                         Some(&mint_pubkey),
@@ -3152,7 +3152,7 @@ fn test_program_sbf_realloc() {
                         &[ASSIGN_TO_SELF_VIA_SYSTEM_PROGRAM_AND_REALLOC],
                         vec![
                             AccountMeta::new(pubkey, true),
-                            AccountMeta::new(solana_sdk::system_program::id(), false),
+                            AccountMeta::new(domichain_sdk::system_program::id(), false),
                         ],
                     )],
                     Some(&mint_pubkey),
@@ -3352,7 +3352,7 @@ fn test_program_sbf_realloc_invoke() {
         )
         .unwrap();
     let account = bank.get_account(&pubkey).unwrap();
-    assert_eq!(&solana_sdk::system_program::id(), account.owner());
+    assert_eq!(&domichain_sdk::system_program::id(), account.owner());
     let data = bank_client.get_account_data(&pubkey).unwrap().unwrap();
     assert_eq!(MAX_PERMITTED_DATA_INCREASE, data.len());
 
@@ -3383,7 +3383,7 @@ fn test_program_sbf_realloc_invoke() {
                         vec![
                             AccountMeta::new(pubkey, true),
                             AccountMeta::new_readonly(realloc_program_id, false),
-                            AccountMeta::new_readonly(solana_sdk::system_program::id(), false),
+                            AccountMeta::new_readonly(domichain_sdk::system_program::id(), false),
                         ],
                     )],
                     Some(&mint_pubkey),
@@ -3405,7 +3405,7 @@ fn test_program_sbf_realloc_invoke() {
                     vec![
                         AccountMeta::new(pubkey, true),
                         AccountMeta::new_readonly(realloc_program_id, false),
-                        AccountMeta::new_readonly(solana_sdk::system_program::id(), false),
+                        AccountMeta::new_readonly(domichain_sdk::system_program::id(), false),
                     ],
                 )],
                 Some(&mint_pubkey),
@@ -3477,7 +3477,7 @@ fn test_program_sbf_realloc_invoke() {
                     vec![
                         AccountMeta::new(mint_pubkey, true),
                         AccountMeta::new(new_pubkey, true),
-                        AccountMeta::new(solana_sdk::system_program::id(), false),
+                        AccountMeta::new(domichain_sdk::system_program::id(), false),
                         AccountMeta::new_readonly(realloc_invoke_program_id, false),
                     ],
                 )],

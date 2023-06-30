@@ -1,7 +1,7 @@
 use {
     rand::Rng,
-    solana_measure::measure::Measure,
-    solana_program_runtime::{
+    domichain_measure::measure::Measure,
+    domichain_program_runtime::{
         compute_budget::ComputeBudget,
         ic_logger_msg,
         invoke_context::InvokeContext,
@@ -20,7 +20,7 @@ use {
             PROGRAM_ENVIRONMENT_KEY_SHIFT,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         entrypoint::{HEAP_LENGTH, SUCCESS},
         feature_set::{self, FeatureSet},
         instruction::InstructionError,
@@ -626,8 +626,8 @@ pub fn process_instruction_inner(
 mod tests {
     use {
         super::*,
-        solana_program_runtime::invoke_context::mock_process_instruction,
-        solana_sdk::{
+        domichain_program_runtime::invoke_context::mock_process_instruction,
+        domichain_sdk::{
             account::{
                 create_account_shared_data_for_test, AccountSharedData, ReadableAccount,
                 WritableAccount,

@@ -1,6 +1,6 @@
 use {
-    solana_program_runtime::compute_budget::ComputeBudget,
-    solana_sdk::{
+    domichain_program_runtime::compute_budget::ComputeBudget,
+    domichain_sdk::{
         instruction::CompiledInstruction,
         pubkey::Pubkey,
         transaction::{SanitizedTransaction, SanitizedVersionedTransaction},
@@ -69,7 +69,7 @@ impl GetTransactionPriorityDetails for SanitizedTransaction {
 mod tests {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             compute_budget::ComputeBudgetInstruction,
             message::Message,
             pubkey::Pubkey,
@@ -99,7 +99,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: 0,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -112,7 +112,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: 0,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -175,7 +175,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: requested_price,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -188,7 +188,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: requested_price,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    domichain_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );

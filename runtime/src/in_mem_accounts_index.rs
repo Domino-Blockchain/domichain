@@ -2061,8 +2061,8 @@ mod tests {
 
     #[test]
     fn test_remove_if_slot_list_empty_entry() {
-        let key = solana_sdk::pubkey::new_rand();
-        let unknown_key = solana_sdk::pubkey::new_rand();
+        let key = domichain_sdk::pubkey::new_rand();
+        let unknown_key = domichain_sdk::pubkey::new_rand();
 
         let test = new_for_test::<u64>();
 

@@ -44,6 +44,7 @@ pub struct Vote {
     pub hash: Hash,
     /// processing timestamp of last slot
     pub timestamp: Option<UnixTimestamp>,
+    pub vrf_proof: Option<Vec<u8>>,
 }
 
 impl Vote {
@@ -52,6 +53,7 @@ impl Vote {
             slots,
             hash,
             timestamp: None,
+            vrf_proof: None,
         }
     }
 
@@ -152,6 +154,7 @@ pub struct VoteStateUpdate {
     pub hash: Hash,
     /// processing timestamp of last slot
     pub timestamp: Option<UnixTimestamp>,
+    pub vrf_proof: Option<Vec<u8>>,
 }
 
 impl From<Vec<(Slot, u32)>> for VoteStateUpdate {
@@ -167,6 +170,7 @@ impl From<Vec<(Slot, u32)>> for VoteStateUpdate {
             root: None,
             hash: Hash::default(),
             timestamp: None,
+            vrf_proof: None,
         }
     }
 }
@@ -178,6 +182,7 @@ impl VoteStateUpdate {
             root,
             hash,
             timestamp: None,
+            vrf_proof: None,
         }
     }
 
@@ -745,6 +750,7 @@ pub mod serde_compact_vote_state_update {
             lockouts: lockouts.collect::<Result<_, _>>()?,
             hash,
             timestamp,
+            vrf_proof: None,
         })
     }
 }
@@ -1202,7 +1208,7 @@ mod tests {
 
     #[test]
     fn test_minimum_balance() {
-        let rent = solana_program::rent::Rent::default();
+        let rent = domichain_program::rent::Rent::default();
         let minimum_balance = rent.minimum_balance(VoteState::size_of());
         // golden, may need updating when vote_state grows
         assert!(minimum_balance as f64 / 10f64.powf(9.0) < 0.04)

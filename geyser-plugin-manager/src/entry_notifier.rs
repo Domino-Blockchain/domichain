@@ -2,14 +2,14 @@
 use {
     crate::geyser_plugin_manager::GeyserPluginManager,
     log::*,
-    solana_entry::entry::EntrySummary,
-    solana_geyser_plugin_interface::geyser_plugin_interface::{
+    domichain_entry::entry::EntrySummary,
+    domichain_geyser_plugin_interface::geyser_plugin_interface::{
         ReplicaEntryInfo, ReplicaEntryInfoVersions,
     },
-    solana_ledger::entry_notifier_interface::EntryNotifier,
-    solana_measure::measure::Measure,
-    solana_metrics::*,
-    solana_sdk::clock::Slot,
+    domichain_ledger::entry_notifier_interface::EntryNotifier,
+    domichain_measure::measure::Measure,
+    domichain_metrics::*,
+    domichain_sdk::clock::Slot,
     std::sync::{Arc, RwLock},
 };
 

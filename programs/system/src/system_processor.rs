@@ -4,11 +4,11 @@ use {
         withdraw_nonce_account,
     },
     log::*,
-    solana_program_runtime::{
+    domichain_program_runtime::{
         declare_process_instruction, ic_msg, invoke_context::InvokeContext,
         sysvar_cache::get_sysvar_with_account_check,
     },
-    solana_sdk::{
+    domichain_sdk::{
         feature_set,
         instruction::InstructionError,
         nonce,
@@ -556,7 +556,7 @@ declare_process_instruction!(process_instruction, 150, |invoke_context| {
 #[cfg(test)]
 mod tests {
     #[allow(deprecated)]
-    use solana_sdk::{
+    use domichain_sdk::{
         account::{self, Account, AccountSharedData, ReadableAccount},
         fee_calculator::FeeCalculator,
         hash::{hash, Hash},
@@ -574,7 +574,7 @@ mod tests {
         super::*,
         crate::{get_system_account_kind, SystemAccountKind},
         bincode::serialize,
-        solana_program_runtime::{
+        domichain_program_runtime::{
             invoke_context::mock_process_instruction, with_mock_invoke_context,
         },
     };
@@ -1568,7 +1568,7 @@ mod tests {
         let blockhash = hash(&serialize(&0).unwrap());
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![IterItem(0u64, &blockhash, 0); sysvar::recent_blockhashes::MAX_ENTRIES]
                     .into_iter(),
             );
@@ -1855,7 +1855,7 @@ mod tests {
         let blockhash_id = sysvar::recent_blockhashes::id();
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![].into_iter(),
             );
         process_instruction(
@@ -1920,7 +1920,7 @@ mod tests {
         );
         #[allow(deprecated)]
         let new_recent_blockhashes_account =
-            solana_sdk::recent_blockhashes_account::create_account_with_data_for_test(
+            domichain_sdk::recent_blockhashes_account::create_account_with_data_for_test(
                 vec![].into_iter(),
             );
         mock_process_instruction(

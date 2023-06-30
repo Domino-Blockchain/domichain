@@ -1,6 +1,6 @@
 use {
     solana_entry::entry::EntrySummary,
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::sync::{Arc, RwLock},
 };
 

@@ -1,14 +1,14 @@
 use {
     bytemuck::Pod,
-    solana_program_test::*,
-    solana_sdk::{
+    domichain_program_test::*,
+    domichain_sdk::{
         instruction::InstructionError,
         signature::Signer,
         signer::keypair::Keypair,
         system_instruction,
         transaction::{Transaction, TransactionError},
     },
-    solana_zk_token_sdk::{
+    domichain_zk_token_sdk::{
         encryption::{
             elgamal::ElGamalKeypair,
             grouped_elgamal::GroupedElGamal,

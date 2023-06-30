@@ -82,7 +82,7 @@ The code for your Rust based Solana program will live in your `src/lib.rs` file.
 At the top of `lib.rs`, import the `solana-program` crate and bring our needed items into the local namespace:
 
 ```rust
-use solana_program::{
+use domichain_program::{
     account_info::AccountInfo,
     entrypoint,
     entrypoint::ProgramResult,

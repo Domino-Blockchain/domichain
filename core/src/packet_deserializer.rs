@@ -174,7 +174,7 @@ mod tests {
     use {
         super::*,
         solana_perf::packet::to_packet_batches,
-        solana_sdk::{
+        domichain_sdk::{
             hash::Hash, pubkey::Pubkey, signature::Keypair, system_transaction,
             transaction::Transaction,
         },

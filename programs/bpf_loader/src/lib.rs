@@ -16,7 +16,7 @@ use {
         stable_log,
         sysvar_cache::get_sysvar_with_account_check,
     },
-    domichain_rbpf::{
+    solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{self, HOST_ALIGN, MM_HEAP_START},
         elf::Executable,
@@ -335,11 +335,11 @@ macro_rules! create_vm {
         }
         let mut allocations = None;
         let $vm = heap_cost_result.and_then(|_| {
-            let mut stack = domichain_rbpf::aligned_memory::AlignedMemory::<
-                { domichain_rbpf::ebpf::HOST_ALIGN },
+            let mut stack = solana_rbpf::aligned_memory::AlignedMemory::<
+                { solana_rbpf::ebpf::HOST_ALIGN },
             >::zero_filled(stack_size);
-            let mut heap = domichain_rbpf::aligned_memory::AlignedMemory::<
-                { domichain_rbpf::ebpf::HOST_ALIGN },
+            let mut heap = solana_rbpf::aligned_memory::AlignedMemory::<
+                { solana_rbpf::ebpf::HOST_ALIGN },
             >::zero_filled(heap_size);
             let vm = $crate::create_vm(
                 $program,
@@ -359,17 +359,17 @@ macro_rules! create_vm {
 macro_rules! mock_create_vm {
     ($vm:ident, $additional_regions:expr, $orig_account_lengths:expr, $invoke_context:expr $(,)?) => {
         let loader = std::sync::Arc::new(BuiltinProgram::new_loader(
-            domichain_rbpf::vm::Config::default(),
+            solana_rbpf::vm::Config::default(),
         ));
-        let function_registry = domichain_rbpf::vm::FunctionRegistry::default();
-        let executable = domichain_rbpf::elf::Executable::<
-            domichain_rbpf::verifier::TautologyVerifier,
+        let function_registry = solana_rbpf::vm::FunctionRegistry::default();
+        let executable = solana_rbpf::elf::Executable::<
+            solana_rbpf::verifier::TautologyVerifier,
             InvokeContext,
         >::from_text_bytes(
             &[0x95, 0, 0, 0, 0, 0, 0, 0], loader, function_registry
         )
         .unwrap();
-        let verified_executable = domichain_rbpf::elf::Executable::verified(executable).unwrap();
+        let verified_executable = solana_rbpf::elf::Executable::verified(executable).unwrap();
         $crate::create_vm!(
             $vm,
             &verified_executable,
@@ -1756,7 +1756,7 @@ mod tests {
         domichain_program_runtime::{
             invoke_context::mock_process_instruction, with_mock_invoke_context,
         },
-        domichain_rbpf::{
+        solana_rbpf::{
             verifier::Verifier,
             vm::{Config, ContextObject, FunctionRegistry},
         },

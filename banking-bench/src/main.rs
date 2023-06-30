@@ -17,13 +17,13 @@ use {
         get_tmp_ledger_path,
         leader_schedule_cache::LeaderScheduleCache,
     },
-    solana_measure::measure::Measure,
+    domichain_measure::measure::Measure,
     solana_perf::packet::{to_packet_batches, PacketBatch},
     solana_poh::poh_recorder::{create_test_recorder, PohRecorder, WorkingBankEntry},
     solana_runtime::{
         bank::Bank, bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
     },
-    solana_sdk::{
+    domichain_sdk::{
         compute_budget::ComputeBudgetInstruction,
         hash::Hash,
         message::Message,
@@ -469,7 +469,7 @@ fn main() {
         let mut tx_total_us = 0;
         let base_tx_count = bank.transaction_count();
         let mut txs_processed = 0;
-        let collector = solana_sdk::pubkey::new_rand();
+        let collector = domichain_sdk::pubkey::new_rand();
         let mut total_sent = 0;
         for current_iteration_index in 0..iterations {
             trace!("RUNNING ITERATION {}", current_iteration_index);

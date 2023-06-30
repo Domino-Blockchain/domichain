@@ -304,7 +304,7 @@ mod tests {
     use {
         super::*,
         crate::signer::{keypair::Keypair, Signer},
-        solana_program::vote::{self, state::Vote},
+        domichain_program::vote::{self, state::Vote},
     };
 
     #[test]

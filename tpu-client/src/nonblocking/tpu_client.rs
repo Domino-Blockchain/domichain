@@ -17,7 +17,7 @@ use {
         client_error::{Error as ClientError, Result as ClientResult},
         response::{RpcContactInfo, SlotUpdate},
     },
-    solana_sdk::{
+    domichain_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
         epoch_info::EpochInfo,
@@ -48,7 +48,7 @@ use {
     indicatif::ProgressBar,
     solana_rpc_client::spinner,
     solana_rpc_client_api::request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS,
-    solana_sdk::{message::Message, signers::Signers, transaction::TransactionError},
+    domichain_sdk::{message::Message, signers::Signers, transaction::TransactionError},
 };
 
 #[cfg(feature = "spinner")]

@@ -13,7 +13,7 @@ use {
         blockstore_options::{AccessType, BlockstoreRecoveryMode},
         blockstore_processor::ProcessOptions,
     },
-    solana_program_runtime::{
+    domichain_program_runtime::{
         invoke_context::InvokeContext,
         loaded_programs::{LoadProgramMetrics, LoadedProgramType, DELAY_VISIBILITY_SLOT_OFFSET},
         with_mock_invoke_context,
@@ -23,7 +23,7 @@ use {
         verifier::RequisiteVerifier,
     },
     solana_runtime::{bank::Bank, runtime_config::RuntimeConfig},
-    solana_sdk::{
+    domichain_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -525,7 +525,7 @@ pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
     let program_index: u16 = instruction_accounts.len().try_into().unwrap();
     transaction_accounts.push((
         loader_id,
-        AccountSharedData::new(0, 0, &solana_sdk::native_loader::id()),
+        AccountSharedData::new(0, 0, &domichain_sdk::native_loader::id()),
     ));
     transaction_accounts.push((
         program_id, // ID of the loaded program. It can modify accounts with the same owner key

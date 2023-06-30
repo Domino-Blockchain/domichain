@@ -19,7 +19,7 @@ use {
             RpcVoteAccountStatus, StakeActivationState,
         },
     },
-    solana_sdk::{
+    domichain_sdk::{
         account::Account,
         clock::{Slot, UnixTimestamp},
         epoch_info::EpochInfo,

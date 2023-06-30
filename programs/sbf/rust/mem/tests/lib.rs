@@ -1,9 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
 use {
-    solana_program_test::*,
+    domichain_program_test::*,
     solana_sbf_rust_mem::entrypoint::process_instruction,
-    solana_sdk::{
+    domichain_sdk::{
         instruction::Instruction, pubkey::Pubkey, signature::Signer, transaction::Transaction,
     },
 };

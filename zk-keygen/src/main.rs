@@ -15,8 +15,8 @@ use {
         },
         DisplayError,
     },
-    solana_sdk::signer::{EncodableKey, SeedDerivable},
-    solana_zk_token_sdk::encryption::{auth_encryption::AeKey, elgamal::ElGamalKeypair},
+    domichain_sdk::signer::{EncodableKey, SeedDerivable},
+    domichain_zk_token_sdk::encryption::{auth_encryption::AeKey, elgamal::ElGamalKeypair},
     std::{error, str::FromStr},
     thiserror::Error,
 };
@@ -327,7 +327,7 @@ impl FromStr for KeyType {
 mod tests {
     use {
         super::*,
-        solana_sdk::pubkey::Pubkey,
+        domichain_sdk::pubkey::Pubkey,
         tempfile::{tempdir, TempDir},
     };
 

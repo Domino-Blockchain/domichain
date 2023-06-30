@@ -3,7 +3,7 @@ use {
     solana_runtime::transaction_priority_details::{
         GetTransactionPriorityDetails, TransactionPriorityDetails,
     },
-    solana_sdk::{
+    domichain_sdk::{
         feature_set,
         hash::Hash,
         message::Message,
@@ -148,14 +148,14 @@ fn packet_message(packet: &Packet) -> Result<&[u8], DeserializedPacketError> {
 mod tests {
     use {
         super::*,
-        solana_sdk::{signature::Keypair, system_transaction},
+        domichain_sdk::{signature::Keypair, system_transaction},
     };
 
     #[test]
     fn simple_deserialized_packet() {
         let tx = system_transaction::transfer(
             &Keypair::new(),
-            &solana_sdk::pubkey::new_rand(),
+            &domichain_sdk::pubkey::new_rand(),
             1,
             Hash::new_unique(),
         );

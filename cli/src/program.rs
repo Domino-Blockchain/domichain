@@ -24,7 +24,7 @@ use {
         tpu_client::{TpuClient, TpuClientConfig},
     },
     domichain_program_runtime::{compute_budget::ComputeBudget, invoke_context::InvokeContext},
-    domichain_rbpf::{
+    solana_rbpf::{
         elf::Executable,
         verifier::{RequisiteVerifier, TautologyVerifier},
     },
@@ -52,7 +52,7 @@ use {
         system_program,
         transaction::{Transaction, TransactionError},
     },
-    domichain_rbpf::{
+    solana_rbpf::{
         elf::Executable,
         verifier::RequisiteVerifier,
         vm::{Config, VerifiedExecutable},

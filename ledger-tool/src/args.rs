@@ -5,7 +5,7 @@ use {
         accounts_index::{AccountsIndexConfig, IndexLimitMb},
         partitioned_rewards::TestPartitionedEpochRewards,
     },
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::path::{Path, PathBuf},
 };
 

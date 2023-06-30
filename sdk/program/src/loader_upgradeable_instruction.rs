@@ -139,7 +139,7 @@ pub enum UpgradeableLoaderInstruction {
     /// # Account references
     ///   0. `[writable]` The ProgramData account.
     ///   1. `[writable]` The ProgramData account's associated Program account.
-    ///   2. `[]` System program (`solana_sdk::system_program::id()`), optional, used to transfer
+    ///   2. `[]` System program (`domichain_sdk::system_program::id()`), optional, used to transfer
     ///      lamports from the payer to the ProgramData account.
     ///   3. `[signer]` The payer account, optional, that will pay necessary rent exemption costs
     ///      for the increased storage size.

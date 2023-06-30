@@ -1,6 +1,6 @@
 //! Code related to partitioned rewards distribution
 //!
-use solana_sdk::clock::Slot;
+use domichain_sdk::clock::Slot;
 
 #[allow(dead_code)]
 #[derive(Debug)]

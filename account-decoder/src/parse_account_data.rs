@@ -15,7 +15,7 @@ use {
 };
 
 lazy_static! {
-    static ref ADDRESS_LOOKUP_PROGRAM_ID: Pubkey = solana_address_lookup_table_program::id();
+    static ref ADDRESS_LOOKUP_PROGRAM_ID: Pubkey = domichain_address_lookup_table_program::id();
     static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::bpf_loader_upgradeable::id();
     static ref CONFIG_PROGRAM_ID: Pubkey = domichain_config_program::id();
     static ref STAKE_PROGRAM_ID: Pubkey = stake::program::id();
@@ -125,7 +125,7 @@ pub fn parse_account_data(
 mod test {
     use {
         super::*,
-        solana_sdk::{
+        domichain_sdk::{
             nonce::{
                 state::{Data, Versions},
                 State,

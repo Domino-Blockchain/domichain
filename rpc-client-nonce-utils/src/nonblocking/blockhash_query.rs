@@ -7,7 +7,7 @@ use {
         offline::*,
     },
     solana_rpc_client::nonblocking::rpc_client::RpcClient,
-    solana_sdk::{commitment_config::CommitmentConfig, hash::Hash, pubkey::Pubkey},
+    domichain_sdk::{commitment_config::CommitmentConfig, hash::Hash, pubkey::Pubkey},
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -124,7 +124,7 @@ mod tests {
             request::RpcRequest,
             response::{Response, RpcBlockhash, RpcResponseContext},
         },
-        solana_sdk::{
+        domichain_sdk::{
             account::Account,
             fee_calculator::FeeCalculator,
             hash::hash,

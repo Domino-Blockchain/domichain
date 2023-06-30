@@ -144,7 +144,7 @@ mod tests {
             bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
             vote_sender_types::ReplayVoteReceiver,
         },
-        solana_sdk::{
+        domichain_sdk::{
             genesis_config::GenesisConfig, poh_config::PohConfig, pubkey::Pubkey,
             signature::Keypair, system_transaction,
         },

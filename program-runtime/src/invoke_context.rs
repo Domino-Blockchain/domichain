@@ -11,7 +11,7 @@ use {
         timings::{ExecuteDetailsTimings, ExecuteTimings},
     },
     domichain_measure::measure::Measure,
-    domichain_rbpf::{
+    solana_rbpf::{
         ebpf::MM_HEAP_START,
         memory_region::MemoryMapping,
         vm::{BuiltinFunction, Config, ContextObject, ProgramResult},
@@ -56,8 +56,8 @@ macro_rules! declare_process_instruction {
             _arg2: u64,
             _arg3: u64,
             _arg4: u64,
-            _memory_mapping: &mut $crate::domichain_rbpf::memory_region::MemoryMapping,
-            result: &mut $crate::domichain_rbpf::vm::ProgramResult,
+            _memory_mapping: &mut $crate::solana_rbpf::memory_region::MemoryMapping,
+            result: &mut $crate::solana_rbpf::vm::ProgramResult,
         ) {
             fn process_instruction_inner(
                 $invoke_context: &mut $crate::invoke_context::InvokeContext,

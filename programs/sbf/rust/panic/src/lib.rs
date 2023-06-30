@@ -4,14 +4,14 @@
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     // Note: Full panic reporting is included here for testing purposes
-    solana_program::msg!("program custom panic enabled");
-    solana_program::msg!(&format!("{info}"));
+    domichain_program::msg!("program custom panic enabled");
+    domichain_program::msg!(&format!("{info}"));
 }
 
-extern crate solana_program;
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+extern crate domichain_program;
+use domichain_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 #[allow(clippy::unnecessary_wraps)]
 fn process_instruction(
     _program_id: &Pubkey,

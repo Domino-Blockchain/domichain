@@ -8,7 +8,7 @@ pub use crate::nonblocking::{
 };
 use {
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey},
+    domichain_sdk::{account::Account, commitment_config::CommitmentConfig, pubkey::Pubkey},
 };
 
 /// Get a nonce account from the network.

@@ -170,7 +170,7 @@ impl Secp256k1Pubkey {
 /// this:
 ///
 /// ```rust
-/// # use solana_program::program_error::ProgramError;
+/// # use domichain_program::program_error::ProgramError;
 /// # let signature_bytes = [
 /// #     0x83, 0x55, 0x81, 0xDF, 0xB1, 0x02, 0xA7, 0xD2,
 /// #     0x2D, 0x33, 0xA4, 0x07, 0xDD, 0x7E, 0xFA, 0x9A,
@@ -265,7 +265,7 @@ impl Secp256k1Pubkey {
 /// the secp256k1 signature to prevent malleability.
 ///
 /// ```no_run
-/// use solana_program::{
+/// use domichain_program::{
 ///     entrypoint::ProgramResult,
 ///     keccak, msg,
 ///     program_error::ProgramError,
@@ -335,11 +335,11 @@ impl Secp256k1Pubkey {
 /// The RPC client program:
 ///
 /// ```no_run
-/// # use solana_program::example_mocks::solana_rpc_client;
-/// # use solana_program::example_mocks::solana_sdk;
+/// # use domichain_program::example_mocks::solana_rpc_client;
+/// # use domichain_program::example_mocks::domichain_sdk;
 /// use anyhow::Result;
 /// use solana_rpc_client::rpc_client::RpcClient;
-/// use solana_sdk::{
+/// use domichain_sdk::{
 ///     instruction::Instruction,
 ///     keccak,
 ///     pubkey::Pubkey,

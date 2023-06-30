@@ -15,7 +15,7 @@ use {
     },
     solana_rpc_client::rpc_client::RpcClient,
     solana_runtime::accounts_index::{AccountIndex, AccountSecondaryIndexes},
-    solana_sdk::{
+    domichain_sdk::{
         account::AccountSharedData,
         clock::Slot,
         epoch_schedule::EpochSchedule,
@@ -211,7 +211,7 @@ fn main() {
 
             upgradeable_programs_to_load.push(UpgradeableProgramInfo {
                 program_id: address,
-                loader: solana_sdk::bpf_loader_upgradeable::id(),
+                loader: domichain_sdk::bpf_loader_upgradeable::id(),
                 upgrade_authority: Pubkey::default(),
                 program_path,
             });
@@ -240,7 +240,7 @@ fn main() {
 
             upgradeable_programs_to_load.push(UpgradeableProgramInfo {
                 program_id: address,
-                loader: solana_sdk::bpf_loader_upgradeable::id(),
+                loader: domichain_sdk::bpf_loader_upgradeable::id(),
                 upgrade_authority: upgrade_authority_address,
                 program_path,
             });

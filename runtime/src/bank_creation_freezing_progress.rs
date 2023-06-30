@@ -2,7 +2,7 @@
 //! This is useful to track foreground progress to understand expected access to accounts db.
 use {
     crate::waitable_condvar::WaitableCondvar,
-    solana_sdk::timing::AtomicInterval,
+    domichain_sdk::timing::AtomicInterval,
     std::sync::{
         atomic::{AtomicU32, Ordering},
         Arc,
@@ -64,7 +64,7 @@ impl BankCreationFreezingProgress {
 
 #[cfg(test)]
 pub mod tests {
-    use {super::*, solana_sdk::timing::timestamp, std::thread::Builder};
+    use {super::*, domichain_sdk::timing::timestamp, std::thread::Builder};
 
     #[test]
     fn test_count() {

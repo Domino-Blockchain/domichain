@@ -100,7 +100,7 @@ mod tests {
         solana_perf::packet::to_packet_batches,
         solana_poh::poh_recorder::{PohRecorder, WorkingBankEntry},
         solana_runtime::{bank::Bank, bank_forks::BankForks},
-        solana_sdk::{
+        domichain_sdk::{
             genesis_config::GenesisConfig, poh_config::PohConfig, pubkey::Pubkey,
             signature::Keypair, system_transaction,
         },

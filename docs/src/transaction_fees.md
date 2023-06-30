@@ -156,7 +156,7 @@ error, and ultimately transaction failure. :::
 #### Rust
 
 The rust `solana-sdk` crate includes functions within
-[`ComputeBudgetInstruction`](https://docs.rs/solana-sdk/latest/solana_sdk/compute_budget/enum.ComputeBudgetInstruction.html)
+[`ComputeBudgetInstruction`](https://docs.rs/solana-sdk/latest/domichain_sdk/compute_budget/enum.ComputeBudgetInstruction.html)
 to craft instructions for setting the _compute unit limit_ and _compute unit
 price_:
 

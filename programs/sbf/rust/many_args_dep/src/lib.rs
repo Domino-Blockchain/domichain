@@ -2,8 +2,8 @@
 
 #![allow(clippy::integer_arithmetic)]
 
-extern crate solana_program;
-use solana_program::{log::sol_log_64, msg};
+extern crate domichain_program;
+use domichain_program::{log::sol_log_64, msg};
 
 pub fn many_args(
     arg1: u64,

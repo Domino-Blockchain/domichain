@@ -21,7 +21,7 @@ use {
         ThreadPool, ThreadPoolBuilder,
     },
     regex::Regex,
-    solana_sdk::clock::Slot,
+    domichain_sdk::clock::Slot,
     std::{
         collections::HashMap,
         fs::File,

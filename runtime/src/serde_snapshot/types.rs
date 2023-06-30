@@ -2,7 +2,7 @@
 use {
     crate::accounts_hash::{AccountsDeltaHash, AccountsHash, IncrementalAccountsHash},
     serde::{Deserialize, Serialize},
-    solana_sdk::hash::Hash,
+    domichain_sdk::hash::Hash,
 };
 
 /// Snapshot serde-safe accounts delta hash

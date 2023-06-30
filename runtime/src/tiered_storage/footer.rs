@@ -4,7 +4,7 @@ use {
         TieredStorageResult as TsResult,
     },
     memmap2::Mmap,
-    solana_sdk::{hash::Hash, pubkey::Pubkey},
+    domichain_sdk::{hash::Hash, pubkey::Pubkey},
     std::{mem, path::Path},
 };
 
@@ -253,7 +253,7 @@ mod tests {
             append_vec::test_utils::get_append_vec_path, tiered_storage::file::TieredStorageFile,
         },
         memoffset::offset_of,
-        solana_sdk::hash::Hash,
+        domichain_sdk::hash::Hash,
     };
 
     #[test]

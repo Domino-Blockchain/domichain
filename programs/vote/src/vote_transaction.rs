@@ -1,5 +1,5 @@
 use {
-    solana_program::vote::{
+    domichain_program::vote::{
         self,
         state::{Vote, VoteStateUpdate},
     },

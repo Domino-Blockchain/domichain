@@ -2,7 +2,7 @@
 
 #![allow(clippy::integer_arithmetic)]
 
-extern crate solana_program;
+extern crate domichain_program;
 
 #[derive(Debug)]
 pub struct Data<'a> {

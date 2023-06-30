@@ -3,7 +3,7 @@
 #![cfg(feature = "program")]
 #![allow(clippy::integer_arithmetic)]
 
-use solana_program::{
+use domichain_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     instruction::{
@@ -14,7 +14,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-solana_program::entrypoint!(process_instruction);
+domichain_program::entrypoint!(process_instruction);
 fn process_instruction(
     _program_id: &Pubkey,
     accounts: &[AccountInfo],
