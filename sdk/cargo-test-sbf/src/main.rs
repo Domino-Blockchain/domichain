@@ -248,7 +248,7 @@ fn test_solana(config: Config, manifest_path: Option<PathBuf>) {
 }
 
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
     let mut args = env::args().collect::<Vec<_>>();
     // When run as a cargo subcommand, the first program argument is the subcommand name.
     // Remove it

@@ -1572,7 +1572,7 @@ mod tests {
 
     #[test]
     fn test_gather_possible_evictions() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let startup = false;
         let ref_count = 1;
         let pks = (0..=255)

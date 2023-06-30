@@ -270,7 +270,7 @@ fn load_program_and_advance_slot(
 #[test]
 #[cfg(any(feature = "sbf_c", feature = "sbf_rust"))]
 fn test_program_sbf_sanity() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -354,7 +354,7 @@ fn test_program_sbf_sanity() {
 #[test]
 #[cfg(any(feature = "sbf_c", feature = "sbf_rust"))]
 fn test_program_sbf_loader_deprecated() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -395,7 +395,7 @@ fn test_program_sbf_loader_deprecated() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_sol_alloc_free_no_longer_deployable() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let program_keypair = Keypair::new();
     let program_address = program_keypair.pubkey();
@@ -478,7 +478,7 @@ fn test_sol_alloc_free_no_longer_deployable() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_duplicate_accounts() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -582,7 +582,7 @@ fn test_program_sbf_duplicate_accounts() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_error_handling() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -689,7 +689,7 @@ fn test_program_sbf_error_handling() {
 #[test]
 #[cfg(any(feature = "sbf_c", feature = "sbf_rust"))]
 fn test_return_data_and_log_data_syscall() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -745,7 +745,7 @@ fn test_return_data_and_log_data_syscall() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_invoke_sanity() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     #[allow(dead_code)]
     #[derive(Debug)]
@@ -1254,7 +1254,7 @@ fn test_program_sbf_caller_has_access_to_cpi_program() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_ro_modify() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1309,7 +1309,7 @@ fn test_program_sbf_ro_modify() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_call_depth() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1342,7 +1342,7 @@ fn test_program_sbf_call_depth() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_compute_budget() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1373,7 +1373,7 @@ fn test_program_sbf_compute_budget() {
 
 #[test]
 fn assert_instruction_count() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -1469,7 +1469,7 @@ fn assert_instruction_count() {
 #[test]
 #[cfg(any(feature = "sbf_rust"))]
 fn test_program_sbf_instruction_introspection() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1527,7 +1527,7 @@ fn test_program_sbf_instruction_introspection() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_test_use_latest_executor() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1604,7 +1604,7 @@ fn test_program_sbf_test_use_latest_executor() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_upgrade() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1743,7 +1743,7 @@ fn test_program_sbf_invoke_stable_genesis_and_bank() {
     // assert that the resulting bank hash matches with the expected value.
     // The assert check is commented out by default. Please refer to the last few lines
     // of the test to enable the assertion.
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -1917,7 +1917,7 @@ fn test_program_sbf_invoke_stable_genesis_and_bank() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_invoke_in_same_tx_as_deployment() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2015,7 +2015,7 @@ fn test_program_sbf_invoke_in_same_tx_as_deployment() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_invoke_in_same_tx_as_redeployment() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2123,7 +2123,7 @@ fn test_program_sbf_invoke_in_same_tx_as_redeployment() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_invoke_in_same_tx_as_undeployment() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2216,7 +2216,7 @@ fn test_program_sbf_invoke_in_same_tx_as_undeployment() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_invoke_upgradeable_via_cpi() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2330,7 +2330,7 @@ fn test_program_sbf_invoke_upgradeable_via_cpi() {
 #[test]
 #[cfg(any(feature = "sbf_c", feature = "sbf_rust"))]
 fn test_program_sbf_disguised_as_sbf_loader() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let mut programs = Vec::new();
     #[cfg(feature = "sbf_c")]
@@ -2374,7 +2374,7 @@ fn test_program_sbf_disguised_as_sbf_loader() {
 #[test]
 #[cfg(feature = "sbf_c")]
 fn test_program_reads_from_program_account() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2400,7 +2400,7 @@ fn test_program_reads_from_program_account() {
 #[test]
 #[cfg(feature = "sbf_c")]
 fn test_program_sbf_c_dup() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2430,7 +2430,7 @@ fn test_program_sbf_c_dup() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_upgrade_via_cpi() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2540,7 +2540,7 @@ fn test_program_sbf_upgrade_via_cpi() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_set_upgrade_authority_via_cpi() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2633,7 +2633,7 @@ fn test_program_upgradeable_locks() {
         buffer_keypair: &Keypair,
         program_keypair: &Keypair,
     ) -> (Arc<Bank>, Transaction, Transaction) {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let GenesisConfigInfo {
             genesis_config,
@@ -2756,7 +2756,7 @@ fn test_program_upgradeable_locks() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_finalize() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2804,7 +2804,7 @@ fn test_program_sbf_finalize() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_ro_account_modify() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -2864,7 +2864,7 @@ fn test_program_sbf_ro_account_modify() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_realloc() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     const START_BALANCE: u64 = 100_000_000_000;
 
@@ -3197,7 +3197,7 @@ fn test_program_sbf_realloc() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_realloc_invoke() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     const START_BALANCE: u64 = 100_000_000_000;
 
@@ -3719,7 +3719,7 @@ fn test_program_sbf_realloc_invoke() {
 #[test]
 #[cfg(any(feature = "sbf_rust"))]
 fn test_program_sbf_processed_inner_instruction() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,
@@ -3793,7 +3793,7 @@ fn test_program_sbf_processed_inner_instruction() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_fees() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let congestion_multiplier = 1;
 
@@ -3899,7 +3899,7 @@ fn test_get_minimum_delegation() {
 #[test]
 #[cfg(feature = "sbf_rust")]
 fn test_program_sbf_inner_instruction_alignment_checks() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let GenesisConfigInfo {
         genesis_config,

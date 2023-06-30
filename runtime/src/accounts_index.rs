@@ -3927,7 +3927,7 @@ pub mod tests {
 
     #[test]
     fn test_clean_rooted_entries_return() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let value = true;
         let key = solana_sdk::pubkey::new_rand();
         let key_unknown = solana_sdk::pubkey::new_rand();

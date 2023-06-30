@@ -911,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_bank_process_and_record_transactions() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1037,7 +1037,7 @@ mod tests {
 
     #[test]
     fn test_bank_process_and_record_transactions_all_unexecuted() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1127,7 +1127,7 @@ mod tests {
     fn bank_process_and_record_transactions_cost_tracker(
         apply_cost_tracker_during_replay_enabled: bool,
     ) {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1256,7 +1256,7 @@ mod tests {
 
     #[test]
     fn test_bank_process_and_record_transactions_account_in_use() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1330,7 +1330,7 @@ mod tests {
 
     #[test]
     fn test_process_transactions_instruction_error() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let lamports = 10_000;
         let GenesisConfigInfo {
             genesis_config,
@@ -1392,7 +1392,7 @@ mod tests {
 
     #[test]
     fn test_process_transactions_account_in_use() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1451,7 +1451,7 @@ mod tests {
 
     #[test]
     fn test_process_transactions_returns_unprocessed_txs() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1531,7 +1531,7 @@ mod tests {
 
     #[test]
     fn test_write_persist_transaction_status() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             mut genesis_config,
             mint_keypair,
@@ -1661,7 +1661,7 @@ mod tests {
 
     #[test]
     fn test_write_persist_loaded_addresses() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-domichain-program = { path = "../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../sdk/program", version = "=1.16.1" }
 primitive-types = { version = "0.11.1", features = ["fp-conversion"] }
 statrs = "0.15.0"
 

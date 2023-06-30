@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_connection_cache_max_parallel_chunks() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let mut connection_config = QuicConfig::new().unwrap();
         assert_eq!(

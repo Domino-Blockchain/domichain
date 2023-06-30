@@ -805,7 +805,7 @@ mod tests {
 
     #[test]
     fn batch_insert_duplicates_internal_simple() {
-        solana_logger::setup();
+        domichain_logger::setup();
         // add the same duplicate key several times.
         // make sure the resulting index and returned `duplicates` is correct.
         let random = 1;
@@ -849,7 +849,7 @@ mod tests {
 
     #[test]
     fn batch_insert_non_duplicates_internal_simple() {
-        solana_logger::setup();
+        domichain_logger::setup();
         // add 2 entries, make sure they are added in the buckets we expect
         let random = 1;
         let data_buckets = Vec::default();
@@ -889,7 +889,7 @@ mod tests {
 
     #[test]
     fn batch_insert_non_duplicates_internal_same_ix_exceeds_max_search() {
-        solana_logger::setup();
+        domichain_logger::setup();
         // add `len` entries with the same ix, make sure they are added in subsequent buckets.
         // adjust `max_search`. If we try to add an entry that causes us to exceed `max_search`, then assert that the adding fails with an error and
         // the colliding item remains in `entries`
@@ -955,7 +955,7 @@ mod tests {
     #[should_panic(expected = "batch insertion can only occur prior to any deletes")]
     #[test]
     fn batch_insert_after_delete() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let tmpdir = tempdir().unwrap();
         let paths: Vec<PathBuf> = vec![tmpdir.path().to_path_buf()];

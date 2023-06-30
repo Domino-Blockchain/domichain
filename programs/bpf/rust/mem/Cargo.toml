@@ -13,12 +13,12 @@ edition = "2021"
 no-entrypoint = []
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
 
 [dev-dependencies]
-domichain-program-runtime = { path = "../../../../program-runtime", version = "=1.11.1" }
-domichain-program-test = { path = "../../../../program-test", version = "=1.11.1" }
-domichain-sdk = { path = "../../../../sdk", version = "=1.11.1" }
+domichain-program-runtime = { path = "../../../../program-runtime", version = "=1.16.1" }
+domichain-program-test = { path = "../../../../program-test", version = "=1.16.1" }
+domichain-sdk = { path = "../../../../sdk", version = "=1.16.1" }
 
 [lib]
 crate-type = ["cdylib", "lib"]

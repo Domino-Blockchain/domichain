@@ -64,7 +64,7 @@ mod tests {
             solana_connection_cache::client_connection::ClientConnection,
             solana_quic_client::quic_client::QuicClientConnection,
         };
-        solana_logger::setup();
+        domichain_logger::setup();
         let (sender, receiver) = unbounded();
         let staked_nodes = Arc::new(RwLock::new(StakedNodes::default()));
         let (s, exit, keypair, ip) = server_args();
@@ -144,7 +144,7 @@ mod tests {
             solana_connection_cache::nonblocking::client_connection::ClientConnection,
             solana_quic_client::nonblocking::quic_client::QuicClientConnection,
         };
-        solana_logger::setup();
+        domichain_logger::setup();
         let (sender, receiver) = unbounded();
         let staked_nodes = Arc::new(RwLock::new(StakedNodes::default()));
         let (s, exit, keypair, ip) = server_args();
@@ -198,7 +198,7 @@ mod tests {
             solana_connection_cache::client_connection::ClientConnection,
             solana_quic_client::quic_client::QuicClientConnection,
         };
-        solana_logger::setup();
+        domichain_logger::setup();
 
         // Request Receiver
         let (sender, receiver) = unbounded();

@@ -1014,7 +1014,7 @@ mod tests {
 
     #[test]
     fn test_filter_and_forward_with_account_limits() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
@@ -1219,7 +1219,7 @@ mod tests {
 
     #[test]
     fn test_prepare_packets_to_forward() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,

@@ -444,7 +444,7 @@ pub(crate) mod tests {
     #[test]
     fn test_rent_pubkey_range_max() {
         // start==end && start != 0 is curious behavior. Verifying it here.
-        solana_logger::setup();
+        domichain_logger::setup();
         let range = pubkey_range_from_partition((1, 1, 3));
         let p = partition_from_pubkey(range.start(), 3);
         assert_eq!(p, 2);
@@ -649,7 +649,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_rent_eager_pubkey_range_not_dividable() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let test_map = map_to_test_bad_range();
         let range = pubkey_range_from_partition((0, 0, 3));
@@ -699,7 +699,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_rent_eager_pubkey_range_gap() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let test_map = map_to_test_bad_range();
         let range = pubkey_range_from_partition((120, 1023, 12345));

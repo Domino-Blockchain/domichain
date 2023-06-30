@@ -68,7 +68,7 @@ pub mod tests {
 
     #[test]
     fn test_count() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let progress = BankCreationFreezingProgress::default();
         assert_eq!(progress.get_bank_creation_count(), 0);
         assert_eq!(progress.get_bank_frozen_or_destroyed_count(), 0);
@@ -82,7 +82,7 @@ pub mod tests {
 
     #[test]
     fn test_wait() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let progress = BankCreationFreezingProgress::default();
         let waiter = progress.bank_frozen_or_destroyed.clone();
         let duration = std::time::Duration::default();

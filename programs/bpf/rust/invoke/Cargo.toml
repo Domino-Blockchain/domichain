@@ -15,7 +15,7 @@ program = []
 
 [dependencies]
 domichain-bpf-rust-invoked = { path = "../invoked", default-features = false }
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
 
 [lib]
 crate-type = ["lib", "cdylib"]

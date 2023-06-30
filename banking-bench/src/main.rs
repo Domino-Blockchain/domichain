@@ -229,7 +229,7 @@ impl PacketsPerIteration {
 
 #[allow(clippy::cognitive_complexity)]
 fn main() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let matches = Command::new(crate_name!())
         .about(crate_description!())

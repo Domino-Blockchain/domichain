@@ -252,7 +252,7 @@ impl Drop for BackgroundServices {
 #[test_case(TestEnvironment::new()                      ; "without snapshots")]
 #[test_case(TestEnvironment::new_with_snapshots(80, 40) ; "with snapshots")]
 fn test_epoch_accounts_hash_basic(test_environment: TestEnvironment) {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     const NUM_EPOCHS_TO_TEST: u64 = 2;
     const SET_ROOT_INTERVAL: Slot = 3;
@@ -360,7 +360,7 @@ fn test_epoch_accounts_hash_basic(test_environment: TestEnvironment) {
 /// in-flight or valid.
 #[test]
 fn test_snapshots_have_expected_epoch_accounts_hash() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     const NUM_EPOCHS_TO_TEST: u64 = 2;
 
@@ -479,7 +479,7 @@ fn test_snapshots_have_expected_epoch_accounts_hash() {
 /// EAH request and the second bank sends a snapshot request, both requests should be handled.
 #[test]
 fn test_background_services_request_handling_for_epoch_accounts_hash() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     const NUM_EPOCHS_TO_TEST: u64 = 2;
     const FULL_SNAPSHOT_INTERVAL: Slot = 80;
@@ -563,7 +563,7 @@ fn test_background_services_request_handling_for_epoch_accounts_hash() {
 /// that use-case.
 #[test]
 fn test_epoch_accounts_hash_and_warping() {
-    solana_logger::setup();
+    domichain_logger::setup();
 
     let test_environment = TestEnvironment::new();
     let bank_forks = &test_environment.bank_forks;

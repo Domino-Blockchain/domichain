@@ -340,7 +340,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_forwarder_budget() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let TestSetup {
             bank_forks,
             poh_recorder,
@@ -407,7 +407,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_handle_forwarding() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let TestSetup {
             bank_forks,
             poh_recorder,

@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_update_prioritization_fee() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let write_account_a = Pubkey::new_unique();
         let write_account_b = Pubkey::new_unique();
         let write_account_c = Pubkey::new_unique();

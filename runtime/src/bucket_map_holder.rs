@@ -426,7 +426,7 @@ pub mod tests {
 
     #[test]
     fn test_ages() {
-        solana_logger::setup();
+        domichain_logger::setup();
         let bins = 4;
         let test = BucketMapHolder::<u64, u64>::new(bins, &Some(AccountsIndexConfig::default()), 1);
         assert_eq!(0, test.current_age());

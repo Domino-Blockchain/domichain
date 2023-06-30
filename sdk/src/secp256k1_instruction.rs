@@ -1285,7 +1285,7 @@ pub mod test {
     // Signatures are malleable.
     #[test]
     fn test_malleability() {
-        solana_logger::setup();
+        domichain_logger::setup();
 
         let secret_key = libsecp256k1::SecretKey::random(&mut thread_rng());
         let public_key = libsecp256k1::PublicKey::from_secret_key(&secret_key);
