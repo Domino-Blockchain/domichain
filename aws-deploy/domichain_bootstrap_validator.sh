@@ -6,6 +6,9 @@ set -o errexit
 # Print executed commands
 set -o verbose
 
+export NODE_IP_ADDR=127.0.0.1
+export URL=http://127.0.0.1:8899
+
 cd ~/domichain
 rm -rf ~/domichain/config
 
@@ -20,7 +23,7 @@ fi
 screen -d -m -S faucet bash -c './multinode-demo/faucet.sh'
 
 export RUST_LOG="INFO,domichain_metrics::metrics=WARN"
-screen -d -m -S bootstrap-validator bash -c "./multinode-demo/bootstrap-validator.sh \
+screen -d -m -S bootstrap-validator bash -c "DOMICHAIN_CUDA=1 ./multinode-demo/bootstrap-validator.sh \
   --gossip-host $NODE_IP_ADDR \
   --enable-rpc-transaction-history \
   --allow-private-addr \
