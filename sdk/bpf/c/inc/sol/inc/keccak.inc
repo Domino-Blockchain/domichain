@@ -3,7 +3,7 @@
  * @brief Domichain keccak system call
 **/
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

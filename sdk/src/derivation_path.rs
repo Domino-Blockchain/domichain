@@ -2,12 +2,12 @@
 //!
 //! [BIP-44]: https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 //!
-//! Includes definitions and helpers for Solana derivation paths.
-//! The standard Solana BIP-44 derivation path prefix is
+//! Includes definitions and helpers for Domichain derivation paths.
+//! The standard Domichain BIP-44 derivation path prefix is
 //!
 //! > `m/44'/501'`
 //!
-//! with 501 being the Solana coin type.
+//! with 501 being the Domichain coin type.
 
 use {
     core::{iter::IntoIterator, slice::Iter},

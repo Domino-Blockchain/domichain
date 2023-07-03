@@ -111,9 +111,9 @@ TEST_CXX_FLAGS := \
 
 help:
 	@echo ''
-	@echo 'Solana VM Program makefile'
+	@echo 'Domichain VM Program makefile'
 	@echo ''
-	@echo 'This makefile will build Solana Programs from C or C++ source files into ELFs'
+	@echo 'This makefile will build Domichain Programs from C or C++ source files into ELFs'
 	@echo ''
 	@echo 'Assumptions:'
 	@echo '  - Programs are located in the source directory: $(SRC_DIR)/<program name>'

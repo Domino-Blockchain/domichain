@@ -16,17 +16,17 @@ keywords:
 ---
 
 The small fees paid to process [instructions](./terminology.md#instruction) on
-the Solana blockchain are known as "_transaction fees_".
+the Domichain blockchain are known as "_transaction fees_".
 
 As each transaction (which contains one or more instructions) is sent through
 the network, it gets processed by the current leader validation-client. Once
 confirmed as a global state transaction, this _transaction fee_ is paid to the
-network to help support the [economic design](#economic-design) of the Solana
+network to help support the [economic design](#economic-design) of the Domichain
 blockchain.
 
 > **NOTE:** Transaction fees are different from
 > [account rent](./terminology.md#rent)! While transaction fees are paid to
-> process instructions on the Solana network, rent is paid to store data on the
+> process instructions on the Domichain network, rent is paid to store data on the
 > blockchain.
 
 > You can learn more about rent here:
@@ -34,7 +34,7 @@ blockchain.
 
 ## Why pay transaction fees?
 
-Transaction fees offer many benefits in the Solana
+Transaction fees offer many benefits in the Domichain
 [economic design](#basic-economic-design) described below. Mainly:
 
 - they provide compensation to the validator network for the CPU/GPU resources
@@ -53,14 +53,14 @@ _protocol-based rewards_ to secure the network in the short-term. Over the
 long-term, these networks will increasingly rely on _transaction fees_ to
 sustain security.
 
-The same is true on Solana. Specifically:
+The same is true on Domichain. Specifically:
 
 - A fixed proportion (initially 50%) of each transaction fee is _burned_
   (destroyed), with the remaining going to the current
   [leader](./terminology.md#leader) processing the transaction.
 - A scheduled global inflation rate provides a source for
   [rewards](./implemented-proposals/staking-rewards.md) distributed to
-  [Solana Validators](../src/running-validator.md).
+  [Domichain Validators](../src/running-validator.md).
 
 ### Why burn some fees?
 
@@ -108,7 +108,7 @@ and return an error. This results in a failed transaction.
 
 ## Prioritization fee
 
-A Solana transaction can include an **optional** fee to prioritize itself
+A Domichain transaction can include an **optional** fee to prioritize itself
 against others known as a
 "_[prioritization fee](./terminology.md#prioritization-fee)_". Paying this
 additional fee helps boost how a transaction is prioritized against others,

@@ -1,4 +1,4 @@
-//! Definitions related to Solana over QUIC.
+//! Definitions related to Domichain over QUIC.
 use std::time::Duration;
 
 pub const QUIC_PORT_OFFSET: u16 = 6;

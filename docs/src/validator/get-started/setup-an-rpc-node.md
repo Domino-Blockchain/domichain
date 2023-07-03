@@ -1,9 +1,9 @@
 ---
-title: Setup a Solana RPC Node
+title: Setup a Domichain RPC Node
 sidebar_label: Setup an RPC Node
 ---
 
-Since a Solana RPC server runs the same process as a consensus validator, first follow the instructions on [how to setup a Solana validator](./setup-a-validator.md) to get started. Note, that you do not need to create a vote account if you are operating an RPC node.  An RPC node typically does not vote.
+Since a Domichain RPC server runs the same process as a consensus validator, first follow the instructions on [how to setup a Domichain validator](./setup-a-validator.md) to get started. Note, that you do not need to create a vote account if you are operating an RPC node.  An RPC node typically does not vote.
 
 After your validator is running, you can refer to this section for the RPC node specific setup instructions.
 
@@ -47,17 +47,17 @@ exec solana-validator \
     --limit-ledger-size
 ```
 
-### Solana Bigtable
+### Domichain Bigtable
 
-The Solana blockchain is able to create many transactions per second. Because of the volume of transactions on the chain, it is not practical for an RPC node to store the entire blockchain on the machine. Instead, RPC operators use the `--limit-ledger-size` flag to specify how many blocks to store on the RPC node. If the user of the RPC node needs historical blockchain data then the RPC server will have to access older blocks through a Solana bigtable instance.
+The Domichain blockchain is able to create many transactions per second. Because of the volume of transactions on the chain, it is not practical for an RPC node to store the entire blockchain on the machine. Instead, RPC operators use the `--limit-ledger-size` flag to specify how many blocks to store on the RPC node. If the user of the RPC node needs historical blockchain data then the RPC server will have to access older blocks through a Domichain bigtable instance.
 
-If you are interested in setting up your own bigtable instance, see these docs in the Solana GitHub repository: [solana-labs/solana-bigtable](https://github.com/solana-labs/solana-bigtable)
+If you are interested in setting up your own bigtable instance, see these docs in the Domichain GitHub repository: [solana-labs/solana-bigtable](https://github.com/solana-labs/solana-bigtable)
 
 ### Example Known Validators
 
 The identities of the [known validators](../../running-validator/validator-start.md#known-validators) supplied in these example snippets (via the `--known-validator` flag) are:
 
-- `5D1fNXzvv5NjV1ysLjirC4WY92RNsVH18vjmcszZd8on` - Solana Labs
+- `5D1fNXzvv5NjV1ysLjirC4WY92RNsVH18vjmcszZd8on` - Domichain Labs
 - `dDzy5SR3AXdYWVqbDEkVFdvSPCtS9ihF5kJkHCtXoFs` - MonkeDAO
 - `Ft5fbkqNa76vnsjYNwjDZUXoTWpP7VYm3mtsaQckQADN` - Certus One
 - `eoKpUABi59aT4rR9HGS3LcMecfut9x7zJyodWWP43YQ` - SerGo
@@ -65,6 +65,6 @@ The identities of the [known validators](../../running-validator/validator-start
 
 ## Examples for other clusters
 
-Additional examples of other Solana cluster specific validator commands can be found on the [Clusters](../../clusters.md) page.
+Additional examples of other Domichain cluster specific validator commands can be found on the [Clusters](../../clusters.md) page.
 
 Keep in mind, you will still need to customize these commands to operate as an RPC node, as well other operator specific configuration settings.

@@ -10,22 +10,22 @@ If not addressed here, ask on [StackOverflow](https://stackoverflow.com/question
 
 ## Limitations
 
-Developing programs on the Solana blockchain have some inherent limitation associated with them. Below is a list of common limitation that you may run into.
+Developing programs on the Domichain blockchain have some inherent limitation associated with them. Below is a list of common limitation that you may run into.
 
 See [Limitations of developing programs](./limitations.md) for more details
 
 ## Berkeley Packet Filter (BPF)
 
-Solana on-chain programs are compiled via the [LLVM compiler infrastructure](https://llvm.org/) to an [Executable and Linkable Format (ELF)](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) containing
+Domichain on-chain programs are compiled via the [LLVM compiler infrastructure](https://llvm.org/) to an [Executable and Linkable Format (ELF)](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) containing
 a variation of the [Berkeley Packet Filter (BPF)](https://en.wikipedia.org/wiki/Berkeley_Packet_Filter) bytecode.
 
-Because Solana uses the LLVM compiler infrastructure, a program may be written in any programming language that can target the LLVM's BPF backend.
+Because Domichain uses the LLVM compiler infrastructure, a program may be written in any programming language that can target the LLVM's BPF backend.
 
 BPF provides an efficient [instruction set](https://github.com/iovisor/bpf-docs/blob/master/eBPF.md) that can be executed in an interpreted virtual machine or as efficient just-in-time compiled native instructions.
 
 ## Memory map
 
-The virtual address memory map used by Solana SBF programs is fixed and laid out
+The virtual address memory map used by Domichain SBF programs is fixed and laid out
 as follows
 
 - Program code starts at 0x100000000

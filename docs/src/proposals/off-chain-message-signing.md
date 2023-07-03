@@ -2,7 +2,7 @@
 ## Motivation
 
 There is ecosystem demand for a method of signing non-transaction messages with
-a Solana wallet. Typically this is some kind of "proof of wallet ownership" for
+a Domichain wallet. Typically this is some kind of "proof of wallet ownership" for
 entry into a whitelisted system.
 
 Some inspiration can be gleaned from relevant portions of Ethereum's
@@ -91,7 +91,7 @@ This field **SHOULD NOT** be displayed to users
 
 ## Signing
 
-Solana off-chain messages **MUST** only be signed using the ed25519 digital
+Domichain off-chain messages **MUST** only be signed using the ed25519 digital
 signature scheme. Before signing, the message **MUST** be strictly checked to
 conform to the associated preamble. The message body is then appended to the
 [message preamble](#message-preamble). Finally the result is ed25519 signed.

@@ -1,11 +1,11 @@
 #pragma once
 /**
- * @brief Solana logging utilities
+ * @brief Domichain logging utilities
  */
 
-#include <sol/types.h>
-#include <sol/string.h>
-#include <sol/entrypoint.h>
+#include <domi/types.h>
+#include <domi/string.h>
+#include <domi/entrypoint.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -79,7 +79,7 @@ Discord, or Twillio. For details, run `domichain-watchtower --help`.
 domichain-watchtower --validator-identity <YOUR VALIDATOR IDENTITY>
 ```
 
-> You can find more information about the [best practices for Solana Watchtower](../validator/best-practices/monitoring.md#solana-watchtower) here in the docs.
+> You can find more information about the [best practices for Domichain Watchtower](../validator/best-practices/monitoring.md#solana-watchtower) here in the docs.
 
 #### New Software Release Announcements
 

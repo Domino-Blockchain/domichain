@@ -1,4 +1,4 @@
-//! Solana account addresses.
+//! Domichain account addresses.
 
 pub use domichain_program::pubkey::*;
 

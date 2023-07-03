@@ -1,5 +1,5 @@
 ## Canaries
-In order to reduce the risk associated with deploying updates Solana Labs operates the validator software on canary nodes on mainnet-beta
+In order to reduce the risk associated with deploying updates Domichain Labs operates the validator software on canary nodes on mainnet-beta
 and testnet. The mainnet-beta nodes are non-voting. These nodes update themselves on a regular schedule.
 
 |Canary|Host|Dashboards|Identity|Cluster|Channel|Days between updates|

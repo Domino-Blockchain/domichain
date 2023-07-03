@@ -1,6 +1,6 @@
 ---
 title: "Hello World Quickstart Guide"
-description: 'This "hello world" quickstart guide will demonstrate how to setup, build, and deploy your first Solana program in your browser with Solana Playground.'
+description: 'This "hello world" quickstart guide will demonstrate how to setup, build, and deploy your first Domichain program in your browser with Domichain Playground.'
 keywords:
   - playground
   - solana pg
@@ -14,35 +14,35 @@ keywords:
   - web3 developer
 ---
 
-For this "hello world" quickstart guide, we will use [Solana Playground](https://beta.solpg.io), a browser based IDE to develop and deploy our Solana program. To use it, you do **NOT** have to install any software on your computer. Simply open Solana Playground in your browser of choice, and you are ready to write and deploy Solana programs.
+For this "hello world" quickstart guide, we will use [Domichain Playground](https://beta.solpg.io), a browser based IDE to develop and deploy our Domichain program. To use it, you do **NOT** have to install any software on your computer. Simply open Domichain Playground in your browser of choice, and you are ready to write and deploy Domichain programs.
 
 ## What you will learn
 
-- How to get started with Solana Playground
-- How to create a Solana wallet on Playground
-- How to program a basic Solana program in Rust
-- How to build and deploy a Solana Rust program
+- How to get started with Domichain Playground
+- How to create a Domichain wallet on Playground
+- How to program a basic Domichain program in Rust
+- How to build and deploy a Domichain Rust program
 - How to interact with your on chain program using JavaScript
 
-## Using Solana Playground
+## Using Domichain Playground
 
-[Solana Playground](https://beta.solpg.io) is browser based application that will let you write, build, and deploy on chain Solana programs. All from your browser. No installation needed.
+[Domichain Playground](https://beta.solpg.io) is browser based application that will let you write, build, and deploy on chain Domichain programs. All from your browser. No installation needed.
 
-It is a great developer resource for getting started with Solana development, especially on Windows.
+It is a great developer resource for getting started with Domichain development, especially on Windows.
 
 ### Import our example project
 
-In a new tab in your browser, open our example "_Hello World_" project on Solana Playground: https://beta.solpg.io/6314a69688a7fca897ad7d1d
+In a new tab in your browser, open our example "_Hello World_" project on Domichain Playground: https://beta.solpg.io/6314a69688a7fca897ad7d1d
 
 Next, import the project into your local workspace by clicking the "**Import**" icon and naming your project `hello_world`.
 
-![Import the get started Solana program on Solana Playground](/img/quickstarts/solana-get-started-import-on-playground.png)
+![Import the get started Domichain program on Domichain Playground](/img/quickstarts/solana-get-started-import-on-playground.png)
 
-> If you do **not** import the program into **your** Solana Playground, then you will **not** be able to make changes to the code. But you **will** still be able to build and deploy the code to a Solana cluster.
+> If you do **not** import the program into **your** Domichain Playground, then you will **not** be able to make changes to the code. But you **will** still be able to build and deploy the code to a Domichain cluster.
 
 ### Create a Playground wallet
 
-Normally with [local development](./local.md), you will need to create a file system wallet for use with the Solana CLI. But with the Solana Playground, you only need to click a few buttons to create a browser based wallet.
+Normally with [local development](./local.md), you will need to create a file system wallet for use with the Domichain CLI. But with the Domichain Playground, you only need to click a few buttons to create a browser based wallet.
 
 :::caution
 Your _Playground Wallet_ will be saved in your browser's local storage. Clearing your browser cache will remove your saved wallet. When creating a new wallet, you will have the option to save a local copy of your wallet's keypair file.
@@ -50,11 +50,11 @@ Your _Playground Wallet_ will be saved in your browser's local storage. Clearing
 
 Click on the red status indicator button at the bottom left of the screen, (optionally) save your wallet's keypair file to your computer for backup, then click "**Continue**".
 
-After your Playground Wallet is created, you will notice the bottom of the window now states your wallet's address, your DOMI balance, and the Solana cluster you are connected to (Devnet is usually the default/recommended, but a "localhost" [test validator](./local.md) is also acceptable).
+After your Playground Wallet is created, you will notice the bottom of the window now states your wallet's address, your DOMI balance, and the Domichain cluster you are connected to (Devnet is usually the default/recommended, but a "localhost" [test validator](./local.md) is also acceptable).
 
-## Create a Solana program
+## Create a Domichain program
 
-The code for your Rust based Solana program will live in your `src/lib.rs` file. Inside `src/lib.rs` you will be able to import your Rust crates and define your logic. Open your `src/lib.rs` file within Solana Playground.
+The code for your Rust based Domichain program will live in your `src/lib.rs` file. Inside `src/lib.rs` you will be able to import your Rust crates and define your logic. Open your `src/lib.rs` file within Domichain Playground.
 
 ### Import the `domichain_program` crate
 
@@ -72,7 +72,7 @@ use domichain_program::{
 
 ### Write your program logic
 
-Every Solana program must define an `entrypoint` that tells the Solana runtime where to start executing your on chain code. Your program's [entrypoint](../developing/on-chain-programs/developing-rust#program-entrypoint) should provide a public function named `process_instruction`:
+Every Domichain program must define an `entrypoint` that tells the Domichain runtime where to start executing your on chain code. Your program's [entrypoint](../developing/on-chain-programs/developing-rust#program-entrypoint) should provide a public function named `process_instruction`:
 
 ```rust
 // declare and export the program's entrypoint
@@ -92,7 +92,7 @@ pub fn process_instruction(
 }
 ```
 
-Every on chain program should return the `Ok` [result enum](https://doc.rust-lang.org/std/result/) with a value of `()`. This tells the Solana runtime that your program executed successfully without errors.
+Every on chain program should return the `Ok` [result enum](https://doc.rust-lang.org/std/result/) with a value of `()`. This tells the Domichain runtime that your program executed successfully without errors.
 
 Our program above will simply [log a message](../developing/on-chain-programs/debugging#logging) of "_Hello, world!_" to the blockchain cluster, then gracefully exit with `Ok(())`.
 
@@ -100,7 +100,7 @@ Our program above will simply [log a message](../developing/on-chain-programs/de
 
 On the left sidebar, select the "**Build & Deploy**" tab. Next, click the "Build" button.
 
-If you look at the Playground's terminal, you should see your Solana program begin to compile. Once complete, you will see a success message.
+If you look at the Playground's terminal, you should see your Domichain program begin to compile. Once complete, you will see a success message.
 
 ![Viewing a successful build of your Rust based program](/img/quickstarts/solana-get-started-successful-build.png)
 
@@ -110,9 +110,9 @@ You may receive _warning_ when your program is compiled due to unused variables.
 
 ### Deploy your program
 
-You can click the "Deploy" button to deploy your first program to the Solana blockchain. Specifically to your selected cluster (e.g. Devnet, Testnet, etc).
+You can click the "Deploy" button to deploy your first program to the Domichain blockchain. Specifically to your selected cluster (e.g. Devnet, Testnet, etc).
 
-After each deployment, you will see your Playground Wallet balance change. By default, Solana Playground will automatically request DOMI airdrops on your behalf to ensure your wallet has enough DOMI to cover the cost of deployment.
+After each deployment, you will see your Playground Wallet balance change. By default, Domichain Playground will automatically request DOMI airdrops on your behalf to ensure your wallet has enough DOMI to cover the cost of deployment.
 
 > Note:
 > If you need more DOMI, you can airdrop more by typing airdrop command in the playground terminal:
@@ -121,21 +121,21 @@ After each deployment, you will see your Playground Wallet balance change. By de
 solana airdrop 2
 ```
 
-![Build and deploy your Solana program to the blockchain](/img/quickstarts/solana-get-started-build-and-deploy.png)
+![Build and deploy your Domichain program to the blockchain](/img/quickstarts/solana-get-started-build-and-deploy.png)
 
 ### Find your program id
 
-When executing a program using [web3.js](../developing/clients/javascript-reference.md) or from [another Solana program](../developing/programming-model/calling-between-programs.md), you will need to provide the `program id` (aka public address of your program).
+When executing a program using [web3.js](../developing/clients/javascript-reference.md) or from [another Domichain program](../developing/programming-model/calling-between-programs.md), you will need to provide the `program id` (aka public address of your program).
 
-Inside Solana Playground's **Build & Deploy** sidebar, you can find your `program id` under the **Program Credentials** dropdown.
+Inside Domichain Playground's **Build & Deploy** sidebar, you can find your `program id` under the **Program Credentials** dropdown.
 
 #### Congratulations!
 
-You have successfully setup, built, and deployed a Solana program using the Rust language directly in your browser. Next, we will demonstrate how to interact with your on chain program.
+You have successfully setup, built, and deployed a Domichain program using the Rust language directly in your browser. Next, we will demonstrate how to interact with your on chain program.
 
 ## Interact with your on chain program
 
-Once you have successfully deployed a Solana program to the blockchain, you will want to be able to interact with that program.
+Once you have successfully deployed a Domichain program to the blockchain, you will want to be able to interact with that program.
 
 Like most developers creating dApps and websites, we will interact with our on chain program using JavaScript. Specifically, will use the open source [NPM package](https://www.npmjs.com/package/@solana/web3.js) `@solana/web3.js` to aid in our client application.
 
@@ -145,7 +145,7 @@ This web3.js package is an abstraction layer on top of the [JSON RPC API](/api) 
 
 ### Initialize client
 
-We will be using Solana Playground for the client generation. Create a client folder by running `run` command in the playground terminal:
+We will be using Domichain Playground for the client generation. Create a client folder by running `run` command in the playground terminal:
 
 ```bash
 run
@@ -155,7 +155,7 @@ We have created `client` folder and a default `client.ts`. This is where we will
 
 ### Playground globals
 
-In playground, there are many utilities that are globally available for us to use without installing or setting up anything. Most important ones for our `hello world` program are `web3` for `@solana/web3.js` and `pg` for Solana Playground utilities.
+In playground, there are many utilities that are globally available for us to use without installing or setting up anything. Most important ones for our `hello world` program are `web3` for `@solana/web3.js` and `pg` for Domichain Playground utilities.
 
 :::info
 You can go over all of the available globals by pressing `CTRL+SPACE` (or `CMD+SPACE` on macOS) inside the editor.
@@ -163,7 +163,7 @@ You can go over all of the available globals by pressing `CTRL+SPACE` (or `CMD+S
 
 ### Call the program
 
-To execute your on chain program, you must send a [transaction](../developing/programming-model/transactions.md) to it. Each transaction submitted to the Solana blockchain contains a listing of instructions (and the program's that instruction will interact with).
+To execute your on chain program, you must send a [transaction](../developing/programming-model/transactions.md) to it. Each transaction submitted to the Domichain blockchain contains a listing of instructions (and the program's that instruction will interact with).
 
 Here we create a new transaction and add a single `instruction` to it:
 
@@ -185,7 +185,7 @@ Each `instruction` must include all the keys involved in the operation and the p
 With our transaction created, we can submit it to the cluster:
 
 ```js
-// send the transaction to the Solana cluster
+// send the transaction to the Domichain cluster
 console.log("Sending transaction...");
 const txHash = await web3.sendAndConfirmTransaction(
   pg.connection,
@@ -228,15 +228,15 @@ You should see `Hello, world!` in the **Log Messages** section of the output. ðŸ
 
 #### Congratulations!!!
 
-You have now written a client application for your on chain program. You are now a Solana developer!
+You have now written a client application for your on chain program. You are now a Domichain developer!
 
 PS: Try to update your program's message then re-build, re-deploy, and re-execute your program.
 
 ## Next steps
 
-See the links below to learn more about writing Solana programs:
+See the links below to learn more about writing Domichain programs:
 
 - [Setup your local development environment](./local.md)
-- [Overview of writing Solana programs](../developing/on-chain-programs/overview)
-- [Learn more about developing Solana programs with Rust](../developing/on-chain-programs/developing-Rust)
+- [Overview of writing Domichain programs](../developing/on-chain-programs/overview)
+- [Learn more about developing Domichain programs with Rust](../developing/on-chain-programs/developing-Rust)
 - [Debugging on chain programs](../developing/on-chain-programs/debugging)

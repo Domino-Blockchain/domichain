@@ -2,13 +2,13 @@
  * @brief Example C-based SBF program that tests cross-program invocations
  */
 #include "../invoked/instruction.h"
-#include <sol/entrypoint.h>
-#include <sol/cpi.h>
-#include <sol/pubkey.h>
-#include <sol/log.h>
-#include <sol/assert.h>
-#include <sol/deserialize.h>
-#include <sol/return_data.h>
+#include <domi/entrypoint.h>
+#include <domi/cpi.h>
+#include <domi/pubkey.h>
+#include <domi/log.h>
+#include <domi/assert.h>
+#include <domi/deserialize.h>
+#include <domi/return_data.h>
 
 static const uint8_t TEST_SUCCESS = 1;
 static const uint8_t TEST_PRIVILEGE_ESCALATION_SIGNER = 2;

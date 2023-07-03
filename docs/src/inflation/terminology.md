@@ -14,7 +14,7 @@ The Domichain protocol will automatically create new tokens on a predetermined i
 
 ### Inflation Schedule
 
-A deterministic description of token issuance over time. The Solana Foundation is proposing a disinflationary _Inflation Schedule_. I.e. Inflation starts at its highest value, the rate reduces over time until stabilizing at a predetermined long-term inflation rate (see discussion below). This schedule is completely and uniquely parameterized by three numbers:
+A deterministic description of token issuance over time. The Domichain Foundation is proposing a disinflationary _Inflation Schedule_. I.e. Inflation starts at its highest value, the rate reduces over time until stabilizing at a predetermined long-term inflation rate (see discussion below). This schedule is completely and uniquely parameterized by three numbers:
 
 - **Initial Inflation Rate [%]**: The starting _Inflation Rate_ for when inflation is first enabled. Token issuance rate can only decrease from this point.
 - **Disinflation Rate [%]**: The rate at which the _Inflation Rate_ is reduced.

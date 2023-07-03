@@ -4,12 +4,12 @@ displayed_sidebar: apiHttpMethodsSidebar
 hide_table_of_contents: true
 ---
 
-Solana nodes accept HTTP requests using the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification.
+Domichain nodes accept HTTP requests using the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification.
 
 :::info
-For JavaScript applications, use the [@solana/web3.js](https://github.com/solana-labs/solana-web3.js) library as a convenient interface for the RPC methods to interact with a Solana node.
+For JavaScript applications, use the [@solana/web3.js](https://github.com/solana-labs/solana-web3.js) library as a convenient interface for the RPC methods to interact with a Domichain node.
 
-For an PubSub connection to a Solana node, use the [Websocket API](./websocket.md).
+For an PubSub connection to a Domichain node, use the [Websocket API](./websocket.md).
 :::
 
 ## RPC HTTP Endpoint
@@ -52,12 +52,12 @@ Requests can be sent in batches by sending an array of JSON-RPC request objects 
 
 - Hash: A SHA-256 hash of a chunk of data.
 - Pubkey: The public key of a Ed25519 key-pair.
-- Transaction: A list of Solana instructions signed by a client keypair to authorize those actions.
+- Transaction: A list of Domichain instructions signed by a client keypair to authorize those actions.
 - Signature: An Ed25519 signature of transaction's payload data including instructions. This can be used to identify transactions.
 
 ## Configuring State Commitment
 
-For preflight checks and transaction processing, Solana nodes choose which bank
+For preflight checks and transaction processing, Domichain nodes choose which bank
 state to query based on a commitment requirement set by the client. The
 commitment describes how finalized a block is at that point in time. When
 querying the ledger state, it's recommended to use lower levels of commitment
@@ -118,7 +118,7 @@ Many methods that take a commitment parameter return an RpcResponse JSON object 
 
 Some methods support an `encoding` parameter, and can return account or
 instruction data in parsed JSON format if `"encoding":"jsonParsed"` is requested
-and the node has a parser for the owning program. Solana nodes currently support
+and the node has a parser for the owning program. Domichain nodes currently support
 JSON parsing for the following native and SPL programs:
 
 | Program                      | Account State | Instructions |

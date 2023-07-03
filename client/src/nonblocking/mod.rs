@@ -13,10 +13,10 @@ pub mod nonce_utils {
 pub mod pubsub_client {
     pub use domichain_pubsub_client::nonblocking::pubsub_client::*;
 }
-/// Communication with a Solana node over RPC asynchronously .
+/// Communication with a Domichain node over RPC asynchronously .
 ///
-/// Software that interacts with the Solana blockchain, whether querying its
-/// state or submitting transactions, communicates with a Solana node over
+/// Software that interacts with the Domichain blockchain, whether querying its
+/// state or submitting transactions, communicates with a Domichain node over
 /// [JSON-RPC], using the [`RpcClient`] type.
 ///
 /// [JSON-RPC]: https://www.jsonrpc.org/specification

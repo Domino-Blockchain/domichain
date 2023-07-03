@@ -7,7 +7,7 @@
 //! [`EpochSchedule`] implements [`Sysvar::get`] and can be loaded efficiently without
 //! passing the sysvar account ID to the program.
 //!
-//! See also the Solana [documentation on the epoch schedule sysvar][sdoc].
+//! See also the Domichain [documentation on the epoch schedule sysvar][sdoc].
 //!
 //! [sdoc]: https://docs.solana.com/developing/runtime-facilities/sysvars#epochschedule
 //!

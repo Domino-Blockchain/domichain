@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana Blake3 system call
+ * @brief Domichain Blake3 system call
  */
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

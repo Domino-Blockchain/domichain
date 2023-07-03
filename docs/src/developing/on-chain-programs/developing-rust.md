@@ -39,7 +39,7 @@ using the `no-entrypoint` feature.
 At a minimum, Domichain Rust programs must pull in the
 [domichain-program](https://crates.io/crates/domichain-program) crate.
 
-Solana SBF programs have some [restrictions](#restrictions) that may prevent the
+Domichain SBF programs have some [restrictions](#restrictions) that may prevent the
 inclusion of some crates as dependencies or require special handling.
 
 For example:
@@ -59,7 +59,7 @@ For example:
 First setup the environment:
 
 - Install the latest Rust stable from https://rustup.rs/
-- Install the latest [Solana command-line tools](../../cli/install-solana-cli-tools.md)
+- Install the latest [Domichain command-line tools](../../cli/install-solana-cli-tools.md)
 
 The normal cargo build is available for building programs against your host
 machine which can be used for unit testing:
@@ -68,7 +68,7 @@ machine which can be used for unit testing:
 $ cargo build
 ```
 
-To build a specific program, such as SPL Token, for the Solana SBF target which
+To build a specific program, such as SPL Token, for the Domichain SBF target which
 can be deployed to the cluster:
 
 ```bash
@@ -78,7 +78,7 @@ $ cargo build-bpf
 
 ## How to Test
 
-Solana programs can be unit tested via the traditional `cargo test` mechanism by
+Domichain programs can be unit tested via the traditional `cargo test` mechanism by
 exercising program functions directly.
 
 To help facilitate testing in an environment that more closely matches a live
@@ -94,8 +94,8 @@ program.
 
 ## Program Entrypoint
 
-Programs export a known entrypoint symbol which the Solana runtime looks up and
-calls when invoking a program. Solana supports multiple versions of the BPF
+Programs export a known entrypoint symbol which the Domichain runtime looks up and
+calls when invoking a program. Domichain supports multiple versions of the BPF
 loader and the entrypoints may vary between them.
 Programs must be written for and deployed to the same loader. For more details
 see the [FAQ section on Loaders](./faq.md#loaders).

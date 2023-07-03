@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana assert and panic utilities
+ * @brief Domichain assert and panic utilities
  */
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

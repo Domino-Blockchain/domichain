@@ -2,17 +2,17 @@
 title: State Compression
 description:
   'State Compression is the method of cheaply and securely storing
-  "fingerprints" of off-chain data in the Solana leger, instead of expensive
+  "fingerprints" of off-chain data in the Domichain leger, instead of expensive
   accounts.'
 ---
 
-On Solana, [State Compression](./state-compression.md) is the method of creating
+On Domichain, [State Compression](./state-compression.md) is the method of creating
 a "fingerprint" (or hash) of off-chain data and storing this fingerprint
-on-chain for secure verification. Effectively using the security of the Solana
+on-chain for secure verification. Effectively using the security of the Domichain
 ledger to securely validate off-chain data, verifying it has not been tampered
 with.
 
-This method of "compression" allows Solana programs and dApps to use cheap
+This method of "compression" allows Domichain programs and dApps to use cheap
 blockchain [ledger](./../terminology.md#ledger) space, instead of the more
 expensive [account](./../terminology.md#account) space, to securely store data.
 
@@ -45,7 +45,7 @@ large amounts of data due to this "state compression".
 
 ## Merkle trees and concurrent merkle trees
 
-Solana's state compression used a special type of
+Domichain's state compression used a special type of
 [merkle tree](#what-is-a-merkle-tree) that allows for multiple changes to any
 given tree to happen, while still maintaining the integrity and validity of the
 tree.
@@ -94,7 +94,7 @@ changes.
 ### What is a Concurrent merkle tree?
 
 In high throughput applications, like within the
-[Solana runtime](/src/validator/runtime.md), requests to change an on-chain
+[Domichain runtime](/src/validator/runtime.md), requests to change an on-chain
 _traditional merkle tree_ could be received by validators in relatively rapid
 succession (e.g. within the same slot). Each leaf data change would still be
 required to performed in series. Resulting in each subsequent request for change
@@ -238,7 +238,7 @@ While a tree's creation costs are higher with a higher canopy, having a lower
 transaction. The more nodes required to be submitted, the larger the transaction
 size, and therefore the easier it is to exceed the transaction size limits.
 
-This will also be the case for any other Solana program or dApp that attempts to
+This will also be the case for any other Domichain program or dApp that attempts to
 interact with your tree/leafs. If your tree requires too many proof nodes
 (because of a low canopy depth), then any other additional actions another
 on-chain program **could** offer will be **limited** by their specific
@@ -323,7 +323,7 @@ many leaf nodes are possible for each:
 ## Compressed NFTs
 
 Compressed NFTs are one of the most popular use cases for State Compression on
-Solana. With compression, a one million NFT collection could be minted for
+Domichain. With compression, a one million NFT collection could be minted for
 `~50 DOMI`, vice `~12,000 DOMI` for its uncompressed equivalent collection.
 
 :::info Developer Guide

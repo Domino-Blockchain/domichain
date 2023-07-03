@@ -103,7 +103,7 @@ if pushd "${tmpdir}" &>/dev/null; then
 name = "${package_name}"
 version = "0.0.0"
 description = "reserved for future use"
-authors = ["Solana Labs Maintainers <maintainers@solanalabs.com>"]
+authors = ["Domichain Labs Maintainers <maintainers@solanalabs.com>"]
 repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
 homepage = "https://solanalabs.com"

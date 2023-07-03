@@ -1,4 +1,4 @@
-//! The Solana [`Account`] type.
+//! The Domichain [`Account`] type.
 
 use {
     crate::{

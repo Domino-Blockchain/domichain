@@ -102,7 +102,7 @@ where
     }
 }
 
-fn test_solana_package(
+fn test_domichain_package(
     config: &Config,
     target_directory: &Path,
     package: &cargo_metadata::Package,
@@ -195,7 +195,7 @@ fn test_solana_package(
     );
 }
 
-fn test_solana(config: Config, manifest_path: Option<PathBuf>) {
+fn test_domichain(config: Config, manifest_path: Option<PathBuf>) {
     let mut metadata_command = cargo_metadata::MetadataCommand::new();
     if let Some(manifest_path) = manifest_path.as_ref() {
         metadata_command.manifest_path(manifest_path);
@@ -218,7 +218,7 @@ fn test_solana(config: Config, manifest_path: Option<PathBuf>) {
                     .any(|p| root_package.id.repr.contains(p)))
         {
             debug!("test root package {:?}", root_package.id);
-            test_solana_package(&config, metadata.target_directory.as_ref(), root_package);
+            test_domichain_package(&config, metadata.target_directory.as_ref(), root_package);
             return;
         }
     }
@@ -242,7 +242,7 @@ fn test_solana(config: Config, manifest_path: Option<PathBuf>) {
         if config.packages.is_empty() || config.packages.iter().any(|p| package.id.repr.contains(p))
         {
             debug!("test package {:?}", package.id);
-            test_solana_package(&config, metadata.target_directory.as_ref(), package);
+            test_domichain_package(&config, metadata.target_directory.as_ref(), package);
         }
     }
 }
@@ -348,7 +348,7 @@ fn main() {
                 .long("workspace")
                 .takes_value(false)
                 .alias("all")
-                .help("Test all Solana packages in the workspace"),
+                .help("Test all Domichain packages in the workspace"),
         )
         .arg(
             Arg::new("jobs")
@@ -420,5 +420,5 @@ fn main() {
     }
 
     let manifest_path: Option<PathBuf> = matches.value_of_t("manifest_path").ok();
-    test_solana(config, manifest_path);
+    test_domichain(config, manifest_path);
 }

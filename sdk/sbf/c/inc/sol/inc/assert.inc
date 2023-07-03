@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana assert and panic utilities
+ * @brief Domichain assert and panic utilities
  */
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,7 @@ if (!(expr)) {          \
   sol_panic(); \
 }
 
-#ifdef SOL_TEST
+#ifdef DOMI_TEST
 /**
  * Stub functions when building tests
  */

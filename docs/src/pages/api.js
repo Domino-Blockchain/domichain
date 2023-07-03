@@ -9,7 +9,7 @@ function APIPage() {
     <CardLayout
       sidebarKey="apiSidebar"
       title="JSON RPC API"
-      description="Solana Documentation"
+      description="Domichain Documentation"
       path="/api"
     >
       <section className={styles.features}>
@@ -19,7 +19,7 @@ function APIPage() {
 
             <div className="container__spacer">
               <p>
-                Interact with Solana nodes directly with the JSON RPC API via
+                Interact with Domichain nodes directly with the JSON RPC API via
                 the HTTP and Websocket methods.
               </p>
 
@@ -41,7 +41,7 @@ function APIPage() {
                 }}
                 body={{
                   label:
-                    "Make direct requests to a Solana node via HTTP using the JSON RPC standard.",
+                    "Make direct requests to a Domichain node via HTTP using the JSON RPC standard.",
                   translateId: "learn-methods-http",
                 }}
               />
@@ -54,7 +54,7 @@ function APIPage() {
                 }}
                 body={{
                   label:
-                    "Monitor on-chain Solana data and events via a RPC PubSub Websocket connection.",
+                    "Monitor on-chain Domichain data and events via a RPC PubSub Websocket connection.",
                   translateId: "learn-methods-websocket",
                 }}
               />
@@ -67,7 +67,7 @@ function APIPage() {
                 }}
                 body={{
                   label:
-                    "Use the @solana/web3.js library to interact with a Solana node inside a JavaScript application.",
+                    "Use the @solana/web3.js library to interact with a Domichain node inside a JavaScript application.",
                   translateId: "learn-web3.js",
                 }}
               />

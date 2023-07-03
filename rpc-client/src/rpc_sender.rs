@@ -21,7 +21,7 @@ pub struct RpcTransportStats {
 /// A transport for RPC calls.
 ///
 /// `RpcSender` implements the underlying transport of requests to, and
-/// responses from, a Solana node, and is used primarily by [`RpcClient`].
+/// responses from, a Domichain node, and is used primarily by [`RpcClient`].
 ///
 /// [`RpcClient`]: crate::rpc_client::RpcClient
 #[async_trait]

@@ -337,7 +337,7 @@ mod tests {
     use {
         crate::geyser_plugin_manager::GeyserPluginManager,
         libloading::Library,
-        solana_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin,
+        domichain_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin,
         std::sync::{Arc, RwLock},
     };
 

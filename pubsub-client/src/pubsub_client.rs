@@ -1,6 +1,6 @@
 //! A client for subscribing to messages from the RPC server.
 //!
-//! The [`PubsubClient`] implements [Solana WebSocket event
+//! The [`PubsubClient`] implements [Domichain WebSocket event
 //! subscriptions][spec].
 //!
 //! [spec]: https://docs.solana.com/developing/clients/jsonrpc-api#subscription-websocket

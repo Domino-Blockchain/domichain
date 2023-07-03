@@ -36,4 +36,4 @@ All data accounts owned by Move modules must set their owners to the loader, `MO
 
 ### Interacting with Domichain programs
 
-To invoke instructions in non-Move programs, Solana would need to extend the Move VM with a `process_instruction()` system call. It would work the same as `process_instruction()` Rust SBF programs.
+To invoke instructions in non-Move programs, Domichain would need to extend the Move VM with a `process_instruction()` system call. It would work the same as `process_instruction()` Rust SBF programs.

@@ -1,10 +1,10 @@
 #pragma once
 /**
- * @brief Solana string and memory system calls and utilities
+ * @brief Domichain string and memory system calls and utilities
  */
 
-#include <sol/constants.h>
-#include <sol/types.h>
+#include <domi/constants.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

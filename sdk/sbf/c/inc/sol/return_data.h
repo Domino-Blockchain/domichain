@@ -1,10 +1,10 @@
 #pragma once
 /**
- * @brief Solana return data system calls
+ * @brief Domichain return data system calls
 **/
 
-#include <sol/types.h>
-#include <sol/pubkey.h>
+#include <domi/types.h>
+#include <domi/pubkey.h>
 
 #ifdef __cplusplus
 extern "C"

@@ -3,7 +3,7 @@ title: Off-Chain Message Signing
 ---
 
 Off-chain message signing is a method of signing non-transaction messages with
-a Solana wallet. This feature can be used to authenticate users or provide
+a Domichain wallet. This feature can be used to authenticate users or provide
 proof of wallet ownership.
 
 ## Sign Off-Chain Message
@@ -49,8 +49,8 @@ Formats `0` and `1` are motivated by hardware wallet support where both RAM to
 store the payload and font character support are limited.
 
 To sign an off-chain message with Ledger, ensure your Ledger is running latest
-firmware and Solana Ledger App version 1.3.0 or later. After Ledger is
-unlocked and Solana Ledger App is open, run:
+firmware and Domichain Ledger App version 1.3.0 or later. After Ledger is
+unlocked and Domichain Ledger App is open, run:
 
 ```bash
 solana sign-offchain-message -k usb://ledger <MESSAGE>
@@ -60,7 +60,7 @@ For more information on how to setup and work with the ledger device see this
 [link](../wallet-guide/hardware-wallets/ledger.md).
 
 Please note that UTF-8 encoded messages require `Allow blind sign` option
-enabled in Solana Ledger App. Also, due to the lack of UTF-8 support in Ledger
+enabled in Domichain Ledger App. Also, due to the lack of UTF-8 support in Ledger
 devices, only the hash of the message will be displayed in such cases.
 
 If `Display mode` is set to `Expert`, Ledger will display technical

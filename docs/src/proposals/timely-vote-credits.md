@@ -50,7 +50,7 @@ same vote in 2 slots latency, then validators who could land votes
 consistently wihthin 1 slot would have a credits earning advantage over those
 who could not.  Part of the latency when transmitting votes is unavoidable as
 it's a function of geographical distance between the sender and receiver of
-the vote.  The Solana network is spread around the world but it is not evenly
+the vote.  The Domichain network is spread around the world but it is not evenly
 distributed over the whole planet; there are some locations which are, on
 average, more distant from the network than others are.
 

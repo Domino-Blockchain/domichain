@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana bn128 elliptic curve addition, multiplication, and pairing
+ * @brief Domichain bn128 elliptic curve addition, multiplication, and pairing
 **/
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +53,7 @@ extern "C" {
  * @param result 64 byte array to hold the result. ...
  * @return 0 if executed successfully
  */
-@SYSCALL uint64_t sol_alt_bn128_group_op(
+@SYSCALL uint64_t domi_alt_bn128_group_op(
         const uint64_t group_op,
         const uint8_t *input,
         const uint64_t input_size,

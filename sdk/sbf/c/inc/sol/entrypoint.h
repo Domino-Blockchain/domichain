@@ -1,11 +1,11 @@
 #pragma once
 /**
- * @brief Solana program entrypoint
+ * @brief Domichain program entrypoint
  */
 
-#include <sol/constants.h>
-#include <sol/types.h>
-#include <sol/pubkey.h>
+#include <domi/constants.h>
+#include <domi/types.h>
+#include <domi/pubkey.h>
 
 #ifdef __cplusplus
 extern "C" {

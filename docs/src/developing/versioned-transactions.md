@@ -3,13 +3,13 @@ title: Versioned Transactions
 description: ""
 ---
 
-[Versioned Transactions](./versioned-transactions.md) are the new transaction format that allow for additional functionality in the Solana runtime, including [Address Lookup Tables](./lookup-tables.md).
+[Versioned Transactions](./versioned-transactions.md) are the new transaction format that allow for additional functionality in the Domichain runtime, including [Address Lookup Tables](./lookup-tables.md).
 
 While changes to [on chain](./on-chain-programs/overview.md) programs are **NOT** required to support the new functionality of versioned transactions (or for backwards compatibility), developers **WILL** need update their client side code to prevent [errors due to different transaction versions](#max-supported-transaction-version).
 
 ## Current Transaction Versions
 
-The Solana runtime supports two transaction versions:
+The Domichain runtime supports two transaction versions:
 
 - `legacy` - older transaction format with no additional benefit
 - `0` - added support for [Address Lookup Tables](./lookup-tables.md)
@@ -145,5 +145,5 @@ console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
 ## More Resources
 
 - using [Versioned Transactions for Address Lookup Tables](./lookup-tables.md#how-to-create-an-address-lookup-table)
-- view an [example of a v0 transaction](https://explorer.solana.com/tx/3jpoANiFeVGisWRY5UP648xRXs3iQasCHABPWRWnoEjeA93nc79WrnGgpgazjq4K9m8g2NJoyKoWBV1Kx5VmtwHQ/?cluster=devnet) on Solana Explorer
+- view an [example of a v0 transaction](https://explorer.solana.com/tx/3jpoANiFeVGisWRY5UP648xRXs3iQasCHABPWRWnoEjeA93nc79WrnGgpgazjq4K9m8g2NJoyKoWBV1Kx5VmtwHQ/?cluster=devnet) on Domichain Explorer
 - read the [accepted proposal](./../proposals/versioned-transactions.md) for Versioned Transaction and Address Lookup Tables

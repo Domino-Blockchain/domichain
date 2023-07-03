@@ -16,7 +16,7 @@
 //!
 //! [`Sysvar`]: crate::sysvar::Sysvar
 //!
-//! See also the Solana [documentation on the instructions sysvar][sdoc].
+//! See also the Domichain [documentation on the instructions sysvar][sdoc].
 //!
 //! [sdoc]: https://docs.solana.com/developing/runtime-facilities/sysvars#instructions
 //!
@@ -59,7 +59,7 @@ crate::declare_sysvar_id!("Sysvar1nstructions1111111111111111111111111", Instruc
 
 /// Construct the account data for the instructions sysvar.
 ///
-/// This function is used by the runtime and not available to Solana programs.
+/// This function is used by the runtime and not available to Domichain programs.
 #[cfg(not(target_os = "domichain"))]
 pub fn construct_instructions_data(instructions: &[BorrowedInstruction]) -> Vec<u8> {
     let mut data = serialize_instructions(instructions);
@@ -72,7 +72,7 @@ pub fn construct_instructions_data(instructions: &[BorrowedInstruction]) -> Vec<
 /// Borrowed version of `AccountMeta`.
 ///
 /// This struct is used by the runtime when constructing the sysvar. It is not
-/// useful to Solana programs.
+/// useful to Domichain programs.
 pub struct BorrowedAccountMeta<'a> {
     pub pubkey: &'a Pubkey,
     pub is_signer: bool,
@@ -82,7 +82,7 @@ pub struct BorrowedAccountMeta<'a> {
 /// Borrowed version of `Instruction`.
 ///
 /// This struct is used by the runtime when constructing the sysvar. It is not
-/// useful to Solana programs.
+/// useful to Domichain programs.
 pub struct BorrowedInstruction<'a> {
     pub program_id: &'a Pubkey,
     pub accounts: Vec<BorrowedAccountMeta<'a>>,

@@ -30,7 +30,7 @@
 //! }
 //! ```
 //!
-//! Since Solana sysvars are accounts, if the `AccountInfo` is provided to the
+//! Since Domichain sysvars are accounts, if the `AccountInfo` is provided to the
 //! program, then the program can deserialize the sysvar with
 //! [`Sysvar::from_account_info`] to access its data, as in this example that
 //! again logs the [`clock`] sysvar.

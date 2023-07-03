@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana bn128 elliptic curve addition, multiplication, and pairing
+ * @brief Domichain bn128 elliptic curve addition, multiplication, and pairing
 **/
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

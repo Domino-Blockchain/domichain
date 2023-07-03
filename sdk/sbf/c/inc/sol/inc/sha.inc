@@ -1,9 +1,9 @@
 #pragma once
 /**
- * @brief Solana sha system call
+ * @brief Domichain sha system call
  */
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +21,7 @@ extern "C" {
  * @param bytes_len Number of byte arrays
  * @param result 32 byte array to hold the result
  */
-@SYSCALL uint64_t sol_sha256(const SolBytes *, int, uint8_t *);
+@SYSCALL uint64_t sol_sha256(const DomiBytes *, int, uint8_t *);
 
 #ifdef __cplusplus
 }

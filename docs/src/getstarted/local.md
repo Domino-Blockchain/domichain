@@ -1,6 +1,6 @@
 ---
 title: "Local Development Quickstart"
-description: "This quickstart guide will demonstrate how to quickly install and setup your local Solana development environment."
+description: "This quickstart guide will demonstrate how to quickly install and setup your local Domichain development environment."
 keywords:
   - rust
   - cargo
@@ -13,18 +13,18 @@ keywords:
   - web3 developer
 ---
 
-This quickstart guide will demonstrate how to quickly install and setup your local development environment, getting you ready to start developing and deploying Solana programs to the blockchain.
+This quickstart guide will demonstrate how to quickly install and setup your local development environment, getting you ready to start developing and deploying Domichain programs to the blockchain.
 
 ## What you will learn
 
-- How to install the Solana CLI locally
-- How to setup a localhost Solana cluster/validator
-- How to create a Solana wallet for developing
+- How to install the Domichain CLI locally
+- How to setup a localhost Domichain cluster/validator
+- How to create a Domichain wallet for developing
 - How to airdrop DOMI tokens for your wallet
 
-## Install the Solana CLI
+## Install the Domichain CLI
 
-To interact with the Solana network from your terminal, you will need to install the [Solana CLI tool suite](./../cli/install-solana-cli-tools) on your local system.
+To interact with the Domichain network from your terminal, you will need to install the [Domichain CLI tool suite](./../cli/install-solana-cli-tools) on your local system.
 
 <details>
 <summary>macOS / Linux / Windows Subsystem for Linux (WSL)</summary>
@@ -48,7 +48,7 @@ Confirm you have the desired version of `solana` installed by running:
 solana --version
 ```
 
-After a successful install, `solana-install update` may be used to easily update the Solana software to a newer version at any time.
+After a successful install, `solana-install update` may be used to easily update the Domichain software to a newer version at any time.
 
 </details>
 
@@ -66,7 +66,7 @@ After a successful install, `solana-install update` may be used to easily update
     If you are prompted by a pop-up window asking “Do you want to allow this app to
     make changes to your device?”, click Yes.
 
-- Copy and paste the following command, then press Enter to download the Solana
+- Copy and paste the following command, then press Enter to download the Domichain
   installer into a temporary directory:
 
 ```bash
@@ -74,7 +74,7 @@ cmd /c "curl https://release.solana.com/stable/solana-install-init-x86_64-pc-win
 ```
 
 - Copy and paste the following command, then press Enter to install the latest
-  version of Solana. If you see a security pop-up by your system, please select
+  version of Domichain. If you see a security pop-up by your system, please select
   to allow the program to run.
 
 ```bash
@@ -91,28 +91,28 @@ C:\solana-install-tmp\solana-install-init.exe stable
 solana --version
 ```
 
-After a successful install, `solana-install update` may be used to easily update the Solana software to a newer version at any time.
+After a successful install, `solana-install update` may be used to easily update the Domichain software to a newer version at any time.
 </details>
 
 
 ## Setup a localhost blockchain cluster
 
-The Solana CLI comes with the [test validator](./../developing/test-validator.md) built in. This command line tool will allow you to run a full blockchain cluster on your machine.
+The Domichain CLI comes with the [test validator](./../developing/test-validator.md) built in. This command line tool will allow you to run a full blockchain cluster on your machine.
 
 ```bash
 solana-test-validator
 ```
 
 > **PRO TIP:**
-> Run the Solana test validator in a new/separate terminal window that will remain open. The command line program must remain running for your localhost cluster to remain online and ready for action.
+> Run the Domichain test validator in a new/separate terminal window that will remain open. The command line program must remain running for your localhost cluster to remain online and ready for action.
 
-Configure your Solana CLI to use your localhost validator for all your future terminal commands:
+Configure your Domichain CLI to use your localhost validator for all your future terminal commands:
 
 ```bash
 solana config set --url localhost
 ```
 
-At any time, you can view your current Solana CLI configuration settings:
+At any time, you can view your current Domichain CLI configuration settings:
 
 ```bash
 solana config get
@@ -120,7 +120,7 @@ solana config get
 
 ## Create a file system wallet
 
-To deploy a program with Solana CLI, you will need a Solana wallet with DOMI tokens to pay for the cost of transactions.
+To deploy a program with Domichain CLI, you will need a Domichain wallet with DOMI tokens to pay for the cost of transactions.
 
 Let's create a simple file system wallet for testing:
 
@@ -135,7 +135,7 @@ By default, the `solana-keygen` command will create a new file system wallet loc
 
 ### Set your new wallet as default
 
-With your new file system wallet created, you must tell the Solana CLI to use this wallet to deploy and take ownership of your on chain program:
+With your new file system wallet created, you must tell the Domichain CLI to use this wallet to deploy and take ownership of your on chain program:
 
 ```bash
 solana config set -k ~/.config/solana/id.json
@@ -160,7 +160,7 @@ solana balance
 
 ## Next steps
 
-See the links below to learn more about writing Rust based Solana programs:
+See the links below to learn more about writing Rust based Domichain programs:
 
-- [Create and deploy a Solana Rust program](./rust.md)
-- [Overview of writing Solana programs](../developing/on-chain-programs/overview)
+- [Create and deploy a Domichain Rust program](./rust.md)
+- [Overview of writing Domichain programs](../developing/on-chain-programs/overview)

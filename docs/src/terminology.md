@@ -1,6 +1,6 @@
 ---
 title: Terminology
-description: "Learn the essential terminology used throughout the Solana blockchain and development models."
+description: "Learn the essential terminology used throughout the Domichain blockchain and development models."
 keywords:
   - terms
   - dictionary
@@ -9,7 +9,7 @@ keywords:
   - programming models
 ---
 
-The following terms are used throughout the Solana documentation and development ecosystem.
+The following terms are used throughout the Domichain documentation and development ecosystem.
 
 ## account
 
@@ -41,7 +41,7 @@ A contiguous set of [entries](#entry) on the ledger covered by a [vote](#ledger-
 
 ## blockhash
 
-A unique value ([hash](#hash)) that identifies a record (block). Solana computes a blockhash from the last [entry id](#entry-id) of the block.
+A unique value ([hash](#hash)) that identifies a record (block). Domichain computes a blockhash from the last [entry id](#entry-id) of the block.
 
 ## block height
 
@@ -53,7 +53,7 @@ The [validator](#validator) that produces the genesis (first) [block](#block) of
 
 ## BPF loader
 
-The Solana program that owns and loads [BPF](developing/on-chain-programs/faq#berkeley-packet-filter-bpf) smart contract programs, allowing the program to interface with the runtime.
+The Domichain program that owns and loads [BPF](developing/on-chain-programs/faq#berkeley-packet-filter-bpf) smart contract programs, allowing the program to interface with the runtime.
 
 ## client
 
@@ -234,7 +234,7 @@ The private key of a [keypair](#keypair).
 
 ## program
 
-The executable code that interprets the [instructions](#instruction) sent inside of each [transaction](#transaction) on the Solana. These programs are often referred to as "[_smart contracts_](./developing//intro/programs.md)" on other blockchains.
+The executable code that interprets the [instructions](#instruction) sent inside of each [transaction](#transaction) on the Domichain. These programs are often referred to as "[_smart contracts_](./developing//intro/programs.md)" on other blockchains.
 
 ## program derived account (PDA)
 
@@ -374,7 +374,7 @@ A set of [transactions](#transaction) that may be executed in parallel.
 
 ## validator
 
-A full participant in a Solana network [cluster](#cluster) that produces new [blocks](#block). A validator validates the transactions added to the [ledger](#ledger)
+A full participant in a Domichain network [cluster](#cluster) that produces new [blocks](#block). A validator validates the transactions added to the [ledger](#ledger)
 
 ## VDF
 

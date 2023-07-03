@@ -32,7 +32,7 @@ Fact Sheet
 
 ### How Clients Submit Transactions
 
-In Solana, there is no concept of a mempool. All transactions, whether they are
+In Domichain, there is no concept of a mempool. All transactions, whether they are
 initiated programmatically or by an end-user, are efficiently routed to leaders
 so that they can be processed into a block. There are two main ways in which a
 transaction can be sent to leaders:
@@ -64,7 +64,7 @@ forwarding it to the relevant leaders. UDP allows validators to quickly
 communicate with one another, but does not provide any guarantees regarding
 transaction delivery.
 
-Because Solana’s leader schedule is known in advance of every
+Because Domichain’s leader schedule is known in advance of every
 [epoch](../terminology#epoch) (~2 days), an RPC node will
 broadcast its transaction directly to the current and next leaders. This is in
 contrast to other gossip protocols such as Ethereum that propagate transactions
@@ -327,7 +327,7 @@ expired. If the initial blockhash is still valid, it is possible for both
 transactions to be accepted by the network. To an end-user, this would appear as
 if they unintentionally sent the same transaction twice.
 
-In Solana, a dropped transaction can be safely discarded once the blockhash it
+In Domichain, a dropped transaction can be safely discarded once the blockhash it
 references is older than the `lastValidBlockHeight` received from
 `getLatestBlockhash`. Developers should keep track of this
 `lastValidBlockHeight` by querying

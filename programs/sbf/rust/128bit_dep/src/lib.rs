@@ -1,4 +1,4 @@
-//! Solana Rust-based SBF program utility functions and types
+//! Domichain Rust-based SBF program utility functions and types
 
 #![allow(clippy::integer_arithmetic)]
 

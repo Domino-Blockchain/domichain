@@ -1,12 +1,12 @@
 #pragma once
 /**
- * @brief Solana deprecated SBF loader deserializer to be used when deploying
+ * @brief Domichain deprecated SBF loader deserializer to be used when deploying
  * a program with `SBFLoader1111111111111111111111111111111111`
  */
 
- #include <sol/types.h>
- #include <sol/pubkey.h>
- #include <sol/entrypoint.h>
+ #include <domi/types.h>
+ #include <domi/pubkey.h>
+ #include <domi/entrypoint.h>
 
 #ifdef __cplusplus
 extern "C" {

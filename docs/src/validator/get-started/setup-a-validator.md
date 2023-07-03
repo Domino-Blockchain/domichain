@@ -1,11 +1,11 @@
 ---
-title: Setup a Solana Validator
+title: Setup a Domichain Validator
 sidebar_label: Setup a Validator
 ---
 
-This is a guide for getting your validator setup on the Solana testnet cluster for the first time. Testnet is a Solana cluster that is used for performance testing of the software before the software is used on mainnet. Since testnet is stress tested daily, it is a good cluster to practice validator operations.
+This is a guide for getting your validator setup on the Domichain testnet cluster for the first time. Testnet is a Domichain cluster that is used for performance testing of the software before the software is used on mainnet. Since testnet is stress tested daily, it is a good cluster to practice validator operations.
 
-Once you have a working validator on testnet, you will want to learn about [operational best practices](../best-practices/operations.md) in the next section. Although the guide is specific to testnet, it can be adapted to mainnet or devnet as well. Refer to the [clusters](../../clusters) section of the Solana docs to see example commands for each cluster.
+Once you have a working validator on testnet, you will want to learn about [operational best practices](../best-practices/operations.md) in the next section. Although the guide is specific to testnet, it can be adapted to mainnet or devnet as well. Refer to the [clusters](../../clusters) section of the Domichain docs to see example commands for each cluster.
 
 Now let's get started.
 
@@ -17,15 +17,15 @@ To start this guide, you will be running commands on your trusted computer, not 
 - on Ubuntu, you can type `CTRL + Alt + T`.
 - on Windows, you will have to open the command prompt as an Administrator.
 
-## Install The Solana CLI Locally
+## Install The Domichain CLI Locally
 
-To create your validator vote account, you need to install the [Solana command line interface](../../cli.md) on your local computer.
+To create your validator vote account, you need to install the [Domichain command line interface](../../cli.md) on your local computer.
 
-You can either use [Solana's Install Tool](../../cli/install-solana-cli-tools#use-solanas-install-tool) section from the Solana docs to install the CLI, or alternatively, you can also [build from source](../../cli/install-solana-cli-tools#build-from-source).
+You can either use [Domichain's Install Tool](../../cli/install-solana-cli-tools#use-solanas-install-tool) section from the Domichain docs to install the CLI, or alternatively, you can also [build from source](../../cli/install-solana-cli-tools#build-from-source).
 
 > Building from source is a great option for those that want a more secure and potentially more performant executable.
 
-Once the Solana CLI is installed, you can return to this document once you are able to run the following command and get an answer on your terminal:
+Once the Domichain CLI is installed, you can return to this document once you are able to run the following command and get an answer on your terminal:
 
 ```
 solana --version
@@ -73,9 +73,9 @@ solana-keygen new -o authorized-withdrawer-keypair.json
 
 ## Create a Vote Account
 
-Before you can create your vote account, you need to configure the Solana command line tool a bit more.
+Before you can create your vote account, you need to configure the Domichain command line tool a bit more.
 
-The below command sets the default keypair that the Solana CLI uses to the `validator-keypair.json` file that you just created in the terminal:
+The below command sets the default keypair that the Domichain CLI uses to the `validator-keypair.json` file that you just created in the terminal:
 
 ```
 solana config set --keypair ./validator-keypair.json
@@ -95,7 +95,7 @@ solana airdrop 1
 
 > **NOTE** The `airdrop` sub command does not work on mainnet, so you will have to acquire DOMI and transfer it into this keypair's account if you are setting up a mainnet validator.
 
-Now, use the Solana cluster to create a vote account.
+Now, use the Domichain cluster to create a vote account.
 
 As a reminder, all commands mentioned so far **should be done on your trusted computer** and **NOT** on a server where you intend to run your validator. It is especially important that the following command is done on a **trusted computer**:
 
@@ -315,9 +315,9 @@ On the validator server, switch to the `sol` user:
 su - sol
 ```
 
-## Install The Solana CLI on Remote Machine
+## Install The Domichain CLI on Remote Machine
 
-Your remote machine will need the Solana cli installed to run the validator software.  Refer again to [Solana's Install Tool](../../cli/install-solana-cli-tools#use-solanas-install-tool) or [build from source](../../cli/install-solana-cli-tools#build-from-source).  It is best for operators to build from source rather than using the pre built binaries.
+Your remote machine will need the Domichain cli installed to run the validator software.  Refer again to [Domichain's Install Tool](../../cli/install-solana-cli-tools#use-solanas-install-tool) or [build from source](../../cli/install-solana-cli-tools#build-from-source).  It is best for operators to build from source rather than using the pre built binaries.
 
 ## Create A Validator Startup Script
 
@@ -395,7 +395,7 @@ Assuming you do not see any error messages, exit out of the command.
 
 ### Gossip Protocol
 
-Gossip is a protocol used in the Solana clusters to communicate between validator nodes. For more information on gossip, see [Gossip Service](../gossip.md).  To verify that your validator is running properly, make sure that the validator has registered itself with the gossip network.
+Gossip is a protocol used in the Domichain clusters to communicate between validator nodes. For more information on gossip, see [Gossip Service](../gossip.md).  To verify that your validator is running properly, make sure that the validator has registered itself with the gossip network.
 
 In a new terminal window, connect to your server via ssh. Identify your validator's pubkey:
 
@@ -417,7 +417,7 @@ After running the command, you should see a single line that looks like this:
 
 If you do not see any output after grep-ing the output of gossip, your validator may be having startup problems. If that is the case, start debugging by looking through the validator log output.
 
-### Solana Validators
+### Domichain Validators
 
 After you have verified that your validator is in gossip, you can verify that your validator has joined the network using the `solana validators` command. The command lists all validators in the network, but like before, we can `grep` the output for the validator we care about:
 
@@ -431,9 +431,9 @@ You should see a line of output that looks like this:
 5D1fNXzvv5NjV1ysLjirC4WY92RNsVH18vjmcszZd8on  FX6NNbS5GHc2kuzgTZetup6GZX6ReaWyki8Z8jC7rbNG  100%  197434166 (  0)  197434133 (  0)   2.11%   323614  1.14.17   2450110.588302720 DOMI (1.74%)
 ```
 
-### Solana Catchup
+### Domichain Catchup
 
-The `solana catchup` command is a useful tool for seeing how quickly your validator is processing blocks. The Solana network has the capability to produce many transactions per second. Since your validator is new to the network, it has to ask another validator (listed as a `--known-validator` in your startup script) for a recent snapshot of the ledger. By the time you receive the snapshot, you may already be behind the network. Many transactions may have been processed and finalized in that time. In order for your validator to participate in consensus, it must _catchup_ to the rest of the network by asking for the more recent transactions that it does not have.
+The `solana catchup` command is a useful tool for seeing how quickly your validator is processing blocks. The Domichain network has the capability to produce many transactions per second. Since your validator is new to the network, it has to ask another validator (listed as a `--known-validator` in your startup script) for a recent snapshot of the ledger. By the time you receive the snapshot, you may already be behind the network. Many transactions may have been processed and finalized in that time. In order for your validator to participate in consensus, it must _catchup_ to the rest of the network by asking for the more recent transactions that it does not have.
 
 The `solana catchup` command is a tool that tells you how far behind the network your validator is and how quickly you are catching up:
 
@@ -455,7 +455,7 @@ Make sure to implement log rotate as well. Once you have the system service conf
 sudo systemctl enable --now sol
 ```
 
-Now verify that the validator is running properly by tailing the logs and using the commands mentioned earlier to check gossip and Solana validators:
+Now verify that the validator is running properly by tailing the logs and using the commands mentioned earlier to check gossip and Domichain validators:
 
 ```
 tail -f /home/sol/solana-validator*.log
@@ -463,7 +463,7 @@ tail -f /home/sol/solana-validator*.log
 
 ## Monitoring
 
-`solana-watchtower` is a command you can run on a separate machine to monitor your server. You can read more about handling [automatic restarts and monitoring](../best-practices/monitoring.md#solana-watchtower) using Solana Watchtower here in the docs.
+`solana-watchtower` is a command you can run on a separate machine to monitor your server. You can read more about handling [automatic restarts and monitoring](../best-practices/monitoring.md#solana-watchtower) using Domichain Watchtower here in the docs.
 
 ## Common issues
 

@@ -5,7 +5,7 @@ description: ""
 
 Address Lookup Tables, commonly referred to as "_lookup tables_" or "_ALTs_" for short, allow developers to create a collection of related addresses to efficiently load more addresses in a single transaction.
 
-Since each transaction on the Solana blockchain requires a listing of every address that is interacted with as part of the transaction, this listing would effectively be capped at 32 addresses per transaction. With the help of [Address Lookup Tables](./lookup-tables.md), a transaction would now be able to raise that limit to 256 addresses per transaction.
+Since each transaction on the Domichain blockchain requires a listing of every address that is interacted with as part of the transaction, this listing would effectively be capped at 32 addresses per transaction. With the help of [Address Lookup Tables](./lookup-tables.md), a transaction would now be able to raise that limit to 256 addresses per transaction.
 
 ## Compressing on chain addresses
 
@@ -47,7 +47,7 @@ console.log("lookup table address:", lookupTableAddress.toBase58());
 ```
 
 > NOTE:
-> Address lookup tables can be **created** with either a `v0` transaction or a `legacy` transaction. But the Solana runtime can only retrieve and handle the additional addresses within a lookup table while using [v0 Versioned Transactions](./versioned-transactions.md#current-transaction-versions).
+> Address lookup tables can be **created** with either a `v0` transaction or a `legacy` transaction. But the Domichain runtime can only retrieve and handle the additional addresses within a lookup table while using [v0 Versioned Transactions](./versioned-transactions.md#current-transaction-versions).
 
 ## Add addresses to a lookup table
 

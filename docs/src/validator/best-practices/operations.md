@@ -3,17 +3,17 @@ title: Validator Operations Best Practices
 sidebar_label: General Operations
 ---
 
-After you have successfully setup and started a [validator on testnet](../get-started/setup-a-validator.md) (or another cluster of your choice), you will want to become familiar with how to operate your validator on a day-to-day basis. During daily operations, you will be [monitoring your server](./monitoring.md), updating software regularly (both the Solana validator software and operating system packages), and managing your vote account and identity account.
+After you have successfully setup and started a [validator on testnet](../get-started/setup-a-validator.md) (or another cluster of your choice), you will want to become familiar with how to operate your validator on a day-to-day basis. During daily operations, you will be [monitoring your server](./monitoring.md), updating software regularly (both the Domichain validator software and operating system packages), and managing your vote account and identity account.
 
 All of these skills are critical to practice. Maximizing your validator uptime is an important part of being a good operator.
 
 ## Educational Workshops
 
-The Solana validator community holds regular educational workshops. You can watch past workshops through the [solana validator educational workshops playlist](https://www.youtube.com/watch?v=86zySQ5vGW8&list=PLilwLeBwGuK6jKrmn7KOkxRxS9tvbRa5p).
+The Domichain validator community holds regular educational workshops. You can watch past workshops through the [solana validator educational workshops playlist](https://www.youtube.com/watch?v=86zySQ5vGW8&list=PLilwLeBwGuK6jKrmn7KOkxRxS9tvbRa5p).
 
 ## Help with the validator command line
 
-From within the Solana CLI, you can execute the `solana-validator` command with the `--help` flag to get a better understanding of the flags and sub commands available.
+From within the Domichain CLI, you can execute the `solana-validator` command with the `--help` flag to get a better understanding of the flags and sub commands available.
 
 ```
 solana-validator --help
@@ -39,21 +39,21 @@ solana-validator exit --help
 
 ## Upgrading
 
-There are many ways to upgrade the [Solana software](../../cli/install-solana-cli-tools.md). As an operator, you will need to upgrade often, so it is important to get comfortable with this process.
+There are many ways to upgrade the [Domichain software](../../cli/install-solana-cli-tools.md). As an operator, you will need to upgrade often, so it is important to get comfortable with this process.
 
 > **Note** validator nodes do not need to be offline while the newest version is being downloaded or built from source.  All methods below can be done before the validator process is restarted.
 
 ### Building From Source
 
-It is a best practice to always build your Solana binaries from source. If you build from source, you are certain that the code you are building has not been tampered with before the binary was created. You may also be able to optimize your `solana-validator` binary to your specific hardware.
+It is a best practice to always build your Domichain binaries from source. If you build from source, you are certain that the code you are building has not been tampered with before the binary was created. You may also be able to optimize your `solana-validator` binary to your specific hardware.
 
-If you build from source on the validator machine (or a machine with the same CPU), you can target your specific architecture using the `-march` flag. Refer to the Solana docs for [instructions on building from source](../../cli/install-solana-cli-tools.md#build-from-source).
+If you build from source on the validator machine (or a machine with the same CPU), you can target your specific architecture using the `-march` flag. Refer to the Domichain docs for [instructions on building from source](../../cli/install-solana-cli-tools.md#build-from-source).
 
 ### solana-install
 
 If you are not comfortable building from source, or you need to quickly install a new version to test something out, you could instead try using the `solana-install` command.
 
-Assuming you want to install Solana version `1.14.17`, you would execute the following:
+Assuming you want to install Domichain version `1.14.17`, you would execute the following:
 
 ```
 solana-install init 1.14.17
