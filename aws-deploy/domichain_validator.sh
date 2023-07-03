@@ -39,4 +39,4 @@ export PUBKEY
 target/release/domichain airdrop 600 --url "http://$NODE_IP_ADDR:8899/" "$PUBKEY"
 
 export RUST_LOG=INFO
-./multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test --keypair ~/validator-stake-keypair.json
+./multinode-demo/delegate-stake.sh --url "http://$NODE_IP_ADDR:8899/" --label test1 --keypair ~/validator-stake-keypair.json
