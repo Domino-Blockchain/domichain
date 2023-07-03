@@ -91,9 +91,9 @@ impl Tpu {
         gossip_verified_vote_hash_sender: GossipVerifiedVoteHashSender,
         replay_vote_receiver: ReplayVoteReceiver,
         replay_vote_sender: ReplayVoteSender,
-        bank_notification_sender: Option<BankNotificationSender>,
+        bank_notification_sender: Option<BankNotificationSender>, // quorum
         tpu_coalesce_ms: u64,
-        cluster_confirmed_slot_sender: GossipDuplicateConfirmedSlotsSender,
+        cluster_confirmed_slot_sender: GossipDuplicateConfirmedSlotsSender, // majority
         cost_model: &Arc<RwLock<CostModel>>,
         connection_cache: &Arc<ConnectionCache>,
         keypair: &Keypair,
@@ -220,8 +220,8 @@ impl Tpu {
             gossip_verified_vote_hash_sender,
             replay_vote_receiver,
             blockstore.clone(),
-            bank_notification_sender,
-            cluster_confirmed_slot_sender,
+            bank_notification_sender, // quorum
+            cluster_confirmed_slot_sender, // majority
             total_weight,
         );
 
