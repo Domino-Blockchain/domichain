@@ -75,7 +75,7 @@ digest from the assertion test error message.
 
 Run unit tests using the following command to generate digest values:
 ```
-SOLANA_ABI_DUMP_DIR=. cargo +nightly test abi
+DOMICHAIN_ABI_DUMP_DIR=. cargo +nightly test abi
 ```
 
 In general, once we add `frozen_abi` and its change is published in the stable

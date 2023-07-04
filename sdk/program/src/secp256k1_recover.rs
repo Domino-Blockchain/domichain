@@ -158,7 +158,7 @@ impl Secp256k1Pubkey {
 /// a unique representation this can be the source of bugs, potentially with
 /// security implications.
 ///
-/// **The solana `secp256k1_recover` function does not prevent signature
+/// **The domichain `secp256k1_recover` function does not prevent signature
 /// malleability**. This is in contrast to the Bitcoin secp256k1 library, which
 /// does prevent malleability by default. Domichain accepts signatures with `S`
 /// values that are either in the _high order_ or in the _low order_, and it

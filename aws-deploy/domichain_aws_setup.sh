@@ -47,8 +47,8 @@ git clone git@github.com:solana-labs/solana-perf-libs.git ~/solana-perf-libs
 cd ~/solana-perf-libs
 export PATH=/usr/local/cuda/bin:$PATH
 make -j$(nproc)
-export SOLANA_ROOT=/home/ubuntu/domichain
-make DESTDIR=${SOLANA_ROOT:?}/target/perf-libs install
+export DOMICHAIN_ROOT=/home/ubuntu/domichain
+make DESTDIR=${DOMICHAIN_ROOT:?}/target/perf-libs install
 
 echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
 echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf

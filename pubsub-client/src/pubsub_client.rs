@@ -227,7 +227,7 @@ where
 
         if let Ok(json_msg) = serde_json::from_str::<Map<String, Value>>(message_text) {
             if let Some(Object(version_map)) = json_msg.get("result") {
-                if let Some(node_version) = version_map.get("solana-core") {
+                if let Some(node_version) = version_map.get("domichain-core") {
                     if let Some(node_version) = node_version.as_str() {
                         if let Ok(parsed) = semver::Version::parse(node_version) {
                             return Ok(parsed);
@@ -584,7 +584,7 @@ impl PubsubClient {
     /// votes are observed prior to confirmation and may never be confirmed.
     ///
     /// This method is disabled by default. It can be enabled by passing
-    /// `--rpc-pubsub-enable-vote-subscription` to `solana-validator`.
+    /// `--rpc-pubsub-enable-vote-subscription` to `domichain-validator`.
     ///
     /// # RPC Reference
     ///

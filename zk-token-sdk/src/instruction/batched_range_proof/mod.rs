@@ -24,7 +24,7 @@ use {
     crate::zk_token_elgamal::pod,
     bytemuck::{Pod, Zeroable},
 };
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
@@ -49,7 +49,7 @@ pub struct BatchedRangeProofContext {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl BatchedRangeProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"BatchedRangeProof");
@@ -97,7 +97,7 @@ impl BatchedRangeProofContext {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext {
     type Error = ProofError;
 

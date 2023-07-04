@@ -1,6 +1,6 @@
 //! The 64-bit batched range proof instruction.
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
@@ -32,7 +32,7 @@ pub struct BatchedRangeProofU64Data {
     pub proof: pod::RangeProofU64,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl BatchedRangeProofU64Data {
     pub fn new(
         commitments: Vec<&PedersenCommitment>,
@@ -71,7 +71,7 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU64Data {
         &self.context
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let mut transcript = self.context_data().new_transcript();

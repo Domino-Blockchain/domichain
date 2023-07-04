@@ -331,7 +331,7 @@ pub struct RpcBlockProduction {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub struct RpcVersionInfo {
-    /// The current version of solana-core
+    /// The current version of domichain-core
     pub domichain_core: String,
     /// first 4 bytes of the FeatureSet identifier
     pub feature_set: Option<u32>,

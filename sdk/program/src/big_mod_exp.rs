@@ -10,7 +10,7 @@ pub struct BigModExpParams {
 
 /// Big integer modular exponentiation
 pub fn big_mod_exp(base: &[u8], exponent: &[u8], modulus: &[u8]) -> Vec<u8> {
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     {
         use {
             num_bigint::BigUint,
@@ -33,7 +33,7 @@ pub fn big_mod_exp(base: &[u8], exponent: &[u8], modulus: &[u8]) -> Vec<u8> {
         return_value
     }
 
-    #[cfg(target_os = "solana")]
+    #[cfg(target_os = "domichain")]
     {
         let mut return_value = vec![0_u8; modulus.len()];
 

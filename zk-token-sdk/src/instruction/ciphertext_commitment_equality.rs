@@ -5,7 +5,7 @@
 //! encrypts/encodes the same message. To generate the proof, a prover must provide the decryption
 //! key for the first ciphertext and the Pedersen opening for the commitment.
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::{
@@ -52,7 +52,7 @@ pub struct CiphertextCommitmentEqualityProofContext {
     pub commitment: pod::PedersenCommitment, // 32 bytes
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CiphertextCommitmentEqualityProofData {
     pub fn new(
         keypair: &ElGamalKeypair,
@@ -90,7 +90,7 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
         &self.context
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
 
@@ -106,7 +106,7 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CiphertextCommitmentEqualityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"CtxtCommEqualityProof");

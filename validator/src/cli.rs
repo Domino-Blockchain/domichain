@@ -2028,7 +2028,7 @@ fn hash_validator(hash: String) -> Result<(), String> {
 /// Test validator
 
 pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<'a, 'a> {
-    return App::new("solana-test-validator")
+    return App::new("domichain-test-validator")
         .about("Test Validator")
         .version(version)
         .arg({
@@ -2144,7 +2144,7 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 .value_name("INSTANCE_NAME")
                 .takes_value(true)
                 .hidden(hidden_unless_forced())
-                .default_value("solana-ledger")
+                .default_value("domichain-ledger")
                 .help("Name of BigTable instance to target"),
         )
         .arg(
@@ -2204,7 +2204,7 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 .allow_hyphen_values(true)
                 .multiple(true)
                 .help(
-                    "Load an account from the provided JSON file (see `solana account --help` on how to dump \
+                    "Load an account from the provided JSON file (see `domichain account --help` on how to dump \
                         an account to file). Files are searched for relatively to CWD and tests/fixtures. \
                         If ADDRESS is omitted via the `-` placeholder, the one in the file will be used. \
                         If the ledger already exists then this parameter is silently ignored",
@@ -2483,7 +2483,7 @@ impl DefaultTestArgs {
             faucet_port: FAUCET_PORT.to_string(),
             /* 10,000 was derived empirically by watching the size
              * of the rocksdb/ directory self-limit itself to the
-             * 40MB-150MB range when running `solana-test-validator`
+             * 40MB-150MB range when running `domichain-test-validator`
              */
             limit_ledger_size: 10_000.to_string(),
             faucet_sol: (1_000_000.).to_string(),

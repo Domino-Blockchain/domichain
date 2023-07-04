@@ -4,7 +4,7 @@
 //! certain range. Currently, only 64-bit range proof `VerifyRangeProofU64` is supported in the
 //! proof program. It certifies that a committed number is an unsigned 64-bit number.
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
@@ -44,7 +44,7 @@ pub struct RangeProofU64Data {
     pub proof: pod::RangeProofU64,
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl RangeProofU64Data {
     pub fn new(
         commitment: &PedersenCommitment,
@@ -78,7 +78,7 @@ impl ZkProofData<RangeProofContext> for RangeProofU64Data {
         &self.context
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context_data().new_transcript();
         let commitment = self.context.commitment.try_into()?;
@@ -92,7 +92,7 @@ impl ZkProofData<RangeProofContext> for RangeProofU64Data {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl RangeProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"RangeProof");

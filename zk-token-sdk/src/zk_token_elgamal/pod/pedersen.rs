@@ -4,7 +4,7 @@ use {
     crate::zk_token_elgamal::pod::{Pod, Zeroable},
     std::fmt,
 };
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{encryption::pedersen as decoded, errors::ProofError},
     curve25519_dalek::ristretto::CompressedRistretto,
@@ -21,7 +21,7 @@ impl fmt::Debug for PedersenCommitment {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl From<decoded::PedersenCommitment> for PedersenCommitment {
     fn from(decoded_commitment: decoded::PedersenCommitment) -> Self {
         Self(decoded_commitment.to_bytes())
@@ -29,14 +29,14 @@ impl From<decoded::PedersenCommitment> for PedersenCommitment {
 }
 
 // For proof verification, interpret pod::PedersenCommitment directly as CompressedRistretto
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl From<PedersenCommitment> for CompressedRistretto {
     fn from(pod_commitment: PedersenCommitment) -> Self {
         Self(pod_commitment.0)
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<PedersenCommitment> for decoded::PedersenCommitment {
     type Error = ProofError;
 

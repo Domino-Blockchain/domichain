@@ -163,7 +163,7 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             } else if matches.is_present(NO_OUTFILE_ARG.name) {
                 None
             } else {
-                path.extend([".config", "solana", key_type.default_file_name()]);
+                path.extend([".config", "domichain", key_type.default_file_name()]);
                 Some(path.to_str().unwrap())
             };
 
@@ -233,7 +233,7 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             let path = if matches.is_present("keypair") {
                 matches.value_of("keypair").unwrap()
             } else {
-                path.extend([".config", "solana", key_type.default_file_name()]);
+                path.extend([".config", "domichain", key_type.default_file_name()]);
                 path.to_str().unwrap()
             };
 
@@ -255,7 +255,7 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             let outfile = if matches.is_present("outfile") {
                 matches.value_of("outfile").unwrap()
             } else {
-                path.extend([".config", "solana", key_type.default_file_name()]);
+                path.extend([".config", "domichain", key_type.default_file_name()]);
                 path.to_str().unwrap()
             };
 
@@ -358,7 +358,7 @@ mod tests {
 
         // general success case
         process_test_command(&[
-            "solana-zk-keygen",
+            "domichain-zk-keygen",
             "new",
             "elgamal",
             "--outfile",
@@ -369,7 +369,7 @@ mod tests {
 
         // refuse to overwrite file
         let result = process_test_command(&[
-            "solana-zk-keygen",
+            "domichain-zk-keygen",
             "new",
             "elgamal",
             "--outfile",
@@ -384,7 +384,7 @@ mod tests {
 
         // no outfile
         process_test_command(&[
-            "solana-keygen",
+            "domichain-keygen",
             "new",
             "elgamal",
             "--no-bip39-passphrase",
@@ -401,7 +401,7 @@ mod tests {
 
         // general success case
         process_test_command(&[
-            "solana-zk-keygen",
+            "domichain-zk-keygen",
             "new",
             "aes128",
             "--outfile",
@@ -412,7 +412,7 @@ mod tests {
 
         // refuse to overwrite file
         let result = process_test_command(&[
-            "solana-zk-keygen",
+            "domichain-zk-keygen",
             "new",
             "aes128",
             "--outfile",
@@ -427,7 +427,7 @@ mod tests {
 
         // no outfile
         process_test_command(&[
-            "solana-keygen",
+            "domichain-keygen",
             "new",
             "aes128",
             "--no-bip39-passphrase",
@@ -445,6 +445,6 @@ mod tests {
         let keypair = ElGamalKeypair::new_rand();
         keypair.write_to_file(&keypair_path).unwrap();
 
-        process_test_command(&["solana-keygen", "pubkey", "elgamal", &keypair_path]).unwrap();
+        process_test_command(&["domichain-keygen", "pubkey", "elgamal", &keypair_path]).unwrap();
     }
 }

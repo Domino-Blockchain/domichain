@@ -21,17 +21,17 @@ spl() {
     rm -rf spl
     git clone https://github.com/solana-labs/solana-program-library.git spl
     # copy toolchain file to use solana's rust version
-    cp "$SOLANA_DIR"/rust-toolchain.toml spl/
+    cp "$DOMICHAIN_DIR"/rust-toolchain.toml spl/
     cd spl || exit 1
 
     project_used_domichain_version=$(sed -nE 's/solana-sdk = \"[>=<~]*(.*)\"/\1/p' <"token/program/Cargo.toml")
     echo "used solana version: $project_used_domichain_version"
-    if semverGT "$project_used_domichain_version" "$SOLANA_VER"; then
+    if semverGT "$project_used_domichain_version" "$DOMICHAIN_VER"; then
       echo "skip"
       return
     fi
 
-    ./patch.crates-io.sh "$SOLANA_DIR"
+    ./patch.crates-io.sh "$DOMICHAIN_DIR"
 
     for program in "${PROGRAMS[@]}"; do
       $CARGO_BUILD_SBF --manifest-path "$program"/Cargo.toml

@@ -1,7 +1,7 @@
 //! Plain Old Data types for range proofs.
 
 use crate::zk_token_elgamal::pod::{Pod, Zeroable};
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use crate::{
     errors::ProofVerificationError,
     range_proof::{self as decoded, errors::RangeProofError},
@@ -12,7 +12,7 @@ use crate::{
 #[repr(transparent)]
 pub struct RangeProofU64(pub [u8; 672]);
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<decoded::RangeProof> for RangeProofU64 {
     type Error = RangeProofError;
 
@@ -34,7 +34,7 @@ impl TryFrom<decoded::RangeProof> for RangeProofU64 {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<RangeProofU64> for decoded::RangeProof {
     type Error = RangeProofError;
 
@@ -48,7 +48,7 @@ impl TryFrom<RangeProofU64> for decoded::RangeProof {
 #[repr(transparent)]
 pub struct RangeProofU128(pub [u8; 736]);
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<decoded::RangeProof> for RangeProofU128 {
     type Error = RangeProofError;
 
@@ -70,7 +70,7 @@ impl TryFrom<decoded::RangeProof> for RangeProofU128 {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<RangeProofU128> for decoded::RangeProof {
     type Error = RangeProofError;
 
@@ -84,7 +84,7 @@ impl TryFrom<RangeProofU128> for decoded::RangeProof {
 #[repr(transparent)]
 pub struct RangeProofU256(pub [u8; 800]);
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<decoded::RangeProof> for RangeProofU256 {
     type Error = RangeProofError;
 
@@ -106,7 +106,7 @@ impl TryFrom<decoded::RangeProof> for RangeProofU256 {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl TryFrom<RangeProofU256> for decoded::RangeProof {
     type Error = RangeProofError;
 

@@ -27,9 +27,9 @@ fi
 source ci/upload-ci-artifact.sh
 
 cat >release.solana.com-install <<EOF
-SOLANA_RELEASE=$CHANNEL_OR_TAG
+DOMICHAIN_RELEASE=$CHANNEL_OR_TAG
 DOMICHAIN_INSTALL_INIT_ARGS=$CHANNEL_OR_TAG
-SOLANA_DOWNLOAD_ROOT=https://release.solana.com
+DOMICHAIN_DOWNLOAD_ROOT=https://release.solana.com
 EOF
 cat install/solana-install-init.sh >>release.solana.com-install
 

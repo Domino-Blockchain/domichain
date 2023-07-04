@@ -8,7 +8,7 @@
 //! The first ciphertext associated with the proof is referred to as the "source" ciphertext. The
 //! second ciphertext associated with the proof is referred to as the "destination" ciphertext.
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 use {
     crate::{
         encryption::{
@@ -56,7 +56,7 @@ pub struct CiphertextCiphertextEqualityProofContext {
     pub destination_ciphertext: pod::ElGamalCiphertext, // 64 bytes
 }
 
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CiphertextCiphertextEqualityProofData {
     pub fn new(
         source_keypair: &ElGamalKeypair,
@@ -103,7 +103,7 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
         &self.context
     }
 
-    #[cfg(not(target_os = "solana"))]
+    #[cfg(not(target_os = "domichain"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
 
@@ -126,7 +126,7 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "domichain"))]
 impl CiphertextCiphertextEqualityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"CiphertextCiphertextEqualityProof");

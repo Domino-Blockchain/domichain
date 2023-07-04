@@ -1,4 +1,4 @@
-#![cfg(target_os = "solana")]
+#![cfg(target_os = "domichain")]
 
 use domichain_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,

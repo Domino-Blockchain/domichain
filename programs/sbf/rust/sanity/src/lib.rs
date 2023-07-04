@@ -59,7 +59,7 @@ pub fn process_instruction(
 
     {
         // Test - arch config
-        #[cfg(not(target_os = "solana"))]
+        #[cfg(not(target_os = "domichain"))]
         panic!();
     }
 
