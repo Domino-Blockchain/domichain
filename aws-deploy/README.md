@@ -1,3 +1,14 @@
+First time use:
+
+1. copy init.d scripts into /etc/systemd/system/
+2. install nginx
+3. copy nginx files into /etc/nginx/sites-available and create symlink into /etc/
+4. install certbot
+5. $ sudo certbox --nginx
+6. start and enable nginx and explorer
+
+FYI: domichain init.d script will be done soon.
+
 Usage:
 
 ```bash
