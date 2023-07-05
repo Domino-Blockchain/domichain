@@ -249,57 +249,16 @@ pub(crate) fn bank_from_streams<R>(
 where
     R: Read,
 {
-    // macro_rules! INTO {
-    //     ($style:ident) => {{
-    //         let (full_snapshot_bank_fields, full_snapshot_accounts_db_fields) =
-    //             $style::Context::deserialize_bank_fields(snapshot_streams.full_snapshot_stream)?;
-    //         let (incremental_snapshot_bank_fields, incremental_snapshot_accounts_db_fields) =
-    //             if let Some(ref mut incremental_snapshot_stream) =
-    //                 snapshot_streams.incremental_snapshot_stream
-    //             {
-    //                 let (bank_fields, accounts_db_fields) =
-    //                     $style::Context::deserialize_bank_fields(incremental_snapshot_stream)?;
-    //                 (Some(bank_fields), Some(accounts_db_fields))
-    //             } else {
-    //                 (None, None)
-    //             };
-    //
-    //         let snapshot_accounts_db_fields = SnapshotAccountsDbFields {
-    //             full_snapshot_accounts_db_fields,
-    //             incremental_snapshot_accounts_db_fields,
-    //         };
-    //         // reconstruct_bank_from_fields
-    //         let bank = reconstruct_bank_from_fields(
-    //             incremental_snapshot_bank_fields.unwrap_or(full_snapshot_bank_fields),
-    //             snapshot_accounts_db_fields,
-    //             genesis_config,
-    //             account_paths,
-    //             unpacked_append_vec_map,
-    //             debug_keys,
-    //             additional_builtins,
-    //             account_secondary_indexes,
-    //             caching_enabled,
-    //             limit_load_slot_count_from_snapshot,
-    //             shrink_ratio,
-    //             verify_index,
-    //             accounts_db_config,
-    //             accounts_update_notifier,
-    //             accounts_db_skip_shrink,
-    //         )?;
-    //         Ok(bank)
-    //     }};
-    // }
-    match serde_style {
-        SerdeStyle::Newer => {
-            // INTO!(newer)
+    macro_rules! INTO {
+        ($style:ident) => {{
             let (full_snapshot_bank_fields, full_snapshot_accounts_db_fields) =
-                newer::Context::deserialize_bank_fields(snapshot_streams.full_snapshot_stream)?;
+                $style::Context::deserialize_bank_fields(snapshot_streams.full_snapshot_stream)?;
             let (incremental_snapshot_bank_fields, incremental_snapshot_accounts_db_fields) =
                 if let Some(ref mut incremental_snapshot_stream) =
                     snapshot_streams.incremental_snapshot_stream
                 {
                     let (bank_fields, accounts_db_fields) =
-                        newer::Context::deserialize_bank_fields(incremental_snapshot_stream)?;
+                        $style::Context::deserialize_bank_fields(incremental_snapshot_stream)?;
                     (Some(bank_fields), Some(accounts_db_fields))
                 } else {
                     (None, None)
@@ -309,7 +268,6 @@ where
                 full_snapshot_accounts_db_fields,
                 incremental_snapshot_accounts_db_fields,
             };
-            // reconstruct_bank_from_fields
             let bank = reconstruct_bank_from_fields(
                 incremental_snapshot_bank_fields.unwrap_or(full_snapshot_bank_fields),
                 snapshot_accounts_db_fields,
@@ -329,7 +287,10 @@ where
                 vote_tracker,
             )?;
             Ok(bank)
-        },
+        }};
+    }
+    match serde_style {
+        SerdeStyle::Newer => INTO!(newer),
     }
     .map_err(|err| {
         warn!("bankrc_from_stream error: {:?}", err);

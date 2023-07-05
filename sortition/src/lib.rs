@@ -17,9 +17,9 @@ pub fn select(
 }
 
 fn get_cratio(vrf_output: Hash) -> f64 {
-    let t = U256::from_little_endian(vrf_output.as_ref()).to_f64_lossy();
-    let max_float = U256::MAX.to_f64_lossy();
-    t / max_float
+    let t = U256::from_little_endian(vrf_output.as_ref()).to_f64_lossy(); // 0 - U256
+    let max_float = U256::MAX.to_f64_lossy(); // U256
+    t / max_float // 0.0 - 1.0
 }
 
 fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
@@ -30,6 +30,7 @@ fn sortition_binomial_cdf_walk(n: u64, p: f64, ratio: f64, money: u64) -> u64 {
             return j;
         }
     }
+    // almost never
     return money;
 }
 

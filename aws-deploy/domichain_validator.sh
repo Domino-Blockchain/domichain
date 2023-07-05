@@ -11,8 +11,8 @@ set -o verbose
 #    echo "No argument supplied: you must supply private IP address or bootstrap node"
 #    exit 1
 #fi
-#export NODE_IP_ADDR="$1" # Get form main node: hostname -I | cut -d' ' -f1
-#export URL="http://$NODE_IP_ADDR:8899/"
+export NODE_IP_ADDR="$1" # Get form main node: hostname -I | cut -d' ' -f1
+export URL="http://$NODE_IP_ADDR:8899/"
 
 cd ~/domichain
 rm -rf ~/domichain/config
@@ -20,21 +20,21 @@ rm -rf ~/domichain/config
 screen -d -m -S sys-tuner bash -c 'sudo $(command -v domichain-sys-tuner) --user $(whoami)'
 
 slots_per_epoch=
-if [ -n "$1" ]
+if [ -n "$2" ]
   then
-    slots_per_epoch=" --slots-per-epoch $1"
+    slots_per_epoch=" --slots-per-epoch $2"
 fi
 
 airdrop_amount=600
-if [ -n "$2" ]
+if [ -n "$3" ]
   then
-    airdrop_amount=$2
+    airdrop_amount=$3
 fi
 
 WAIT_TIMEOUT=200
-if [ -n "$3" ]
+if [ -n "$4" ]
   then
-    WAIT_TIMEOUT=$3
+    WAIT_TIMEOUT=$4
 fi
 export WAIT_TIMEOUT
 

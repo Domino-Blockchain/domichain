@@ -787,7 +787,7 @@ impl Validator {
             json_rpc_service,
             pubsub_service,
             optimistically_confirmed_bank_tracker,
-            bank_notification_sender,
+            bank_notification_sender, // quorum
         ) = if let Some((rpc_addr, rpc_pubsub_addr)) = config.rpc_addrs {
             if ContactInfo::is_valid_address(&node.info.rpc, &socket_addr_space) {
                 assert!(ContactInfo::is_valid_address(
@@ -846,7 +846,7 @@ impl Validator {
                     Some(pubsub_service)
                 },
                 Some(OptimisticallyConfirmedBankTracker::new(
-                    bank_notification_receiver,
+                    bank_notification_receiver, // quorum
                     &exit,
                     bank_forks.clone(),
                     optimistically_confirmed_bank,
@@ -946,7 +946,7 @@ impl Validator {
         let (retransmit_slots_sender, retransmit_slots_receiver) = unbounded();
         let (verified_vote_sender, verified_vote_receiver) = unbounded();
         let (gossip_verified_vote_hash_sender, gossip_verified_vote_hash_receiver) = unbounded();
-        let (cluster_confirmed_slot_sender, cluster_confirmed_slot_receiver) = unbounded();
+        let (cluster_confirmed_slot_sender, cluster_confirmed_slot_receiver) = unbounded(); // majority
 
         let rpc_completed_slots_service = RpcCompletedSlotsService::spawn(
             completed_slots_receiver,
@@ -987,7 +987,7 @@ impl Validator {
             replay_vote_sender.clone(),
             completed_data_sets_sender,
             bank_notification_sender.clone(),
-            cluster_confirmed_slot_receiver,
+            cluster_confirmed_slot_receiver, // majority
             TvuConfig {
                 max_ledger_shreds: config.max_ledger_shreds,
                 shred_version: node.info.shred_version,
@@ -1043,9 +1043,9 @@ impl Validator {
             gossip_verified_vote_hash_sender,
             replay_vote_receiver,
             replay_vote_sender,
-            bank_notification_sender,
+            bank_notification_sender, // quorum
             config.tpu_coalesce_ms,
-            cluster_confirmed_slot_sender,
+            cluster_confirmed_slot_sender, // majority
             &cost_model,
             &connection_cache,
             &identity_keypair,
