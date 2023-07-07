@@ -688,25 +688,24 @@ fn nonced_transfer_with_padding(
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
     let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
-    todo!()
-    // let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
-    //     wrap_instruction(
-    //         instruction_padding_config.program_id,
-    //         transfer_instruction,
-    //         vec![],
-    //         instruction_padding_config.data_size,
-    //     )
-    //     .expect("Could not create padded instruction")
-    // } else {
-    //     transfer_instruction
-    // };
-    // let message = Message::new_with_nonce(
-    //     vec![instruction],
-    //     Some(&from_pubkey),
-    //     nonce_account,
-    //     &nonce_authority.pubkey(),
-    // );
-    // Transaction::new(&[from_keypair, nonce_authority], message, nonce_hash)
+    let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
+        wrap_instruction(
+            instruction_padding_config.program_id.into(),
+            transfer_instruction.into(),
+            vec![],
+            instruction_padding_config.data_size,
+        )
+        .expect("Could not create padded instruction")
+    } else {
+        transfer_instruction.into()
+    };
+    let message = Message::new_with_nonce(
+        vec![instruction.into()],
+        Some(&from_pubkey),
+        nonce_account,
+        &nonce_authority.pubkey(),
+    );
+    Transaction::new(&[from_keypair, nonce_authority], message, nonce_hash)
 }
 
 fn generate_nonced_system_txs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(

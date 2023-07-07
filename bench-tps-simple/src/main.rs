@@ -1,5 +1,5 @@
 use domichain_client::nonce_utils;
-use domichain_sdk::{system_instruction, nonce::State, transaction::Transaction, commitment_config::CommitmentConfig};
+use domichain_sdk::{system_instruction, nonce::State, transaction::Transaction};
 
 use {
     clap::{value_t, ArgMatches},
@@ -21,12 +21,6 @@ use {
 };
 
 fn get_bench_client(cli_config: &cli::Config, matches: &ArgMatches) -> ThinClient {
-    let cli::Config {
-        use_quic,
-        tpu_connection_pool_size,
-        ..
-    } = &cli_config;
-    
     let connection_cache =
         Arc::new(ConnectionCache::new("bench-tps-simple"));
     
@@ -234,16 +228,6 @@ fn do_bench_tps_simple(
         let from_balance = client.get_balance(&from.pubkey());
         let to_balance = client.get_balance(&to.pubkey());
         let nonce_balances: u64 = nonce_pks.iter().map(|nonce| client.get_balance(nonce).unwrap()).sum();
-
-        let new_blockhashes: Vec<_> = nonce_pks.iter().map(|nonce| {
-            let nonce_account = {
-                use domichain_sdk::client::SyncClient;
-                SyncClient::get_account_with_commitment(&client, nonce, CommitmentConfig::processed()).unwrap().unwrap()
-            };
-            let nonce_data = nonce_utils::data_from_account(&nonce_account).unwrap();
-            let new_blockhash = nonce_data.blockhash();
-            new_blockhash
-        }).collect();
 
         info!("Token balance: From {from_balance:?} To {to_balance:?} Nonce {nonce_balances:?}");
 

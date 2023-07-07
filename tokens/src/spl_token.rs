@@ -53,28 +53,27 @@ pub fn build_spl_token_instructions(
     let associated_token_address =
         get_associated_token_address(&wallet_address, &spl_token_args.mint.into());
     let mut instructions = vec![];
-    todo!();
-    // if do_create_associated_token_account {
-    //     instructions.push(create_associated_token_account(
-    //         &args.fee_payer.pubkey().into(),
-    //         &wallet_address,
-    //         &spl_token_args.mint.into(),
-    //         &spl_token::id(),
-    //     ));
-    // }
-    // instructions.push(
-    //     spl_token::instruction::transfer_checked(
-    //         &spl_token::id(),
-    //         &spl_token_args.token_account_address.into(),
-    //         &spl_token_args.mint.into(),
-    //         &associated_token_address,
-    //         &args.sender_keypair.pubkey().into(),
-    //         &[],
-    //         allocation.amount,
-    //         spl_token_args.decimals,
-    //     )
-    //     .unwrap(),
-    // );
+    if do_create_associated_token_account {
+        instructions.push(create_associated_token_account(
+            &args.fee_payer.pubkey().into(),
+            &wallet_address,
+            &spl_token_args.mint.into(),
+            &spl_token::id(),
+        ).into());
+    }
+    instructions.push(
+        spl_token::instruction::transfer_checked(
+            &spl_token::id(),
+            &spl_token_args.token_account_address.into(),
+            &spl_token_args.mint.into(),
+            &associated_token_address,
+            &args.sender_keypair.pubkey().into(),
+            &[],
+            allocation.amount,
+            spl_token_args.decimals,
+        )
+        .unwrap().into(),
+    );
     instructions
 }
 

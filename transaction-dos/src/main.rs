@@ -114,8 +114,7 @@ fn make_create_message(
         &program_id,
     )];
 
-    todo!()
-    // Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 fn make_dos_message(
@@ -132,8 +131,7 @@ fn make_dos_message(
         })
         .collect();
 
-    todo!()
-    // Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 /// creates large transactions that all touch the same set of accounts,

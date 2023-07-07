@@ -23,7 +23,7 @@ impl SocketAddrSpace {
         }
         // TODO: remove these once IpAddr::is_global is stable.
         match addr.ip() {
-            IpAddr::V4(addr) => {
+            IpAddr::V4(_addr) => {
                 // TODO: Consider excluding:
                 //    addr.is_link_local() || addr.is_broadcast()
                 // || addr.is_documentation() || addr.is_unspecified()

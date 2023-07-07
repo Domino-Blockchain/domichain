@@ -52,7 +52,6 @@ use {
         system_program,
         transaction::{Transaction, TransactionError},
     },
-    solana_rbpf::vm::Config,
     std::{
         fs::File,
         io::{Read, Write},

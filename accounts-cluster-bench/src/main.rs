@@ -157,25 +157,23 @@ fn make_create_message(
                 space,
                 &program_id,
             )];
-            todo!();
-            // if let Some(mint_address) = mint {
-            //     instructions.push(
-            //         spl_token::instruction::initialize_account(
-            //             &spl_token::id(),
-            //             &to_pubkey.into(),
-            //             &mint_address.into(),
-            //             &base_keypair.pubkey().into(),
-            //         )
-            //         .unwrap(),
-            //     );
-            // }
+            if let Some(mint_address) = mint {
+                instructions.push(
+                    spl_token::instruction::initialize_account(
+                        &spl_token::id(),
+                        &to_pubkey.into(),
+                        &mint_address.into(),
+                        &base_keypair.pubkey().into(),
+                    )
+                    .unwrap().into(),
+                );
+            }
 
             instructions
         })
         .collect();
 
-    todo!()
-    // Message::new(&instructions, Some(&keypair.pubkey()))
+    Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 fn make_close_message(
@@ -187,50 +185,47 @@ fn make_close_message(
     balance: u64,
     spl_token: bool,
 ) -> Message {
-    todo!()
-    // let instructions: Vec<_> = (0..num_instructions)
-    //     .filter_map(|_| {
-    //         let program_id = if spl_token {
-    //             inline_spl_token::id()
-    //         } else {
-    //             system_program::id()
-    //         };
-    //         let max_created_seed = max_created.load(Ordering::Relaxed);
-    //         let max_closed_seed = max_closed.load(Ordering::Relaxed);
-    //         todo!()
-    //         // if max_closed_seed >= max_created_seed {
-    //         //     return None;
-    //         // }
-    //         // let seed = max_closed.fetch_add(1, Ordering::Relaxed).to_string();
-    //         // let address =
-    //         //     Pubkey::create_with_seed(&base_keypair.pubkey(), &seed, &program_id).unwrap();
-    //         //
-    //         // if spl_token {
-    //         //     Some(
-    //         //         spl_token::instruction::close_account(
-    //         //             &spl_token::id(),
-    //         //             &address.into(),
-    //         //             &keypair.pubkey().into(),
-    //         //             &base_keypair.pubkey().into(),
-    //         //             &[],
-    //         //         )
-    //         //         .unwrap(),
-    //         //     )
-    //         // } else {
-    //         //     Some(system_instruction::transfer_with_seed(
-    //         //         &address,
-    //         //         &base_keypair.pubkey(),
-    //         //         seed,
-    //         //         &program_id,
-    //         //         &keypair.pubkey(),
-    //         //         balance,
-    //         //     ))
-    //         // }
-    //     })
-    //     .collect();
-    //
-    // todo!()
-    // Message::new(&instructions, Some(&keypair.pubkey()))
+    let instructions: Vec<_> = (0..num_instructions)
+        .filter_map(|_| {
+            let program_id = if spl_token {
+                inline_spl_token::id()
+            } else {
+                system_program::id()
+            };
+            let max_created_seed = max_created.load(Ordering::Relaxed);
+            let max_closed_seed = max_closed.load(Ordering::Relaxed);
+            if max_closed_seed >= max_created_seed {
+                return None;
+            }
+            let seed = max_closed.fetch_add(1, Ordering::Relaxed).to_string();
+            let address =
+                Pubkey::create_with_seed(&base_keypair.pubkey(), &seed, &program_id).unwrap();
+            
+            if spl_token {
+                Some(
+                    spl_token::instruction::close_account(
+                        &spl_token::id(),
+                        &address.into(),
+                        &keypair.pubkey().into(),
+                        &base_keypair.pubkey().into(),
+                        &[],
+                    )
+                    .unwrap().into(),
+                )
+            } else {
+                Some(system_instruction::transfer_with_seed(
+                    &address,
+                    &base_keypair.pubkey(),
+                    seed,
+                    &program_id,
+                    &keypair.pubkey(),
+                    balance,
+                ).into())
+            }
+        })
+        .collect();
+    
+    Message::new(&instructions, Some(&keypair.pubkey()))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -815,15 +810,15 @@ pub mod test {
                     spl_mint_rent,
                     spl_mint_len as u64,
                     &inline_spl_token::id(),
-                ),
+                ).into(),
                 spl_token::instruction::initialize_mint(
-                    &spl_token::id(),
-                    &spl_mint_keypair.pubkey(),
-                    &spl_mint_keypair.pubkey(),
+                    &spl_token::id().into(),
+                    &spl_mint_keypair.pubkey().into(),
+                    &spl_mint_keypair.pubkey().into(),
                     None,
                     2,
                 )
-                .unwrap(),
+                .unwrap().into(),
             ],
             Some(&funder.pubkey()),
             &[&funder, &spl_mint_keypair],
