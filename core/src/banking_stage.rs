@@ -427,7 +427,7 @@ impl BankingStage {
                 );
 
                 Builder::new()
-                    .name(format!("solBanknStgTx{id:02}"))
+                    .name(format!("domiBanknStgTx{id:02}"))
                     .spawn(move || {
                         Self::process_loop(
                             &mut packet_receiver,

@@ -25,7 +25,7 @@ impl TpuEntryNotifier {
         exit: Arc<AtomicBool>,
     ) -> Self {
         let thread_hdl = Builder::new()
-            .name("solTpuEntry".to_string())
+            .name("domiTpuEntry".to_string())
             .spawn(move || {
                 let mut current_slot = 0;
                 let mut current_index = 0;

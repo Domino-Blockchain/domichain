@@ -32,7 +32,7 @@ impl EntryNotifierService {
         let exit = exit.clone();
         let (entry_notification_sender, entry_notification_receiver) = unbounded();
         let thread_hdl = Builder::new()
-            .name("solEntryNotif".to_string())
+            .name("domiEntryNotif".to_string())
             .spawn(move || loop {
                 if exit.load(Ordering::Relaxed) {
                     break;

@@ -22,7 +22,7 @@ pub struct CostUpdateService {
 impl CostUpdateService {
     pub fn new(blockstore: Arc<Blockstore>, cost_update_receiver: CostUpdateReceiver) -> Self {
         let thread_hdl = Builder::new()
-            .name("solCostUpdtSvc".to_string())
+            .name("domiCostUpdtSvc".to_string())
             .spawn(move || {
                 Self::service_loop(blockstore, cost_update_receiver);
             })

@@ -37,7 +37,7 @@ impl CompletedDataSetsService {
     ) -> Self {
         let exit = exit.clone();
         let thread_hdl = Builder::new()
-            .name("solComplDataSet".to_string())
+            .name("domiComplDataSet".to_string())
             .spawn(move || loop {
                 if exit.load(Ordering::Relaxed) {
                     break;

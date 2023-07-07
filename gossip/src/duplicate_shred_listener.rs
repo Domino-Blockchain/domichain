@@ -31,7 +31,7 @@ impl DuplicateShredListener {
         handler: impl DuplicateShredHandlerTrait + 'static,
     ) -> Self {
         let listen_thread = Builder::new()
-            .name("solCiEntryLstnr".to_string())
+            .name("domiCiEntryLstnr".to_string())
             .spawn(move || {
                 Self::recv_loop(exit, &cluster_info, handler);
             })

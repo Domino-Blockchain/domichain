@@ -75,7 +75,7 @@ fn find_node_activated_stake(
     }
 }
 
-fn create_connection_cache(
+pub fn create_connection_cache(
     json_rpc_url: &str,
     tpu_connection_pool_size: usize,
     use_quic: bool,

@@ -227,6 +227,27 @@ pub fn get_multi_client(
     )
 }
 
+pub fn try_get_multi_client(
+    nodes: &[ContactInfo],
+    socket_addr_space: &SocketAddrSpace,
+    connection_cache: Arc<ConnectionCache>,
+) -> Result<(ThinClient, usize), ()> {
+    let protocol = connection_cache.protocol();
+    let (rpc_addrs, tpu_addrs): (Vec<_>, Vec<_>) = nodes
+        .iter()
+        .filter_map(|node| node.valid_client_facing_addr(protocol, socket_addr_space))
+        .unzip();
+    let num_nodes = tpu_addrs.len();
+    if !rpc_addrs.is_empty() && rpc_addrs.len() == tpu_addrs.len() {
+        Ok((
+            ThinClient::new_from_addrs(rpc_addrs, tpu_addrs, connection_cache),
+            num_nodes,
+        ))
+    } else {
+        Err(())
+    }
+}
+
 fn spy(
     spy_ref: Arc<ClusterInfo>,
     num_nodes: Option<usize>,

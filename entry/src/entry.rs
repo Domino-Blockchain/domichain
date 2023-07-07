@@ -47,7 +47,7 @@ use {
 lazy_static! {
     static ref PAR_THREAD_POOL: ThreadPool = rayon::ThreadPoolBuilder::new()
         .num_threads(get_max_thread_count())
-        .thread_name(|i| format!("solEntry{i:02}"))
+        .thread_name(|i| format!("domiEntry{i:02}"))
         .build()
         .unwrap();
 }
@@ -120,7 +120,7 @@ pub struct Api<'a> {
 /// a Verifiable Delay Function (VDF) and a Proof of Work (not to be confused with Proof of
 /// Work consensus!)
 ///
-/// The solana core protocol currently requires an `Entry` to contain `transactions` that are
+/// The domichain core protocol currently requires an `Entry` to contain `transactions` that are
 /// executable in parallel. Implemented in:
 ///
 /// * For TPU: `domichain_core::banking_stage::BankingStage::process_and_record_transactions()`
@@ -574,7 +574,7 @@ fn start_verify_transactions_gpu(
     let out_recycler = verify_recyclers.out_recycler;
     let num_packets = entry_txs.len();
     let gpu_verify_thread = thread::Builder::new()
-        .name("solGpuSigVerify".into())
+        .name("domiGpuSigVerify".into())
         .spawn(move || {
             let mut verify_time = Measure::start("sigverify");
             sigverify::ed25519_verify(
@@ -819,7 +819,7 @@ impl EntrySlice for [Entry] {
         let hashes_clone = hashes.clone();
 
         let gpu_verify_thread = thread::Builder::new()
-            .name("solGpuPohVerify".into())
+            .name("domiGpuPohVerify".into())
             .spawn(move || {
                 let mut hashes = hashes_clone.lock().unwrap();
                 let gpu_wait = Instant::now();

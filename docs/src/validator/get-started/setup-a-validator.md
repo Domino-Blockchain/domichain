@@ -458,12 +458,12 @@ sudo systemctl enable --now sol
 Now verify that the validator is running properly by tailing the logs and using the commands mentioned earlier to check gossip and Domichain validators:
 
 ```
-tail -f /home/sol/solana-validator*.log
+tail -f /home/sol/domichain-validator*.log
 ```
 
 ## Monitoring
 
-`solana-watchtower` is a command you can run on a separate machine to monitor your server. You can read more about handling [automatic restarts and monitoring](../best-practices/monitoring.md#solana-watchtower) using Domichain Watchtower here in the docs.
+`domichain-watchtower` is a command you can run on a separate machine to monitor your server. You can read more about handling [automatic restarts and monitoring](../best-practices/monitoring.md#domichain-watchtower) using Domichain Watchtower here in the docs.
 
 ## Common issues
 

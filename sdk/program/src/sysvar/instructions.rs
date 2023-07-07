@@ -23,7 +23,7 @@
 //! # Examples
 //!
 //! For a complete example of how the instructions sysvar is used see the
-//! documentation for [`secp256k1_instruction`] in the `solana-sdk` crate.
+//! documentation for [`secp256k1_instruction`] in the `domichain-sdk` crate.
 //!
 //! [`secp256k1_instruction`]: https://docs.rs/solana-sdk/latest/domichain_sdk/secp256k1_instruction/index.html
 

@@ -55,7 +55,7 @@ impl AccountsHashVerifier {
         // If there are no accounts packages to process, limit how often we re-check
         const LOOP_LIMITER: Duration = Duration::from_millis(DEFAULT_MS_PER_SLOT);
         let t_accounts_hash_verifier = Builder::new()
-            .name("solAcctHashVer".to_string())
+            .name("domiAcctHashVer".to_string())
             .spawn(move || {
                 info!("AccountsHashVerifier has started");
                 let mut hashes = vec![];

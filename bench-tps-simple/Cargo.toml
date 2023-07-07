@@ -2,7 +2,7 @@
 authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
 edition = "2021"
 name = "domichain-bench-tps-simple"
-version = "1.11.1"
+version = "1.16.1"
 repository = "https://Domino-Blockchain/domichain"
 license = "Apache-2.0"
 homepage = "https://domichain.com/"

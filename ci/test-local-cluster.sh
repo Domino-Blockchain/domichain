@@ -34,10 +34,10 @@ echo "Executing $testName"
 case $testName in
 test-stable)
   if need_to_upload_test_result; then
-    _ cargo test --jobs "$JOBS" --all --tests --exclude solana-local-cluster ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --jobs "$JOBS" --all --tests --exclude domichain-local-cluster ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ ci/intercept.sh cargo test --jobs "$JOBS" --all --tests --exclude solana-local-cluster ${V:+--verbose} -- --nocapture
+    _ ci/intercept.sh cargo test --jobs "$JOBS" --all --tests --exclude domichain-local-cluster ${V:+--verbose} -- --nocapture
   fi
   ;;
 test-stable-sbf)
@@ -48,14 +48,14 @@ test-stable-sbf)
   # rustfilt required for dumping SBF assembly listings
   "$cargo" install rustfilt
 
-  # solana-keygen required when building C programs
+  # domichain-keygen required when building C programs
   _ "$cargo" build --manifest-path=keygen/Cargo.toml
 
   export PATH="$PWD/target/debug":$PATH
   cargo_build_sbf="$(realpath ./cargo-build-sbf)"
   cargo_test_sbf="$(realpath ./cargo-test-sbf)"
 
-  # SBF solana-sdk legacy compile test
+  # SBF domichain-sdk legacy compile test
   "$cargo_build_sbf" --manifest-path sdk/Cargo.toml
 
   # SBF C program system tests
@@ -82,18 +82,18 @@ test-stable-sbf)
   done |& tee cargo.log
   # Save the output of cargo building the sbf tests so we can analyze
   # the number of redundant rebuilds of dependency crates. The
-  # expected number of solana-program crate compilations is 4. There
-  # should be 3 builds of solana-program while 128bit crate is
+  # expected number of domichain-program crate compilations is 4. There
+  # should be 3 builds of domichain-program while 128bit crate is
   # built. These compilations are not redundant because the crate is
   # built for different target each time. An additional compilation of
-  # solana-program is performed when simulation crate is built. This
-  # last compiled solana-program is of different version, normally the
+  # domichain-program is performed when simulation crate is built. This
+  # last compiled domichain-program is of different version, normally the
   # latest mainbeta release version.
-  domichain_program_count=$(grep -c 'solana-program v' cargo.log)
+  domichain_program_count=$(grep -c 'domichain-program v' cargo.log)
   rm -f cargo.log
   if ((domichain_program_count > 14)); then
       echo "Regression of build redundancy ${domichain_program_count}."
-      echo "Review dependency features that trigger redundant rebuilds of solana-program."
+      echo "Review dependency features that trigger redundant rebuilds of domichain-program."
       exit 1
   fi
 
@@ -117,7 +117,7 @@ test-stable-sbf)
 
   sbf_dump_archive="sbf-dumps.tar.bz2"
   rm -f "$sbf_dump_archive"
-  tar cjvf "$sbf_dump_archive" "${sbf_target_path}"/{deploy/*.txt,sbf-solana-solana/release/*.so}
+  tar cjvf "$sbf_dump_archive" "${sbf_target_path}"/{deploy/*.txt,sbf-domichain-solana/release/*.so}
   exit 0
   ;;
 test-stable-perf)
@@ -130,7 +130,7 @@ test-stable-perf)
     rm -rf target/perf-libs
     ./fetch-perf-libs.sh
 
-    # Force CUDA for solana-core unit tests
+    # Force CUDA for domichain-core unit tests
     export TEST_PERF_LIBS_CUDA=1
 
     # Force CUDA in ci/localnet-sanity.sh
@@ -139,50 +139,50 @@ test-stable-perf)
 
   _ cargo build --bins ${V:+--verbose}
   if need_to_upload_test_result; then
-    _ cargo test --package solana-perf --package solana-ledger --package solana-core --lib ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --package domichain-perf --package domichain-ledger --package domichain-core --lib ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ cargo test --package solana-perf --package solana-ledger --package solana-core --lib ${V:+--verbose} -- --nocapture
+    _ cargo test --package domichain-perf --package domichain-ledger --package domichain-core --lib ${V:+--verbose} -- --nocapture
   fi
   _ cargo run --manifest-path poh-bench/Cargo.toml ${V:+--verbose} -- --hashes-per-tick 10
   ;;
 test-local-cluster)
   _ cargo build --release --bins ${V:+--verbose}
   if need_to_upload_test_result; then
-    _ cargo test --release --package solana-local-cluster --test local_cluster ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --release --package domichain-local-cluster --test local_cluster ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ ci/intercept.sh cargo test --release --package solana-local-cluster --test local_cluster ${V:+--verbose} -- --nocapture --test-threads=1
+    _ ci/intercept.sh cargo test --release --package domichain-local-cluster --test local_cluster ${V:+--verbose} -- --nocapture --test-threads=1
   fi
   exit 0
   ;;
 test-local-cluster-flakey)
   _ cargo build --release --bins ${V:+--verbose}
   if need_to_upload_test_result; then
-    _ cargo test --release --package solana-local-cluster --test local_cluster_flakey ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --release --package domichain-local-cluster --test local_cluster_flakey ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ ci/intercept.sh cargo test --release --package solana-local-cluster --test local_cluster_flakey ${V:+--verbose} -- --nocapture --test-threads=1
+    _ ci/intercept.sh cargo test --release --package domichain-local-cluster --test local_cluster_flakey ${V:+--verbose} -- --nocapture --test-threads=1
   fi
   exit 0
   ;;
 test-local-cluster-slow-1)
   _ cargo build --release --bins ${V:+--verbose}
   if need_to_upload_test_result; then
-    _ cargo test --release --package solana-local-cluster --test local_cluster_slow_1 ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --release --package domichain-local-cluster --test local_cluster_slow_1 ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ ci/intercept.sh cargo test --release --package solana-local-cluster --test local_cluster_slow_1 ${V:+--verbose} -- --nocapture --test-threads=1
+    _ ci/intercept.sh cargo test --release --package domichain-local-cluster --test local_cluster_slow_1 ${V:+--verbose} -- --nocapture --test-threads=1
   fi
   exit 0
   ;;
 test-local-cluster-slow-2)
   _ cargo build --release --bins ${V:+--verbose}
   if need_to_upload_test_result; then
-    _ cargo test --release --package solana-local-cluster --test local_cluster_slow_2 ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --release --package domichain-local-cluster --test local_cluster_slow_2 ${V:+--verbose} -- --test-threads=1 -Z unstable-options --format json --report-time | tee results.json
     exit_if_error "${PIPESTATUS[0]}"
   else
-    _ ci/intercept.sh cargo test --release --package solana-local-cluster --test local_cluster_slow_2 ${V:+--verbose} -- --nocapture --test-threads=1
+    _ ci/intercept.sh cargo test --release --package domichain-local-cluster --test local_cluster_slow_2 ${V:+--verbose} -- --nocapture --test-threads=1
   fi
   exit 0
   ;;
@@ -201,10 +201,10 @@ test-wasm)
   ;;
 test-docs)
   if need_to_upload_test_result; then
-    _ cargo test --jobs "$JOBS" --all --doc --exclude solana-local-cluster ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
+    _ cargo test --jobs "$JOBS" --all --doc --exclude domichain-local-cluster ${V:+--verbose} -- -Z unstable-options --format json --report-time | tee results.json
     exit "${PIPESTATUS[0]}"
   else
-    _ cargo test --jobs "$JOBS" --all --doc --exclude solana-local-cluster ${V:+--verbose} -- --nocapture
+    _ cargo test --jobs "$JOBS" --all --doc --exclude domichain-local-cluster ${V:+--verbose} -- --nocapture
     exit 0
   fi
   ;;

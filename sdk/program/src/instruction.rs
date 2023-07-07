@@ -18,6 +18,10 @@ use {
     bincode::serialize,
     borsh::BorshSerialize,
     serde::Serialize,
+    spl_instruction_padding::solana_program::instruction::{
+        Instruction as SplInstruction,
+        AccountMeta as SplAccountMeta,
+    },
     thiserror::Error,
 };
 
@@ -339,7 +343,27 @@ pub struct Instruction {
     pub data: Vec<u8>,
 }
 
+impl From<SplInstruction> for Instruction {
+    #[inline]
+    fn from(from: SplInstruction) -> Self {
+        Self {
+            program_id: from.program_id.into(),
+            accounts: from.accounts.into_iter().map(|a| a.into()).collect(),
+            data: from.data,
+        }
+    }
+}
 
+impl From<Instruction> for SplInstruction {
+    #[inline]
+    fn from(from: Instruction) -> Self {
+        Self {
+            program_id: from.program_id.into(),
+            accounts: from.accounts.into_iter().map(|a| a.into()).collect(),
+            data: from.data,
+        }
+    }
+}
 
 impl Instruction {
     /// Create a new instruction from a value, encoded with [`borsh`].
@@ -545,6 +569,28 @@ pub struct AccountMeta {
     pub is_signer: bool,
     /// True if the account data or metadata may be mutated during program execution.
     pub is_writable: bool,
+}
+
+impl From<SplAccountMeta> for AccountMeta {
+    #[inline]
+    fn from(from: SplAccountMeta) -> Self {
+        Self {
+            pubkey: from.pubkey.into(),
+            is_signer: from.is_signer,
+            is_writable: from.is_writable,
+        }
+    }
+}
+
+impl From<AccountMeta> for SplAccountMeta {
+    #[inline]
+    fn from(from: AccountMeta) -> Self {
+        Self {
+            pubkey: from.pubkey.into(),
+            is_signer: from.is_signer,
+            is_writable: from.is_writable,
+        }
+    }
 }
 
 impl AccountMeta {

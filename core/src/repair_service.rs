@@ -245,7 +245,7 @@ impl RepairService {
             let exit = exit.clone();
             let repair_info = repair_info.clone();
             Builder::new()
-                .name("solRepairSvc".to_string())
+                .name("domiRepairSvc".to_string())
                 .spawn(move || {
                     Self::run(
                         &blockstore,

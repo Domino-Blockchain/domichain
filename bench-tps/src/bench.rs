@@ -294,39 +294,38 @@ where
             use_durable_nonce,
         );
 
-        todo!()
-        // let balances: u64 = source_keypair_chunks.iter()
-        //     .flatten()
-        //     .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
-        //     .sum();
-        // info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
-        //
-        // datapoint_info!(
-        //     "blockhash_stats",
-        //     (
-        //         "time_elapsed_since_last_generate_txs",
-        //         last_generate_txs_time.elapsed().as_millis(),
-        //         i64
-        //     )
-        // );
-        //
-        // last_generate_txs_time = Instant::now();
-        //
-        // // In sustained mode, overlap the transfers with generation. This has higher average
-        // // performance but lower peak performance in tested environments.
-        // if sustained {
-        //     // Ensure that we don't generate more transactions than we can handle.
-        //     while shared_txs.read().unwrap().len() > 2 * threads {
-        //         sleep(Duration::from_millis(1));
-        //     }
-        // } else {
-        //     while !shared_txs.read().unwrap().is_empty()
-        //         || shared_tx_active_thread_count.load(Ordering::Relaxed) > 0
-        //     {
-        //         sleep(Duration::from_millis(1));
-        //     }
-        // }
-        // chunk_generator.advance();
+        let balances: u64 = chunk_generator.account_chunks.source.iter()
+            .flatten()
+            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
+            .sum();
+        info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
+
+        datapoint_info!(
+            "blockhash_stats",
+            (
+                "time_elapsed_since_last_generate_txs",
+                last_generate_txs_time.elapsed().as_millis(),
+                i64
+            )
+        );
+
+        last_generate_txs_time = Instant::now();
+
+        // In sustained mode, overlap the transfers with generation. This has higher average
+        // performance but lower peak performance in tested environments.
+        if sustained {
+            // Ensure that we don't generate more transactions than we can handle.
+            while shared_txs.read().unwrap().len() > 2 * threads {
+                sleep(Duration::from_millis(1));
+            }
+        } else {
+            while !shared_txs.read().unwrap().is_empty()
+                || shared_tx_active_thread_count.load(Ordering::Relaxed) > 0
+            {
+                sleep(Duration::from_millis(1));
+            }
+        }
+        chunk_generator.advance();
     }
 }
 
@@ -596,27 +595,26 @@ fn transfer_with_compute_unit_price_and_padding(
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
     let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
-    todo!()
-    // let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
-    //     wrap_instruction(
-    //         instruction_padding_config.program_id,
-    //         transfer_instruction,
-    //         vec![],
-    //         instruction_padding_config.data_size,
-    //     )
-    //     .expect("Could not create padded instruction")
-    // } else {
-    //     transfer_instruction
-    // };
-    // let mut instructions = vec![instruction];
-    // if let Some(compute_unit_price) = compute_unit_price {
-    //     instructions.extend_from_slice(&[
-    //         ComputeBudgetInstruction::set_compute_unit_limit(TRANSFER_TRANSACTION_COMPUTE_UNIT),
-    //         ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price),
-    //     ])
-    // }
-    // let message = Message::new(&instructions, Some(&from_pubkey));
-    // Transaction::new(&[from_keypair], message, recent_blockhash)
+    let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
+        wrap_instruction(
+            instruction_padding_config.program_id.into(),
+            transfer_instruction.into(),
+            vec![],
+            instruction_padding_config.data_size,
+        )
+        .expect("Could not create padded instruction").into()
+    } else {
+        transfer_instruction
+    };
+    let mut instructions = vec![instruction];
+    if let Some(compute_unit_price) = compute_unit_price {
+        instructions.extend_from_slice(&[
+            ComputeBudgetInstruction::set_compute_unit_limit(TRANSFER_TRANSACTION_COMPUTE_UNIT),
+            ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price),
+        ])
+    }
+    let message = Message::new(&instructions, Some(&from_pubkey));
+    Transaction::new(&[from_keypair], message, recent_blockhash)
 }
 
 fn get_nonce_accounts<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(

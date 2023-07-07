@@ -106,7 +106,7 @@ impl TransactionExecutor {
         let cleared = cleared.clone();
         let client = client.clone();
         Builder::new()
-            .name("solSigClear".to_string())
+            .name("domiSigClear".to_string())
             .spawn(move || {
                 let mut success = 0;
                 let mut error_count = 0;
