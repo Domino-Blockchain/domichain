@@ -1,4 +1,4 @@
-use {super::*, spl_token_2022::solana_program::pubkey::Pubkey};
+use {super::*, spl_token_2022::domichain_program::pubkey::Pubkey};
 
 pub(in crate::parse_token) fn parse_initialize_permanent_delegate_instruction(
     delegate: Pubkey,
@@ -21,7 +21,7 @@ mod test {
         super::*,
         crate::parse_token::test::*,
         domichain_sdk::pubkey::Pubkey,
-        spl_token_2022::{instruction::*, solana_program::message::Message},
+        spl_token_2022::{instruction::*, domichain_program::message::Message},
     };
 
     #[test]

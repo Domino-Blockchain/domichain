@@ -11,7 +11,7 @@ use {
         get_associated_token_address, instruction::create_associated_token_account,
     },
     spl_token::{
-        solana_program::program_pack::Pack,
+        domichain_program::program_pack::Pack,
         state::{Account as SplTokenAccount, Mint},
     },
 };
@@ -55,24 +55,24 @@ pub fn build_spl_token_instructions(
     let mut instructions = vec![];
     if do_create_associated_token_account {
         instructions.push(create_associated_token_account(
-            &args.fee_payer.pubkey().into(),
+            &args.fee_payer.pubkey(),
             &wallet_address,
-            &spl_token_args.mint.into(),
+            &spl_token_args.mint,
             &spl_token::id(),
-        ).into());
+        ));
     }
     instructions.push(
         spl_token::instruction::transfer_checked(
             &spl_token::id(),
-            &spl_token_args.token_account_address.into(),
-            &spl_token_args.mint.into(),
+            &spl_token_args.token_account_address,
+            &spl_token_args.mint,
             &associated_token_address,
-            &args.sender_keypair.pubkey().into(),
+            &args.sender_keypair.pubkey(),
             &[],
             allocation.amount,
             spl_token_args.decimals,
         )
-        .unwrap().into(),
+        .unwrap(),
     );
     instructions
 }

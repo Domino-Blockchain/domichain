@@ -127,7 +127,7 @@ mod test {
                 mint_close_authority::MintCloseAuthority, ExtensionType, StateWithExtensionsMut,
             },
             pod::OptionalNonZeroPubkey,
-            solana_program::{program_option::COption, program_pack::Pack},
+            domichain_program::{program_option::COption, program_pack::Pack},
         },
         std::collections::BTreeMap,
     };

@@ -886,7 +886,7 @@ mod tests {
         },
         domichain_streamer::socket::SocketAddrSpace,
         spl_token_2022::{
-            solana_program::{program_option::COption, program_pack::Pack},
+            domichain_program::{program_option::COption, program_pack::Pack},
             state::{Account as TokenAccount, AccountState as TokenAccountState, Mint},
         },
         std::{collections::HashSet, str::FromStr, sync::atomic::AtomicBool},

@@ -44,7 +44,7 @@ mod test {
         domichain_sdk::pubkey::Pubkey,
         spl_token_2022::{
             extension::cpi_guard::instruction::{disable_cpi_guard, enable_cpi_guard},
-            solana_program::message::Message,
+            domichain_program::message::Message,
         },
     };
 

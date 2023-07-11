@@ -3,8 +3,8 @@ use {
     domichain_sdk::clock::UnixTimestamp,
     spl_token_2022::{
         extension::{self, BaseState, BaseStateWithExtensions, ExtensionType, StateWithExtensions},
-        solana_program::pubkey::Pubkey,
-        solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey,
+        domichain_program::pubkey::Pubkey,
+        domichain_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey,
     },
 };
 

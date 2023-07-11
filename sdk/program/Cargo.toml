@@ -30,8 +30,8 @@ serde_derive = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 sha3 = { workspace = true }
-spl-instruction-padding = { workspace = true }
-spl-token = { workspace = true, features = ["no-entrypoint"] }
+# spl-instruction-padding = { workspace = true }
+# spl-token = { workspace = true, features = ["no-entrypoint"] }
 domichain-frozen-abi = { workspace = true }
 domichain-frozen-abi-macro = { workspace = true }
 domichain-sdk-macro = { workspace = true }
