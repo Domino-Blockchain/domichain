@@ -1,6 +1,6 @@
 //! Implementations of syscalls used when `domichain-program` is built for non-SBF targets.
 
-#![cfg(not(target_os = "domichain"))]
+#![cfg(not(target_os = "wasi"))]
 
 use {
     crate::{

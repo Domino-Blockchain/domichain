@@ -40,7 +40,7 @@
 mod compiled_keys;
 pub mod legacy;
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 #[path = ""]
 mod non_bpf_modules {
     mod account_keys;
@@ -51,7 +51,7 @@ mod non_bpf_modules {
     pub use {account_keys::*, address_loader::*, sanitized::*, versions::*};
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub use non_bpf_modules::*;
 pub use {compiled_keys::CompileError, legacy::Message};
 

@@ -1,5 +1,5 @@
 //! domichain-program Javascript interface
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))]
 use wasm_bindgen::prelude::*;
 
 pub mod hash;

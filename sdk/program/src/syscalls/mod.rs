@@ -2,10 +2,10 @@
 //!
 //! This module is mostly empty when not compiling for BPF targets.
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 mod definitions;
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 pub use definitions::*;
 
 /// Maximum CPI instruction data size. 10 KiB was chosen to ensure that CPI

@@ -90,7 +90,7 @@ pub struct PodG1(pub [u8; 64]);
 #[repr(transparent)]
 pub struct PodG2(pub [u8; 128]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 mod target_arch {
     use {
         super::*,
@@ -300,7 +300,7 @@ mod target_arch {
     }
 }
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 mod target_arch {
     use super::*;
     pub fn alt_bn128_addition(input: &[u8]) -> Result<Vec<u8>, AltBn128Error> {

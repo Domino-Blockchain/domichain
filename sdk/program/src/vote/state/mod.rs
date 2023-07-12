@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 use crate::epoch_schedule::MAX_LEADER_SCHEDULE_EPOCH_OFFSET;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use bincode::deserialize;
 use {
     crate::{
@@ -348,13 +348,13 @@ impl VoteState {
 
     #[allow(clippy::used_underscore_binding)]
     pub fn deserialize(_input: &[u8]) -> Result<Self, InstructionError> {
-        #[cfg(not(target_os = "domichain"))]
+        #[cfg(not(target_os = "wasi"))]
         {
             deserialize::<VoteStateVersions>(_input)
                 .map(|versioned| versioned.convert_to_current())
                 .map_err(|_| InstructionError::InvalidAccountData)
         }
-        #[cfg(target_os = "domichain")]
+        #[cfg(target_os = "wasi")]
         unimplemented!();
     }
 
