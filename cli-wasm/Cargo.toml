@@ -1,0 +1,68 @@
+[package]
+name = "domichain-cli-wasm"
+description = "Blockchain, Rebuilt for Scale"
+documentation = "https://docs.rs/domichain-cli-wasm"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+bincode = { workspace = true }
+bs58 = { workspace = true }
+clap = { workspace = true }
+console = { workspace = true }
+const_format = { workspace = true }
+criterion-stats = { workspace = true }
+crossbeam-channel = { workspace = true }
+ctrlc = { workspace = true, features = ["termination"] }
+hex = { workspace = true }
+humantime = { workspace = true }
+log = { workspace = true }
+num-traits = { workspace = true }
+pretty-hex = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "brotli", "deflate", "gzip", "rustls-tls", "json"] }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+domichain-account-decoder = { workspace = true }
+domichain-address-lookup-table-program = { workspace = true }
+domichain-bpf-loader-program = { workspace = true }
+domichain-wasm-loader-program = { workspace = true }
+domichain-clap-utils = { workspace = true }
+domichain-cli-config = { workspace = true }
+domichain-cli-output = { workspace = true }
+domichain-client = { workspace = true }
+domichain-config-program = { workspace = true }
+domichain-faucet = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-program-runtime = { workspace = true }
+domichain-pubsub-client = { workspace = true }
+domichain-remote-wallet = { workspace = true, features = ["default"] }
+domichain-rpc-client = { workspace = true, features = ["default"] }
+domichain-rpc-client-api = { workspace = true }
+domichain-rpc-client-nonce-utils = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-tpu-client = { workspace = true, features = ["default"] }
+domichain-transaction-status = { workspace = true }
+domichain-version = { workspace = true }
+domichain-vote-program = { workspace = true }
+solana_rbpf = { workspace = true }
+spl-memo = { workspace = true, features = ["no-entrypoint"] }
+thiserror = { workspace = true }
+tiny-bip39 = { workspace = true }
+
+[dev-dependencies]
+domichain-streamer = { workspace = true }
+domichain-test-validator = { workspace = true }
+tempfile = { workspace = true }
+
+[[bin]]
+name = "domichain-wasm"
+path = "src/main.rs"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
