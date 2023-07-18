@@ -21,6 +21,7 @@ message ConfirmedTransaction {
 message Transaction {
     repeated bytes signatures = 1;
     Message message = 2;
+    uint64 risk_score = 3;
 }
 
 message Message {

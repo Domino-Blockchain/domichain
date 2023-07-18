@@ -801,8 +801,8 @@ impl ClusterInfoVoteListener {
                     "TPU: measure took {}",
                     measure_start.elapsed().as_secs_f64()
                 );
-                println!("Test vote majority in track_new_votes_and_notify_confirmations vote pubkey: {:?}, is_new: {:?}, majority: {:?}, quorum: {:?}, weight: {:?}", 
-                    vote_pubkey, is_new, reached_threshold_results.majority, reached_threshold_results.quorum, weight, 
+                println!("-----AI proxy Test vote majority in track_new_votes_and_notify_confirmations vote pubkey: {:?}, is_new: {:?}, majority: {:?}, quorum: {:?}, weight: {:?}",
+                    vote_pubkey, is_new, reached_threshold_results.majority, reached_threshold_results.quorum, weight,
                 );
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((
@@ -1005,7 +1005,11 @@ impl ClusterInfoVoteListener {
         weight_vote_stake_tracker.voted = vote_stake_tracker.voted().clone();
         weight_vote_stake_tracker.stake = vote_stake_tracker.stake();
         weight_vote_stake_tracker.weight = vote_stake_tracker.weight();
-        warn!("DEV: inserting weight_vote_stake_tracker slot={slot}");
+        //println!("----------------");
+        println!(
+            "----AI porxy Test: weight_vote_stake_tracker voted={:?}, new pubkey={:?}",
+            weight_vote_stake_tracker.voted, pubkey
+        );
         // warn!("DEV: inserting weight_vote_stake_tracker slot={slot} hash={hash} weight_vote_stake_tracker={weight_vote_stake_tracker:?}");
 
         result

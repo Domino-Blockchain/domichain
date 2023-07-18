@@ -42,15 +42,15 @@ impl VoteStakeTracker {
                 info!("TPU: threshold_weight={threshold_weight} old_weight={old_weight} new_weight={new_weight}");
                 old_weight <= threshold_weight && threshold_weight < new_weight
             };
-          /*   println!(
-                "Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}",
+            println!(
+                "---AI porxy Test vote majority {:?}, {:?}, {:?}, {:?}, {:?}",
                 vote_pubkey, _stake, _total_stake, weight, total_weight
             );
             println!(
-                "Test vote majority, majority check {:?}, quorum check {:?}",
+                "---AI porxy Test vote majority, majority check {:?}, quorum check {:?}",
                 check(thresholds_to_check[0]),
                 check(thresholds_to_check[1])
-            ); */
+            );
             (
                 ReachedThresholdResults {
                     majority: check(thresholds_to_check[0]),

@@ -103,8 +103,13 @@ impl CostModel {
         self.get_transaction_cost(&mut tx_cost, transaction);
         tx_cost.account_data_size = self.calculate_account_data_size(transaction);
         tx_cost.is_simple_vote = transaction.is_simple_vote_transaction();
-
-        debug!("transaction {:?} has cost {:?}", transaction, tx_cost);
+        
+        if tx_cost.is_simple_vote != true {
+            println!("AI proxy risk_score {:?}", transaction.risk_score);
+            println!("AI Proxy transaction {:?} has cost {:?}", transaction, tx_cost);
+        }
+        
+        //debug!("transaction {:?} has cost {:?}", transaction, tx_cost);
         tx_cost
     }
 

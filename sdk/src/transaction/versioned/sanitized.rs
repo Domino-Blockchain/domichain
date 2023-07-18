@@ -52,6 +52,7 @@ mod tests {
             message: VersionedMessage::V0(
                 v0::Message::try_compile(&Pubkey::new_unique(), &[], &[], Hash::default()).unwrap(),
             ),
+            risk_score : None,
         };
 
         assert_eq!(
@@ -69,6 +70,7 @@ mod tests {
         let tx = VersionedTransaction {
             signatures: vec![Signature::default()],
             message: VersionedMessage::V0(message),
+            risk_score: None,
         };
 
         assert_eq!(

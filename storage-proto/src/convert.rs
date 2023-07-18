@@ -221,6 +221,7 @@ impl From<Transaction> for generated::Transaction {
                 .map(|signature| <Signature as AsRef<[u8]>>::as_ref(&signature).into())
                 .collect(),
             message: Some(value.message.into()),
+            risk_score: value.risk_score.unwrap(),
         }
     }
 }
@@ -234,6 +235,8 @@ impl From<VersionedTransaction> for generated::Transaction {
                 .map(|signature| <Signature as AsRef<[u8]>>::as_ref(&signature).into())
                 .collect(),
             message: Some(value.message.into()),
+            risk_score: value.risk_score.unwrap(),
+
         }
     }
 }
@@ -247,6 +250,7 @@ impl From<generated::Transaction> for VersionedTransaction {
                 .map(|x| Signature::new(&x))
                 .collect(),
             message: value.message.expect("message is required").into(),
+            risk_score: Some(value.risk_score),
         }
     }
 }

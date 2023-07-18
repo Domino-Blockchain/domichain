@@ -973,14 +973,14 @@ fn confirm_slot_entries(
     let (entries, num_shreds, slot_full) = slot_entries_load_result;
     let num_entries = entries.len();
     let num_txs = entries.iter().map(|e| e.transactions.len()).sum::<usize>();
-    trace!(
+    /* trace!(
         "Fetched entries for slot {}, num_entries: {}, num_shreds: {}, num_txs: {}, slot_full: {}",
         slot,
         num_entries,
         num_shreds,
         num_txs,
         slot_full,
-    );
+    ); */
 
     if !skip_verification {
         let tick_hash_count = &mut progress.tick_hash_count;
@@ -1015,11 +1015,16 @@ fn confirm_slot_entries(
 
     let verify_transaction = {
         let bank = bank.clone();
+        println!("--- AI proxy confirm_slot_entries {:?}", bank.slot());
         move |versioned_tx: VersionedTransaction,
               verification_mode: TransactionVerificationMode|
               -> Result<SanitizedTransaction> {
-            bank.verify_transaction(versioned_tx, verification_mode)
+            println!("--- AI proxy verify_transaction Transaction: {:?}", versioned_tx);
+            let result = bank.verify_transaction(versioned_tx, verification_mode);
+            println!("--- AI proxy verify_transaction Verification Result: {:?}", result);
+            result
         }
+        
     };
 
     let check_start = Instant::now();

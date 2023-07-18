@@ -48,6 +48,7 @@ pub struct VersionedTransaction {
     pub signatures: Vec<Signature>,
     /// Message to sign.
     pub message: VersionedMessage,
+    pub risk_score: Option<u64>,
 }
 
 impl From<Transaction> for VersionedTransaction {
@@ -55,6 +56,7 @@ impl From<Transaction> for VersionedTransaction {
         Self {
             signatures: transaction.signatures,
             message: VersionedMessage::Legacy(transaction.message),
+            risk_score: transaction.risk_score,
         }
     }
 }
@@ -87,10 +89,11 @@ impl VersionedTransaction {
 
         let message_data = message.serialize();
         let signatures = keypairs.try_sign_message(&message_data)?;
-
+        //let risk_score = 1;
         Ok(Self {
             signatures,
             message,
+            risk_score: None,
         })
     }
 
@@ -130,10 +133,13 @@ impl VersionedTransaction {
 
     /// Returns a legacy transaction if the transaction message is legacy.
     pub fn into_legacy_transaction(self) -> Option<Transaction> {
+        
         match self.message {
+            
             VersionedMessage::Legacy(message) => Some(Transaction {
                 signatures: self.signatures,
                 message,
+                risk_score: None,
             }),
             _ => None,
         }

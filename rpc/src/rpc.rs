@@ -2488,6 +2488,9 @@ fn _send_transaction(
     durable_nonce_info: Option<(Pubkey, Hash)>,
     max_retries: Option<usize>,
 ) -> Result<String> {
+
+    let transaction = wire_transaction.clone();
+
     let transaction_info = TransactionInfo::new(
         signature,
         wire_transaction,
@@ -2496,12 +2499,14 @@ fn _send_transaction(
         max_retries,
         None,
     );
+
+    
     meta.transaction_sender
         .lock()
         .unwrap()
         .send(transaction_info)
         .unwrap_or_else(|err| warn!("Failed to enqueue transaction: {}", err));
-
+    println!("AI Proxy wire_transaction _send_transaction {:?}", transaction);
     Ok(signature.to_string())
 }
 
@@ -8432,6 +8437,7 @@ pub mod tests {
                 account_keys: vec![Pubkey::new_unique()],
                 ..v0::Message::default()
             }),
+            risk_score: 1,
         };
 
         assert_eq!(

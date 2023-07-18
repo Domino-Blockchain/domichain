@@ -2744,6 +2744,7 @@ impl ReplayStage {
         if let Some((bank, switch_fork_decision)) = selected_fork {
             let (is_locked_out, vote_threshold, is_leader_slot, fork_weight) = {
                 let fork_stats = progress.get_fork_stats(bank.slot()).unwrap();
+                println!("--- AI proxy select_vote_and_reset_forks {:?}", fork_stats);
                 let propagated_stats = &progress.get_propagated_stats(bank.slot()).unwrap();
                 (
                     fork_stats.is_locked_out,

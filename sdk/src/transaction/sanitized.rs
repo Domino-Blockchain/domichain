@@ -31,6 +31,7 @@ pub struct SanitizedTransaction {
     message_hash: Hash,
     is_simple_vote_tx: bool,
     signatures: Vec<Signature>,
+    pub risk_score: Option<u64>,
 }
 
 /// Set of accounts that must be locked for safe transaction processing
@@ -94,12 +95,13 @@ impl SanitizedTransaction {
                 SanitizedMessage::V0(v0::LoadedMessage::new(message, loaded_addresses))
             }
         };
-
+        //let risk_score = 1;
         Ok(Self {
             message,
             message_hash,
             is_simple_vote_tx,
             signatures,
+            risk_score:None,
         })
     }
 
@@ -135,23 +137,24 @@ impl SanitizedTransaction {
             let mut ix_iter = message.program_instructions_iter();
             ix_iter.next().map(|(program_id, _ix)| program_id) == Some(&crate::vote::program::id())
         });
-
+  //      let risk_score = 1;
         Ok(Self {
             message,
             message_hash,
             is_simple_vote_tx,
             signatures,
+            risk_score: None,
         })
     }
 
     pub fn try_from_legacy_transaction(tx: Transaction) -> Result<Self> {
         tx.sanitize()?;
-
         Ok(Self {
             message_hash: tx.message.hash(),
             message: SanitizedMessage::Legacy(tx.message),
             is_simple_vote_tx: false,
             signatures: tx.signatures,
+            risk_score: tx.risk_score,
         })
     }
 
@@ -199,10 +202,12 @@ impl SanitizedTransaction {
             SanitizedMessage::V0(sanitized_msg) => VersionedTransaction {
                 signatures,
                 message: VersionedMessage::V0(v0::Message::clone(&sanitized_msg.message)),
+                risk_score: self.risk_score,
             },
             SanitizedMessage::Legacy(message) => VersionedTransaction {
                 signatures,
                 message: VersionedMessage::Legacy(message.clone()),
+                risk_score: self.risk_score,
             },
         }
     }

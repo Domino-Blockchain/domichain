@@ -2189,7 +2189,7 @@ pub fn main() {
     let wal_recovery_mode = matches
         .value_of("wal_recovery_mode")
         .map(BlockstoreRecoveryMode::from);
-
+    println!("----AI proxy validator before create_dir_all");
     // Canonicalize ledger path to avoid issues with symlink creation
     let _ = fs::create_dir_all(&ledger_path);
     let ledger_path = fs::canonicalize(&ledger_path).unwrap_or_else(|err| {
@@ -2846,6 +2846,7 @@ pub fn main() {
         }
     }
 
+    println!("---AI proxy before ledger_lock");
     let mut ledger_lock = ledger_lockfile(&ledger_path);
     let _ledger_write_guard = lock_ledger(&ledger_path, &mut ledger_lock);
 
@@ -2863,7 +2864,7 @@ pub fn main() {
             tower_storage: validator_config.tower_storage.clone(),
         },
     );
-
+    println!("---AI proxy after ledger_lock");
     let gossip_host: IpAddr = matches
         .value_of("gossip_host")
         .map(|gossip_host| {
@@ -2967,6 +2968,7 @@ pub fn main() {
         Some(version)
     });
     domichain_entry::entry::init_poh();
+    println!("---AI porxy after init_poh");
     snapshot_utils::remove_tmp_snapshot_archives(&full_snapshot_archives_dir);
     snapshot_utils::remove_tmp_snapshot_archives(&incremental_snapshot_archives_dir);
 
@@ -2996,7 +2998,7 @@ pub fn main() {
         );
         *start_progress.write().unwrap() = ValidatorStartProgress::Initializing;
     }
-
+    println!("--- AI porxy after boostrp::rpc_bootstrp");
     if operation == Operation::Initialize {
         info!("Validator ledger initialization complete");
         return;
@@ -3016,6 +3018,7 @@ pub fn main() {
         tpu_use_quic,
         tpu_connection_pool_size,
     );
+    println!("--- AI porxy after Validator::new");
     *admin_service_post_init.write().unwrap() =
         Some(admin_rpc_service::AdminRpcRequestMetadataPostInit {
             bank_forks: validator.bank_forks.clone(),
@@ -3030,6 +3033,7 @@ pub fn main() {
         });
     }
     info!("Validator initialized");
+    println!("---AI proxy validator initialized");
     validator.join();
     info!("Validator exiting..");
 }

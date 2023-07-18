@@ -170,6 +170,7 @@ impl BanksClient {
         &mut self,
         transaction: Transaction,
     ) -> impl Future<Output = Result<(), BanksClientError>> + '_ {
+        println!("AI proxy send_transaction {:?}", transaction);
         self.send_transaction_with_context(context::current(), transaction)
     }
 

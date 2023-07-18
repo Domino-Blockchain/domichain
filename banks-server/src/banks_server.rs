@@ -84,6 +84,8 @@ impl BanksServer {
                 .into_iter()
                 .map(|info| deserialize(&info.wire_transaction).unwrap())
                 .collect();
+
+            println!("-------AI proxy bank run {:?}", transactions.clone());
             let bank = bank_forks.read().unwrap().working_bank();
             let _ = bank.try_process_transactions(transactions.iter());
         }
@@ -197,6 +199,7 @@ fn simulate_transaction(
 #[tarpc::server]
 impl Banks for BanksServer {
     async fn send_transaction_with_context(self, _: Context, transaction: Transaction) {
+        let transaction_backup = transaction.clone();
         let blockhash = &transaction.message.recent_blockhash;
         let last_valid_block_height = self
             .bank_forks
@@ -214,6 +217,7 @@ impl Banks for BanksServer {
             None,
             None,
         );
+        println!("----AI proxy bank send_transaction_with_context {:?}", transaction_backup);
         self.transaction_sender.send(info).unwrap();
     }
 
@@ -315,7 +319,8 @@ impl Banks for BanksServer {
         if let Err(err) = verify_transaction(&transaction, &self.bank(commitment).feature_set) {
             return Some(Err(err));
         }
-
+        let transaction_backup = transaction.clone();
+        println!("----AI proxy bank process_transaction_with_commitment_and_context {:?}", transaction_backup);
         let blockhash = &transaction.message.recent_blockhash;
         let last_valid_block_height = self
             .bank(commitment)
