@@ -187,7 +187,7 @@ pub struct Transaction {
     /// The message to sign.
     #[wasm_bindgen(skip)]
     pub message: Message,
-    pub risk_score: Option<u64>,
+    //pub risk_score: Option<u64>,
 }
 
 impl Sanitize for Transaction {
@@ -270,11 +270,10 @@ impl Transaction {
     /// # Ok::<(), anyhow::Error>(())
     /// ```
     pub fn new_unsigned(message: Message) -> Self {
-       // let risk_score = 1;
         Self {
             signatures: vec![Signature::default(); message.header.num_required_signatures as usize],
             message,
-            risk_score: None,
+            //risk_score: None,
         }
     }
 

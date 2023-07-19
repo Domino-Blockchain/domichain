@@ -48,7 +48,8 @@ pub struct VersionedTransaction {
     pub signatures: Vec<Signature>,
     /// Message to sign.
     pub message: VersionedMessage,
-    pub risk_score: Option<u64>,
+    // JDING: is this the problem?
+    //pub risk_score: Option<u64>,
 }
 
 impl From<Transaction> for VersionedTransaction {
@@ -56,7 +57,8 @@ impl From<Transaction> for VersionedTransaction {
         Self {
             signatures: transaction.signatures,
             message: VersionedMessage::Legacy(transaction.message),
-            risk_score: transaction.risk_score,
+            //risk_score: transaction.risk_score,
+            //risk_score: None,
         }
     }
 }
@@ -89,11 +91,10 @@ impl VersionedTransaction {
 
         let message_data = message.serialize();
         let signatures = keypairs.try_sign_message(&message_data)?;
-        //let risk_score = 1;
         Ok(Self {
             signatures,
             message,
-            risk_score: None,
+            //risk_score: None,
         })
     }
 
@@ -139,7 +140,7 @@ impl VersionedTransaction {
             VersionedMessage::Legacy(message) => Some(Transaction {
                 signatures: self.signatures,
                 message,
-                risk_score: None,
+                //risk_score: None,
             }),
             _ => None,
         }

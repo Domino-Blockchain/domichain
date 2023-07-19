@@ -1745,7 +1745,7 @@ where
             baseline_msg.header.num_required_signatures as usize
         ],
         message: baseline_msg,
-        risk_score: Some(1),
+        risk_score: None,
     })
     .unwrap() as usize;
     // add 1 byte buffer to account for shortvec encoding

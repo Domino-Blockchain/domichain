@@ -105,7 +105,7 @@ impl CostModel {
         tx_cost.is_simple_vote = transaction.is_simple_vote_transaction();
         
         if tx_cost.is_simple_vote != true {
-            println!("AI proxy risk_score {:?}", transaction.risk_score);
+            //println!("AI proxy risk_score {:?}", transaction.risk_score);
             println!("AI Proxy transaction {:?} has cost {:?}", transaction, tx_cost);
         }
         

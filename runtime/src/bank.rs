@@ -14533,7 +14533,7 @@ pub(crate) mod tests {
             let tx = Transaction {
                 signatures: vec![Signature::default(); num_signatures],
                 message,
-                risk_score: 1,
+                risk_score: None,
             };
 
             let result = bank.process_transaction(&tx);

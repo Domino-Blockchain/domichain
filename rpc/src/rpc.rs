@@ -8437,7 +8437,7 @@ pub mod tests {
                 account_keys: vec![Pubkey::new_unique()],
                 ..v0::Message::default()
             }),
-            risk_score: 1,
+            risk_score: None,
         };
 
         assert_eq!(
