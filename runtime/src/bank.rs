@@ -3985,6 +3985,7 @@ impl Bank {
             self.feature_set.is_active(&tx_wide_compute_cap::id()),
             self.feature_set
                 .is_active(&add_set_compute_unit_price_ix::id()),
+            1.0,
         ))
     }
 
@@ -4000,6 +4001,7 @@ impl Bank {
             self.feature_set.is_active(&tx_wide_compute_cap::id()),
             self.feature_set
                 .is_active(&add_set_compute_unit_price_ix::id()),
+                1.0,
         )
     }
 
@@ -5064,11 +5066,14 @@ impl Bank {
         fee_structure: &FeeStructure,
         tx_wide_compute_cap: bool,
         support_set_compute_unit_price_ix: bool,
+        risk_score:f64,
     ) -> u64 {
         if tx_wide_compute_cap {
             // Fee based on compute units and signatures
             const BASE_CONGESTION: f64 = 5_000.0;
-            let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
+            
+            let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64)*risk_score;
+            println!("---AI proxy lamports_per_signature {:?}", lamports_per_signature);
             let congestion_multiplier = if lamports_per_signature == 0 {
                 0.0 // test only
             } else {
@@ -5121,7 +5126,7 @@ impl Bank {
     ) -> Vec<Result<()>> {
         let hash_queue = self.blockhash_queue.read().unwrap();
         let mut fees = 0;
-
+        
         let results = txs
             .iter()
             .zip(execution_results)
@@ -5143,8 +5148,14 @@ impl Bank {
                         )
                     });
 
-                let lamports_per_signature =
+                let mut lamports_per_signature =
                     lamports_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
+
+                let mut risk_score = 1.0;
+                if !tx.is_simple_vote_transaction() {
+                    risk_score = 0.0001;
+                }
+
                 let fee = Self::calculate_fee(
                     tx.message(),
                     lamports_per_signature,
@@ -5152,7 +5163,13 @@ impl Bank {
                     self.feature_set.is_active(&tx_wide_compute_cap::id()),
                     self.feature_set
                         .is_active(&add_set_compute_unit_price_ix::id()),
+                    risk_score,
                 );
+                
+ /*                if risk_score > 0.5 {
+                    self.withdraw(tx.message().fee_payer(), 5000*risk_score)?;
+                } */
+                
 
                 // In case of instruction error, even though no accounts
                 // were stored we still need to charge the payer the
@@ -5163,13 +5180,16 @@ impl Bank {
                 // stored
                 if execution_status.is_err() && !is_nonce {
                     self.withdraw(tx.message().fee_payer(), fee)?;
+                    
                 }
-
+                if !tx.is_simple_vote_transaction() {
+                    println!("---- AI proxy filter_program_errors_and_collect_fee tx {:?}, fee {:?}", tx, fee);
+                }
                 fees += fee;
                 Ok(())
             })
             .collect();
-
+        
         self.collector_fees.fetch_add(fees, Relaxed);
         results
     }
@@ -6395,6 +6415,7 @@ impl Bank {
         } else {
             vec![]
         };
+        println!("--- AI proxy post_balances {:?}", post_balances.clone());
         (
             results,
             TransactionBalancesSet::new(pre_balances, post_balances),
@@ -10900,6 +10921,7 @@ pub(crate) mod tests {
             &FeeStructure::default(),
             true,
             true,
+            1.0,
         );
 
         let (expected_fee_collected, expected_fee_burned) =
@@ -11083,6 +11105,7 @@ pub(crate) mod tests {
             &FeeStructure::default(),
             true,
             true,
+            1.0,
         );
         assert_eq!(
             bank.get_balance(&mint_keypair.pubkey()),
@@ -11101,6 +11124,7 @@ pub(crate) mod tests {
             &FeeStructure::default(),
             true,
             true,
+            1.0,
         );
         assert_eq!(
             bank.get_balance(&mint_keypair.pubkey()),
@@ -11218,7 +11242,9 @@ pub(crate) mod tests {
                             &FeeStructure::default(),
                             true,
                             true,
+                            1.0,
                         ) * 2
+                        
                     )
                     .0
         );
@@ -17833,13 +17859,13 @@ pub(crate) mod tests {
         let message =
             SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 0, &FeeStructure::default(), false, true),
+            Bank::calculate_fee(&message, 0, &FeeStructure::default(), false, true,1.0),
             0
         );
 
         // One signature, a fee.
         assert_eq!(
-            Bank::calculate_fee(&message, 1, &FeeStructure::default(), false, true),
+            Bank::calculate_fee(&message, 1, &FeeStructure::default(), false, true,1.0),
             1
         );
 
@@ -17850,7 +17876,7 @@ pub(crate) mod tests {
         let ix1 = system_instruction::transfer(&key1, &key0, 1);
         let message = SanitizedMessage::try_from(Message::new(&[ix0, ix1], Some(&key0))).unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 2, &FeeStructure::default(), false, true),
+            Bank::calculate_fee(&message, 2, &FeeStructure::default(), false, true, 1.0),
             4
         );
     }
@@ -17866,7 +17892,7 @@ pub(crate) mod tests {
         let message =
             SanitizedMessage::try_from(Message::new(&[], Some(&Pubkey::new_unique()))).unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 1, &fee_structure, true, true),
+            Bank::calculate_fee(&message, 1, &fee_structure, true, true, 1.0),
             max_fee + lamports_per_signature
         );
 
@@ -17878,7 +17904,7 @@ pub(crate) mod tests {
             SanitizedMessage::try_from(Message::new(&[ix0, ix1], Some(&Pubkey::new_unique())))
                 .unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 1, &fee_structure, true, true),
+            Bank::calculate_fee(&message, 1, &fee_structure, true, true,1.0),
             max_fee + 3 * lamports_per_signature
         );
 
@@ -17911,7 +17937,7 @@ pub(crate) mod tests {
                 Some(&Pubkey::new_unique()),
             ))
             .unwrap();
-            let fee = Bank::calculate_fee(&message, 1, &fee_structure, true, true);
+            let fee = Bank::calculate_fee(&message, 1, &fee_structure, true, true, 1.0);
             assert_eq!(
                 fee,
                 lamports_per_signature + prioritization_fee_details.get_fee()
@@ -17946,7 +17972,7 @@ pub(crate) mod tests {
         ))
         .unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 1, &FeeStructure::default(), false, true),
+            Bank::calculate_fee(&message, 1, &FeeStructure::default(), false, true, 1.0),
             2
         );
 
@@ -17958,7 +17984,8 @@ pub(crate) mod tests {
         ))
         .unwrap();
         assert_eq!(
-            Bank::calculate_fee(&message, 1, &FeeStructure::default(), false, true),
+            Bank::
+            calculate_fee(&message, 1, &FeeStructure::default(), false, true, 1.0),
             11
         );
     }

@@ -350,6 +350,8 @@ fn execute_batches(
             (cost, cost_without_bpf)
         })
         .collect::<Vec<_>>();
+    
+    println!("---AI proxy execute_batches {:?}", tx_costs.clone());
 
     let target_batch_count = get_thread_count() as u64;
 
@@ -391,6 +393,8 @@ fn execute_batches(
         }
         batches
     };
+
+    
 
     execute_batches_internal(
         bank,

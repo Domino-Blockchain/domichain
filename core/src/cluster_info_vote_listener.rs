@@ -801,9 +801,9 @@ impl ClusterInfoVoteListener {
                     "TPU: measure took {}",
                     measure_start.elapsed().as_secs_f64()
                 );
-                println!("Test vote majority in track_new_votes_and_notify_confirmations vote pubkey: {:?}, is_new: {:?}, majority: {:?}, quorum: {:?}, weight: {:?}", 
+               /*  println!("Test vote majority in track_new_votes_and_notify_confirmations vote pubkey: {:?}, is_new: {:?}, majority: {:?}, quorum: {:?}, weight: {:?}", 
                     vote_pubkey, is_new, reached_threshold_results.majority, reached_threshold_results.quorum, weight, 
-                );
+                ); */
                 if is_gossip_vote && is_new && stake > 0 {
                     let _ = gossip_verified_vote_hash_sender.send((
                         *vote_pubkey,

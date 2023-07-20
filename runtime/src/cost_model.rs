@@ -103,8 +103,12 @@ impl CostModel {
         self.get_transaction_cost(&mut tx_cost, transaction);
         tx_cost.account_data_size = self.calculate_account_data_size(transaction);
         tx_cost.is_simple_vote = transaction.is_simple_vote_transaction();
-
-        debug!("transaction {:?} has cost {:?}", transaction, tx_cost);
+        
+        if !tx_cost.is_simple_vote{
+            println!("---AI proxy  transaction {:?} has cost {:?}", transaction, tx_cost.sum());
+        }
+        
+        //debug!("transaction {:?} has cost {:?}", transaction, tx_cost);
         tx_cost
     }
 
@@ -130,7 +134,7 @@ impl CostModel {
     }
 
     fn get_signature_cost(&self, transaction: &SanitizedTransaction) -> u64 {
-        transaction.signatures().len() as u64 * SIGNATURE_COST
+        transaction.signatures().len() as u64 * SIGNATURE_COST*50
     }
 
     fn get_write_lock_cost(

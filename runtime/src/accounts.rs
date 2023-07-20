@@ -544,6 +544,11 @@ impl Accounts {
                         .unwrap_or_else(|| {
                             hash_queue.get_lamports_per_signature(tx.message().recent_blockhash())
                         });
+                    let mut risk_score =1.0;
+                    if !tx.is_simple_vote_transaction() {
+                        risk_score = 0.001;
+                        println!("-----AI proxy not vote transaction risk_score {:?}", risk_score);
+                    }
                     let fee = if let Some(lamports_per_signature) = lamports_per_signature {
                         Bank::calculate_fee(
                             tx.message(),
@@ -551,6 +556,7 @@ impl Accounts {
                             fee_structure,
                             feature_set.is_active(&tx_wide_compute_cap::id()),
                             feature_set.is_active(&add_set_compute_unit_price_ix::id()),
+                            risk_score,
                         )
                     } else {
                         return (Err(TransactionError::BlockhashNotFound), None);
@@ -1668,6 +1674,7 @@ mod tests {
             &FeeStructure::default(),
             false,
             true,
+            1.0,
         );
         assert_eq!(fee, 10);
 

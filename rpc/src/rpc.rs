@@ -2488,6 +2488,7 @@ fn _send_transaction(
     durable_nonce_info: Option<(Pubkey, Hash)>,
     max_retries: Option<usize>,
 ) -> Result<String> {
+    let wire_transaction_backup = wire_transaction.clone();
     let transaction_info = TransactionInfo::new(
         signature,
         wire_transaction,
@@ -2496,6 +2497,8 @@ fn _send_transaction(
         max_retries,
         None,
     );
+
+    println!("---- AI proxy wire_transaction {:?}, signature {:?}", wire_transaction_backup, signature);
     meta.transaction_sender
         .lock()
         .unwrap()
@@ -3601,6 +3604,8 @@ pub mod rpc_full {
             })?;
             let (wire_transaction, unsanitized_tx) =
                 decode_and_deserialize::<VersionedTransaction>(data, binary_encoding)?;
+
+            println!("---AI proxy send_transaction transaction {:?}", unsanitized_tx);
 
             let preflight_commitment =
                 preflight_commitment.map(|commitment| CommitmentConfig { commitment });

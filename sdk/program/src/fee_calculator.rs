@@ -18,8 +18,9 @@ pub struct FeeCalculator {
 
 impl FeeCalculator {
     pub fn new(lamports_per_signature: u64) -> Self {
+        //println!("--- AI proxy FeeCalculator {:?}", lamports_per_signature);
         Self {
-            lamports_per_signature,
+            lamports_per_signature
         }
     }
 
@@ -42,8 +43,10 @@ impl FeeCalculator {
             }
         }
 
-        self.lamports_per_signature
-            * (u64::from(message.header.num_required_signatures) + num_signatures)
+        let result = self.lamports_per_signature
+            * (u64::from(message.header.num_required_signatures) + num_signatures);
+
+        result
     }
 }
 
