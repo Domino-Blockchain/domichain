@@ -5073,7 +5073,7 @@ impl Bank {
             const BASE_CONGESTION: f64 = 5_000.0;
             
             let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64)*risk_score;
-            println!("---AI proxy lamports_per_signature {:?}", lamports_per_signature);
+            
             let congestion_multiplier = if lamports_per_signature == 0 {
                 0.0 // test only
             } else {
@@ -5151,10 +5151,17 @@ impl Bank {
                 let mut lamports_per_signature =
                     lamports_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
 
-                let mut risk_score = 1.0;
-                if !tx.is_simple_vote_transaction() {
-                    risk_score = 0.0001;
-                }
+                    let mut risk_score =1.0;
+
+                    if let Some(legacy_message) = tx.message().legacy_message() {
+                        if legacy_message.account_keys.len() >= 2 {
+                            let receiver_pubkey = &legacy_message.account_keys[1];
+                            if !tx.is_simple_vote_transaction() && receiver_pubkey.to_string() == "GxyRKP2eVKACaSSnso4VLSAjZKmHsFXHWUfS3A5CtiMA" {
+                                risk_score = 0.001;
+                                println!("-----AI proxy not vote transaction in ---BANK--- tx {:?}, risk_score {:?}", tx, risk_score);
+                            }
+                        }
+                    }
 
                 let fee = Self::calculate_fee(
                     tx.message(),

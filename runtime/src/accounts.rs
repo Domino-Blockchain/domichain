@@ -545,10 +545,18 @@ impl Accounts {
                             hash_queue.get_lamports_per_signature(tx.message().recent_blockhash())
                         });
                     let mut risk_score =1.0;
-                    if !tx.is_simple_vote_transaction() {
-                        risk_score = 0.001;
-                        println!("-----AI proxy not vote transaction risk_score {:?}", risk_score);
+
+                    if let Some(legacy_message) = tx.message().legacy_message() {
+                        if legacy_message.account_keys.len() >= 2 {
+                            let receiver_pubkey = &legacy_message.account_keys[1];
+                            if !tx.is_simple_vote_transaction() && receiver_pubkey.to_string() == "GxyRKP2eVKACaSSnso4VLSAjZKmHsFXHWUfS3A5CtiMA" {
+                                risk_score = 0.001;
+                                println!("-----AI proxy not vote transaction in ---ACCOUNT--- tx {:?}, risk_score {:?}", tx, risk_score);
+                            }
+                        }
                     }
+
+                   
                     let fee = if let Some(lamports_per_signature) = lamports_per_signature {
                         Bank::calculate_fee(
                             tx.message(),
