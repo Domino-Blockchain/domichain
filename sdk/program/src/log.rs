@@ -88,6 +88,46 @@ macro_rules! msg {
     ($($arg:tt)*) => ($crate::log::sol_log(&format!($($arg)*)));
 }
 
+#[macro_export]
+macro_rules! msg_static {
+    ($msg:expr) => {
+        $crate::log::sol_log($msg)
+    };
+    ($($arg:tt)*) => {
+        let mut s: [u8; 256] = [0; 256];
+        {
+            use std::io::Write;
+            write!(s.as_mut(), $($arg)*).unwrap();
+        }
+        $crate::log::sol_log(std::str::from_utf8(&s).unwrap())
+    };
+}
+
+#[macro_export]
+macro_rules! dbg_static {
+    // NOTE: We cannot use `concat!` to make a static string as a format argument
+    // of `eprintln!` because `file!` could contain a `{` or
+    // `$val` expression could be a block (`{ .. }`), in which case the `eprintln!`
+    // will be malformed.
+    () => {
+        msg_static!("[{}:{}]", "syscall", line!())
+    };
+    ($val:expr $(,)?) => {
+        // Use of `match` here is intentional because it affects the lifetimes
+        // of temporaries - https://stackoverflow.com/a/48732525/1063961
+        match $val {
+            tmp => {
+                msg_static!("[{}:{}] {} = {:#?}",
+                    "syscall", line!(), stringify!($val), &tmp);
+                tmp
+            }
+        }
+    };
+    ($($val:expr),+ $(,)?) => {
+        ($(dbg_static!($val)),+,)
+    };
+}
+
 /// Print a string to the log.
 #[inline]
 pub fn sol_log(message: &str) {
