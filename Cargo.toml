@@ -58,6 +58,8 @@ members = [
     "programs/bpf-loader-tests",
     "programs/bpf_loader",
     "programs/bpf_loader/gen-syscall-list",
+    "programs/wasm_loader",
+    # "programs/wasm_loader/wasm-gen-syscall-list",
     "programs/compute-budget",
     "programs/config",
     "programs/ed25519-tests",
@@ -302,6 +304,7 @@ domichain-banks-server = { path = "banks-server", version = "=1.16.1" }
 domichain-bench-tps = { path = "bench-tps", version = "=1.16.1" }
 domichain-bloom = { path = "bloom", version = "=1.16.1" }
 domichain-bpf-loader-program = { path = "programs/bpf_loader", version = "=1.16.1" }
+domichain-wasm-loader-program = { path = "programs/wasm_loader", version = "=1.16.1" }
 domichain-bucket-map = { path = "bucket_map", version = "=1.16.1" }
 domichain-connection-cache = { path = "connection-cache", version = "=1.16.1", default-features = false }
 domichain-clap-utils = { path = "clap-utils", version = "=1.16.1" }
