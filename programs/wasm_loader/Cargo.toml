@@ -1,0 +1,35 @@
+[package]
+name = "domichain-wasm-loader-program"
+description = "Domichain WASM loader"
+documentation = "https://docs.rs/domichain-wasm-loader-program"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+bincode = { workspace = true }
+byteorder = { workspace = true }
+libsecp256k1 = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-program-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-zk-token-sdk = { workspace = true }
+solana_rbpf = { workspace = true }
+thiserror = { workspace = true }
+wasmi = { workspace = true }
+wasmi_wasi = { workspace = true }
+
+[dev-dependencies]
+memoffset = { workspace = true }
+
+[lib]
+crate-type = ["lib"]
+name = "domichain_wasm_loader_program"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
