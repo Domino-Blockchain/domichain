@@ -38,6 +38,7 @@ serde_bytes = { workspace = true }
 sha2 = { workspace = true }
 domichain-account-decoder = { workspace = true }
 domichain-bpf-loader-program = { workspace = true }
+domichain-wasm-loader-program = { workspace = true }
 domichain-entry = { workspace = true }
 domichain-frozen-abi = { workspace = true }
 domichain-frozen-abi-macro = { workspace = true }

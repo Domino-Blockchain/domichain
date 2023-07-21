@@ -211,7 +211,7 @@ fn main() {
 
             upgradeable_programs_to_load.push(UpgradeableProgramInfo {
                 program_id: address,
-                loader: domichain_sdk::bpf_loader_upgradeable::id(),
+                loader: domichain_sdk::wasm_loader_upgradeable::id(),
                 upgrade_authority: Pubkey::default(),
                 program_path,
             });
@@ -240,7 +240,7 @@ fn main() {
 
             upgradeable_programs_to_load.push(UpgradeableProgramInfo {
                 program_id: address,
-                loader: domichain_sdk::bpf_loader_upgradeable::id(),
+                loader: domichain_sdk::wasm_loader_upgradeable::id(),
                 upgrade_authority: upgrade_authority_address,
                 program_path,
             });

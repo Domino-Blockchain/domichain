@@ -18,7 +18,7 @@ use {
     },
     domichain_sdk::{
         account::{AccountSharedData, ReadableAccount},
-        bpf_loader_deprecated,
+        wasm_loader_deprecated,
         feature_set::{
             check_slice_translation_size, enable_early_verification_of_account_modifications,
             native_programs_consume_cu, FeatureSet,
@@ -843,7 +843,7 @@ impl<'a> InvokeContext<'a> {
                 debug_assert!(program_account.is_ok());
                 program_account
             })
-            .map(|program_account| *program_account.get_owner() != bpf_loader_deprecated::id())
+            .map(|program_account| *program_account.get_owner() != wasm_loader_deprecated::id())
             .unwrap_or(true)
     }
 
@@ -861,7 +861,7 @@ impl<'a> InvokeContext<'a> {
         *self
             .syscall_context
             .last_mut()
-            .ok_or(InstructionError::CallDepth)? = Some(syscall_context);
+            .ok_or_else(|| InstructionError::CallDepth)? = Some(syscall_context);
         Ok(())
     }
 
@@ -878,7 +878,7 @@ impl<'a> InvokeContext<'a> {
         self.syscall_context
             .last_mut()
             .and_then(|syscall_context| syscall_context.as_mut())
-            .ok_or(InstructionError::CallDepth)
+            .ok_or_else(|| InstructionError::CallDepth)
     }
 
     /// Return a references to traces

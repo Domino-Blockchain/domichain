@@ -3,7 +3,9 @@
 use {
     lazy_static::lazy_static,
     domichain_sdk::{
-        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, compute_budget, ed25519_program,
+        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+        compute_budget, ed25519_program,
         feature, incinerator, native_loader, pubkey::Pubkey, secp256k1_program, system_program,
     },
     std::collections::HashMap,
@@ -47,6 +49,9 @@ lazy_static! {
         (bpf_loader_upgradeable::id(), COMPUTE_UNIT_TO_US_RATIO * 79),
         (bpf_loader_deprecated::id(), COMPUTE_UNIT_TO_US_RATIO * 38),
         (bpf_loader::id(), COMPUTE_UNIT_TO_US_RATIO * 19),
+        (wasm_loader_upgradeable::id(), COMPUTE_UNIT_TO_US_RATIO * 79),
+        (wasm_loader_deprecated::id(), COMPUTE_UNIT_TO_US_RATIO * 38),
+        (wasm_loader::id(), COMPUTE_UNIT_TO_US_RATIO * 19),
     ]
     .iter()
     .cloned()

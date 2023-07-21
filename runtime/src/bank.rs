@@ -90,7 +90,7 @@ use {
         iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
         ThreadPool, ThreadPoolBuilder,
     },
-    domichain_bpf_loader_program::syscalls::create_program_runtime_environment,
+    domichain_wasm_loader_program::syscalls::create_program_runtime_environment,
     domichain_measure::{measure, measure::Measure, measure_us},
     domichain_perf::perf_libs,
     domichain_program_runtime::{
@@ -112,7 +112,9 @@ use {
         },
         account_utils::StateMut,
         bpf_loader, bpf_loader_deprecated,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated,
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         clock::{
             BankId, Epoch, Slot, SlotCount, SlotIndex, UnixTimestamp, DEFAULT_HASHES_PER_TICK,
             DEFAULT_TICKS_PER_SECOND, INITIAL_RENT_EPOCH, MAX_PROCESSING_AGE,
@@ -4130,7 +4132,7 @@ impl Bank {
         let program = self
             .get_account_with_fixed_root(pubkey)
             .ok_or(TransactionError::ProgramAccountNotFound)?;
-        if bpf_loader_upgradeable::check_id(program.owner()) {
+        if wasm_loader_upgradeable::check_id(program.owner()) {
             if let Ok(UpgradeableLoaderState::Program {
                 programdata_address,
             }) = program.state()
@@ -4167,7 +4169,7 @@ impl Bank {
         };
         let mut transaction_accounts = vec![(*pubkey, program)];
         let is_upgradeable_loader =
-            bpf_loader_upgradeable::check_id(transaction_accounts[0].1.owner());
+            wasm_loader_upgradeable::check_id(transaction_accounts[0].1.owner());
         if is_upgradeable_loader {
             if let Ok(UpgradeableLoaderState::Program {
                 programdata_address,
@@ -4220,7 +4222,7 @@ impl Bank {
             .unwrap()
             .program_runtime_environment_v1
             .clone();
-        domichain_bpf_loader_program::load_program_from_account(
+        domichain_wasm_loader_program::load_program_from_account(
             &self.feature_set,
             None, // log_collector
             &program,
@@ -4565,6 +4567,9 @@ impl Bank {
             bpf_loader_upgradeable::id(),
             bpf_loader::id(),
             bpf_loader_deprecated::id(),
+            wasm_loader_upgradeable::id(),
+            wasm_loader::id(),
+            wasm_loader_deprecated::id(),
         ];
         let program_owners_refs: Vec<&Pubkey> = program_owners.iter().collect();
         let mut program_accounts_map = self.rc.accounts.filter_executable_program_accounts(

@@ -29,6 +29,7 @@ domichain-metrics = { workspace = true }
 domichain-sdk = { workspace = true }
 solana_rbpf = { workspace = true }
 thiserror = { workspace = true }
+wasmi = { workspace = true }
 
 [dev-dependencies]
 domichain-logger = { workspace = true }

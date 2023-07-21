@@ -461,6 +461,23 @@
 //!   - Instruction: [`domichain_program::loader_instruction`]
 //!   - Invokable by programs? yes
 //!
+//! - __WASM Loader__: Deploys, and executes immutable programs on the chain.
+//!   - ID: [`domichain_program::wasm_loader`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
+//!   - Invokable by programs? yes
+//!
+//! - __Upgradable WASM Loader__: Deploys, upgrades, and executes upgradable
+//!   programs on the chain.
+//!   - ID: [`domichain_program::wasm_loader_upgradeable`]
+//!   - Instruction: [`domichain_program::loader_upgradeable_instruction`]
+//!   - Invokable by programs? yes
+//!
+//! - __Deprecated WASM Loader__: Deploys, and executes immutable programs on the
+//!   chain.
+//!   - ID: [`domichain_program::wasm_loader_deprecated`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
+//!   - Invokable by programs? yes
+//!
 //! [lut]: https://docs.domichain.com/proposals/versioned-transactions
 
 #![allow(incomplete_features)]
@@ -480,6 +497,9 @@ pub mod borsh;
 pub mod bpf_loader;
 pub mod bpf_loader_deprecated;
 pub mod bpf_loader_upgradeable;
+pub mod wasm_loader;
+pub mod wasm_loader_deprecated;
+pub mod wasm_loader_upgradeable;
 pub mod clock;
 pub mod debug_account_data;
 pub mod decode_error;
@@ -550,7 +570,9 @@ pub mod config {
 pub mod sdk_ids {
     use {
         crate::{
-            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config, ed25519_program,
+            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+            wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+            config, ed25519_program,
             feature, incinerator, secp256k1_program, domichain_program::pubkey::Pubkey, stake,
             system_program, sysvar, vote,
         },
@@ -566,11 +588,14 @@ pub mod sdk_ids {
                 sysvar::id(),
                 bpf_loader::id(),
                 bpf_loader_upgradeable::id(),
+                wasm_loader::id(),
+                wasm_loader_upgradeable::id(),
                 incinerator::id(),
                 config::program::id(),
                 vote::program::id(),
                 feature::id(),
                 bpf_loader_deprecated::id(),
+                wasm_loader_deprecated::id(),
                 stake::config::id(),
             ];
             sdk_ids.extend(sysvar::ALL_IDS.iter());

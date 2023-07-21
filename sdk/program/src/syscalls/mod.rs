@@ -1,6 +1,6 @@
 //! Declarations of Domichain program syscalls.
 //!
-//! This module is mostly empty when not compiling for BPF targets.
+//! This module is mostly empty when not compiling for WASM targets.
 
 #[cfg(target_os = "wasi")]
 mod definitions;

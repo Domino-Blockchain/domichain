@@ -31,7 +31,7 @@ use {
     domichain_sdk::{
         account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         clock::{BankId, Slot},
         feature_set::{
             self, add_set_tx_loaded_accounts_data_size_instruction, enable_request_heap_frame_ix,
@@ -435,7 +435,7 @@ impl Accounts {
                     }
 
                     if !feature_set.is_active(&simplify_writable_program_account_check::id()) {
-                        if bpf_loader_upgradeable::check_id(account.owner()) {
+                        if wasm_loader_upgradeable::check_id(account.owner()) {
                             if message.is_writable(i) && !message.is_upgradeable_loader_present() {
                                 error_counters.invalid_writable_account += 1;
                                 return Err(TransactionError::InvalidWritableAccount);
@@ -2533,12 +2533,12 @@ mod tests {
             programdata_address: programdata_key1,
         };
         let mut account =
-            AccountSharedData::new_data(40, &program, &bpf_loader_upgradeable::id()).unwrap();
+            AccountSharedData::new_data(40, &program, &wasm_loader_upgradeable::id()).unwrap();
         account.set_executable(true);
         account.set_rent_epoch(1);
         accounts.push((key1, account));
         let mut account =
-            AccountSharedData::new_data(40, &program_data, &bpf_loader_upgradeable::id()).unwrap();
+            AccountSharedData::new_data(40, &program_data, &wasm_loader_upgradeable::id()).unwrap();
         account.set_rent_epoch(1);
         accounts.push((programdata_key1, account));
 
@@ -2546,19 +2546,19 @@ mod tests {
             programdata_address: programdata_key2,
         };
         let mut account =
-            AccountSharedData::new_data(40, &program, &bpf_loader_upgradeable::id()).unwrap();
+            AccountSharedData::new_data(40, &program, &wasm_loader_upgradeable::id()).unwrap();
         account.set_executable(true);
         account.set_rent_epoch(1);
         accounts.push((key2, account));
         let mut account =
-            AccountSharedData::new_data(40, &program_data, &bpf_loader_upgradeable::id()).unwrap();
+            AccountSharedData::new_data(40, &program_data, &wasm_loader_upgradeable::id()).unwrap();
         account.set_rent_epoch(1);
         accounts.push((programdata_key2, account));
 
-        let mut account = AccountSharedData::new(40, 1, &native_loader::id()); // create mock bpf_loader_upgradeable
+        let mut account = AccountSharedData::new(40, 1, &native_loader::id()); // create mock wasm_loader_upgradeable
         account.set_executable(true);
         account.set_rent_epoch(1);
-        accounts.push((bpf_loader_upgradeable::id(), account));
+        accounts.push((wasm_loader_upgradeable::id(), account));
 
         let instructions = vec![CompiledInstruction::new(2, &(), vec![0, 1])];
         let mut message = Message::new_with_compiled_instructions(
@@ -2591,8 +2591,8 @@ mod tests {
         assert_eq!(error_counters.invalid_writable_account, 1);
         assert_eq!(loaded_accounts.len(), 1);
 
-        // Solution 1: include bpf_loader_upgradeable account
-        message.account_keys = vec![key0, key1, bpf_loader_upgradeable::id()];
+        // Solution 1: include wasm_loader_upgradeable account
+        message.account_keys = vec![key0, key1, wasm_loader_upgradeable::id()];
         let tx = Transaction::new(&[&keypair], message.clone(), Hash::default());
         let loaded_accounts = load_accounts_with_excluded_features(
             tx,
@@ -2654,7 +2654,7 @@ mod tests {
             upgrade_authority_address: None,
         };
         let mut account =
-            AccountSharedData::new_data(40, &program_data, &bpf_loader_upgradeable::id()).unwrap();
+            AccountSharedData::new_data(40, &program_data, &wasm_loader_upgradeable::id()).unwrap();
         account.set_rent_epoch(1);
         accounts.push((key1, account));
 
@@ -2694,16 +2694,16 @@ mod tests {
         assert_eq!(error_counters.invalid_writable_account, 1);
         assert_eq!(loaded_accounts.len(), 1);
 
-        // Solution 1: include bpf_loader_upgradeable account
-        let mut account = AccountSharedData::new(40, 1, &native_loader::id()); // create mock bpf_loader_upgradeable
+        // Solution 1: include wasm_loader_upgradeable account
+        let mut account = AccountSharedData::new(40, 1, &native_loader::id()); // create mock wasm_loader_upgradeable
         account.set_executable(true);
         account.set_rent_epoch(1);
         let accounts_with_upgradeable_loader = vec![
             accounts[0].clone(),
             accounts[1].clone(),
-            (bpf_loader_upgradeable::id(), account),
+            (wasm_loader_upgradeable::id(), account),
         ];
-        message.account_keys = vec![key0, key1, bpf_loader_upgradeable::id()];
+        message.account_keys = vec![key0, key1, wasm_loader_upgradeable::id()];
         let tx = Transaction::new(&[&keypair], message.clone(), Hash::default());
         let loaded_accounts = load_accounts_with_excluded_features(
             tx,

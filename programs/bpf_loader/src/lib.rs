@@ -571,11 +571,17 @@ fn process_instruction_inner(
         | LoadedProgramType::DelayVisibility => {
             Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
         }
-        LoadedProgramType::LegacyV0(executable) => execute(executable, invoke_context),
-        LoadedProgramType::LegacyV1(executable) => execute(executable, invoke_context),
+        LoadedProgramType::LegacyV0(executable) => {
+            // execute(executable, invoke_context)
+            todo!()
+        },
+        LoadedProgramType::LegacyV1(executable) => {
+            // execute(executable, invoke_context)
+            todo!()
+        },
         _ => Err(Box::new(InstructionError::IncorrectProgramId) as Box<dyn std::error::Error>),
     }
-    .map(|_| 0)
+    .map(|_: ()| 0)
 }
 
 fn process_loader_upgradeable_instruction(

@@ -4,6 +4,7 @@ use {
         parse_address_lookup_table::parse_address_lookup_table,
         parse_associated_token::{parse_associated_token, spl_associated_token_id},
         parse_bpf_loader::{parse_bpf_loader, parse_bpf_upgradeable_loader},
+        parse_wasm_loader::{parse_wasm_loader, parse_wasm_upgradeable_loader},
         parse_stake::parse_stake,
         parse_system::parse_system,
         parse_token::parse_token,
@@ -28,6 +29,8 @@ lazy_static! {
     static ref ASSOCIATED_TOKEN_PROGRAM_ID: Pubkey = spl_associated_token_id();
     static ref BPF_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::bpf_loader::id();
     static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::bpf_loader_upgradeable::id();
+    static ref WASM_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::wasm_loader::id();
+    static ref WASM_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::wasm_loader_upgradeable::id();
     static ref MEMO_V1_PROGRAM_ID: Pubkey = spl_memo_id_v1();
     static ref MEMO_V3_PROGRAM_ID: Pubkey = spl_memo_id_v3();
     static ref STAKE_PROGRAM_ID: Pubkey = stake::program::id();
@@ -52,6 +55,11 @@ lazy_static! {
         m.insert(
             *BPF_UPGRADEABLE_LOADER_PROGRAM_ID,
             ParsableProgram::BpfUpgradeableLoader,
+        );
+        m.insert(*WASM_LOADER_PROGRAM_ID, ParsableProgram::WasmLoader);
+        m.insert(
+            *WASM_UPGRADEABLE_LOADER_PROGRAM_ID,
+            ParsableProgram::WasmUpgradeableLoader,
         );
         m.insert(*STAKE_PROGRAM_ID, ParsableProgram::Stake);
         m.insert(*SYSTEM_PROGRAM_ID, ParsableProgram::System);
@@ -102,6 +110,8 @@ pub enum ParsableProgram {
     SplToken,
     BpfLoader,
     BpfUpgradeableLoader,
+    WasmLoader,
+    WasmUpgradeableLoader,
     Stake,
     System,
     Vote,
@@ -130,6 +140,12 @@ pub fn parse(
         }
         ParsableProgram::BpfUpgradeableLoader => {
             serde_json::to_value(parse_bpf_upgradeable_loader(instruction, account_keys)?)?
+        }
+        ParsableProgram::WasmLoader => {
+            serde_json::to_value(parse_wasm_loader(instruction, account_keys)?)?
+        }
+        ParsableProgram::WasmUpgradeableLoader => {
+            serde_json::to_value(parse_wasm_upgradeable_loader(instruction, account_keys)?)?
         }
         ParsableProgram::Stake => serde_json::to_value(parse_stake(instruction, account_keys)?)?,
         ParsableProgram::System => serde_json::to_value(parse_system(instruction, account_keys)?)?,

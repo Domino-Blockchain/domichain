@@ -11,7 +11,7 @@
 
 use crate::{
     address_lookup_table_account::AddressLookupTableAccount,
-    bpf_loader_upgradeable,
+    wasm_loader_upgradeable,
     hash::Hash,
     instruction::{CompiledInstruction, Instruction},
     message::{
@@ -331,11 +331,11 @@ impl Message {
         }
     }
 
-    /// Returns true if any static account key is the bpf upgradeable loader
+    /// Returns true if any static account key is the wasam upgradeable loader
     fn is_upgradeable_loader_in_static_keys(&self) -> bool {
         self.account_keys
             .iter()
-            .any(|&key| key == bpf_loader_upgradeable::id())
+            .any(|&key| key == wasm_loader_upgradeable::id())
     }
 
     /// Returns true if the account at the specified index was requested as writable.

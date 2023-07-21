@@ -1,5 +1,7 @@
-#[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
-use solana_rbpf::error::EbpfError;
+use solana_rbpf::vm::Config;
+
+// #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
+// use solana_rbpf::error::EbpfError;
 use {
     crate::{
         invoke_context::{InvokeContext, ProcessInstructionWithContext},
@@ -9,9 +11,14 @@ use {
     log::{debug, log_enabled, trace},
     percentage::PercentageInteger,
     domichain_measure::measure::Measure,
-    solana_rbpf::{elf::Executable, verifier::RequisiteVerifier, vm::BuiltinProgram},
+    solana_rbpf::{
+        // elf::Executable, verifier::RequisiteVerifier,
+        vm::BuiltinProgram,
+    },
     domichain_sdk::{
-        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, clock::Slot, loader_v4,
+        // bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+        clock::Slot, loader_v4,
         pubkey::Pubkey, saturating_add_assign,
     },
     std::{
@@ -57,6 +64,12 @@ pub trait WorkingSlot {
     fn is_ancestor(&self, other: Slot) -> bool;
 }
 
+pub struct WasmExecutable {
+    pub engine: wasmi::Engine,
+    pub verified_executable: wasmi::Module,
+    pub config: Config,
+}
+
 #[derive(Default)]
 pub enum LoadedProgramType {
     /// Tombstone for undeployed, closed or unloadable programs
@@ -66,9 +79,9 @@ pub enum LoadedProgramType {
     DelayVisibility,
     /// Successfully verified but not currently compiled, used to track usage statistics when a compiled program is evicted from memory.
     Unloaded(Arc<BuiltinProgram<InvokeContext<'static>>>),
-    LegacyV0(Executable<RequisiteVerifier, InvokeContext<'static>>),
-    LegacyV1(Executable<RequisiteVerifier, InvokeContext<'static>>),
-    Typed(Executable<RequisiteVerifier, InvokeContext<'static>>),
+    LegacyV0(WasmExecutable),
+    LegacyV1(WasmExecutable),
+    Typed(WasmExecutable),
     #[cfg(test)]
     TestLoaded(Arc<BuiltinProgram<InvokeContext<'static>>>),
     Builtin(BuiltinProgram<InvokeContext<'static>>),
@@ -227,8 +240,23 @@ impl LoadedProgram {
         account_size: usize,
         metrics: &mut LoadProgramMetrics,
     ) -> Result<Self, Box<dyn std::error::Error>> {
+        let engine = wasmi::Engine::default();
+
         let mut load_elf_time = Measure::start("load_elf_time");
-        let executable = Executable::load(elf_bytes, program_runtime_environment.clone())?;
+
+        // let executable = Executable::load(elf_bytes, program_runtime_environment.clone())?;
+
+        let verified_executable = wasmi::Module::new(
+            &engine,
+            elf_bytes,
+        ).map_err(|err| format!("Binary should be valid WASM: {err}"))?;
+
+        let executable = WasmExecutable {
+            engine,
+            verified_executable,
+            config: program_runtime_environment.get_config().clone(),
+        };
+
         load_elf_time.stop();
         metrics.load_elf_us = load_elf_time.as_us();
 
@@ -236,30 +264,30 @@ impl LoadedProgram {
 
         // Allowing mut here, since it may be needed for jit compile, which is under a config flag
         #[allow(unused_mut)]
-        let mut program = if bpf_loader_deprecated::check_id(loader_key) {
-            LoadedProgramType::LegacyV0(Executable::verified(executable)?)
-        } else if bpf_loader::check_id(loader_key) || bpf_loader_upgradeable::check_id(loader_key) {
-            LoadedProgramType::LegacyV1(Executable::verified(executable)?)
+        let mut program = if wasm_loader_deprecated::check_id(loader_key) {
+            LoadedProgramType::LegacyV0(executable)
+        } else if wasm_loader::check_id(loader_key) || wasm_loader_upgradeable::check_id(loader_key) {
+            LoadedProgramType::LegacyV1(executable)
         } else if loader_v4::check_id(loader_key) {
-            LoadedProgramType::Typed(Executable::verified(executable)?)
+            LoadedProgramType::Typed(executable)
         } else {
             panic!();
         };
         verify_code_time.stop();
         metrics.verify_code_us = verify_code_time.as_us();
 
-        #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
-        {
-            let mut jit_compile_time = Measure::start("jit_compile_time");
-            match &mut program {
-                LoadedProgramType::LegacyV0(executable) => executable.jit_compile(),
-                LoadedProgramType::LegacyV1(executable) => executable.jit_compile(),
-                LoadedProgramType::Typed(executable) => executable.jit_compile(),
-                _ => Err(EbpfError::JitNotCompiled),
-            }?;
-            jit_compile_time.stop();
-            metrics.jit_compile_us = jit_compile_time.as_us();
-        }
+        // #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
+        // {
+        //     let mut jit_compile_time = Measure::start("jit_compile_time");
+        //     match &mut program {
+        //         LoadedProgramType::LegacyV0(executable) => executable.jit_compile(),
+        //         LoadedProgramType::LegacyV1(executable) => executable.jit_compile(),
+        //         LoadedProgramType::Typed(executable) => executable.jit_compile(),
+        //         _ => Err(EbpfError::JitNotCompiled),
+        //     }?;
+        //     jit_compile_time.stop();
+        //     metrics.jit_compile_us = jit_compile_time.as_us();
+        // }
 
         Ok(Self {
             deployment_slot,
@@ -272,24 +300,26 @@ impl LoadedProgram {
         })
     }
 
+    #[allow(unreachable_code)]
     pub fn to_unloaded(&self) -> Option<Self> {
-        let env = match &self.program {
-            LoadedProgramType::LegacyV0(program)
-            | LoadedProgramType::LegacyV1(program)
-            | LoadedProgramType::Typed(program) => program.get_loader().clone(),
-            #[cfg(test)]
-            LoadedProgramType::TestLoaded(env) => env.clone(),
-            _ => return None,
-        };
-        Some(Self {
-            program: LoadedProgramType::Unloaded(env),
-            account_size: self.account_size,
-            deployment_slot: self.deployment_slot,
-            effective_slot: self.effective_slot,
-            maybe_expiration_slot: self.maybe_expiration_slot,
-            tx_usage_counter: AtomicU64::new(self.tx_usage_counter.load(Ordering::Relaxed)),
-            ix_usage_counter: AtomicU64::new(self.tx_usage_counter.load(Ordering::Relaxed)),
-        })
+        todo!()
+        // let env = match &self.program {
+        //     LoadedProgramType::LegacyV0(program)
+        //     | LoadedProgramType::LegacyV1(program)
+        //     | LoadedProgramType::Typed(program) => program.get_loader().clone(),
+        //     #[cfg(test)]
+        //     LoadedProgramType::TestLoaded(env) => env.clone(),
+        //     _ => return None,
+        // };
+        // Some(Self {
+        //     program: LoadedProgramType::Unloaded(env),
+        //     account_size: self.account_size,
+        //     deployment_slot: self.deployment_slot,
+        //     effective_slot: self.effective_slot,
+        //     maybe_expiration_slot: self.maybe_expiration_slot,
+        //     tx_usage_counter: AtomicU64::new(self.tx_usage_counter.load(Ordering::Relaxed)),
+        //     ix_usage_counter: AtomicU64::new(self.tx_usage_counter.load(Ordering::Relaxed)),
+        // })
     }
 
     /// Creates a new built-in program
@@ -484,6 +514,7 @@ impl LoadedPrograms {
     }
 
     /// On the epoch boundary this removes all programs of the outdated feature set
+    #[allow(unreachable_code)]
     pub fn prune_feature_set_transition(&mut self) {
         for second_level in self.entries.values_mut() {
             second_level.retain(|entry| {
@@ -491,11 +522,13 @@ impl LoadedPrograms {
                     LoadedProgramType::Builtin(_)
                     | LoadedProgramType::DelayVisibility
                     | LoadedProgramType::Closed => true,
-                    LoadedProgramType::LegacyV0(program) | LoadedProgramType::LegacyV1(program)
-                        if Arc::ptr_eq(
-                            program.get_loader(),
-                            &self.program_runtime_environment_v1,
-                        ) =>
+                    LoadedProgramType::LegacyV0(_program) | LoadedProgramType::LegacyV1(_program)
+                        // FIXME(Dev)
+                        // if Arc::ptr_eq(
+                        //     program.get_loader(),
+                        //     &self.program_runtime_environment_v1,
+                        // )
+                        =>
                     {
                         true
                     }

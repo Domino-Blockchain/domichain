@@ -23,7 +23,7 @@ sha2 = { workspace = true }
 domichain-frozen-abi-macro = { workspace = true }
 thiserror = { workspace = true }
 
-[target.'cfg(not(target_os = "domichain"))'.dependencies]
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
 ahash = { workspace = true }
 blake3 = { workspace = true, features = ["digest", "traits-preview"] }
 block-buffer = { workspace = true }
@@ -38,7 +38,7 @@ once_cell = { workspace = true, features = ["alloc", "race"] }
 rand_core = { workspace = true, features = ["std"] }
 subtle = { workspace = true }
 
-[target.'cfg(not(target_os = "domichain"))'.dev-dependencies]
+[target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
 domichain-logger = { workspace = true }
 
 [build-dependencies]

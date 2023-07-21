@@ -1,3 +1,5 @@
+use domichain_tpu_client::tpu_client::TpuSenderError;
+
 use {
     crate::{
         checks::*,
@@ -10,7 +12,6 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     log::*,
     domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
-    domichain_bpf_loader_program::syscalls::create_program_runtime_environment,
     domichain_clap_utils::{
         self, hidden_unless_forced, input_parsers::*, input_validators::*, keypair::*,
     },
@@ -23,24 +24,18 @@ use {
         connection_cache::ConnectionCache,
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    domichain_program_runtime::{compute_budget::ComputeBudget, invoke_context::InvokeContext},
-    solana_rbpf::{
-        elf::Executable,
-        verifier::{RequisiteVerifier, TautologyVerifier},
-    },
     domichain_remote_wallet::remote_wallet::RemoteWalletManager,
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_rpc_client_api::{
-        client_error::ErrorKind as ClientErrorKind,
+        client_error::{ErrorKind as ClientErrorKind, Error as ClientError},
         config::{RpcAccountInfoConfig, RpcProgramAccountsConfig, RpcSendTransactionConfig},
         filter::{Memcmp, RpcFilterType},
     },
     domichain_sdk::{
         account::Account,
         account_utils::StateMut,
-        bpf_loader, bpf_loader_deprecated,
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
-        feature_set::FeatureSet,
+        wasm_loader, wasm_loader_deprecated,
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         instruction::{Instruction, InstructionError},
         loader_instruction,
         message::Message,
@@ -868,7 +863,7 @@ fn process_program_deploy(
         .get_account_with_commitment(&program_pubkey, config.commitment)?
         .value
     {
-        if account.owner != bpf_loader_upgradeable::id() {
+        if account.owner != wasm_loader_upgradeable::id() {
             return Err(format!(
                 "Account {program_pubkey} is not an upgradeable program or already in use"
             )
@@ -927,7 +922,7 @@ fn process_program_deploy(
     };
 
     let (program_data, program_len) = if let Some(program_location) = program_location {
-        let program_data = read_and_verify_elf(program_location)?;
+        let program_data = read_and_verify_wasm(program_location)?;
         let program_len = program_data.len();
         (program_data, program_len)
     } else if buffer_provided {
@@ -936,9 +931,9 @@ fn process_program_deploy(
             .get_account_with_commitment(&buffer_pubkey, config.commitment)?
             .value
         {
-            if !bpf_loader_upgradeable::check_id(&account.owner) {
+            if !wasm_loader_upgradeable::check_id(&account.owner) {
                 return Err(format!(
-                    "Buffer account {buffer_pubkey} is not owned by the BPF Upgradeable Loader",
+                    "Buffer account {buffer_pubkey} is not owned by the WASM Upgradeable Loader",
                 )
                 .into());
             }
@@ -1010,7 +1005,7 @@ fn process_program_deploy(
             program_len,
             programdata_len,
             minimum_balance,
-            &bpf_loader_upgradeable::id(),
+            &wasm_loader_upgradeable::id(),
             Some(&[program_signer.unwrap(), upgrade_authority_signer]),
             buffer_signer,
             &buffer_pubkey,
@@ -1093,7 +1088,7 @@ fn process_write_buffer(
         }
     }
 
-    let program_data = read_and_verify_elf(program_location)?;
+    let program_data = read_and_verify_wasm(program_location)?;
     let buffer_data_len = if let Some(len) = max_len {
         len
     } else {
@@ -1110,7 +1105,7 @@ fn process_write_buffer(
         program_data.len(),
         program_data.len(),
         minimum_balance,
-        &bpf_loader_upgradeable::id(),
+        &wasm_loader_upgradeable::id(),
         None,
         buffer_signer,
         &buffer_pubkey,
@@ -1144,7 +1139,7 @@ fn process_set_authority(
 
     let mut tx = if let Some(ref pubkey) = program_pubkey {
         Transaction::new_unsigned(Message::new(
-            &[bpf_loader_upgradeable::set_upgrade_authority(
+            &[wasm_loader_upgradeable::set_upgrade_authority(
                 pubkey,
                 &authority_signer.pubkey(),
                 new_authority.as_ref(),
@@ -1154,7 +1149,7 @@ fn process_set_authority(
     } else if let Some(pubkey) = buffer_pubkey {
         if let Some(ref new_authority) = new_authority {
             Transaction::new_unsigned(Message::new(
-                &[bpf_loader_upgradeable::set_buffer_authority(
+                &[wasm_loader_upgradeable::set_buffer_authority(
                     &pubkey,
                     &authority_signer.pubkey(),
                     new_authority,
@@ -1208,7 +1203,7 @@ fn process_set_authority_checked(
     let blockhash = rpc_client.get_latest_blockhash()?;
 
     let mut tx = Transaction::new_unsigned(Message::new(
-        &[bpf_loader_upgradeable::set_upgrade_authority_checked(
+        &[wasm_loader_upgradeable::set_upgrade_authority_checked(
             &program_pubkey,
             &authority_signer.pubkey(),
             &new_authority_signer.pubkey(),
@@ -1365,7 +1360,7 @@ fn get_accounts_with_filter(
     length: usize,
 ) -> Result<Vec<(Pubkey, Account)>, Box<dyn std::error::Error>> {
     let results = rpc_client.get_program_accounts_with_config(
-        &bpf_loader_upgradeable::id(),
+        &wasm_loader_upgradeable::id(),
         RpcProgramAccountsConfig {
             filters: Some(filters),
             account_config: RpcAccountInfoConfig {
@@ -1394,13 +1389,13 @@ fn process_show(
             .get_account_with_commitment(&account_pubkey, config.commitment)?
             .value
         {
-            if account.owner == bpf_loader::id() || account.owner == bpf_loader_deprecated::id() {
+            if account.owner == wasm_loader::id() || account.owner == wasm_loader_deprecated::id() {
                 Ok(config.output_format.formatted_string(&CliProgram {
                     program_id: account_pubkey.to_string(),
                     owner: account.owner.to_string(),
                     data_len: account.data.len(),
                 }))
-            } else if account.owner == bpf_loader_upgradeable::id() {
+            } else if account.owner == wasm_loader_upgradeable::id() {
                 if let Ok(UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = account.state()
@@ -1486,11 +1481,11 @@ fn process_dump(
             .get_account_with_commitment(&account_pubkey, config.commitment)?
             .value
         {
-            if account.owner == bpf_loader::id() || account.owner == bpf_loader_deprecated::id() {
+            if account.owner == wasm_loader::id() || account.owner == wasm_loader_deprecated::id() {
                 let mut f = File::create(output_location)?;
                 f.write_all(&account.data)?;
                 Ok(format!("Wrote program to {output_location}"))
-            } else if account.owner == bpf_loader_upgradeable::id() {
+            } else if account.owner == wasm_loader_upgradeable::id() {
                 if let Ok(UpgradeableLoaderState::Program {
                     programdata_address,
                 }) = account.state()
@@ -1547,7 +1542,7 @@ fn close(
     let blockhash = rpc_client.get_latest_blockhash()?;
 
     let mut tx = Transaction::new_unsigned(Message::new(
-        &[bpf_loader_upgradeable::close_any(
+        &[wasm_loader_upgradeable::close_any(
             account_pubkey,
             recipient_pubkey,
             Some(&authority_signer.pubkey()),
@@ -1763,7 +1758,7 @@ fn do_process_program_write_and_deploy(
             &config.signers[0].pubkey(),
             buffer_pubkey,
             &account,
-            if loader_id == &bpf_loader_upgradeable::id() {
+            if loader_id == &wasm_loader_upgradeable::id() {
                 UpgradeableLoaderState::size_of_buffer(program_len)
             } else {
                 program_len
@@ -1771,9 +1766,9 @@ fn do_process_program_write_and_deploy(
             minimum_balance,
             allow_excessive_balance,
         )?
-    } else if loader_id == &bpf_loader_upgradeable::id() {
+    } else if loader_id == &wasm_loader_upgradeable::id() {
         (
-            bpf_loader_upgradeable::create_buffer(
+            wasm_loader_upgradeable::create_buffer(
                 &config.signers[0].pubkey(),
                 buffer_pubkey,
                 &buffer_authority_signer.pubkey(),
@@ -1807,8 +1802,8 @@ fn do_process_program_write_and_deploy(
     // Create and add write messages
     let payer_pubkey = config.signers[0].pubkey();
     let create_msg = |offset: u32, bytes: Vec<u8>| {
-        let instruction = if loader_id == &bpf_loader_upgradeable::id() {
-            bpf_loader_upgradeable::write(
+        let instruction = if loader_id == &wasm_loader_upgradeable::id() {
+            wasm_loader_upgradeable::write(
                 buffer_pubkey,
                 &buffer_authority_signer.pubkey(),
                 offset,
@@ -1828,9 +1823,9 @@ fn do_process_program_write_and_deploy(
 
     // Create and add final message
     let final_message = if let Some(program_signers) = program_signers {
-        let message = if loader_id == &bpf_loader_upgradeable::id() {
+        let message = if loader_id == &wasm_loader_upgradeable::id() {
             Message::new_with_blockhash(
-                &bpf_loader_upgradeable::deploy_with_max_program_len(
+                &wasm_loader_upgradeable::deploy_with_max_program_len(
                     &config.signers[0].pubkey(),
                     &program_signers[0].pubkey(),
                     buffer_pubkey,
@@ -1900,7 +1895,7 @@ fn do_process_program_upgrade(
     buffer_signer: Option<&dyn Signer>,
     skip_fee_check: bool,
 ) -> ProcessResult {
-    let loader_id = bpf_loader_upgradeable::id();
+    let loader_id = wasm_loader_upgradeable::id();
     let data_len = program_data.len();
     let minimum_balance = rpc_client.get_minimum_balance_for_rent_exemption(
         UpgradeableLoaderState::size_of_programdata(data_len),
@@ -1927,7 +1922,7 @@ fn do_process_program_upgrade(
                 )?
             } else {
                 (
-                    bpf_loader_upgradeable::create_buffer(
+                    wasm_loader_upgradeable::create_buffer(
                         &config.signers[0].pubkey(),
                         buffer_pubkey,
                         &upgrade_authority.pubkey(),
@@ -1952,7 +1947,7 @@ fn do_process_program_upgrade(
             let upgrade_authority_pubkey = upgrade_authority.pubkey();
             let payer_pubkey = config.signers[0].pubkey();
             let create_msg = |offset: u32, bytes: Vec<u8>| {
-                let instruction = bpf_loader_upgradeable::write(
+                let instruction = wasm_loader_upgradeable::write(
                     &buffer_signer_pubkey,
                     &upgrade_authority_pubkey,
                     offset,
@@ -1975,7 +1970,7 @@ fn do_process_program_upgrade(
 
     // Create and add final message
     let final_message = Message::new_with_blockhash(
-        &[bpf_loader_upgradeable::upgrade(
+        &[wasm_loader_upgradeable::upgrade(
             program_id,
             buffer_pubkey,
             &upgrade_authority.pubkey(),
@@ -2014,29 +2009,15 @@ fn do_process_program_upgrade(
     Ok(config.output_format.formatted_string(&program_id))
 }
 
-fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+fn read_and_verify_wasm(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut file = File::open(program_location)
         .map_err(|err| format!("Unable to open program file: {err}"))?;
     let mut program_data = Vec::new();
     file.read_to_end(&mut program_data)
         .map_err(|err| format!("Unable to read program file: {err}"))?;
 
-    // Verify the program
-    let program_runtime_environment = create_program_runtime_environment(
-        &FeatureSet::default(),
-        &ComputeBudget::default(),
-        true,
-        false,
-    )
-    .unwrap();
-    let executable = Executable::<TautologyVerifier, InvokeContext>::from_elf(
-        &program_data,
-        Arc::new(program_runtime_environment),
-    )
-    .map_err(|err| format!("ELF error: {err}"))?;
-
-    let _ = Executable::<RequisiteVerifier, InvokeContext>::verified(executable)
-        .map_err(|err| format!("ELF error: {err}"))?;
+    let engine = wasmi::Engine::default();
+    let _module = wasmi::Module::new(&engine, &mut &program_data[..]).map_err(|err| format!("WASM error: {err}"))?;
 
     Ok(program_data)
 }
@@ -2178,17 +2159,49 @@ fn send_deploy_messages(
                     write_messages,
                     &[payer_signer, write_signer],
                 ),
-                ConnectionCache::Quic(cache) => TpuClient::new_with_connection_cache(
-                    rpc_client.clone(),
-                    &config.websocket_url,
-                    TpuClientConfig::default(),
-                    cache,
-                )?
-                .send_and_confirm_messages_with_spinner(
-                    write_messages,
-                    &[payer_signer, write_signer],
-                ),
+                ConnectionCache::Quic(cache) => {
+                    let mut attempts = 0;
+                    let client_result = loop {
+                        match TpuClient::new_with_connection_cache(
+                            rpc_client.clone(),
+                            &config.websocket_url,
+                            TpuClientConfig::default(),
+                            cache.clone(),
+                        ) {
+                            Ok(client) => break Ok(client),
+                            Err(TpuSenderError::RpcError(rpc_err)) => {
+                                match ClientError::from(rpc_err).kind {
+                                    ClientErrorKind::RpcError(inner_error) => {
+                                        match domichain_rpc_client_api::request::RpcError::from(inner_error) {
+                                            domichain_rpc_client_api::request::RpcError::RpcResponseError {
+                                                code,
+                                                ..
+                                            } if code == -32602 => {
+                                                attempts += 1;
+                                                if attempts > 20 {
+                                                    panic!();
+                                                }
+                                                println!("Waiting for leader schedule: {attempts}/10");
+                                                std::thread::sleep(std::time::Duration::from_secs(2));
+                                                continue;
+                                            }
+                                            _ => todo!(),
+                                        }
+                                    }
+                                    _ => todo!(),
+                                }
+                            },
+                            error => break error,
+                        }
+                    };
+
+                    client_result?.send_and_confirm_messages_with_spinner(
+                        write_messages,
+                        &[payer_signer, write_signer],
+                    )
+                },
             }
+            
             .map_err(|err| format!("Data writes to account failed: {err}"))?
             .into_iter()
             .flatten()

@@ -615,7 +615,10 @@ pub fn process_instruction_inner(
             | LoadedProgramType::DelayVisibility => {
                 Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
             }
-            LoadedProgramType::Typed(executable) => execute(invoke_context, executable),
+            LoadedProgramType::Typed(_executable) => {
+                todo!()
+                // execute(invoke_context, executable)
+            },
             _ => Err(Box::new(InstructionError::IncorrectProgramId) as Box<dyn std::error::Error>),
         }
     }

@@ -3,7 +3,7 @@ use {
     serde::Serialize,
     domichain_sdk::{
         account::{AccountSharedData, WritableAccount},
-        bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+        wasm_loader_upgradeable::{self, UpgradeableLoaderState},
         client::{Client, SyncClient},
         clock::Clock,
         instruction::{AccountMeta, Instruction},
@@ -121,7 +121,7 @@ pub fn load_upgradeable_buffer<T: Client>(
         .send_and_confirm_message(
             &[from_keypair, buffer_keypair],
             Message::new(
-                &bpf_loader_upgradeable::create_buffer(
+                &wasm_loader_upgradeable::create_buffer(
                     &from_keypair.pubkey(),
                     &buffer_pubkey,
                     &buffer_authority_pubkey,
@@ -142,7 +142,7 @@ pub fn load_upgradeable_buffer<T: Client>(
     let mut offset = 0;
     for chunk in program.chunks(chunk_size) {
         let message = Message::new(
-            &[bpf_loader_upgradeable::write(
+            &[wasm_loader_upgradeable::write(
                 &buffer_pubkey,
                 &buffer_authority_pubkey,
                 offset,
@@ -176,7 +176,7 @@ pub fn load_upgradeable_program(
     );
 
     let message = Message::new(
-        &bpf_loader_upgradeable::deploy_with_max_program_len(
+        &wasm_loader_upgradeable::deploy_with_max_program_len(
             &from_keypair.pubkey(),
             &executable_keypair.pubkey(),
             &buffer_keypair.pubkey(),
@@ -221,7 +221,7 @@ pub fn upgrade_program<T: Client>(
         name,
     );
     let message = Message::new(
-        &[bpf_loader_upgradeable::upgrade(
+        &[wasm_loader_upgradeable::upgrade(
             executable_pubkey,
             &buffer_keypair.pubkey(),
             &authority_keypair.pubkey(),
@@ -242,7 +242,7 @@ pub fn set_upgrade_authority<T: Client>(
     new_authority_pubkey: Option<&Pubkey>,
 ) {
     let message = Message::new(
-        &[bpf_loader_upgradeable::set_upgrade_authority(
+        &[wasm_loader_upgradeable::set_upgrade_authority(
             program_pubkey,
             &current_authority_keypair.pubkey(),
             new_authority_pubkey,

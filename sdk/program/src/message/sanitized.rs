@@ -50,7 +50,7 @@ impl<'a> LegacyMessage<'a> {
         self.message.is_key_called_as_program(key_index)
     }
 
-    /// Inspect all message keys for the bpf upgradeable loader
+    /// Inspect all message keys for the wasm upgradeable loader
     pub fn is_upgradeable_loader_present(&self) -> bool {
         self.message.is_upgradeable_loader_present()
     }
@@ -293,7 +293,7 @@ impl SanitizedMessage {
             .collect()
     }
 
-    /// Inspect all message keys for the bpf upgradeable loader
+    /// Inspect all message keys for the wasm upgradeable loader
     pub fn is_upgradeable_loader_present(&self) -> bool {
         match self {
             Self::Legacy(message) => message.is_upgradeable_loader_present(),

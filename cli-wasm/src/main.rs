@@ -6,7 +6,7 @@ use {
         keypair::{CliSigners, DefaultSigner},
         DisplayError,
     },
-    domichain_cli::{
+    domichain_cli_wasm::{
         clap_app::get_clap_app,
         cli::{parse_command, process_command, CliCommandInfo, CliConfig},
     },

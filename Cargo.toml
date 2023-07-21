@@ -17,6 +17,7 @@ members = [
     "cli",
     "cli-config",
     "cli-output",
+    "cli-wasm",
     "client",
     "client-test",
     "connection-cache",
@@ -308,6 +309,7 @@ domichain-clap-v3-utils = { path = "clap-v3-utils", version = "=1.16.1" }
 domichain-cli = { path = "cli", version = "=1.16.1" }
 domichain-cli-config = { path = "cli-config", version = "=1.16.1" }
 domichain-cli-output = { path = "cli-output", version = "=1.16.1" }
+domichain-cli-wasm = { path = "cli-wasm", version = "=1.16.1" }
 domichain-client = { path = "client", version = "=1.16.1" }
 domichain-compute-budget-program = { path = "programs/compute-budget", version = "=1.16.1" }
 domichain-config-program = { path = "programs/config", version = "=1.16.1" }
@@ -397,6 +399,8 @@ unix_socket2 = "0.5.4"
 uriparse = "0.6.4"
 url = "2.3.1"
 users = "0.10.0"
+wasmi = "0.29.0"
+wasmi_wasi = "0.29.0"
 wasm-bindgen = "0.2"
 winapi = "0.3.8"
 winreg = "0.10"

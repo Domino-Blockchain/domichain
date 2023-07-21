@@ -14,6 +14,7 @@
 use {
     crate::{
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
         hash::Hash,
         instruction::{CompiledInstruction, Instruction},
         message::{compiled_keys::CompiledKeys, MessageHeader},
@@ -27,7 +28,7 @@ use {
 
 lazy_static! {
     // Copied keys over since direct references create cyclical dependency.
-    pub static ref BUILTIN_PROGRAMS_KEYS: [Pubkey; 10] = {
+    pub static ref BUILTIN_PROGRAMS_KEYS: [Pubkey; 13] = {
         let parse = |s| Pubkey::from_str(s).unwrap();
         [
             parse("Config1111111111111111111111111111111111111"),
@@ -40,6 +41,9 @@ lazy_static! {
             bpf_loader::id(),
             bpf_loader_deprecated::id(),
             bpf_loader_upgradeable::id(),
+            wasm_loader::id(),
+            wasm_loader_deprecated::id(),
+            wasm_loader_upgradeable::id(),
         ]
     };
 }
@@ -605,11 +609,11 @@ impl Message {
         false
     }
 
-    /// Returns `true` if any account is the BPF upgradeable loader.
+    /// Returns `true` if any account is the WASM upgradeable loader.
     pub fn is_upgradeable_loader_present(&self) -> bool {
         self.account_keys
             .iter()
-            .any(|&key| key == bpf_loader_upgradeable::id())
+            .any(|&key| key == wasm_loader_upgradeable::id())
     }
 }
 

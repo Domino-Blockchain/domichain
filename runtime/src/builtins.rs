@@ -1,7 +1,9 @@
 use {
     domichain_program_runtime::invoke_context::ProcessInstructionWithContext,
     domichain_sdk::{
-        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, feature_set, pubkey::Pubkey,
+        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+        feature_set, pubkey::Pubkey,
     },
 };
 
@@ -82,6 +84,24 @@ pub static BUILTINS: &[BuiltinPrototype] = &[
         program_id: bpf_loader_upgradeable::id(),
         name: "domichain_bpf_loader_upgradeable_program",
         entrypoint: domichain_bpf_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader_deprecated::id(),
+        name: "domichain_wasm_loader_deprecated_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader::id(),
+        name: "domichain_wasm_loader_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader_upgradeable::id(),
+        name: "domichain_wasm_loader_upgradeable_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
     },
     BuiltinPrototype {
         feature_id: None,

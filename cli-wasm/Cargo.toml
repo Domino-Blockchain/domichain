@@ -30,7 +30,6 @@ serde_derive = { workspace = true }
 serde_json = { workspace = true }
 domichain-account-decoder = { workspace = true }
 domichain-address-lookup-table-program = { workspace = true }
-domichain-bpf-loader-program = { workspace = true }
 domichain-wasm-loader-program = { workspace = true }
 domichain-clap-utils = { workspace = true }
 domichain-cli-config = { workspace = true }
@@ -50,10 +49,10 @@ domichain-tpu-client = { workspace = true, features = ["default"] }
 domichain-transaction-status = { workspace = true }
 domichain-version = { workspace = true }
 domichain-vote-program = { workspace = true }
-solana_rbpf = { workspace = true }
 spl-memo = { workspace = true, features = ["no-entrypoint"] }
 thiserror = { workspace = true }
 tiny-bip39 = { workspace = true }
+wasmi = { workspace = true }
 
 [dev-dependencies]
 domichain-streamer = { workspace = true }

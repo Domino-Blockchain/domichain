@@ -1,6 +1,6 @@
 use {
     crate::{
-        bpf_loader_upgradeable,
+        wasm_loader_upgradeable,
         message::{legacy::is_builtin_key_or_sysvar, v0, AccountKeys},
         pubkey::Pubkey,
     },
@@ -163,11 +163,11 @@ impl<'a> LoadedMessage<'a> {
         }
     }
 
-    /// Returns true if any account is the bpf upgradeable loader
+    /// Returns true if any account is the wasm upgradeable loader
     pub fn is_upgradeable_loader_present(&self) -> bool {
         self.account_keys()
             .iter()
-            .any(|&key| key == bpf_loader_upgradeable::id())
+            .any(|&key| key == wasm_loader_upgradeable::id())
     }
 }
 

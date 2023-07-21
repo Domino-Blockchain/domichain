@@ -42,7 +42,7 @@ pub mod legacy;
 
 #[cfg(not(target_os = "wasi"))]
 #[path = ""]
-mod non_bpf_modules {
+mod non_wasm_modules {
     mod account_keys;
     mod address_loader;
     mod sanitized;
@@ -52,7 +52,7 @@ mod non_bpf_modules {
 }
 
 #[cfg(not(target_os = "wasi"))]
-pub use non_bpf_modules::*;
+pub use non_wasm_modules::*;
 pub use {compiled_keys::CompileError, legacy::Message};
 
 /// The length of a message header in bytes.

@@ -1,3 +1,5 @@
+use domichain_program_runtime::loaded_programs::WasmExecutable;
+
 use {
     crate::{args::*, ledger_utils::*},
     clap::{value_t, App, AppSettings, Arg, ArgMatches, SubCommand},
@@ -330,7 +332,8 @@ fn load_program<'a>(
     filename: &Path,
     program_id: Pubkey,
     invoke_context: &InvokeContext<'a>,
-) -> Executable<RequisiteVerifier, InvokeContext<'a>> {
+) -> WasmExecutable {
+// ) -> Executable<RequisiteVerifier, InvokeContext<'a>> {
     let mut file = File::open(filename).unwrap();
     let mut magic = [0u8; 4];
     file.read_exact(&mut magic).unwrap();
@@ -374,23 +377,25 @@ fn load_program<'a>(
             Err(err) => Err(format!("Loading executable failed: {err:?}")),
         }
     } else {
-        let executable = assemble::<InvokeContext>(
-            std::str::from_utf8(contents.as_slice()).unwrap(),
-            Arc::new(program_runtime_environment),
-        )
-        .unwrap();
-        Executable::<RequisiteVerifier, InvokeContext>::verified(executable)
-            .map_err(|err| format!("Assembling executable failed: {err:?}"))
+        todo!()
+        // let executable = assemble::<InvokeContext>(
+        //     std::str::from_utf8(contents.as_slice()).unwrap(),
+        //     Arc::new(program_runtime_environment),
+        // )
+        // .unwrap();
+        // Executable::<RequisiteVerifier, InvokeContext>::verified(executable)
+        //     .map_err(|err| format!("Assembling executable failed: {err:?}"))
     }
     .unwrap();
-    #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
-    verified_executable.jit_compile().unwrap();
-    unsafe {
-        std::mem::transmute::<
-            Executable<RequisiteVerifier, InvokeContext<'static>>,
-            Executable<RequisiteVerifier, InvokeContext<'a>>,
-        >(verified_executable)
-    }
+    // #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
+    // verified_executable.jit_compile().unwrap();
+    // unsafe {
+    //     std::mem::transmute::<
+    //         Executable<RequisiteVerifier, InvokeContext<'static>>,
+    //         Executable<RequisiteVerifier, InvokeContext<'a>>,
+    //     >(verified_executable)
+    // }
+    verified_executable
 }
 
 enum Action {
@@ -404,20 +409,21 @@ fn process_static_action(action: Action, matches: &ArgMatches<'_>) {
     with_mock_invoke_context!(invoke_context, transaction_context, transaction_accounts);
     let program = matches.value_of("PROGRAM").unwrap();
     let verified_executable = load_program(Path::new(program), program_id, &invoke_context);
-    let mut analysis = LazyAnalysis::new(&verified_executable);
-    match action {
-        Action::Cfg => {
-            let mut file = File::create("cfg.dot").unwrap();
-            analysis
-                .analyze()
-                .visualize_graphically(&mut file, None)
-                .unwrap();
-        }
-        Action::Dis => {
-            let stdout = std::io::stdout();
-            analysis.analyze().disassemble(&mut stdout.lock()).unwrap();
-        }
-    };
+    todo!()
+    // let mut analysis = LazyAnalysis::new(&verified_executable);
+    // match action {
+    //     Action::Cfg => {
+    //         let mut file = File::create("cfg.dot").unwrap();
+    //         analysis
+    //             .analyze()
+    //             .visualize_graphically(&mut file, None)
+    //             .unwrap();
+    //     }
+    //     Action::Dis => {
+    //         let stdout = std::io::stdout();
+    //         analysis.analyze().disassemble(&mut stdout.lock()).unwrap();
+    //     }
+    // };
 }
 
 pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
@@ -566,57 +572,58 @@ pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
 
     let program = matches.value_of("PROGRAM").unwrap();
     let verified_executable = load_program(Path::new(program), program_id, &invoke_context);
-    let mut analysis = LazyAnalysis::new(&verified_executable);
-    create_vm!(
-        vm,
-        &verified_executable,
-        regions,
-        account_lengths,
-        &mut invoke_context,
-    );
-    let mut vm = vm.unwrap();
-    let start_time = Instant::now();
-    if matches.value_of("mode").unwrap() == "debugger" {
-        vm.debug_port = Some(matches.value_of("port").unwrap().parse::<u16>().unwrap());
-    }
-    let (instruction_count, result) = vm.execute_program(interpreted);
-    let duration = Instant::now() - start_time;
-    if matches.occurrences_of("trace") > 0 {
-        // top level trace is stored in syscall_context
-        if let Some(Some(syscall_context)) = vm.env.context_object_pointer.syscall_context.last() {
-            let trace = syscall_context.trace_log.as_slice();
-            output_trace(matches, trace, 0, &mut analysis);
-        }
-        // the remaining traces are saved in InvokeContext when
-        // corresponding syscall_contexts are popped
-        let traces = vm.env.context_object_pointer.get_traces();
-        for (frame, trace) in traces.iter().filter(|t| !t.is_empty()).enumerate() {
-            output_trace(matches, trace, frame + 1, &mut analysis);
-        }
-    }
-    drop(vm);
+    todo!()
+    // let mut analysis = LazyAnalysis::new(&verified_executable);
+    // create_vm!(
+    //     vm,
+    //     &verified_executable,
+    //     regions,
+    //     account_lengths,
+    //     &mut invoke_context,
+    // );
+    // let mut vm = vm.unwrap();
+    // let start_time = Instant::now();
+    // if matches.value_of("mode").unwrap() == "debugger" {
+    //     vm.debug_port = Some(matches.value_of("port").unwrap().parse::<u16>().unwrap());
+    // }
+    // let (instruction_count, result) = vm.execute_program(interpreted);
+    // let duration = Instant::now() - start_time;
+    // if matches.occurrences_of("trace") > 0 {
+    //     // top level trace is stored in syscall_context
+    //     if let Some(Some(syscall_context)) = vm.env.context_object_pointer.syscall_context.last() {
+    //         let trace = syscall_context.trace_log.as_slice();
+    //         output_trace(matches, trace, 0, &mut analysis);
+    //     }
+    //     // the remaining traces are saved in InvokeContext when
+    //     // corresponding syscall_contexts are popped
+    //     let traces = vm.env.context_object_pointer.get_traces();
+    //     for (frame, trace) in traces.iter().filter(|t| !t.is_empty()).enumerate() {
+    //         output_trace(matches, trace, frame + 1, &mut analysis);
+    //     }
+    // }
+    // drop(vm);
 
-    let output = Output {
-        result: format!("{result:?}"),
-        instruction_count,
-        execution_time: duration,
-        log: invoke_context
-            .get_log_collector()
-            .unwrap()
-            .borrow()
-            .get_recorded_content()
-            .to_vec(),
-    };
-    match matches.value_of("output_format") {
-        Some("json") => {
-            println!("{}", serde_json::to_string_pretty(&output).unwrap());
-        }
-        Some("json-compact") => {
-            println!("{}", serde_json::to_string(&output).unwrap());
-        }
-        _ => {
-            println!("Program output:");
-            println!("{output:?}");
-        }
-    }
+    // let output = Output {
+    //     result: format!("{result:?}"),
+    //     instruction_count,
+    //     execution_time: duration,
+    //     log: invoke_context
+    //         .get_log_collector()
+    //         .unwrap()
+    //         .borrow()
+    //         .get_recorded_content()
+    //         .to_vec(),
+    // };
+    // match matches.value_of("output_format") {
+    //     Some("json") => {
+    //         println!("{}", serde_json::to_string_pretty(&output).unwrap());
+    //     }
+    //     Some("json-compact") => {
+    //         println!("{}", serde_json::to_string(&output).unwrap());
+    //     }
+    //     _ => {
+    //         println!("Program output:");
+    //         println!("{output:?}");
+    //     }
+    // }
 }

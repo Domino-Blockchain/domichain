@@ -21,6 +21,7 @@ domichain-banks-client = { workspace = true }
 domichain-banks-interface = { workspace = true }
 domichain-banks-server = { workspace = true }
 domichain-bpf-loader-program = { workspace = true }
+domichain-wasm-loader-program = { workspace = true }
 domichain-logger = { workspace = true }
 domichain-program-runtime = { workspace = true }
 domichain-runtime = { workspace = true }
