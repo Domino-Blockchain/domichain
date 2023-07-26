@@ -10,6 +10,7 @@ fn main() {
     let build = builder
         .files(src.iter())
         .include("include")
+        .include("/opt/homebrew/Cellar/libsodium/1.0.18_1/include")
         .flag("-Wno-unused-parameter");
     build.compile("vrf");
 

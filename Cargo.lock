@@ -1749,6 +1749,7 @@ dependencies = [
  "domichain-runtime",
  "domichain-sdk",
  "domichain-send-transaction-service",
+ "domichain_risk_score",
  "futures 0.3.28",
  "tarpc",
  "tokio",
@@ -3281,6 +3282,7 @@ dependencies = [
  "domichain-vote-program",
  "domichain-zk-token-proof-program",
  "domichain-zk-token-sdk",
+ "domichain_risk_score",
  "ed25519-dalek",
  "flate2",
  "fnv",
@@ -3750,6 +3752,7 @@ dependencies = [
  "domichain-tpu-client",
  "domichain-version",
  "domichain-vote-program",
+ "domichain_risk_score",
  "fd-lock",
  "indicatif",
  "itertools",
@@ -3773,6 +3776,7 @@ dependencies = [
  "symlink",
  "thiserror",
  "tikv-jemallocator",
+ "tokio",
 ]
 
 [[package]]
@@ -3900,6 +3904,17 @@ dependencies = [
  "thiserror",
  "tiny-bip39",
  "zeroize",
+]
+
+[[package]]
+name = "domichain_risk_score"
+version = "1.16.1"
+dependencies = [
+ "domichain-sdk",
+ "lazy_static",
+ "reqwest",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

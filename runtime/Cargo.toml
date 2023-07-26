@@ -56,6 +56,7 @@ domichain-metrics = { workspace = true }
 domichain-perf = { workspace = true }
 domichain-program-runtime = { workspace = true }
 domichain-rayon-threadlimit = { workspace = true }
+domichain_risk_score = { workspace = true }
 domichain-sdk = { workspace = true }
 domichain-stake-program = { workspace = true }
 domichain-system-program = { workspace = true }

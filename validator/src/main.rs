@@ -78,8 +78,14 @@ use {
         str::FromStr,
         sync::{Arc, RwLock},
         time::{Duration, SystemTime},
+        
     },
+
+    tokio,
+
 };
+
+use domichain_risk_score::ai_risk_score;
 
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]
@@ -1831,6 +1837,7 @@ pub fn main() {
         return;
     }
 
+
     let validator = Validator::new(
         node,
         identity_keypair,
@@ -1861,6 +1868,9 @@ pub fn main() {
     }
     info!("Validator initialized");
     validator.join();
+
+    
+    
     info!("Validator exiting..");
 }
 

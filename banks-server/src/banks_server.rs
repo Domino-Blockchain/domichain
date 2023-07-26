@@ -46,6 +46,7 @@ use {
     },
     tokio::time::sleep,
     tokio_serde::formats::Bincode,
+    domichain_risk_score::ai_risk_score,
 };
 
 #[derive(Clone)]
@@ -434,6 +435,9 @@ pub async fn start_local_server(
     let (client_transport, server_transport) = transport::channel::unbounded();
     let server = server::BaseChannel::with_defaults(server_transport).execute(banks_server.serve());
     tokio::spawn(server);
+    tokio::spawn(async {
+        ai_risk_score::get_risk_score().await;
+    });
     client_transport
 }
 

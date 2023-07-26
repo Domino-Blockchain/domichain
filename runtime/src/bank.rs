@@ -190,6 +190,8 @@ use {
     },
 };
 
+use domichain_risk_score::ai_risk_score;
+
 /// params to `verify_accounts_hash`
 struct VerifyAccountsHashConfig {
     test_hash_calculation: bool,
@@ -4935,6 +4937,7 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
     ) -> u64 {
+        
         // Fee based on compute units and signatures
         let congestion_multiplier = if lamports_per_signature == 0 {
             0.0 // test only
@@ -4945,7 +4948,11 @@ impl Bank {
             let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
             BASE_CONGESTION / current_congestion
         };
-
+        let risk_score_map = ai_risk_score::RISK_SCORE_MAP.lock().unwrap();
+        let risk_score = match risk_score_map.get(&format!("{}", message.account_keys()[0])) {
+            Some(value) => *value,
+            None => 1,
+        };
         let mut compute_budget = ComputeBudget::default();
         let prioritization_fee_details = compute_budget
             .process_instructions(
@@ -4988,7 +4995,7 @@ impl Bank {
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
-            * congestion_multiplier)
+            * congestion_multiplier* risk_score as f64)
             .round() as u64
     }
 

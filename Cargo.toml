@@ -3,6 +3,7 @@ members = [
     "account-decoder",
     "accounts-bench",
     "accounts-cluster-bench",
+    "ai-risk-score",
     "banking-bench",
     "banks-client",
     "banks-interface",
@@ -340,6 +341,7 @@ domichain-pubsub-client = { path = "pubsub-client", version = "=1.16.1" }
 domichain-quic-client = { path = "quic-client", version = "=1.16.1" }
 domichain-rayon-threadlimit = { path = "rayon-threadlimit", version = "=1.16.1" }
 domichain-remote-wallet = { path = "remote-wallet", version = "=1.16.1", default-features = false }
+domichain_risk_score = { path = "ai-risk-score", version = "=1.16.1"}
 domichain-rpc = { path = "rpc", version = "=1.16.1" }
 domichain-rpc-client = { path = "rpc-client", version = "=1.16.1", default-features = false }
 domichain-rpc-client-api = { path = "rpc-client-api", version = "=1.16.1" }
