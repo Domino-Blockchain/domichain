@@ -4948,11 +4948,13 @@ impl Bank {
             let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
             BASE_CONGESTION / current_congestion
         };
-        let risk_score_map = ai_risk_score::RISK_SCORE_MAP.lock().unwrap();
+        let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
         let risk_score = match risk_score_map.get(&format!("{}", message.account_keys()[0])) {
             Some(value) => *value+10,
             None => 1,
         };
+
+        drop(risk_score_map);
 
         //println!("---AI Test calculate fee account: {:?}, risk-score: {:?}", &format!("{}", message.account_keys()[0]), risk_score);
         let mut compute_budget = ComputeBudget::default();

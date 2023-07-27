@@ -1,13 +1,12 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use serde_json::Value;
+use std::sync::{Arc, Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time;
 
 lazy_static! {
-    pub static ref RISK_SCORE_MAP: Arc<Mutex<HashMap<String, u32>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref RISK_SCORE_MAP: Arc<RwLock<HashMap<String, u32>>> = Arc::new(RwLock::new(HashMap::new()));
 }
 
 #[derive(Debug, Deserialize)]
@@ -45,7 +44,7 @@ pub async fn get_risk_score() {
 
         println!("---AI test parsed_response {:?}", parsed_response);
         {
-        let mut risk_score_map = RISK_SCORE_MAP.lock().unwrap();
+        let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
         for entry in parsed_response {
             let wallet = entry.wallet;
             let risk_score = entry.risk_score as u32;
@@ -54,8 +53,9 @@ pub async fn get_risk_score() {
             
         }
         println!("---AI test get risk_score {:?}", risk_score_map);
+        
+        drop(risk_score_map);
     }
-
 /*         if parsed_response.is_array() {
             let mut risk_score_map = RISK_SCORE_MAP.lock().unwrap();
             for value in parsed_response.as_array().unwrap().iter() {
