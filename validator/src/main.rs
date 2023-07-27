@@ -459,7 +459,8 @@ fn configure_banking_trace_dir_byte_limit(
         };
 }
 
-pub fn main() {
+#[tokio::main]
+pub async fn main() {
     let default_args = DefaultArgs::new();
     let domichain_version = domichain_version::version!();
     let cli_app = app(domichain_version, &default_args);
@@ -1866,6 +1867,11 @@ pub fn main() {
             exit(1);
         });
     }
+    let my_task = tokio::task::spawn(async {
+        ai_risk_score::get_risk_score().await;
+    });
+    println!("AI get risk score validator");
+    _ = my_task.await;
     info!("Validator initialized");
     validator.join();
 
