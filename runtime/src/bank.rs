@@ -4950,9 +4950,11 @@ impl Bank {
         };
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.lock().unwrap();
         let risk_score = match risk_score_map.get(&format!("{}", message.account_keys()[0])) {
-            Some(value) => *value,
+            Some(value) => *value+10,
             None => 1,
         };
+
+        //println!("---AI Test calculate fee account: {:?}, risk-score: {:?}", &format!("{}", message.account_keys()[0]), risk_score);
         let mut compute_budget = ComputeBudget::default();
         let prioritization_fee_details = compute_budget
             .process_instructions(
