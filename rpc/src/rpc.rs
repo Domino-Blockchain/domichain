@@ -3973,7 +3973,8 @@ pub mod rpc_full {
             data: String,
             config: Option<RpcContextConfig>,
         ) -> Result<RpcResponse<Option<u64>>> {
-            debug!("get_fee_for_message rpc request received");
+            //debug!("get_fee_for_message rpc request received");
+            println!("---AI proxy get_fee_for_message rpc request received");
             let (_, message) = decode_and_deserialize::<VersionedMessage>(
                 data,
                 TransactionBinaryEncoding::Base64,
@@ -3988,6 +3989,7 @@ pub mod rpc_full {
                     Error::invalid_params(format!("invalid transaction message: {err}"))
                 })?;
             let fee = bank.get_fee_for_message(&sanitized_message);
+            println!("---AI proxy get_fee_for_message fee {:?}", fee);
             Ok(new_response(bank, fee))
         }
 

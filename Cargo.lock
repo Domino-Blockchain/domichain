@@ -3912,6 +3912,7 @@ version = "1.16.1"
 dependencies = [
  "domichain-sdk",
  "lazy_static",
+ "log",
  "reqwest",
  "serde",
  "serde_json",

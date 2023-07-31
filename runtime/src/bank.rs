@@ -3564,6 +3564,7 @@ impl Bank {
                     NoncePartial::new(address, account).lamports_per_signature()
                 })
         })?;
+        
         Some(Self::calculate_fee(
             message,
             lamports_per_signature,
@@ -3581,6 +3582,8 @@ impl Bank {
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
         ))
+        //println!("------AI proxy get fee for message: {:?}", fee);
+        //fee
     }
 
     pub fn get_startup_verification_complete(&self) -> &Arc<AtomicBool> {
@@ -4950,7 +4953,16 @@ impl Bank {
         };
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
         let risk_score = match risk_score_map.get(&format!("{}", message.account_keys()[0])) {
-            Some(value) => *value+10,
+            Some(value) => 
+                if *value <3  {
+                    *value + 1
+                }else if *value < 4 {
+                    *value + 5 
+                }else if *value < 5 {
+                    *value + 20
+                } else {
+                    *value + 50
+                }
             None => 1,
         };
 

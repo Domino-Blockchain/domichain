@@ -5,11 +5,12 @@
 here=$(dirname "$0")
 # shellcheck source=multinode-demo/common.sh
 source "$here"/common.sh
-
+default_ai_node_url="http://127.0.0.1:5000/retrieve_risk_score_by_timestamp?time=600"
 args=(
   --max-genesis-archive-unpacked-size 1073741824
   --no-poh-speed-test
   --no-os-network-limits-test
+  #--ai-node-url "$default_ai_node_url"
 )
 airdrops_enabled=1
 node_domi=500 # 500 DOMI: number of DOMI to airdrop the node for transaction fees and vote account rent exemption (ignored if airdrops_enabled=0)
@@ -69,6 +70,10 @@ while [[ -n $1 ]]; do
       args+=("$1" "$2")
       shift 2
     elif [[ $1 = --expected-shred-version ]]; then
+      args+=("$1" "$2")
+      shift 2
+    elif [[ $1 = --ai-node-url ]]; then
+      default_ai_node_url="$2"
       args+=("$1" "$2")
       shift 2
     elif [[ $1 = --identity ]]; then
@@ -264,6 +269,7 @@ default_arg --log -
 default_arg --full-rpc-api
 default_arg --no-incremental-snapshots
 default_arg --allow-private-addr
+default_arg --ai-node-url "$default_ai_node_url"
 
 if [[ $maybeRequireTower = true ]]; then
   default_arg --require-tower

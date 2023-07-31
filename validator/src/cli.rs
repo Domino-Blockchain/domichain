@@ -1333,6 +1333,13 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
                 .help("Allow concurrent replay of slots on different forks")
         )
         .arg(
+            Arg::with_name("ai-node-url")
+                .long("ai-node-url")
+                .value_name("URL") // Replace "DIR" with a more descriptive name if desired
+                .takes_value(true)
+                .help("Specifies the ai node url")
+        )
+        .arg(
             Arg::with_name("banking_trace_dir_byte_limit")
                 // expose friendly alternative name to cli than internal
                 // implementation-oriented one

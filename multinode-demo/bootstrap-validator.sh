@@ -94,6 +94,10 @@ while [[ -n $1 ]]; do
     elif [[ $1 == --maximum-snapshots-to-retain ]]; then
       args+=("$1" "$2")
       shift 2
+    elif [[ $1 = --ai-node-url ]]; then
+      default_ai_node_url="$2"
+      args+=("$1" "$2")
+      shift 2
     elif [[ $1 == --no-snapshot-fetch ]]; then
       args+=("$1")
       shift
@@ -124,6 +128,7 @@ done
 # These keypairs are created by ./setup.sh and included in the genesis config
 identity=$DOMICHAIN_CONFIG_DIR/bootstrap-validator/identity.json
 vote_account="$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/vote-account.json
+default_ai_node_url="http://127.0.0.1:5000/retrieve_risk_score_by_timestamp?time=600"
 
 ledger_dir="$DOMICHAIN_CONFIG_DIR"/bootstrap-validator
 [[ -d "$ledger_dir" ]] || {
@@ -149,6 +154,7 @@ args+=(
   --no-os-network-limits-test
   --no-wait-for-vote-to-start-leader
   --full-rpc-api
+  --ai-node-url "$default_ai_node_url"
 )
 default_arg --gossip-port 8001
 default_arg --log -

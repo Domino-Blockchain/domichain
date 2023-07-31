@@ -1867,16 +1867,16 @@ pub async fn main() {
             exit(1);
         });
     }
+
+    let ai_node_url = matches.value_of("ai-node-url").unwrap_or("http://127.0.0.1:5000/retrieve_risk_score_by_timestamp?time=500").to_string();
+    info!("---AI test _ai_node_url {:?}", ai_node_url);
     let my_task = tokio::task::spawn(async {
-        ai_risk_score::get_risk_score().await;
+        ai_risk_score::get_risk_score(ai_node_url).await;
     });
-    println!("AI get risk score validator");
+    //println!("AI get risk score validator");
     _ = my_task.await;
     info!("Validator initialized");
-    validator.join();
-
-    
-    
+    validator.join();  
     info!("Validator exiting..");
 }
 
