@@ -14,7 +14,7 @@ const QUERY_TIME_PERIOD:u64 = 600;
 
 #[derive(Debug, Deserialize)]
 struct ParsedResponse {
-    _ip_address: String,
+    ip_address: String,
     risk_score: f64,
     wallet: String,
 }
@@ -48,7 +48,7 @@ pub async fn get_risk_score(url:String) {
         for entry in parsed_response {
             let wallet = entry.wallet;
             let risk_score = entry.risk_score as u32;
-            println!("Wallet: {:?}, Risk Score: {:?}", wallet, risk_score);
+            //println!("Wallet: {:?}, Risk Score: {:?}", wallet, risk_score);
             risk_score_map.insert(wallet, risk_score as u32);
             
         }
