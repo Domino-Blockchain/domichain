@@ -2135,17 +2135,17 @@ fn execute<'a, 'b: 'a>(
         let parameter_bytes_slice = parameter_bytes.as_slice();
         let parameter_bytes_slice_len = parameter_bytes_slice.len();
 
-        fn print_bytes(v: &[u8]) {
-            println!();
-            for c in v.chunks(48) {
-                for b in c {
-                    print!("{} ", b);
-                }
+        // fn print_bytes(v: &[u8]) {
+        //     println!();
+        //     for c in v.chunks(48) {
+        //         for b in c {
+        //             print!("{} ", b);
+        //         }
 
-                print!("\n");
-            }
-            println!();
-        }
+        //         print!("\n");
+        //     }
+        //     println!();
+        // }
 
         // if parameter_bytes_slice_len < 1024 * 1024 {
         //     print_bytes(&parameter_bytes_slice[..48 * 4]);
@@ -2186,6 +2186,7 @@ fn execute<'a, 'b: 'a>(
         execute_time = Measure::start("execute");
         
         // TODO
+        dbg!();
         let result = vm.call(&mut store, 0).unwrap();
 
         // let (compute_units_consumed, result) = vm.execute_program(!use_jit);
@@ -2206,11 +2207,11 @@ fn execute<'a, 'b: 'a>(
             &memory.data(&store)[0..parameter_bytes_slice_len]
         );
 
-        if parameter_bytes_slice_len < 1024 * 1024 {
-            let to_print = parameter_bytes.as_slice();
-            print_bytes(&to_print[..48 * 4]);
-            print_bytes(&to_print[to_print.len() - 48 * 4..]);
-        }
+        // if parameter_bytes_slice_len < 1024 * 1024 {
+        //     let to_print = parameter_bytes.as_slice();
+        //     print_bytes(&to_print[..48 * 4]);
+        //     print_bytes(&to_print[to_print.len() - 48 * 4..]);
+        // }
 
         let invoke_context_ref = invoke_context.borrow_mut();
         

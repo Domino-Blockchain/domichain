@@ -322,8 +322,10 @@ fn translate(
     vm_addr: u64,
     len: u64,
 ) -> Result<u64, Error> {
+    let new_vm_addr = vm_addr + solana_rbpf::ebpf::MM_HEAP_START;
+    // dbg!("translate", access_type, vm_addr, len, new_vm_addr);
     // FIXME: vm_addr is address in WASM space. For non-heap access this won't work
-    memory_mapping.map(access_type, vm_addr + solana_rbpf::ebpf::MM_HEAP_START, len, 0).into()
+    memory_mapping.map(access_type, new_vm_addr, len, 0).into()
 }
 
 fn translate_type_inner<'a, T>(
@@ -332,6 +334,7 @@ fn translate_type_inner<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a mut T, Error> {
+    // dbg!("translate_type_inner", access_type, vm_addr);
     let host_addr = translate(memory_mapping, access_type, vm_addr, size_of::<T>() as u64)?;
 
     if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
@@ -344,6 +347,7 @@ fn translate_type_mut<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a mut T, Error> {
+    // dbg!("translate_type_mut", vm_addr);
     translate_type_inner::<T>(memory_mapping, AccessType::Store, vm_addr, check_aligned)
 }
 fn translate_type<'a, T>(
@@ -351,6 +355,7 @@ fn translate_type<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a T, Error> {
+    // dbg!("translate_type", vm_addr);
     translate_type_inner::<T>(memory_mapping, AccessType::Load, vm_addr, check_aligned)
         .map(|value| &*value)
 }
@@ -363,6 +368,7 @@ fn translate_slice_inner<'a, T>(
     check_aligned: bool,
     check_size: bool,
 ) -> Result<&'a mut [T], Error> {
+    // dbg!("translate_slice_inner", access_type, vm_addr, len);
     if len == 0 {
         return Ok(&mut []);
     }
@@ -373,6 +379,7 @@ fn translate_slice_inner<'a, T>(
     }
 
     let host_addr = translate(memory_mapping, access_type, vm_addr, total_size)?;
+    // dbg!("translate_slice_inner", vm_addr, total_size, host_addr);
 
     if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
         return Err(SyscallError::UnalignedPointer.into());
@@ -778,6 +785,7 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
+        // dbg!(vals_addr, vals_len, result_addr);
         let compute_budget = invoke_context.get_compute_budget();
         if compute_budget.sha256_max_slices < vals_len {
             ic_msg!(
@@ -808,6 +816,7 @@ declare_syscall!(
                 invoke_context.get_check_size(),
             )?;
             for val in vals.iter() {
+                // Values on stack
                 let bytes = translate_slice::<u8>(
                     memory_mapping,
                     val.as_ptr() as u64,

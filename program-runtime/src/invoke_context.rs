@@ -792,6 +792,10 @@ impl<'a> InvokeContext<'a> {
                 .process_executable_chain_us,
             process_executable_chain_time.as_us()
         );
+
+        if builtin_id.to_string().contains("Loader") {
+            dbg!(timings.execute_accessories.process_instructions.process_executable_chain_us);
+        }
         result
     }
 
