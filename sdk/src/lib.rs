@@ -40,7 +40,7 @@ extern crate self as domichain_sdk;
 pub use signer::signers;
 // These domichain_program imports could be *-imported, but that causes a bunch of
 // confusing duplication in the docs due to a rustdoc bug. #26211
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub use domichain_program::program_stubs;
 pub use domichain_program::{
     account_info, address_lookup_table_account, alt_bn128, big_mod_exp, blake3, borsh,
