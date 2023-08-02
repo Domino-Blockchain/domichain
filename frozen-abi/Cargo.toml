@@ -2,12 +2,14 @@
 name = "domichain-frozen-abi"
 description = "Domichain Frozen ABI"
 documentation = "https://docs.rs/domichain-frozen-abi"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.16.1"
+edition = "2021"
+# version = { workspace = true }
+# authors = { workspace = true }
+# repository = { workspace = true }
+# homepage = { workspace = true }
+# license = { workspace = true }
+# edition = { workspace = true }
 
 [dependencies]
 bs58 = { workspace = true }
@@ -20,7 +22,8 @@ serde_bytes = { workspace = true }
 serde_derive = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
-domichain-frozen-abi-macro = { workspace = true }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro" }
+# domichain-frozen-abi-macro = { workspace = true }
 thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]

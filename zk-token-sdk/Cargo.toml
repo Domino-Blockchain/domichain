@@ -2,19 +2,22 @@
 name = "domichain-zk-token-sdk"
 description = "Domichain Zk Token SDK"
 documentation = "https://docs.rs/domichain-zk-token-sdk"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.16.1"
+edition = "2021"
+# version = { workspace = true }
+# authors = { workspace = true }
+# repository = { workspace = true }
+# homepage = { workspace = true }
+# license = { workspace = true }
+# edition = { workspace = true }
 
 [dependencies]
 base64 = { workspace = true }
 bytemuck = { workspace = true, features = ["derive"] }
 num-derive = { workspace = true }
 num-traits = { workspace = true }
-domichain-program = { workspace = true }
+domichain-program = { path = "../sdk/program" }
+# domichain-program = { workspace = true }
 
 [dev-dependencies]
 tiny-bip39 = { workspace = true }
@@ -33,7 +36,8 @@ rand = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sha3 = "0.9"
-domichain-sdk = { workspace = true }
+domichain-sdk = { path = "../sdk" }
+# domichain-sdk = { workspace = true }
 subtle = { workspace = true }
 thiserror = { workspace = true }
 zeroize = { workspace = true, features = ["zeroize_derive"] }

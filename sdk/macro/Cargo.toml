@@ -2,12 +2,14 @@
 name = "domichain-sdk-macro"
 description = "Domichain SDK Macro"
 documentation = "https://docs.rs/domichain-sdk-macro"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.16.1"
+edition = "2021"
+# version = { workspace = true }
+# authors = { workspace = true }
+# repository = { workspace = true }
+# homepage = { workspace = true }
+# license = { workspace = true }
+# edition = { workspace = true }
 
 [lib]
 proc-macro = true

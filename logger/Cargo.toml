@@ -2,12 +2,14 @@
 name = "domichain-logger"
 description = "Domichain Logger"
 documentation = "https://docs.rs/domichain-logger"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.16.1"
+edition = "2021"
+# version = { workspace = true }
+# authors = { workspace = true }
+# repository = { workspace = true }
+# homepage = { workspace = true }
+# license = { workspace = true }
+# edition = { workspace = true }
 
 [dependencies]
 env_logger = { workspace = true }

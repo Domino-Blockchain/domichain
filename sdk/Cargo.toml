@@ -3,12 +3,14 @@ name = "domichain-sdk"
 description = "Domichain SDK"
 documentation = "https://docs.rs/domichain-sdk"
 readme = "README.md"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.16.1"
+edition = "2021"
+# version = { workspace = true }
+# authors = { workspace = true }
+# repository = { workspace = true }
+# homepage = { workspace = true }
+# license = { workspace = true }
+# edition = { workspace = true }
 
 [features]
 # "program" feature is a legacy feature retained to support v1.3 and older
@@ -73,11 +75,16 @@ serde_json = { workspace = true, optional = true }
 serde_with = { workspace = true, features = ["macros"] }
 sha2 = { workspace = true }
 sha3 = { workspace = true, optional = true }
-domichain-frozen-abi = { workspace = true }
-domichain-frozen-abi-macro = { workspace = true }
-domichain-logger = { workspace = true, optional = true }
-domichain-program = { workspace = true }
-domichain-sdk-macro = { workspace = true }
+domichain-frozen-abi = { path = "../frozen-abi" }
+# domichain-frozen-abi = { workspace = true }
+domichain-frozen-abi-macro = { path = "../frozen-abi/macro" }
+# domichain-frozen-abi-macro = { workspace = true }
+domichain-logger = { path = "../logger", optional = true }
+# domichain-logger = { workspace = true, optional = true }
+domichain-program = { path = "../sdk/program" }
+# domichain-program = { workspace = true }
+domichain-sdk-macro = { path = "../sdk/macro" }
+# domichain-sdk-macro = { workspace = true }
 thiserror = { workspace = true }
 uriparse = { workspace = true }
 wasm-bindgen = { workspace = true }
