@@ -26,8 +26,8 @@ default_arg --duration 20
 default_arg --tx-count 500
 default_arg --thread-batch-sleep-ms 0
 default_arg --keypair-multiplier 2
-#default_arg --url "http://127.0.0.1:8899"
-#default_arg --use-rpc-client
-#default_arg --tpu-disable-quic
+default_arg --url "http://127.0.0.1:9080"
+default_arg --use-rpc-client
+default_arg --tpu-disable-quic
 
 $domichain_bench_tps "${args[@]}"
