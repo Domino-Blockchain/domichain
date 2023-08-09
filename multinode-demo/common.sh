@@ -24,6 +24,8 @@ if [[ $(uname) != Linux ]]; then
   fi
 fi
 
+DOMICHAIN_CUDA=
+
 if [[ -n $USE_INSTALL || ! -f "$DOMICHAIN_ROOT"/Cargo.toml ]]; then
   domichain_program() {
     declare program="$1"
