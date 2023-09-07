@@ -33,6 +33,8 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
+use core::f64;
+
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
 pub use domichain_sdk::reward_type::RewardType;
@@ -190,7 +192,7 @@ use {
     },
 };
 
-use domichain_risk_score::ai_risk_score;
+use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE};
 
 /// params to `verify_accounts_hash`
 struct VerifyAccountsHashConfig {
@@ -263,6 +265,7 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
+use num_traits::Float;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -4951,20 +4954,19 @@ impl Bank {
             let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
             BASE_CONGESTION / current_congestion
         };
+
+        let send_account = format!("{}", message.account_keys()[0]);
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
-        let risk_score = match risk_score_map.get(&format!("{}", message.account_keys()[0])) {
-            Some(value) => 
-                if *value <3  {
-                    *value + 1
-                }else if *value < 4 {
-                    *value + 5 
-                }else if *value < 5 {
-                    *value + 20
-                } else {
-                    *value + 50
-                }
-            None => 1,
-        };
+
+        let (risk_scores, _): (Vec<f64>, Vec<String>) = risk_score_map
+        .get(&send_account)
+        .map(|account_entry| {
+            (
+                account_entry.values().cloned().collect(),
+                account_entry.keys().cloned().collect(),
+            )
+        })
+        .unwrap_or_default();
 
         drop(risk_score_map);
 
@@ -5006,13 +5008,112 @@ impl Bank {
                     .map(|bin| bin.fee)
                     .unwrap_or_default()
             });
-
+        let total_risk_score: f64 = risk_scores.iter().sum();
+        let average_risk_score = total_risk_score / risk_scores.len() as f64;
         ((prioritization_fee
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
-            * congestion_multiplier* risk_score as f64)
+            * congestion_multiplier* average_risk_score as f64)
             .round() as u64
+    }
+
+    //Return fee and the reward to AI node 
+    pub fn calculate_fee_with_ai_node(
+        message: &SanitizedMessage,
+        lamports_per_signature: u64,
+        fee_structure: &FeeStructure,
+        use_default_units_per_instruction: bool,
+        support_request_units_deprecated: bool,
+        remove_congestion_multiplier: bool,
+        enable_request_heap_frame_ix: bool,
+        support_set_accounts_data_size_limit_ix: bool,
+        include_loaded_account_data_size_in_fee: bool,
+    ) -> (u64, u64, Vec<Pubkey>) {
+        
+        // Fee based on compute units and signatures
+        let congestion_multiplier = if lamports_per_signature == 0 {
+            0.0 // test only
+        } else if remove_congestion_multiplier {
+            1.0 // multiplier that has no effect
+        } else {
+            const BASE_CONGESTION: f64 = 5_000.0;
+            let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
+            BASE_CONGESTION / current_congestion
+        };
+
+        let send_account = format!("{}", message.account_keys()[0]);
+        let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
+
+        let (risk_scores, rewards_accounts): (Vec<f64>, Vec<String>) = risk_score_map
+        .get(&send_account)
+        .map(|account_entry| {
+            (
+                account_entry.values().cloned().collect(),
+                account_entry.keys().cloned().collect(),
+            )
+        })
+        .unwrap_or_default();
+
+        drop(risk_score_map);
+
+        //println!("---AI Test calculate fee account: {:?}, risk-score: {:?}", &format!("{}", message.account_keys()[0]), risk_score);
+        let mut compute_budget = ComputeBudget::default();
+        let prioritization_fee_details = compute_budget
+            .process_instructions(
+                message.program_instructions_iter(),
+                use_default_units_per_instruction,
+                support_request_units_deprecated,
+                enable_request_heap_frame_ix,
+                support_set_accounts_data_size_limit_ix,
+            )
+            .unwrap_or_default();
+        let prioritization_fee = prioritization_fee_details.get_fee();
+        let signature_fee = Self::get_num_signatures_in_message(message)
+            .saturating_mul(fee_structure.lamports_per_signature);
+        let write_lock_fee = Self::get_num_write_locks_in_message(message)
+            .saturating_mul(fee_structure.lamports_per_write_lock);
+
+        // `compute_fee` covers costs for both requested_compute_units and
+        // requested_loaded_account_data_size
+        let loaded_accounts_data_size_cost = if include_loaded_account_data_size_in_fee {
+            Self::calculate_loaded_accounts_data_size_cost(&compute_budget)
+        } else {
+            0_u64
+        };
+        let total_compute_units =
+            loaded_accounts_data_size_cost.saturating_add(compute_budget.compute_unit_limit);
+        let compute_fee = fee_structure
+            .compute_fee_bins
+            .iter()
+            .find(|bin| total_compute_units <= bin.limit)
+            .map(|bin| bin.fee)
+            .unwrap_or_else(|| {
+                fee_structure
+                    .compute_fee_bins
+                    .last()
+                    .map(|bin| bin.fee)
+                    .unwrap_or_default()
+            });
+        let total_risk_score: f64 = risk_scores.iter().sum();
+        let average_risk_score = total_risk_score / risk_scores.len() as f64;
+        let fee = ((prioritization_fee
+            .saturating_add(signature_fee)
+            .saturating_add(write_lock_fee)
+            .saturating_add(compute_fee) as f64)
+            * congestion_multiplier* (10.0).powf(average_risk_score))
+            .round() as u64;
+        
+        let mut ai_fee = 0;
+        if *message.fee_payer()== Pubkey::try_from("2wLcxrcaZyDL22DzhVkntLCVShVw3BKagwP8WNMm4Lpf").unwrap() {
+            ai_fee = (fee as f64 * (*AI_REWARDS_RATE.get().unwrap_or(&0.3))) as u64;
+            println!{"Pay ID {:?}, ai_fee {:?}", message.fee_payer(), ai_fee};
+        }
+        
+        //println!("ai_fee: {:?}", ai_fee);
+        let mut ai_node_rewards = vec![];
+        ai_node_rewards.push(Pubkey::try_from("5gEs3hAEKwqwiFhjCwTZWQiyQRuLhceGrunGrqtXUgDx").unwrap());
+        (fee - ai_fee, ai_fee , ai_node_rewards)
     }
 
     // Calculate cost of loaded accounts size in the same way heap cost is charged at
@@ -5063,7 +5164,7 @@ impl Bank {
 
                 let lamports_per_signature =
                     lamports_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                let fee = Self::calculate_fee(
+                let (fee, ai_fee, ai_account) = Self::calculate_fee_with_ai_node(
                     tx.message(),
                     lamports_per_signature,
                     &self.fee_structure,
@@ -5088,6 +5189,10 @@ impl Bank {
                 //...except nonce accounts, which already have their
                 // post-load, fee deducted, pre-execute account state
                 // stored
+                if ai_fee > 0 {
+                    self.withdraw(tx.message().fee_payer(), ai_fee)?;
+                    self.deposit(&ai_account[0], ai_fee).unwrap();
+                }
                 if execution_status.is_err() && !is_nonce {
                     self.withdraw(tx.message().fee_payer(), fee)?;
                 }

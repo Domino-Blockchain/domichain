@@ -1335,9 +1335,16 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
         .arg(
             Arg::with_name("ai-node-url")
                 .long("ai-node-url")
-                .value_name("URL") // Replace "DIR" with a more descriptive name if desired
+                .value_name("URL") 
                 .takes_value(true)
                 .help("Specifies the ai node url")
+        )
+        .arg(
+            Arg::with_name("ai-reward-rate")
+                .long("ai-reward-rate")
+                .value_name("Reward Rate") 
+                .takes_value(true)
+                .help("Specify the reward rate assigned to the ai node")
         )
         .arg(
             Arg::with_name("banking_trace_dir_byte_limit")

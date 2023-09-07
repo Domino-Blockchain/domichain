@@ -1869,9 +1869,11 @@ pub async fn main() {
     }
 
     let ai_node_url = matches.value_of("ai-node-url").unwrap_or("http://127.0.0.1:5000/retrieve_risk_score_by_timestamp?time=500").to_string();
+    let ai_rewards_rate_str = matches.value_of("ai-reward-rate").unwrap_or("0.3");
+    let ai_rewards_rate = ai_rewards_rate_str.parse::<f64>().unwrap_or(0.3);
     info!("---AI test _ai_node_url {:?}", ai_node_url);
-    let my_task = tokio::task::spawn(async {
-        ai_risk_score::get_risk_score(ai_node_url).await;
+    let my_task = tokio::task::spawn(async move {
+        ai_risk_score::get_risk_score(ai_node_url, ai_rewards_rate.clone()).await;
     });
     //println!("AI get risk score validator");
     _ = my_task.await;

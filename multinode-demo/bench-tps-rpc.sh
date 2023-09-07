@@ -24,6 +24,7 @@ default_arg --entrypoint "127.0.0.1:8001"
 default_arg --faucet "127.0.0.1:9900"
 default_arg --duration 20
 default_arg --tx-count 500
+default_arg --threads 16
 default_arg --thread-batch-sleep-ms 0
 default_arg --keypair-multiplier 2
 default_arg --url "http://127.0.0.1:8899"

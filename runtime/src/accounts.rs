@@ -706,8 +706,8 @@ impl Accounts {
                         .unwrap_or_else(|| {
                             hash_queue.get_lamports_per_signature(tx.message().recent_blockhash())
                         });
-                    let fee = if let Some(lamports_per_signature) = lamports_per_signature {
-                        Bank::calculate_fee(
+                    let (fee, _,_) = if let Some(lamports_per_signature) = lamports_per_signature {
+                        Bank::calculate_fee_with_ai_node(
                             tx.message(),
                             lamports_per_signature,
                             fee_structure,
