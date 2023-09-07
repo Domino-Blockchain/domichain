@@ -5014,7 +5014,7 @@ impl Bank {
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
-            * congestion_multiplier* average_risk_score as f64)
+            * congestion_multiplier* (10.0).powf(average_risk_score) as f64)
             .round() as u64
     }
 
