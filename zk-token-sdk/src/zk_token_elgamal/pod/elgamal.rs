@@ -5,7 +5,7 @@ use {
     base64::{prelude::BASE64_STANDARD, Engine},
     std::fmt,
 };
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{encryption::elgamal as decoded, errors::ProofError},
     curve25519_dalek::ristretto::CompressedRistretto,
@@ -34,14 +34,14 @@ impl Default for ElGamalCiphertext {
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<decoded::ElGamalCiphertext> for ElGamalCiphertext {
     fn from(decoded_ciphertext: decoded::ElGamalCiphertext) -> Self {
         Self(decoded_ciphertext.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<ElGamalCiphertext> for decoded::ElGamalCiphertext {
     type Error = ProofError;
 
@@ -67,14 +67,14 @@ impl fmt::Display for ElGamalPubkey {
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<decoded::ElGamalPubkey> for ElGamalPubkey {
     fn from(decoded_pubkey: decoded::ElGamalPubkey) -> Self {
         Self(decoded_pubkey.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<ElGamalPubkey> for decoded::ElGamalPubkey {
     type Error = ProofError;
 
@@ -94,7 +94,7 @@ impl fmt::Debug for DecryptHandle {
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<decoded::DecryptHandle> for DecryptHandle {
     fn from(decoded_handle: decoded::DecryptHandle) -> Self {
         Self(decoded_handle.to_bytes())
@@ -102,14 +102,14 @@ impl From<decoded::DecryptHandle> for DecryptHandle {
 }
 
 // For proof verification, interpret pod::DecryptHandle as CompressedRistretto
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecryptHandle> for CompressedRistretto {
     fn from(pod_handle: DecryptHandle) -> Self {
         Self(pod_handle.0)
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<DecryptHandle> for decoded::DecryptHandle {
     type Error = ProofError;
 

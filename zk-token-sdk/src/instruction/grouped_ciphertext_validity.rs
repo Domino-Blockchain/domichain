@@ -10,7 +10,7 @@
 //! with the proof is referred to as the "destination" handle and the second decryption handle is
 //! referred to as the "auditor" handle.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::{
@@ -54,7 +54,7 @@ pub struct GroupedCiphertext2HandlesValidityProofContext {
     pub grouped_ciphertext: pod::GroupedElGamalCiphertext2Handles, // 96 bytes
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl GroupedCiphertext2HandlesValidityProofData {
     pub fn new(
         destination_pubkey: &ElGamalPubkey,
@@ -96,7 +96,7 @@ impl ZkProofData<GroupedCiphertext2HandlesValidityProofContext>
         &self.context
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
 
@@ -121,7 +121,7 @@ impl ZkProofData<GroupedCiphertext2HandlesValidityProofContext>
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl GroupedCiphertext2HandlesValidityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"CiphertextValidityProof");

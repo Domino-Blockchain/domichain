@@ -46,7 +46,7 @@ impl From<PodRistrettoPoint> for pod::DecryptHandle {
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 mod target_arch {
     use {
         super::pod,
@@ -180,7 +180,7 @@ mod target_arch {
     }
 }
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 #[allow(unused_variables)]
 mod target_arch {}
 

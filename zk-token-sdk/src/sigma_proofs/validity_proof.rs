@@ -8,7 +8,7 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::encryption::{
         elgamal::{DecryptHandle, ElGamalPubkey},
@@ -43,7 +43,7 @@ pub struct ValidityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl ValidityProof {
     /// The ciphertext validity proof constructor.
     ///
@@ -227,7 +227,7 @@ impl ValidityProof {
 pub struct AggregatedValidityProof(ValidityProof);
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl AggregatedValidityProof {
     /// Aggregated ciphertext validity proof constructor.
     ///

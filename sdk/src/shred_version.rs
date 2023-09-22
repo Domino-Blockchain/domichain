@@ -2,7 +2,7 @@
 //!
 //! [shred]: https://docs.solana.com/terminology#shred
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use domichain_sdk::{
     hard_forks::HardForks,

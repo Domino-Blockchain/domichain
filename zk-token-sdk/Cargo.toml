@@ -22,7 +22,7 @@ domichain-program = { path = "../sdk/program" }
 [dev-dependencies]
 tiny-bip39 = { workspace = true }
 
-[target.'cfg(not(target_os = "domichain"))'.dependencies]
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
 aes-gcm-siv = { workspace = true }
 arrayref = { workspace = true }
 bincode = { workspace = true }

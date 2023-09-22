@@ -1,6 +1,6 @@
 //! The 256-bit batched range proof instruction.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
@@ -17,7 +17,7 @@ use {
     bytemuck::{Pod, Zeroable},
 };
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 
 /// The instruction data that is needed for the
@@ -35,7 +35,7 @@ pub struct BatchedRangeProofU256Data {
     pub proof: pod::RangeProofU256,
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl BatchedRangeProofU256Data {
     pub fn new(
         commitments: Vec<&PedersenCommitment>,
@@ -69,7 +69,7 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
         &self.context
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let mut transcript = self.context_data().new_transcript();

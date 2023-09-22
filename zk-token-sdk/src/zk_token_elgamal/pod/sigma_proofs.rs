@@ -1,6 +1,6 @@
 //! Plain Old Data types for sigma proofs.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use crate::sigma_proofs::{
     batched_grouped_ciphertext_validity_proof::BatchedGroupedCiphertext2HandlesValidityProof as DecodedBatchedGroupedCiphertext2HandlesValidityProof,
     ciphertext_ciphertext_equality_proof::CiphertextCiphertextEqualityProof as DecodedCiphertextCiphertextEqualityProof,
@@ -17,14 +17,14 @@ use crate::zk_token_elgamal::pod::{Pod, Zeroable};
 #[repr(transparent)]
 pub struct CiphertextCommitmentEqualityProof(pub [u8; 192]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedCiphertextCommitmentEqualityProof> for CiphertextCommitmentEqualityProof {
     fn from(decoded_proof: DecodedCiphertextCommitmentEqualityProof) -> Self {
         Self(decoded_proof.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<CiphertextCommitmentEqualityProof> for DecodedCiphertextCommitmentEqualityProof {
     type Error = EqualityProofError;
 
@@ -38,14 +38,14 @@ impl TryFrom<CiphertextCommitmentEqualityProof> for DecodedCiphertextCommitmentE
 #[repr(transparent)]
 pub struct CiphertextCiphertextEqualityProof(pub [u8; 224]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedCiphertextCiphertextEqualityProof> for CiphertextCiphertextEqualityProof {
     fn from(decoded_proof: DecodedCiphertextCiphertextEqualityProof) -> Self {
         Self(decoded_proof.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<CiphertextCiphertextEqualityProof> for DecodedCiphertextCiphertextEqualityProof {
     type Error = EqualityProofError;
 
@@ -59,7 +59,7 @@ impl TryFrom<CiphertextCiphertextEqualityProof> for DecodedCiphertextCiphertextE
 #[repr(transparent)]
 pub struct GroupedCiphertext2HandlesValidityProof(pub [u8; 160]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedGroupedCiphertext2HandlesValidityProof>
     for GroupedCiphertext2HandlesValidityProof
 {
@@ -68,7 +68,7 @@ impl From<DecodedGroupedCiphertext2HandlesValidityProof>
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<GroupedCiphertext2HandlesValidityProof>
     for DecodedGroupedCiphertext2HandlesValidityProof
 {
@@ -84,7 +84,7 @@ impl TryFrom<GroupedCiphertext2HandlesValidityProof>
 #[repr(transparent)]
 pub struct BatchedGroupedCiphertext2HandlesValidityProof(pub [u8; 160]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedBatchedGroupedCiphertext2HandlesValidityProof>
     for BatchedGroupedCiphertext2HandlesValidityProof
 {
@@ -93,7 +93,7 @@ impl From<DecodedBatchedGroupedCiphertext2HandlesValidityProof>
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<BatchedGroupedCiphertext2HandlesValidityProof>
     for DecodedBatchedGroupedCiphertext2HandlesValidityProof
 {
@@ -111,14 +111,14 @@ impl TryFrom<BatchedGroupedCiphertext2HandlesValidityProof>
 #[repr(transparent)]
 pub struct ZeroBalanceProof(pub [u8; 96]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedZeroBalanceProof> for ZeroBalanceProof {
     fn from(decoded_proof: DecodedZeroBalanceProof) -> Self {
         Self(decoded_proof.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<ZeroBalanceProof> for DecodedZeroBalanceProof {
     type Error = ZeroBalanceProofError;
 
@@ -132,14 +132,14 @@ impl TryFrom<ZeroBalanceProof> for DecodedZeroBalanceProof {
 #[repr(transparent)]
 pub struct FeeSigmaProof(pub [u8; 256]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedFeeSigmaProof> for FeeSigmaProof {
     fn from(decoded_proof: DecodedFeeSigmaProof) -> Self {
         Self(decoded_proof.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<FeeSigmaProof> for DecodedFeeSigmaProof {
     type Error = FeeSigmaProofError;
 
@@ -153,14 +153,14 @@ impl TryFrom<FeeSigmaProof> for DecodedFeeSigmaProof {
 #[repr(transparent)]
 pub struct PubkeyValidityProof(pub [u8; 64]);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<DecodedPubkeyValidityProof> for PubkeyValidityProof {
     fn from(decoded_proof: DecodedPubkeyValidityProof) -> Self {
         Self(decoded_proof.to_bytes())
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TryFrom<PubkeyValidityProof> for DecodedPubkeyValidityProof {
     type Error = PubkeyValidityProofError;
 

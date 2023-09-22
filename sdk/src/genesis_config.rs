@@ -1,6 +1,6 @@
 //! The chain's genesis config.
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {
     crate::{

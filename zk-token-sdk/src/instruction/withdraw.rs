@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::{
@@ -21,7 +21,7 @@ use {
     bytemuck::{Pod, Zeroable},
 };
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const WITHDRAW_AMOUNT_BIT_LENGTH: usize = 64;
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyWithdraw` instruction.
@@ -50,7 +50,7 @@ pub struct WithdrawProofContext {
     pub final_ciphertext: pod::ElGamalCiphertext, // 64 bytes
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl WithdrawData {
     pub fn new(
         amount: u64,
@@ -91,7 +91,7 @@ impl ZkProofData<WithdrawProofContext> for WithdrawData {
         &self.context
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
 
@@ -103,7 +103,7 @@ impl ZkProofData<WithdrawProofContext> for WithdrawData {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl WithdrawProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"WithdrawProof");
@@ -133,7 +133,7 @@ pub struct WithdrawProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl WithdrawProof {
     pub fn new(
         keypair: &ElGamalKeypair,

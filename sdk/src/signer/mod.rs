@@ -1,6 +1,6 @@
 //! Abstractions and implementations for transaction signers.
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {
     crate::{

@@ -14,7 +14,7 @@
 //! information on a discrete log solution depending on the execution time of the implementation.
 //!
 
-#![cfg(not(target_os = "domichain"))]
+#![cfg(not(target_os = "wasi"))]
 
 use {
     curve25519_dalek::{

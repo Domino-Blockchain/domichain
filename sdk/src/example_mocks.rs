@@ -11,7 +11,7 @@
 //! appear to import from that crate.
 
 #![doc(hidden)]
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 pub mod domichain_rpc_client {
     pub mod rpc_client {

@@ -1,5 +1,5 @@
 //! domichain-sdk Javascript interface
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))]
 
 pub mod keypair;
 pub mod transaction;

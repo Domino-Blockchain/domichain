@@ -8,7 +8,7 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::{
@@ -46,7 +46,7 @@ pub struct GroupedCiphertext2HandlesValidityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl GroupedCiphertext2HandlesValidityProof {
     /// Creates a grouped ciphertext validity proof for 2 handles.
     ///

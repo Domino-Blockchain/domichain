@@ -4,7 +4,7 @@
 //! certifies that a given ciphertext encrypts the message 0 in the field (`Scalar::zero()`). To
 //! generate the proof, a prover must provide the decryption key for the ciphertext.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
@@ -48,7 +48,7 @@ pub struct ZeroBalanceProofContext {
     pub ciphertext: pod::ElGamalCiphertext, // 64 bytes
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl ZeroBalanceProofData {
     pub fn new(
         keypair: &ElGamalKeypair,
@@ -76,7 +76,7 @@ impl ZkProofData<ZeroBalanceProofContext> for ZeroBalanceProofData {
         &self.context
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
         let pubkey = self.context.pubkey.try_into()?;
@@ -89,7 +89,7 @@ impl ZkProofData<ZeroBalanceProofContext> for ZeroBalanceProofData {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl ZeroBalanceProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"ZeroBalanceProof");

@@ -1,5 +1,5 @@
 //! Functionality for public and private keys.
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 // legacy module paths
 pub use crate::signer::{keypair::*, null_signer::*, presigner::*, *};

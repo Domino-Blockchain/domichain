@@ -1,4 +1,4 @@
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 pub use crate::message::{AddressLoader, SimpleAddressLoader};
 use {

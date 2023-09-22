@@ -6,7 +6,7 @@
 pub use domichain_program::hash::*;
 
 /// Random hash value for tests and benchmarks.
-#[cfg(feature = "full")]
+#[cfg(all(not(target_os = "wasi"), feature = "full"))]
 pub fn new_rand<R: ?Sized>(rng: &mut R) -> Hash
 where
     R: rand::Rng,

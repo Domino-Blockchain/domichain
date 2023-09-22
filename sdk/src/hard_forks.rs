@@ -1,7 +1,7 @@
 //! The list of slot boundaries at which a hard fork should
 //! occur.
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {
     byteorder::{ByteOrder, LittleEndian},

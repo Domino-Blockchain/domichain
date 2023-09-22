@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::{
         encryption::{
@@ -35,27 +35,27 @@ use {
     bytemuck::{Pod, Zeroable},
 };
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const MAX_FEE_BASIS_POINTS: u64 = 10_000;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const ONE_IN_BASIS_POINTS: u128 = MAX_FEE_BASIS_POINTS as u128;
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const TRANSFER_SOURCE_AMOUNT_BITS: usize = 64;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const TRANSFER_AMOUNT_LO_BITS: usize = 16;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const TRANSFER_AMOUNT_LO_NEGATED_BITS: usize = 16;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const TRANSFER_AMOUNT_HI_BITS: usize = 32;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const TRANSFER_DELTA_BITS: usize = 48;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const FEE_AMOUNT_LO_BITS: usize = 16;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 const FEE_AMOUNT_HI_BITS: usize = 32;
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 lazy_static::lazy_static! {
     pub static ref COMMITMENT_MAX: PedersenCommitment = Pedersen::encode((1_u64 <<
                                                                          TRANSFER_AMOUNT_LO_NEGATED_BITS) - 1);
@@ -102,7 +102,7 @@ pub struct TransferWithFeeProofContext {
     pub fee_parameters: pod::FeeParameters, // 10 bytes
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TransferWithFeeData {
     pub fn new(
         transfer_amount: u64,
@@ -346,7 +346,7 @@ impl ZkProofData<TransferWithFeeProofContext> for TransferWithFeeData {
         &self.context
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         let mut transcript = self.context.new_transcript();
 
@@ -373,7 +373,7 @@ impl ZkProofData<TransferWithFeeProofContext> for TransferWithFeeData {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TransferWithFeeProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"transfer-with-fee-proof");
@@ -407,7 +407,7 @@ pub struct TransferWithFeeProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TransferWithFeeProof {
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::many_single_char_names)]
@@ -685,7 +685,7 @@ impl TransferWithFeeProof {
 /// The ElGamal public keys needed for a transfer with fee
 #[derive(Clone)]
 #[repr(C)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub struct TransferWithFeePubkeys {
     pub source_pubkey: ElGamalPubkey,
     pub destination_pubkey: ElGamalPubkey,
@@ -693,7 +693,7 @@ pub struct TransferWithFeePubkeys {
     pub withdraw_withheld_authority_pubkey: ElGamalPubkey,
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TransferWithFeePubkeys {
     pub fn to_bytes(&self) -> [u8; 128] {
         let mut bytes = [0u8; 128];
@@ -728,7 +728,7 @@ impl TransferWithFeePubkeys {
     }
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 fn calculate_fee(transfer_amount: u64, fee_rate_basis_points: u16) -> Option<(u64, u64)> {
     let numerator = (transfer_amount as u128).checked_mul(fee_rate_basis_points as u128)?;
 
@@ -748,7 +748,7 @@ fn calculate_fee(transfer_amount: u64, fee_rate_basis_points: u16) -> Option<(u6
     Some((fee as u64, delta_fee as u64))
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 fn compute_delta_commitment_and_opening(
     (combined_commitment, combined_opening): (&PedersenCommitment, &PedersenOpening),
     (combined_fee_commitment, combined_fee_opening): (&PedersenCommitment, &PedersenOpening),
@@ -763,7 +763,7 @@ fn compute_delta_commitment_and_opening(
     (delta_commitment, delta_opening)
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 fn compute_delta_commitment(
     combined_commitment: &PedersenCommitment,
     combined_fee_commitment: &PedersenCommitment,

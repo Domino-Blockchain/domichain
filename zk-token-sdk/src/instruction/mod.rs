@@ -9,7 +9,7 @@ pub mod transfer;
 pub mod withdraw;
 pub mod zero_balance;
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use crate::errors::ProofError;
 use num_derive::{FromPrimitive, ToPrimitive};
 pub use {
@@ -67,6 +67,6 @@ pub trait ZkProofData<T: Pod> {
 
     fn context_data(&self) -> &T;
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     fn verify_proof(&self) -> Result<(), ProofError>;
 }

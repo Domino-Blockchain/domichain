@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use crate::{
     encryption::{
         elgamal::{DecryptHandle, ElGamalPubkey},
@@ -10,10 +10,10 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(C)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub struct TransferAmountCiphertext(pub(crate) GroupedElGamalCiphertext<3>);
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl TransferAmountCiphertext {
     pub fn new(
         amount: u64,
@@ -57,14 +57,14 @@ impl TransferAmountCiphertext {
 // FeeEncryption
 #[derive(Clone)]
 #[repr(C)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub struct FeeEncryption {
     pub commitment: PedersenCommitment,
     pub destination_handle: DecryptHandle,
     pub withdraw_withheld_authority_handle: DecryptHandle,
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl FeeEncryption {
     pub fn new(
         amount: u64,

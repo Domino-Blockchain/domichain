@@ -1,7 +1,7 @@
 //! Definitions of commitment levels.
 
 #![allow(deprecated)]
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {std::str::FromStr, thiserror::Error};
 

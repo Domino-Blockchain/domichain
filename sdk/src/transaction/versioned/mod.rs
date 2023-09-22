@@ -1,6 +1,6 @@
 //! Defines a transaction which supports multiple versions of messages.
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {
     crate::{

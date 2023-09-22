@@ -2,7 +2,7 @@
 //!
 //! TODO: Add detail on how the fee is calculated.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening, G, H},
     rand::rngs::OsRng,
@@ -38,7 +38,7 @@ pub struct FeeSigmaProof {
 }
 
 #[allow(non_snake_case, dead_code)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl FeeSigmaProof {
     /// Creates a fee sigma proof assuming that the committed fee is greater than the maximum fee
     /// bound.

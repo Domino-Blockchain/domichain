@@ -2,7 +2,7 @@
 //!
 //! [np]: https://docs.solana.com/developing/runtime-facilities/programs#ed25519-program
 
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {
     crate::{feature_set::FeatureSet, instruction::Instruction, precompiles::PrecompileError},

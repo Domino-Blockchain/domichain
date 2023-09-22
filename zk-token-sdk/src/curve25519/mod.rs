@@ -5,7 +5,7 @@
 
 pub mod curve_syscall_traits;
 pub mod edwards;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub mod errors;
 pub mod ristretto;
 pub mod scalar;
