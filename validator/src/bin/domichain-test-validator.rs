@@ -204,7 +204,7 @@ fn main() {
     };
 
     let mut upgradeable_programs_to_load = vec![];
-    if let Some(values) = matches.values_of("bpf_program") {
+    if let Some(values) = matches.values_of("wasm_program") {
         for (address, program) in values.into_iter().tuples() {
             let address = parse_address(address, "address");
             let program_path = parse_program_path(program);
@@ -352,7 +352,7 @@ fn main() {
 
     if TestValidatorGenesis::ledger_exists(&ledger_path) {
         for (name, long) in &[
-            ("bpf_program", "--bpf-program"),
+            ("wasm_program", "--wasm-program"),
             ("clone_account", "--clone"),
             ("account", "--account"),
             ("mint_address", "--mint"),

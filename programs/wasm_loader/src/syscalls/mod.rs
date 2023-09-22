@@ -1,3 +1,5 @@
+use std::mem::size_of_val;
+
 pub use self::{
     cpi::{SyscallInvokeSignedC, SyscallInvokeSignedRust},
     logging::{
@@ -322,10 +324,30 @@ fn translate(
     vm_addr: u64,
     len: u64,
 ) -> Result<u64, Error> {
+    // WASM
     let new_vm_addr = vm_addr + solana_rbpf::ebpf::MM_HEAP_START;
+
+    // BPF
+    // let new_vm_addr = vm_addr;
+    
+    
     // dbg!("translate", access_type, vm_addr, len, new_vm_addr);
     // FIXME: vm_addr is address in WASM space. For non-heap access this won't work
-    memory_mapping.map(access_type, new_vm_addr, len, 0).into()
+    let res: Result<u64, Error> = memory_mapping.map(access_type, new_vm_addr, len, 0).into();
+    let _ = res.as_ref().map(|a| {
+        let host_addr = *a as *mut usize;
+        let new_vm_addr = new_vm_addr as *mut usize;
+        // println!("[{}:{}] translate: vm_addr = {:?} host_addr = {:?}",
+        //     file!(),
+        //     line!(),
+        //     new_vm_addr,
+        //     host_addr,
+        // );
+    }).map_err(|e| {
+        dbg!(e);
+        dbg!(access_type, new_vm_addr as *const u8, len, unsafe {(new_vm_addr as *const u8).add(len as _)})
+    });
+    res
 }
 
 fn translate_type_inner<'a, T>(
@@ -334,10 +356,24 @@ fn translate_type_inner<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a mut T, Error> {
-    // dbg!("translate_type_inner", access_type, vm_addr);
+    let vm_addr_ = vm_addr as *mut T;
+    println!("\t[{file}:{line}] translate_type_inner access_type={access_type:?}", file=file!(), line=line!());
+    println!("\t[{file}:{line}] translate_type_inner vm_addr_={vm_addr_:?}", file=file!(), line=line!());
+    println!("\t[{file}:{line}] translate_type_inner size_of::<T>() as u64={:?}", size_of::<T>() as u64, file=file!(), line=line!());
+    // dbg!("translate_type_inner", access_type, vm_addr_, size_of::<T>() as u64);
     let host_addr = translate(memory_mapping, access_type, vm_addr, size_of::<T>() as u64)?;
+    let host_addr_ = host_addr as *mut T;
+    println!("\t[{file}:{line}] translate_type_inner host_addr_={host_addr_:?}", file=file!(), line=line!());
+    // dbg!("translate_type_inner", host_addr_);
+
+    // dbg!(size_of::<T>() as u64);
+    // let bytes_in_place = unsafe { std::slice::from_raw_parts_mut(host_addr as *mut u8, size_of::<T>()) };
+    // dbg!("translate_type_inner", bytes_in_place);
 
     if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
+        dbg!(host_addr as *mut T as usize);
+        dbg!(align_of::<T>());
+        dbg!((host_addr as *mut T as usize).wrapping_rem(align_of::<T>()));
         return Err(SyscallError::UnalignedPointer.into());
     }
     Ok(unsafe { &mut *(host_addr as *mut T) })
@@ -355,7 +391,8 @@ fn translate_type<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a T, Error> {
-    // dbg!("translate_type", vm_addr);
+    let vm_addr_ = vm_addr as *mut T;
+    println!("\t[{file}:{line}] translate_type vm_addr_={vm_addr_:?}", file=file!(), line=line!());
     translate_type_inner::<T>(memory_mapping, AccessType::Load, vm_addr, check_aligned)
         .map(|value| &*value)
 }
@@ -678,6 +715,8 @@ declare_syscall!(
                 if let Ok(new_address) =
                     Pubkey::create_program_address(&seeds_with_bump, program_id)
                 {
+                    // dbg!(&seeds_with_bump, program_id, new_address);
+
                     let bump_seed_ref = translate_type_mut::<u8>(
                         memory_mapping,
                         bump_seed_addr,
@@ -785,7 +824,7 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        // dbg!(vals_addr, vals_len, result_addr);
+        dbg!(vals_addr, vals_len, result_addr);
         let compute_budget = invoke_context.get_compute_budget();
         if compute_budget.sha256_max_slices < vals_len {
             ic_msg!(

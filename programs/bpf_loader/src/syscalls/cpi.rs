@@ -290,6 +290,13 @@ declare_syscall!(
         signers_seeds_len: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
+        dbg!("cpi_common",
+            instruction_addr,
+            account_infos_addr,
+            account_infos_len,
+            signers_seeds_addr,
+            signers_seeds_len,
+        );
         cpi_common::<Self>(
             invoke_context,
             instruction_addr,

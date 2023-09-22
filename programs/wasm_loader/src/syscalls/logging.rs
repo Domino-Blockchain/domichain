@@ -28,7 +28,7 @@ declare_syscall!(
                 .feature_set
                 .is_active(&stop_truncating_strings_in_syscalls::id()),
             &mut |string: &str| {
-                dbg!(string);
+                println!("[syscall] {string}");
                 stable_log::program_log(&invoke_context.get_log_collector(), string);
                 Ok(0)
             },

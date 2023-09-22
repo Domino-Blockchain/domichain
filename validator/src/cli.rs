@@ -2169,14 +2169,14 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 .help("Enable the unstable RPC PubSub `blockSubscribe` subscription"),
         )
         .arg(
-            Arg::with_name("bpf_program")
-                .long("bpf-program")
-                .value_names(&["ADDRESS_OR_KEYPAIR", "SBF_PROGRAM.SO"])
+            Arg::with_name("wasm_program")
+                .long("wasm-program")
+                .value_names(&["ADDRESS_OR_KEYPAIR", "WASM_PROGRAM.WASM"])
                 .takes_value(true)
                 .number_of_values(2)
                 .multiple(true)
                 .help(
-                    "Add a SBF program to the genesis configuration with upgrades disabled. \
+                    "Add a WASM program to the genesis configuration with upgrades disabled. \
                        If the ledger already exists then this parameter is silently ignored. \
                        First argument can be a pubkey string or path to a keypair",
                 ),
@@ -2184,12 +2184,12 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
         .arg(
             Arg::with_name("upgradeable_program")
                 .long("upgradeable-program")
-                .value_names(&["ADDRESS_OR_KEYPAIR", "SBF_PROGRAM.SO", "UPGRADE_AUTHORITY"])
+                .value_names(&["ADDRESS_OR_KEYPAIR", "WASM_PROGRAM.WASM", "UPGRADE_AUTHORITY"])
                 .takes_value(true)
                 .number_of_values(3)
                 .multiple(true)
                 .help(
-                    "Add an upgradeable SBF program to the genesis configuration. \
+                    "Add an upgradeable WASM program to the genesis configuration. \
                        If the ledger already exists then this parameter is silently ignored. \
                        First and third arguments can be a pubkey string or path to a keypair. \
                        Upgrade authority set to \"none\" disables upgrades",
@@ -2381,11 +2381,11 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 .help("Keep this amount of shreds in root slots."),
         )
         .arg(
-            Arg::with_name("faucet_sol")
-                .long("faucet-sol")
+            Arg::with_name("faucet_domi")
+                .long("faucet-domi")
                 .takes_value(true)
                 .value_name("DOMI")
-                .default_value(default_args.faucet_sol.as_str())
+                .default_value(default_args.faucet_domi.as_str())
                 .help(
                     "Give the faucet address this much DOMI in genesis. \
                      If the ledger already exists then this parameter is silently ignored",
@@ -2402,8 +2402,8 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 ),
         )
         .arg(
-            Arg::with_name("faucet_per_time_sol_cap")
-                .long("faucet-per-time-sol-cap")
+            Arg::with_name("faucet_per_time_domi_cap")
+                .long("faucet-per-time-domi-cap")
                 .takes_value(true)
                 .value_name("DOMI")
                 .min_values(0)
@@ -2413,8 +2413,8 @@ pub fn test_app<'a>(version: &'a str, default_args: &'a DefaultTestArgs) -> App<
                 ),
         )
         .arg(
-            Arg::with_name("faucet_per_request_sol_cap")
-                .long("faucet-per-request-sol-cap")
+            Arg::with_name("faucet_per_request_domi_cap")
+                .long("faucet-per-request-domi-cap")
                 .takes_value(true)
                 .value_name("DOMI")
                 .min_values(0)
@@ -2472,7 +2472,7 @@ pub struct DefaultTestArgs {
     pub rpc_port: String,
     pub faucet_port: String,
     pub limit_ledger_size: String,
-    pub faucet_sol: String,
+    pub faucet_domi: String,
     pub faucet_time_slice_secs: String,
 }
 
@@ -2486,7 +2486,7 @@ impl DefaultTestArgs {
              * 40MB-150MB range when running `domichain-test-validator`
              */
             limit_ledger_size: 10_000.to_string(),
-            faucet_sol: (1_000_000.).to_string(),
+            faucet_domi: (1_000_000.).to_string(),
             faucet_time_slice_secs: (faucet::TIME_SLICE).to_string(),
         }
     }

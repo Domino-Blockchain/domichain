@@ -4267,6 +4267,9 @@ impl Bank {
         programs_loaded_for_tx_batch: &LoadedProgramsForTxBatch,
     ) -> TransactionExecutionResult {
         let prev_accounts_data_len = self.load_accounts_data_size();
+        if loaded_transaction.accounts.iter().find(|(pk, _)| pk.to_string().contains("BPF")).is_some() {
+            dbg!(&loaded_transaction);
+        }
         let transaction_accounts = std::mem::take(&mut loaded_transaction.accounts);
         let mut transaction_context = TransactionContext::new(
             transaction_accounts,
@@ -4579,10 +4582,13 @@ impl Bank {
             &program_owners_refs,
             &self.blockhash_queue.read().unwrap(),
         );
+        // dbg!(&program_accounts_map);
         let native_loader = native_loader::id();
         for builtin_program in self.builtin_programs.iter() {
             program_accounts_map.insert(*builtin_program, (&native_loader, 0));
         }
+
+        // dbg!(&program_accounts_map);
 
         let programs_loaded_for_tx_batch = Rc::new(RefCell::new(
             self.replenish_program_cache(&program_accounts_map),

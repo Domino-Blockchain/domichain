@@ -4983,7 +4983,9 @@ impl AccountsDb {
 
         if !storage_location.is_cached() {
             let result = self.read_only_accounts_cache.load(*account, slot);
+            // dbg!(&result);
             if let Some(account) = result {
+                // dbg!(account.owner());
                 return if account.is_zero_lamport() {
                     Err(MatchAccountOwnerError::NoMatch)
                 } else {
@@ -5006,6 +5008,7 @@ impl AccountsDb {
             )
             .ok_or(MatchAccountOwnerError::UnableToLoad)?;
         account_accessor.account_matches_owners(owners)
+        // dbg!(dbg!(account_accessor).account_matches_owners(owners))
     }
 
     pub fn load_account_into_read_cache(&self, ancestors: &Ancestors, pubkey: &Pubkey) {

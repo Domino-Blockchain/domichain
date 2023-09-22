@@ -995,7 +995,7 @@ pub fn initialize_account<S: std::hash::BuildHasher>(
             feature_set.is_active(&feature_set::vote_state_add_vote_latency::id()),
         )
     {
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     let versioned = vote_account.get_state::<VoteStateVersions>()?;
 

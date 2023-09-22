@@ -65,7 +65,7 @@ zeroize = { workspace = true, features = ["default", "zeroize_derive"] }
 [target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
 domichain-logger = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))'.dependencies]
 console_error_panic_hook = { workspace = true }
 console_log = { workspace = true }
 js-sys = { workspace = true }

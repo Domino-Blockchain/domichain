@@ -90,7 +90,7 @@ pub fn load_program_from_bytes(
     )
     .map_err(|err| {
         ic_logger_msg!(log_collector, "{}", err);
-        InstructionError::InvalidAccountData
+        dbg!(InstructionError::InvalidAccountData)
     })?;
     Ok(loaded_program)
 }
@@ -124,11 +124,11 @@ pub fn load_program_from_account(
                     (UpgradeableLoaderState::size_of_programdata_metadata(), slot)
                 } else {
                     ic_logger_msg!(log_collector, "Program has been closed");
-                    return Err(InstructionError::InvalidAccountData);
+                    return Err(dbg!(InstructionError::InvalidAccountData));
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             }
         } else {
             (0, 0)
@@ -551,10 +551,11 @@ fn process_instruction_inner(
 
     let mut get_or_create_executor_time = Measure::start("get_or_create_executor_time");
     let executor = find_program_in_cache(invoke_context, program_account.get_key())
-        .ok_or(InstructionError::InvalidAccountData)?;
+        .ok_or_else(|| dbg!(InstructionError::InvalidAccountData))?;
 
     if executor.is_tombstone() {
-        return Err(Box::new(InstructionError::InvalidAccountData));
+        panic!();
+        return Err(Box::new(dbg!(InstructionError::InvalidAccountData))); // HERE
     }
 
     drop(program_account);
@@ -569,7 +570,7 @@ fn process_instruction_inner(
         LoadedProgramType::FailedVerification(_)
         | LoadedProgramType::Closed
         | LoadedProgramType::DelayVisibility => {
-            Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
+            Err(Box::new(dbg!(InstructionError::InvalidAccountData)) as Box<dyn std::error::Error>)
         }
         LoadedProgramType::LegacyV0(executable) => {
             // execute(executable, invoke_context)
@@ -635,7 +636,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Buffer account");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             }
             drop(buffer);
             write_program_data(
@@ -705,7 +706,7 @@ fn process_loader_upgradeable_instruction(
                 || buffer_data_len == 0
             {
                 ic_logger_msg!(log_collector, "Buffer account too small");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             }
             drop(buffer);
             if max_data_len < buffer_data_len {
@@ -865,7 +866,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             }
             let new_program_id = *program.get_key();
             drop(program);
@@ -894,7 +895,7 @@ fn process_loader_upgradeable_instruction(
                 || buffer_data_len == 0
             {
                 ic_logger_msg!(log_collector, "Buffer account too small");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             }
             drop(buffer);
 
@@ -947,7 +948,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid ProgramData account");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             };
             let programdata_len = programdata.get_data().len();
             drop(programdata);
@@ -1352,7 +1353,7 @@ fn process_loader_upgradeable_instruction(
                 }
                 _ => {
                     ic_logger_msg!(log_collector, "Invalid Program account");
-                    return Err(InstructionError::InvalidAccountData);
+                    return Err(dbg!(InstructionError::InvalidAccountData));
                 }
             }
             drop(program_account);
@@ -1394,7 +1395,7 @@ fn process_loader_upgradeable_instruction(
                 upgrade_authority_address
             } else {
                 ic_logger_msg!(log_collector, "ProgramData state is invalid");
-                return Err(InstructionError::InvalidAccountData);
+                return Err(dbg!(InstructionError::InvalidAccountData));
             };
 
             let required_payment = {
@@ -1965,7 +1966,7 @@ mod tests {
                 is_signer: true,
                 is_writable: true,
             }],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
     }
 
@@ -2235,7 +2236,7 @@ mod tests {
             &instruction,
             vec![(buffer_address, buffer_account.clone())],
             instruction_accounts.clone(),
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Case: Write entire buffer
@@ -2785,7 +2786,7 @@ mod tests {
         process_instruction(
             transaction_accounts,
             instruction_accounts,
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Case: Program ProgramData account mismatch
@@ -2874,7 +2875,7 @@ mod tests {
         process_instruction(
             transaction_accounts,
             instruction_accounts,
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Case: Mismatched buffer and program authority
@@ -3930,7 +3931,7 @@ mod tests {
                 (program_address, program_account.clone()),
             ],
             Vec::new(),
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Case: Reopen should fail

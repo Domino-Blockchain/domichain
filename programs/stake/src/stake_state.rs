@@ -467,7 +467,7 @@ pub fn initialize(
     feature_set: &FeatureSet,
 ) -> Result<(), InstructionError> {
     if stake_account.get_data().len() != StakeState::size_of() {
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     if let StakeState::Uninitialized = stake_account.get_state()? {
         let rent_exempt_reserve = rent.minimum_balance(stake_account.get_data().len());
@@ -489,7 +489,7 @@ pub fn initialize(
             Err(InstructionError::InsufficientFunds)
         }
     } else {
-        Err(InstructionError::InvalidAccountData)
+        Err(dbg!(InstructionError::InvalidAccountData))
     }
 }
 
@@ -532,7 +532,7 @@ pub fn authorize(
             )?;
             stake_account.set_state(&StakeState::Initialized(meta))
         }
-        _ => Err(InstructionError::InvalidAccountData),
+        _ => Err(dbg!(InstructionError::InvalidAccountData)),
     }
 }
 
@@ -627,7 +627,7 @@ pub fn delegate(
             )?;
             stake_account.set_state(&StakeState::Stake(meta, stake))
         }
-        _ => Err(InstructionError::InvalidAccountData),
+        _ => Err(dbg!(InstructionError::InvalidAccountData)),
     }
 }
 
@@ -642,7 +642,7 @@ pub fn deactivate(
 
         stake_account.set_state(&StakeState::Stake(meta, stake))
     } else {
-        Err(InstructionError::InvalidAccountData)
+        Err(dbg!(InstructionError::InvalidAccountData))
     }
 }
 
@@ -661,7 +661,7 @@ pub fn set_lockup(
             meta.set_lockup(lockup, signers, clock)?;
             stake_account.set_state(&StakeState::Stake(meta, stake))
         }
-        _ => Err(InstructionError::InvalidAccountData),
+        _ => Err(dbg!(InstructionError::InvalidAccountData)),
     }
 }
 
@@ -680,10 +680,10 @@ pub fn split(
         return Err(InstructionError::IncorrectProgramId);
     }
     if split.get_data().len() != StakeState::size_of() {
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     if !matches!(split.get_state()?, StakeState::Uninitialized) {
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     let split_lamport_balance = split.get_lamports();
     drop(split);
@@ -808,7 +808,7 @@ pub fn split(
                 return Err(InstructionError::MissingRequiredSignature);
             }
         }
-        _ => return Err(InstructionError::InvalidAccountData),
+        _ => return Err(dbg!(InstructionError::InvalidAccountData)),
     }
 
     // Deinitialize state upon zero balance
@@ -925,7 +925,7 @@ pub fn redelegate(
             StakeState::size_of(),
             uninitialized_stake_account.get_data().len()
         );
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     if !matches!(
         uninitialized_stake_account.get_state()?,
@@ -977,7 +977,7 @@ pub fn redelegate(
             (meta, status.effective)
         } else {
             ic_msg!(invoke_context, "invalid stake account data",);
-            return Err(InstructionError::InvalidAccountData);
+            return Err(dbg!(InstructionError::InvalidAccountData));
         };
 
     // deactivate `stake_account`
@@ -1078,7 +1078,7 @@ pub fn withdraw(
             }
             (Lockup::default(), 0, false) // no lockup, no restrictions
         }
-        _ => return Err(InstructionError::InvalidAccountData),
+        _ => return Err(dbg!(InstructionError::InvalidAccountData)),
     };
 
     // verify that lockup has expired or that the withdrawal is signed by
@@ -1177,7 +1177,7 @@ pub(crate) fn deactivate_delinquent(
             Err(StakeError::MinimumDelinquentEpochsForDeactivationNotMet.into())
         }
     } else {
-        Err(InstructionError::InvalidAccountData)
+        Err(dbg!(InstructionError::InvalidAccountData))
     }
 }
 
@@ -1373,7 +1373,7 @@ impl MergeKind {
                 }
             }
             StakeState::Initialized(meta) => Ok(Self::Inactive(*meta, stake_lamports)),
-            _ => Err(InstructionError::InvalidAccountData),
+            _ => Err(dbg!(InstructionError::InvalidAccountData)),
         }
     }
 
@@ -1618,7 +1618,7 @@ pub fn redeem_rewards(
             Err(StakeError::NoCreditsToRedeem.into())
         }
     } else {
-        Err(InstructionError::InvalidAccountData)
+        Err(dbg!(InstructionError::InvalidAccountData))
     }
 }
 
@@ -1637,7 +1637,7 @@ pub fn calculate_points(
             null_tracer(),
         ))
     } else {
-        Err(InstructionError::InvalidAccountData)
+        Err(dbg!(InstructionError::InvalidAccountData))
     }
 }
 
@@ -3319,7 +3319,7 @@ mod tests {
                 &stake_history
             )
             .unwrap_err(),
-            InstructionError::InvalidAccountData
+            dbg!(InstructionError::InvalidAccountData)
         );
 
         // RewardsPool state fails
@@ -3333,7 +3333,7 @@ mod tests {
                 &stake_history
             )
             .unwrap_err(),
-            InstructionError::InvalidAccountData
+            dbg!(InstructionError::InvalidAccountData)
         );
 
         // Initialized state succeeds

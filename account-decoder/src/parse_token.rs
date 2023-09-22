@@ -61,7 +61,16 @@ pub fn parse_token(
     data: &[u8],
     mint_decimals: Option<u8>,
 ) -> Result<TokenAccountType, ParseAccountError> {
+    dbg!(_parse_token(data, mint_decimals))
+}
+
+pub fn _parse_token(
+    data: &[u8],
+    mint_decimals: Option<u8>,
+) -> Result<TokenAccountType, ParseAccountError> {
     if let Ok(account) = StateWithExtensions::<Account>::unpack(data) {
+        dbg!(&account);
+        panic!();
         let decimals = mint_decimals.ok_or_else(|| {
             ParseAccountError::AdditionalDataMissing(
                 "no mint_decimals provided to parse spl-token account".to_string(),

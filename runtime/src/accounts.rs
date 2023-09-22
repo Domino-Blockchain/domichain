@@ -352,6 +352,14 @@ impl Accounts {
             .iter()
             .enumerate()
             .map(|(i, key)| {
+                if key.to_string().contains("BPF") {
+                    dbg!(key);
+                    dbg!(&loaded_programs);
+                    dbg!(account_keys.iter().collect::<Vec<_>>());
+                    dbg!(&tx);
+                    dbg!(domichain_sdk::sysvar::instructions::check_id(key));
+                }
+
                 let mut account_found = true;
                 #[allow(clippy::collapsible_else_if)]
                 let account = if domichain_sdk::sysvar::instructions::check_id(key) {
@@ -369,7 +377,15 @@ impl Accounts {
                         && !instruction_account
                         && !message.is_writable(i))
                     .then_some(())
-                    .and_then(|_| loaded_programs.find(key))
+                    .and_then(|_| {
+                        if key.to_string().contains("BPF") {
+                            dbg!(key);
+                            dbg!(&loaded_programs);
+                            dbg!(account_keys.iter().collect::<Vec<_>>());
+                            dbg!(&tx);
+                        }
+                        loaded_programs.find(key)
+                    })
                     {
                         // This condition block does special handling for accounts that are passed
                         // as instruction account to any of the instructions in the transaction.
@@ -638,6 +654,12 @@ impl Accounts {
         program_owners: &[&'a Pubkey],
         hash_queue: &BlockhashQueue,
     ) -> HashMap<Pubkey, (&'a Pubkey, u64)> {
+        // dbg!(&self);
+            // dbg!(&ancestors);
+        // dbg!(&txs);
+            // dbg!(&lock_results);
+            // dbg!(&program_owners);
+        // dbg!(&hash_queue);
         let mut result: HashMap<Pubkey, (&'a Pubkey, u64)> = HashMap::new();
         lock_results.iter_mut().zip(txs).for_each(|etx| {
             if let ((Ok(()), nonce), tx) = etx {
@@ -663,6 +685,7 @@ impl Accounts {
                                     key,
                                     program_owners,
                                 ) {
+                                    // dbg!(index);
                                     program_owners
                                         .get(index)
                                         .map(|owner| entry.insert((*owner, 1)));

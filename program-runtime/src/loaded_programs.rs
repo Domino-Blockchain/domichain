@@ -360,6 +360,18 @@ impl LoadedProgram {
     }
 
     pub fn is_tombstone(&self) -> bool {
+        // dbg!(matches!(
+        //     self.program,
+        //     LoadedProgramType::FailedVerification(_)
+        // ));
+        // dbg!(matches!(
+        //     self.program,
+        //     LoadedProgramType::Closed
+        // ));
+        // dbg!(matches!(
+        //     self.program,
+        //     LoadedProgramType::DelayVisibility
+        // ));
         matches!(
             self.program,
             LoadedProgramType::FailedVerification(_)

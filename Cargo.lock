@@ -190,7 +190,7 @@ dependencies = [
  "ark-std",
  "derivative",
  "hashbrown 0.13.2",
- "itertools",
+ "itertools 0.10.5",
  "num-traits",
  "zeroize",
 ]
@@ -207,7 +207,7 @@ dependencies = [
  "ark-std",
  "derivative",
  "digest 0.10.7",
- "itertools",
+ "itertools 0.10.5",
  "num-bigint 0.4.3",
  "num-traits",
  "paste",
@@ -2371,7 +2371,7 @@ dependencies = [
  "etcd-client",
  "fs_extra",
  "histogram",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "libvrf",
  "log",
@@ -2427,7 +2427,7 @@ dependencies = [
  "domichain-thin-client",
  "domichain-tpu-client",
  "domichain-version",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "rand 0.7.3",
  "serde",
@@ -2560,7 +2560,7 @@ dependencies = [
  "domichain-stake-program",
  "domichain-version",
  "domichain-vote-program",
- "itertools",
+ "itertools 0.10.5",
  "serde",
  "serde_json",
  "serde_yaml 0.9.22",
@@ -2642,7 +2642,7 @@ dependencies = [
  "domichain-vote-program",
  "flate2",
  "indexmap 1.9.3",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "lru",
  "matches",
@@ -2747,7 +2747,7 @@ dependencies = [
  "domichain-wasm-loader-program",
  "fs_extra",
  "futures 0.3.28",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "libc",
  "log",
@@ -2812,7 +2812,7 @@ dependencies = [
  "domichain-vote-program",
  "futures 0.3.28",
  "histogram",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "num_cpus",
  "regex",
@@ -2863,7 +2863,7 @@ dependencies = [
  "domichain-vote-program",
  "fs_extra",
  "gag",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "rand 0.7.3",
  "rayon",
@@ -3078,7 +3078,7 @@ dependencies = [
  "domichain-logger",
  "domichain-sdk-macro",
  "getrandom 0.2.10",
- "itertools",
+ "itertools 0.10.5",
  "js-sys",
  "lazy_static",
  "libc",
@@ -3120,7 +3120,7 @@ dependencies = [
  "domichain-sdk",
  "eager",
  "enum-iterator",
- "itertools",
+ "itertools 0.10.5",
  "libc",
  "log",
  "num-derive",
@@ -3202,7 +3202,7 @@ dependencies = [
  "domichain-sdk",
  "domichain-streamer",
  "futures 0.3.28",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "log",
  "quinn",
@@ -3273,7 +3273,7 @@ dependencies = [
  "domichain-transaction-status",
  "domichain-version",
  "domichain-vote-program",
- "itertools",
+ "itertools 0.10.5",
  "jsonrpc-core",
  "jsonrpc-core-client",
  "jsonrpc-derive",
@@ -3431,7 +3431,7 @@ dependencies = [
  "fnv",
  "im",
  "index_list",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "libsecp256k1",
  "log",
@@ -3492,7 +3492,7 @@ dependencies = [
  "generic-array 0.14.7",
  "hex",
  "hmac 0.12.1",
- "itertools",
+ "itertools 0.10.5",
  "js-sys",
  "lazy_static",
  "libsecp256k1",
@@ -3654,7 +3654,7 @@ dependencies = [
  "futures-util",
  "histogram",
  "indexmap 1.9.3",
- "itertools",
+ "itertools 0.10.5",
  "libc",
  "log",
  "nix",
@@ -3897,7 +3897,7 @@ dependencies = [
  "domichain-vote-program",
  "fd-lock",
  "indicatif",
- "itertools",
+ "itertools 0.10.5",
  "jsonrpc-core",
  "jsonrpc-core-client",
  "jsonrpc-derive",
@@ -3961,11 +3961,14 @@ name = "domichain-wasm-loader-program"
 version = "1.16.1"
 dependencies = [
  "bincode",
+ "borsh 0.10.3",
+ "bytemuck",
  "byteorder",
  "domichain-measure",
  "domichain-program-runtime",
  "domichain-sdk",
  "domichain-zk-token-sdk",
+ "itertools 0.11.0",
  "libsecp256k1",
  "log",
  "memoffset 0.9.0",
@@ -4052,7 +4055,7 @@ dependencies = [
  "domichain-program",
  "domichain-sdk",
  "getrandom 0.1.16",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "merlin",
  "num-derive",
@@ -5159,6 +5162,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -6421,7 +6433,7 @@ checksum = "59230a63c37f3e18569bdb90e4a89cbf5bf8b06fea0b84e65ea10cc4df47addd"
 dependencies = [
  "difflib",
  "float-cmp",
- "itertools",
+ "itertools 0.10.5",
  "normalize-line-endings",
  "predicates-core",
  "regex",
@@ -6589,7 +6601,7 @@ checksum = "62941722fb675d463659e49c4f3fe1fe792ff24fe5bbaa9c08cd3b98a1c354f5"
 dependencies = [
  "bytes",
  "heck 0.3.3",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "log",
  "multimap",
@@ -6609,7 +6621,7 @@ checksum = "119533552c9a7ffacc21e099c24a0ac8bb19c2a2a3f363de84cd9b844feab270"
 dependencies = [
  "bytes",
  "heck 0.4.0",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "log",
  "multimap",
@@ -6630,7 +6642,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9cc1a3263e07e0bf68e96268f37665207b49560d98739662cdfaae215c720fe"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.10.5",
  "proc-macro2 1.0.63",
  "quote 1.0.29",
  "syn 1.0.93",
@@ -6643,7 +6655,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.10.5",
  "proc-macro2 1.0.63",
  "quote 1.0.29",
  "syn 1.0.93",

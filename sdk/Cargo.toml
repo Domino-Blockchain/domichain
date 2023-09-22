@@ -89,7 +89,7 @@ thiserror = { workspace = true }
 uriparse = { workspace = true }
 wasm-bindgen = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))'.dependencies]
 js-sys = { workspace = true }
 
 [dev-dependencies]

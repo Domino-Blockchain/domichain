@@ -123,7 +123,7 @@ pub fn load_program_from_account(
     )
     .map_err(|err| {
         ic_logger_msg!(log_collector, "{}", err);
-        InstructionError::InvalidAccountData
+        dbg!(InstructionError::InvalidAccountData)
     })?;
     Ok((Arc::new(loaded_program), load_program_metrics))
 }
@@ -236,7 +236,7 @@ fn check_program_account(
     }
     if program.get_data().is_empty() {
         ic_logger_msg!(log_collector, "Program is uninitialized");
-        return Err(InstructionError::InvalidAccountData);
+        return Err(dbg!(InstructionError::InvalidAccountData));
     }
     let state = get_state(program.get_data())?;
     if !program.is_writable() {
@@ -584,7 +584,7 @@ pub fn process_instruction_inner(
         }
         if program.get_data().is_empty() {
             ic_logger_msg!(log_collector, "Program is uninitialized");
-            return Err(Box::new(InstructionError::InvalidAccountData));
+            return Err(Box::new(dbg!(InstructionError::InvalidAccountData)));
         }
         let state = get_state(program.get_data())?;
         if !state.is_deployed {
@@ -613,7 +613,7 @@ pub fn process_instruction_inner(
             LoadedProgramType::FailedVerification(_)
             | LoadedProgramType::Closed
             | LoadedProgramType::DelayVisibility => {
-                Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
+                Err(Box::new(dbg!(InstructionError::InvalidAccountData)) as Box<dyn std::error::Error>)
             }
             LoadedProgramType::Typed(_executable) => {
                 todo!()
@@ -1108,7 +1108,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Truncate { offset: 0 }).unwrap(),
             transaction_accounts.clone(),
             &[(2, false, true), (1, true, false), (0, false, true)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: Program is not retracted
@@ -1244,7 +1244,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Deploy).unwrap(),
             transaction_accounts.clone(),
             &[(3, false, true), (1, true, false)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: Program fails verification
@@ -1253,7 +1253,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Deploy).unwrap(),
             transaction_accounts.clone(),
             &[(4, false, true), (1, true, false)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: Program is deployed already
@@ -1315,7 +1315,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Retract).unwrap(),
             transaction_accounts.clone(),
             &[(2, false, true), (1, true, false)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: Program is not deployed
@@ -1404,7 +1404,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::TransferAuthority).unwrap(),
             transaction_accounts.clone(),
             &[(3, false, true), (1, true, false), (2, true, false)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: New authority did not sign
@@ -1469,7 +1469,7 @@ mod tests {
             &[0, 1, 2, 3],
             transaction_accounts.clone(),
             &[(1, false, true)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
 
         // Error: Program is not deployed
@@ -1487,7 +1487,7 @@ mod tests {
             &[0, 1, 2, 3],
             transaction_accounts,
             &[(1, false, true)],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
     }
 }

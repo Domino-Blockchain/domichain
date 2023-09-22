@@ -1,5 +1,7 @@
 //! `Instruction`, with a stable memory layout
 
+use super::stable_vec::StableVecFixed;
+
 use {
     crate::{
         instruction::{AccountMeta, Instruction},
@@ -42,6 +44,34 @@ impl From<Instruction> for StableInstruction {
             accounts: other.accounts.into(),
             data: other.data.into(),
             program_id: other.program_id,
+        }
+    }
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct StableInstructionFixed {
+    pub accounts: StableVecFixed<AccountMeta>,
+    pub data: StableVecFixed<u8>,
+    pub program_id: Pubkey,
+}
+
+impl From<StableInstruction> for StableInstructionFixed {
+    fn from(value: StableInstruction) -> Self {
+        Self {
+            accounts: value.accounts.into(),
+            data: value.data.into(),
+            program_id: value.program_id,
+        }
+    }
+}
+
+impl From<StableInstructionFixed> for StableInstruction {
+    fn from(value: StableInstructionFixed) -> Self {
+        Self {
+            accounts: value.accounts.into(),
+            data: value.data.into(),
+            program_id: value.program_id,
         }
     }
 }

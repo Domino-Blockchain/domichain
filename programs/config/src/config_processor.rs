@@ -34,7 +34,7 @@ declare_process_instruction!(process_instruction, 450, |invoke_context| {
                 "Unable to deserialize config account: {}",
                 err
             );
-            InstructionError::InvalidAccountData
+            dbg!(InstructionError::InvalidAccountData)
         })?
     };
     drop(config_account);
@@ -373,7 +373,7 @@ mod tests {
                 is_signer: true,
                 is_writable: false,
             }],
-            Err(InstructionError::InvalidAccountData),
+            Err(dbg!(InstructionError::InvalidAccountData)),
         );
     }
 

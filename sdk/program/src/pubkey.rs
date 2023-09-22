@@ -503,7 +503,11 @@ impl Pubkey {
                     let mut seeds_with_bump = seeds.to_vec();
                     seeds_with_bump.push(&bump_seed);
                     match Self::create_program_address(&seeds_with_bump, program_id) {
-                        Ok(address) => return Some((address, bump_seed[0])),
+                        Ok(address) => {
+                            dbg!(seeds_with_bump.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
+                            dbg!(program_id, address);
+                            return Some((address, bump_seed[0]))
+                        },
                         Err(PubkeyError::InvalidSeeds) => (),
                         _ => break,
                     }
@@ -603,6 +607,8 @@ impl Pubkey {
                 return Err(PubkeyError::InvalidSeeds);
             }
 
+            // dbg!(seeds.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
+            // dbg!(program_id, Pubkey::from(hash.to_bytes()));
             Ok(Pubkey::from(hash.to_bytes()))
         }
         // Call via a system call to perform the calculation

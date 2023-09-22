@@ -1,6 +1,6 @@
 //! `Vec`, with a stable memory layout
 
-use std::{marker::PhantomData, mem::ManuallyDrop, ptr::NonNull};
+use std::{marker::PhantomData, mem::ManuallyDrop, ptr::NonNull, num::NonZeroU64, fmt::Debug, ops::Deref};
 
 /// `Vec`, with a stable memory layout
 ///
@@ -28,6 +28,112 @@ pub struct StableVec<T> {
     pub cap: usize,
     pub len: usize,
     _marker: PhantomData<T>,
+}
+
+#[repr(C)]
+pub struct StableVecFixed<T> {
+    pub ptr: NonZeroU64,
+    pub cap: u64,
+    pub len: u64,
+    _marker: PhantomData<T>,
+}
+
+impl<T> StableVecFixed<T> {
+    #[inline]
+    pub fn as_ptr(&self) -> *const T {
+        // We shadow the slice method of the same name to avoid going through
+        // `deref`, which creates an intermediate reference.
+        let res = NonNull::new(u64::from(self.ptr) as *mut T).unwrap().as_ptr();
+        // #[cfg(target_os = "wasi")]
+        // {
+        //     use crate::dbg_syscall;
+        //     dbg_syscall!(format_args!("{:x}", self.ptr));
+        //     dbg_syscall!(res);
+        // }
+        res
+    }
+
+    #[inline]
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        // We shadow the slice method of the same name to avoid going through
+        // `deref_mut`, which creates an intermediate reference.
+        NonNull::new(u64::from(self.ptr) as *mut T).unwrap().as_ptr()
+    }
+}
+
+impl<T: Debug> Debug for StableVecFixed<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list().entries(Deref::deref(self)).finish()
+    }
+}
+
+impl<T> From<StableVec<T>> for StableVecFixed<T> {
+    fn from(other: StableVec<T>) -> Self {
+        let other = ManuallyDrop::new(other);
+        let res = Self {
+            ptr: (other.ptr.as_ptr() as u64).try_into().unwrap(),
+            cap: other.cap as _,
+            len: other.len as _,
+            _marker: PhantomData,
+        };
+        // #[cfg(target_os = "wasi")]
+        // {
+        //     use crate::dbg_syscall;
+        //     dbg_syscall!(other.ptr.as_ptr());
+        //     dbg_syscall!(format_args!("{:x}", res.ptr));
+        //     dbg_syscall!(other.cap);
+        //     dbg_syscall!(res.cap);
+        //     dbg_syscall!(other.len);
+        //     dbg_syscall!(res.len);
+        // }
+        res
+    }
+}
+
+impl<T> From<StableVecFixed<T>> for StableVec<T> {
+    fn from(other: StableVecFixed<T>) -> Self {
+        let other = ManuallyDrop::new(other);
+        Self {
+            ptr: NonNull::new(u64::from(other.ptr) as *mut T).unwrap(),
+            cap: other.cap as _,
+            len: other.len as _,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> std::ops::Deref for StableVecFixed<T> {
+    type Target = [T];
+
+    #[inline]
+    fn deref(&self) -> &[T] {
+        let res = unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len.try_into().unwrap()) };
+        // #[cfg(target_os = "wasi")]
+        // {
+        //     use crate::dbg_syscall;
+        //     dbg_syscall!(self.as_ptr());
+        //     dbg_syscall!(res.as_ptr());
+        // }
+        res
+    }
+}
+
+impl<T> std::ops::DerefMut for StableVecFixed<T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut [T] {
+        unsafe { core::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len.try_into().unwrap()) }
+    }
+}
+
+impl<T> Drop for StableVecFixed<T> {
+    fn drop(&mut self) {
+        // We only allow creating a StableVecFixed through creating a Vec.  To ensure we are dropped
+        // correctly, convert ourselves back to a Vec and let Vec's drop handling take over.
+        //
+        // SAFETY: We have a valid StableVecFixed, which we can only get from a Vec.  Therefore it is
+        // safe to convert back to Vec.
+        let _vec = unsafe { Vec::from_raw_parts(self.as_mut_ptr(), self.len.try_into().unwrap(), self.cap.try_into().unwrap()) };
+    }
 }
 
 impl<T> StableVec<T> {
@@ -63,7 +169,14 @@ impl<T> std::ops::Deref for StableVec<T> {
 
     #[inline]
     fn deref(&self) -> &[T] {
-        unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len) }
+        let res = unsafe { core::slice::from_raw_parts(self.as_ptr(), self.len) };
+        // #[cfg(target_os = "wasi")]
+        // {
+        //     use crate::dbg_syscall;
+        //     dbg_syscall!(self.as_ptr());
+        //     dbg_syscall!(res.as_ptr());
+        // }
+        res
     }
 }
 

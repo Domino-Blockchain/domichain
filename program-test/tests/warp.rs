@@ -28,7 +28,7 @@ use {
         },
         transaction::{Transaction, TransactionError},
     },
-    solana_stake_program::stake_state,
+    domichain_stake_program::stake_state,
     domichain_vote_program::{
         vote_instruction,
         vote_state::{self, VoteInit, VoteState},

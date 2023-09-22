@@ -1,5 +1,7 @@
 //! Account information.
 
+use std::{marker::PhantomData, mem::transmute};
+
 use {
     crate::{
         clock::Epoch, debug_account_data::*, entrypoint::MAX_PERMITTED_DATA_INCREASE,
@@ -12,6 +14,11 @@ use {
         slice::from_raw_parts_mut,
     },
 };
+
+// [programs/wasm_loader/src/syscalls/cpi.rs:406] size_of::<AccountInfo>() = 48
+// [programs/wasm_loader/src/syscalls/cpi.rs:407] size_of::<&Pubkey>() = 8
+// [programs/wasm_loader/src/syscalls/cpi.rs:408] size_of::<Rc<RefCell<&'a mut u64>>>() = 8
+// [programs/wasm_loader/src/syscalls/cpi.rs:409] size_of::<Rc<RefCell<&'a mut [u8]>>>() = 8
 
 /// Account information
 #[derive(Clone)]
@@ -33,6 +40,129 @@ pub struct AccountInfo<'a> {
     pub is_writable: bool,
     /// This account's data contains a loaded program (and is now read-only)
     pub executable: bool,
+}
+
+impl<'a> AccountInfo<'a> {
+    pub fn into_raw(&self) -> AccountInfoRaw<'a> {
+        let lamports = self.lamports.as_ptr() as *const _;
+        let lamports = unsafe { *transmute::<_, *const &u64>(lamports) };
+
+        let ptr_to_slice = self.data.as_ptr() as *const &mut [u8];
+        let slice = unsafe { *transmute::<_, *const &[u8]>(ptr_to_slice) };
+
+        AccountInfoRaw {
+            key: (self.key as *const _ as u64).try_into().unwrap(),
+            lamports: (lamports as *const _ as u64).try_into().unwrap(),
+            ptr_to_slice: (ptr_to_slice as usize as u64).try_into().unwrap(),
+            data: (slice as *const [u8] as *const () as usize as u64).try_into().unwrap(),
+            data_len: slice.len().try_into().unwrap(),
+            owner: (self.owner as *const _ as u64).try_into().unwrap(),
+            rent_epoch: self.rent_epoch,
+            is_signer: self.is_signer,
+            is_writable: self.is_writable,
+            executable: self.executable,
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+
+/// Account information with raw mut pointers
+#[derive(Clone)]
+#[repr(C)]
+pub struct AccountInfoRaw<'a> {
+    /// Public key of the account
+    pub key: u32, // &'a Pubkey,
+    /// The lamports in the account.  Modifiable by programs.
+    pub lamports: u32, // *mut u64,
+    /// The data held in this account.  Modifiable by programs.
+    pub ptr_to_slice: u32, // *const *mut [u8],
+    pub data: u32, // *mut [u8],
+    pub data_len: u32, // *mut usize
+    /// Program that owns this account
+    pub owner: u32, // &'a Pubkey,
+    /// The epoch at which this account will next owe rent
+    pub rent_epoch: Epoch,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
+    /// This account's data contains a loaded program (and is now read-only)
+    pub executable: bool,
+
+    phantom_data: PhantomData<&'a Pubkey>,
+}
+
+impl<'a> fmt::Debug for AccountInfoRaw<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut f = f.debug_struct("AccountInfoRaw");
+
+        f.field("key", &format_args!("{:p}", self.key as *const ()))
+            .field("owner", &format_args!("{:p}", self.owner as *const ()))
+            .field("is_signer", &self.is_signer)
+            .field("is_writable", &self.is_writable)
+            .field("executable", &self.executable)
+            .field("rent_epoch", &self.rent_epoch)
+            .field("lamports", &format_args!("{:p}", self.lamports as *const ()))
+            .field("data.len", &self.data_len)
+            .field("data", &format_args!("{:p}", self.data as *const ()))
+            .field("ptr_to_slice", &format_args!("{:p}", self.ptr_to_slice as *const ()));
+
+        f.finish_non_exhaustive()
+    }
+}
+
+
+
+
+
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:382] size_of::<AccountInfo>() = 32
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:383] size_of::<&Pubkey>() = 4
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:384] size_of::<Rc<RefCell<&mut u64>>>() = 4
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:385] size_of::<Rc<RefCell<&mut [u8]>>>() = 4
+
+
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:382] size_of::<AccountInfoFromWasm>() = 32
+// [programs/wasm_loader/src/syscalls/cpi.rs:406] size_of::<AccountInfoFromWasm>() = 32
+
+/// Account information from WASM
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct AccountInfoFromWasm<'a> {
+    /// Public key of the account
+    pub key: u32, // &'a Pubkey
+    /// The lamports in the account.  Modifiable by programs.
+    pub lamports: u32, // Rc<RefCell<&'a mut u64>>
+    /// The data held in this account.  Modifiable by programs.
+    pub data: u32, // Rc<RefCell<&'a mut [u8]>>
+    /// Program that owns this account
+    pub owner: u32, // &'a Pubkey
+    /// The epoch at which this account will next owe rent
+    pub rent_epoch: Epoch,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
+    /// This account's data contains a loaded program (and is now read-only)
+    pub executable: bool,
+
+    phantom_data: PhantomData<&'a Pubkey>,
+}
+
+impl<'a> AccountInfoFromWasm<'a> {
+    pub fn key(&self) -> &'a Pubkey {
+        unsafe { transmute(self.key as u64 as *mut Pubkey) }
+    }
+    pub fn lamports(&self) -> &Rc<RefCell<&'a mut u64>> {
+        dbg!(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>);
+        unsafe { transmute(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>) }
+    }
+    pub fn data(&self) -> &Rc<RefCell<&'a mut [u8]>> {
+        unsafe { transmute(self.data as u64 as *mut Rc<RefCell<&'a mut [u8]>>) }
+    }
+    pub fn owner(&self) -> &'a Pubkey {
+        unsafe { transmute(self.owner as u64 as *mut Pubkey) }
+    }
 }
 
 impl<'a> fmt::Debug for AccountInfo<'a> {
