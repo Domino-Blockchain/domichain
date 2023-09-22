@@ -329,7 +329,7 @@ custom-panic = []
 Then provide a custom implementation of the panic handler:
 
 ```rust
-#[cfg(all(feature = "custom-panic", target_os = "domichain"))]
+#[cfg(all(feature = "custom-panic", target_os = "wasi"))]
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     domichain_program::msg!("program custom panic enabled");
@@ -350,7 +350,7 @@ programs can provide their own custom panic handler with an empty
 implementation.
 
 ```rust
-#[cfg(all(feature = "custom-panic", target_os = "domichain"))]
+#[cfg(all(feature = "custom-panic", target_os = "wasi"))]
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     // Do nothing to save space

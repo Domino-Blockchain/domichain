@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use domichain_program::message::AddressLoaderError;
 use thiserror::Error;
 
@@ -21,7 +21,7 @@ pub enum AddressLookupError {
     InvalidLookupIndex,
 }
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl From<AddressLookupError> for AddressLoaderError {
     fn from(err: AddressLookupError) -> Self {
         match err {

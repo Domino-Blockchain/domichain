@@ -1,6 +1,6 @@
 //! Example Rust-based SBF program that panics
 
-#[cfg(all(feature = "custom-panic", target_os = "domichain"))]
+#[cfg(all(feature = "custom-panic", target_os = "wasi"))]
 #[no_mangle]
 fn custom_panic(info: &core::panic::PanicInfo<'_>) {
     // Note: Full panic reporting is included here for testing purposes

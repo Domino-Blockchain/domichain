@@ -21,7 +21,7 @@ domichain-frozen-abi-macro = { workspace = true }
 domichain-program = { workspace = true }
 thiserror = { workspace = true }
 
-[target.'cfg(not(target_os = "domichain"))'.dependencies]
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
 domichain-program-runtime = { workspace = true }
 domichain-sdk = { workspace = true }
 

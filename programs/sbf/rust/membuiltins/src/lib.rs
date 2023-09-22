@@ -1,6 +1,6 @@
 //! Test builtin mem functions
 
-#![cfg(target_os = "domichain")]
+#![cfg(target_os = "wasi")]
 #![feature(rustc_private)]
 
 extern crate compiler_builtins;

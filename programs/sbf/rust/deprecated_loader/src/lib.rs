@@ -65,7 +65,7 @@ fn process_instruction(
 
     {
         // Test - arch config
-        #[cfg(not(target_os = "domichain"))]
+        #[cfg(not(target_os = "wasi"))]
         panic!();
     }
 

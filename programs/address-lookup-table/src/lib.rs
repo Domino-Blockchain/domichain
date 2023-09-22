@@ -6,7 +6,7 @@ use domichain_program::declare_id;
 
 pub mod error;
 pub mod instruction;
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub mod processor;
 pub mod state;
 

@@ -291,7 +291,7 @@ impl Processor {
                 u8::try_from(lookup_table.addresses.len()).map_err(|_| {
                     // This is impossible as long as the length of new_addresses
                     // is non-zero and LOOKUP_TABLE_MAX_ADDRESSES == u8::MAX + 1.
-                    InstructionError::InvalidAccountData
+                    dbg!(InstructionError::InvalidAccountData)
                 })?;
         }
 

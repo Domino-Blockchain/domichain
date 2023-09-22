@@ -1,4 +1,4 @@
-#![cfg(target_os = "domichain")]
+#![cfg(target_os = "wasi")]
 
 use domichain_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,
