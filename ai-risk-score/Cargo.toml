@@ -16,7 +16,7 @@ serde = "1.0"
 lazy_static = "1.4"
 log = { workspace = true }
 domichain-sdk = { workspace = true }
-ed25519-dalek = "1.0.1"
+ed25519-dalek = "2.0.0"
 hex = "0.4.3"
 
 [lib]
