@@ -1,5 +1,6 @@
 use bs58;
-use ed25519_dalek::{PublicKey, Signature};
+use ed25519_dalek::Verifier;
+use ed25519_dalek::{PublicKey, Signature as EdSignature};
 use hex::FromHex;
 use lazy_static::lazy_static;
 use log::{info, warn};
@@ -43,7 +44,7 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
     let public_key =
         PublicKey::from_bytes(&public_key_bytes).expect("Failed to create PublicKey from bytes");
     let signature =
-        Signature::from_bytes(&signature_bytes).expect("Failed to create Signature from bytes");
+        EdSignature::from_bytes(&signature_bytes).expect("Failed to create Signature from bytes");
 
     public_key.verify(&data_bytes, &signature).is_ok()
 }
@@ -87,6 +88,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                 let is_signature_valid = verify_signature(data_hex, signature_hex, public_key_hex);
 
                 if is_signature_valid {
+                    // Only proceed if the signature is valid
                     let wallet_entry = risk_score_map
                         .entry(wallet.to_owned())
                         .or_insert_with(HashMap::new);
