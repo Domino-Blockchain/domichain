@@ -1,6 +1,7 @@
 use bs58;
+use ed25519_dalek::ed25519::signature::Signature;
+use ed25519_dalek::PublicKey;
 use ed25519_dalek::Verifier;
-use ed25519_dalek::{PublicKey, Signature as EdSignature};
 use hex::FromHex;
 use lazy_static::lazy_static;
 use log::{info, warn};
@@ -44,7 +45,7 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
     let public_key =
         PublicKey::from_bytes(&public_key_bytes).expect("Failed to create PublicKey from bytes");
     let signature =
-        EdSignature::from_bytes(&signature_bytes).expect("Failed to create Signature from bytes");
+        Signature::from_bytes(&signature_bytes).expect("Failed to create Signature from bytes");
 
     public_key.verify(&data_bytes, &signature).is_ok()
 }
