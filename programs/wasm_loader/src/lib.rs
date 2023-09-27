@@ -2515,10 +2515,13 @@ fn execute<'a, 'b: 'a>(
 
     let mut deserialize_time = Measure::start("deserialize");
     let execute_or_deserialize_result = execution_result.and_then(|_| {
+        dbg!(bpf_account_data_direct_mapping);
+        // Mint outside of smart contract
         deserialize_parameters(
             invoke_context,
             parameter_bytes.as_slice(),
             true, // !bpf_account_data_direct_mapping,
+            // !bpf_account_data_direct_mapping,
         )
         .map_err(|error| Box::new(error) as Box<dyn std::error::Error>)
     });

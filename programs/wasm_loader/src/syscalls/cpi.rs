@@ -194,8 +194,8 @@ impl<'a> CallerAccount<'a> {
         account_info: &AccountInfoRaw,
         original_data_len: usize,
     ) -> Result<CallerAccount<'a>, Error> {
-        dbg!(size_of::<AccountInfo>());
-        dbg!(size_of::<AccountInfoRaw>());
+        // dbg!(size_of::<AccountInfo>());
+        // dbg!(size_of::<AccountInfoRaw>());
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
@@ -497,13 +497,14 @@ declare_syscall!(
         signers_seeds_len: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        dbg!("cpi_common",
-            instruction_addr as *mut Self,
-            account_infos_addr as *mut Self,
-            account_infos_len,
-            signers_seeds_addr as *mut Self,
-            signers_seeds_len,
-        );
+        dbg!("cpi_common");
+        // dbg!("cpi_common",
+        //     instruction_addr as *mut Self,
+        //     account_infos_addr as *mut Self,
+        //     account_infos_len,
+        //     signers_seeds_addr as *mut Self,
+        //     signers_seeds_len,
+        // );
         cpi_common::<Self>(
             invoke_context,
             instruction_addr,
@@ -612,12 +613,12 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             invoke_context,
         )?;
-        for i in 0..account_infos.len() {
-            dbg!(format_args!("{:?}", account_infos[i]));
-        }
+        // for i in 0..account_infos.len() {
+        //     dbg!(format_args!("{:?}", account_infos[i]));
+        // }
         dbg!(&account_info_keys);
 
-        dbg!();
+        // dbg!();
         let res = translate_and_update_accounts(
             instruction_accounts,
             program_indices,
@@ -629,7 +630,7 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             CallerAccount::from_wasm_account_info,
         );
-        dbg!();
+        // dbg!();
         res
     }
 
@@ -1010,7 +1011,7 @@ fn translate_and_update_accounts<'a, T, F>(
 where
     F: Fn(&InvokeContext, &MemoryMapping, bool, u64, &T, usize) -> Result<CallerAccount<'a>, Error>,
 {
-    dbg!();
+    // dbg!();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let mut accounts = Vec::with_capacity(instruction_accounts.len().saturating_add(1));
@@ -1298,10 +1299,10 @@ fn cpi_common<S: SyscallInvokeSigned>(
 
     for (index_in_caller, caller_account) in accounts.iter_mut() {
         if let Some(caller_account) = caller_account {
-            dbg!();
+            // dbg!();
             let mut callee_account = instruction_context
                 .try_borrow_instruction_account(transaction_context, *index_in_caller)?;
-            dbg!();
+            // dbg!();
             update_caller_account(
                 invoke_context,
                 memory_mapping,
@@ -1362,7 +1363,7 @@ fn update_callee_account(
                         );
                 }
             }
-            Err(err) if prev_len != post_len => {
+            Err(err) if dbg!(prev_len != post_len) => {
                 return Err(Box::new(err));
             }
             _ => {}

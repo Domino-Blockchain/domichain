@@ -357,18 +357,18 @@ fn translate_type_inner<'a, T>(
     check_aligned: bool,
 ) -> Result<&'a mut T, Error> {
     let vm_addr_ = vm_addr as *mut T;
-    println!("\t[{file}:{line}] translate_type_inner access_type={access_type:?}", file=file!(), line=line!());
-    println!("\t[{file}:{line}] translate_type_inner vm_addr_={vm_addr_:?}", file=file!(), line=line!());
-    println!("\t[{file}:{line}] translate_type_inner size_of::<T>() as u64={:?}", size_of::<T>() as u64, file=file!(), line=line!());
-    // dbg!("translate_type_inner", access_type, vm_addr_, size_of::<T>() as u64);
+    // println!("\t[{file}:{line}] translate_type_inner access_type={access_type:?}", file=file!(), line=line!());
+    // println!("\t[{file}:{line}] translate_type_inner vm_addr_={vm_addr_:?}", file=file!(), line=line!());
+    // println!("\t[{file}:{line}] translate_type_inner size_of::<T>() as u64={:?}", size_of::<T>() as u64, file=file!(), line=line!());
+    // // dbg!("translate_type_inner", access_type, vm_addr_, size_of::<T>() as u64);
     let host_addr = translate(memory_mapping, access_type, vm_addr, size_of::<T>() as u64)?;
-    let host_addr_ = host_addr as *mut T;
-    println!("\t[{file}:{line}] translate_type_inner host_addr_={host_addr_:?}", file=file!(), line=line!());
-    // dbg!("translate_type_inner", host_addr_);
+    // let host_addr_ = host_addr as *mut T;
+    // println!("\t[{file}:{line}] translate_type_inner host_addr_={host_addr_:?}", file=file!(), line=line!());
+    // // dbg!("translate_type_inner", host_addr_);
 
-    // dbg!(size_of::<T>() as u64);
-    // let bytes_in_place = unsafe { std::slice::from_raw_parts_mut(host_addr as *mut u8, size_of::<T>()) };
-    // dbg!("translate_type_inner", bytes_in_place);
+    // // dbg!(size_of::<T>() as u64);
+    // // let bytes_in_place = unsafe { std::slice::from_raw_parts_mut(host_addr as *mut u8, size_of::<T>()) };
+    // // dbg!("translate_type_inner", bytes_in_place);
 
     if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
         dbg!(host_addr as *mut T as usize);
@@ -392,7 +392,7 @@ fn translate_type<'a, T>(
     check_aligned: bool,
 ) -> Result<&'a T, Error> {
     let vm_addr_ = vm_addr as *mut T;
-    println!("\t[{file}:{line}] translate_type vm_addr_={vm_addr_:?}", file=file!(), line=line!());
+    // println!("\t[{file}:{line}] translate_type vm_addr_={vm_addr_:?}", file=file!(), line=line!());
     translate_type_inner::<T>(memory_mapping, AccessType::Load, vm_addr, check_aligned)
         .map(|value| &*value)
 }

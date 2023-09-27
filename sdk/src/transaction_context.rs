@@ -1144,14 +1144,20 @@ impl<'a> BorrowedAccount<'a> {
         }
         // and only if we are the owner
         if !self.is_owned_by_current_program() {
-            dbg!(&self.instruction_context.program_accounts);
-            let _ = dbg!(self.instruction_context
-                .get_last_program_key(self.transaction_context));
-            dbg!(&self.transaction_context.account_keys);
-            dbg!(self.get_owner());
-            let _ = dbg!(Backtrace::force_capture());
+            if self.get_owner().to_string() == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" {
+                dbg!(&self.instruction_context.program_accounts);
+                let _ = dbg!(self.instruction_context
+                    .get_last_program_key(self.transaction_context));
+                dbg!(&self.transaction_context.account_keys);
+                dbg!(self.get_owner());
+                dbg!(self.get_key());
+                // let backtrace = format!("{}", Backtrace::force_capture());
+                // let backtrace: Vec<_> = backtrace.lines().take(5).collect();
+                // dbg!(backtrace);
+            }
+            dbg!();
             // FIXME(Dev): keys should be equal
-            return Err(InstructionError::ExternalAccountDataModified);
+            return dbg!(Err(InstructionError::ExternalAccountDataModified));
         }
         Ok(())
     }
