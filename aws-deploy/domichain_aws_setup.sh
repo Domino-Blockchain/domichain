@@ -34,6 +34,7 @@ source "$HOME/.cargo/env"
 export GIT_SSH_COMMAND="ssh -i $IDENTITY_FILE"
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 git clone git@github.com:Domino-Blockchain/domichain.git ~/domichain
+git clone git@github.com:Domino-Blockchain/domichain-program-library.git ~/domichain-program-library
 cd ~/domichain
 
 if [ -n "$2" ]
