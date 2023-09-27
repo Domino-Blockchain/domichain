@@ -82,6 +82,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                 let wallet = &entry.wallet;
                 let reward_account: &String = &entry.public_key;
                 let risk_score = entry.risk_score;
+                let timeout = entry.timeout;
 
                 let data_hex = &entry.data;
                 let signature_hex = &entry.signature;
