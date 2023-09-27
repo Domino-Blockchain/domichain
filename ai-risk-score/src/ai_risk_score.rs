@@ -19,7 +19,7 @@ lazy_static! {
 
 pub static AI_REWARDS_RATE: OnceCell<f64> = OnceCell::const_new();
 
-const QUERY_TIME_PERIOD: u64 = 600;
+const QUERY_TIME_PERIOD: u64 = 60;
 
 #[derive(Debug, Deserialize)]
 struct ParsedResponse {
