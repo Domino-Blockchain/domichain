@@ -368,11 +368,11 @@ domichain-vote-program = { path = "programs/vote", version = "=1.16.1" }
 domichain-zk-keygen = { path = "zk-keygen", version = "=1.16.1" }
 domichain-zk-token-proof-program = { path = "programs/zk-token-proof", version = "=1.16.1" }
 domichain-zk-token-sdk = { path = "zk-token-sdk", version = "=1.16.1" }
-spl-associated-token-account = { path = "../domichain-program-library-2/associated-token-account/program", version = "=1.1.3" }
-spl-instruction-padding = { path = "../domichain-program-library-2/instruction-padding/program", version = "0.1" }
-spl-memo = { path = "../domichain-program-library-2/memo/program", version = "=3.0.1" }
-spl-token = { path = "../domichain-program-library-2/token/program", version = "=3.5.0" }
-spl-token-2022 = { path = "../domichain-program-library-2/token/program-2022", version = "=0.6.1" }
+spl-associated-token-account = { path = "../domichain-program-library/associated-token-account/program", version = "=1.1.3" }
+spl-instruction-padding = { path = "../domichain-program-library/instruction-padding/program", version = "0.1" }
+spl-memo = { path = "../domichain-program-library/memo/program", version = "=3.0.1" }
+spl-token = { path = "../domichain-program-library/token/program", version = "=3.5.0" }
+spl-token-2022 = { path = "../domichain-program-library/token/program-2022", version = "=0.6.1" }
 static_assertions = "1.1.0"
 stream-cancel = "0.8.1"
 strum = "0.24"
