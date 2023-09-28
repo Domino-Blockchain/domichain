@@ -5014,15 +5014,43 @@ impl Bank {
                     .map(|bin| bin.fee)
                     .unwrap_or_default()
             });
-        let total_risk_score: f64 = risk_scores.iter().sum();
-        let average_risk_score = total_risk_score / risk_scores.len() as f64;
-        ((prioritization_fee
+
+        let current_time = Utc::now();
+
+        // Filter risk scores based on their timestamp and timeout
+        let valid_risk_scores: Vec<f64> = risk_scores
+            .into_iter()
+            .zip(timeouts.iter())
+            .zip(timestamps.iter())
+            .filter_map(|((risk_score, timeout), timestamp_str)| {
+                if let Ok(timestamp) = DateTime::parse_from_rfc3339(timestamp_str) {
+                    let timestamp = timestamp.with_timezone(&Utc);
+                    if current_time <= timestamp + CDuration::seconds(*timeout as i64) {
+                        return Some(risk_score);
+                    }
+                }
+                None
+            })
+            .collect();
+
+        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+
+        let median_risk_score = if valid_risk_scores.is_empty() {
+            0.0
+        } else if valid_risk_scores.len() % 2 == 1 {
+            valid_risk_scores[valid_risk_scores.len() / 2]
+        } else {
+            let mid = valid_risk_scores.len() / 2;
+            (valid_risk_scores[mid - 1] + valid_risk_scores[mid]) / 2.0
+        };
+
+        let fee = ((prioritization_fee
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
             * congestion_multiplier
-            * (10.0).powf(average_risk_score) as f64)
-            .round() as u64
+            * (10.0).powf(median_risk_score))
+        .round() as u64;
     }
 
     //Return fee and the reward to AI node
@@ -5124,18 +5152,23 @@ impl Bank {
             })
             .collect();
 
-        let total_risk_score: f64 = valid_risk_scores.iter().sum();
-        let average_risk_score = if valid_risk_scores.is_empty() {
+        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+
+        let median_risk_score = if valid_risk_scores.is_empty() {
             0.0
+        } else if valid_risk_scores.len() % 2 == 1 {
+            valid_risk_scores[valid_risk_scores.len() / 2]
         } else {
-            total_risk_score / valid_risk_scores.len() as f64
+            let mid = valid_risk_scores.len() / 2;
+            (valid_risk_scores[mid - 1] + valid_risk_scores[mid]) / 2.0
         };
+
         let fee = ((prioritization_fee
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
             * congestion_multiplier
-            * (10.0).powf(average_risk_score))
+            * (10.0).powf(median_risk_score))
         .round() as u64;
 
         let mut ai_fee = 0;
