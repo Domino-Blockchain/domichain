@@ -115,7 +115,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                         timestamp: timestamp.to_string(),
                     };
                     let rewards_entry = wallet_entry.entry(reward_account.to_owned());
-                    rewards_entry.or_insert(reward_data);
+                    rewards_entry.insert(reward_data);
                 } else {
                     warn!("Invalid signature for wallet: {}", wallet);
                 }
