@@ -18,6 +18,7 @@ bytemuck = { workspace = true }
 byteorder = { workspace = true }
 bzip2 = { workspace = true }
 crossbeam-channel = { workspace = true }
+chrono = "0.4"
 dashmap = { workspace = true, features = ["rayon", "raw-api"] }
 dir-diff = { workspace = true }
 flate2 = { workspace = true }

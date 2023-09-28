@@ -793,6 +793,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
+name = "bs58"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5353f36341f7451062466f0b755b96ac3a9547e4d7f6b70d603fc721a7d7896"
+dependencies = [
+ "tinyvec",
+]
+
+[[package]]
 name = "bstr"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1600,7 +1609,7 @@ dependencies = [
  "Inflector",
  "base64 0.21.2",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "domichain-address-lookup-table-program",
  "domichain-config-program",
@@ -1994,7 +2003,7 @@ name = "domichain-cli"
 version = "1.16.1"
 dependencies = [
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "clap 2.33.3",
  "console",
  "const_format",
@@ -2193,7 +2202,7 @@ version = "1.16.1"
 dependencies = [
  "base64 0.21.2",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "chrono",
  "crossbeam-channel",
  "dashmap 4.0.2",
@@ -2366,7 +2375,7 @@ dependencies = [
  "ahash 0.8.3",
  "blake3",
  "block-buffer 0.10.4",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "byteorder",
  "cc",
@@ -2450,7 +2459,7 @@ dependencies = [
 name = "domichain-geyser-plugin-manager"
 version = "1.16.1"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "crossbeam-channel",
  "domichain-entry",
  "domichain-geyser-plugin-interface",
@@ -2558,7 +2567,7 @@ dependencies = [
 name = "domichain-keygen"
 version = "1.16.1"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "clap 3.2.25",
  "dirs-next",
  "domichain-clap-v3-utils",
@@ -2578,7 +2587,7 @@ dependencies = [
  "assert_matches",
  "bincode",
  "bitflags 1.3.2",
- "bs58",
+ "bs58 0.4.0",
  "byteorder",
  "chrono",
  "chrono-humanize",
@@ -2639,7 +2648,7 @@ name = "domichain-ledger-tool"
 version = "1.16.1"
 dependencies = [
  "assert_cmd",
- "bs58",
+ "bs58 0.4.0",
  "bytecount",
  "chrono",
  "clap 2.33.3",
@@ -2923,7 +2932,7 @@ dependencies = [
  "bitflags 1.3.2",
  "blake3",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "bytemuck",
  "cc",
@@ -3103,7 +3112,7 @@ version = "1.16.1"
 dependencies = [
  "base64 0.21.2",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "crossbeam-channel",
  "dashmap 4.0.2",
  "domichain-account-decoder",
@@ -3162,7 +3171,7 @@ dependencies = [
  "async-trait",
  "base64 0.21.2",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "crossbeam-channel",
  "domichain-account-decoder",
  "domichain-rpc-client-api",
@@ -3188,7 +3197,7 @@ name = "domichain-rpc-client-api"
 version = "1.16.1"
 dependencies = [
  "base64 0.21.2",
- "bs58",
+ "bs58 0.4.0",
  "domichain-account-decoder",
  "domichain-sdk",
  "domichain-transaction-status",
@@ -3225,7 +3234,7 @@ name = "domichain-rpc-test"
 version = "1.16.1"
 dependencies = [
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "crossbeam-channel",
  "domichain-account-decoder",
  "domichain-client",
@@ -3259,6 +3268,7 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "bzip2",
+ "chrono",
  "crossbeam-channel",
  "dashmap 4.0.2",
  "dir-diff",
@@ -3332,7 +3342,7 @@ dependencies = [
  "bincode",
  "bitflags 1.3.2",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -3382,7 +3392,7 @@ dependencies = [
 name = "domichain-sdk-macro"
 version = "1.16.1"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "proc-macro2 1.0.63",
  "quote 1.0.29",
  "rustversion",
@@ -3474,7 +3484,7 @@ name = "domichain-storage-proto"
 version = "1.16.1"
 dependencies = [
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "domichain-account-decoder",
  "domichain-sdk",
  "domichain-transaction-status",
@@ -3677,7 +3687,7 @@ dependencies = [
  "base64 0.21.2",
  "bincode",
  "borsh 0.9.3",
- "bs58",
+ "bs58 0.4.0",
  "domichain-account-decoder",
  "domichain-address-lookup-table-program",
  "domichain-sdk",
@@ -3838,7 +3848,7 @@ dependencies = [
 name = "domichain-zk-keygen"
 version = "1.16.1"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "clap 3.2.25",
  "dirs-next",
  "domichain-clap-v3-utils",
@@ -3910,7 +3920,10 @@ dependencies = [
 name = "domichain_risk_score"
 version = "1.16.1"
 dependencies = [
+ "bs58 0.5.0",
  "domichain-sdk",
+ "ed25519-dalek",
+ "hex",
  "lazy_static",
  "log",
  "reqwest",
@@ -7534,7 +7547,7 @@ dependencies = [
  "ahash 0.8.3",
  "blake3",
  "block-buffer 0.10.4",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "byteorder",
  "cc",
@@ -7597,7 +7610,7 @@ dependencies = [
  "bitflags 1.3.2",
  "blake3",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "bytemuck",
  "cc",
@@ -7646,7 +7659,7 @@ dependencies = [
  "bincode",
  "bitflags 1.3.2",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -7694,7 +7707,7 @@ version = "1.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa991e6d6ae7c57ef9fc56f964b22f3bae6ba6c144ccb07b0fe07e06a3efc47c"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "proc-macro2 1.0.63",
  "quote 1.0.29",
  "rustversion",
@@ -8238,9 +8251,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f83b2a3d4d9091d0abd7eba4dc2710b1718583bd4d8992e2190720ea38f391f7"
+checksum = "87cc5ceb3875bb20c2890005a4e226a4651264a5c75edb2421b52861a0a0cb50"
 dependencies = [
  "tinyvec_macros",
 ]

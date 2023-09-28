@@ -33,6 +33,7 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
+use chrono::{DateTime, Duration, Utc};
 use core::f64;
 
 #[allow(deprecated)]
@@ -86,12 +87,6 @@ use {
     },
     byteorder::{ByteOrder, LittleEndian},
     dashmap::{DashMap, DashSet},
-    log::*,
-    percentage::Percentage,
-    rayon::{
-        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
-        ThreadPool, ThreadPoolBuilder,
-    },
     domichain_bpf_loader_program::syscalls::create_program_runtime_environment,
     domichain_measure::{measure, measure::Measure, measure_us},
     domichain_perf::perf_libs,
@@ -171,6 +166,12 @@ use {
     },
     domichain_system_program::{get_system_account_kind, SystemAccountKind},
     domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
+    log::*,
+    percentage::Percentage,
+    rayon::{
+        iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator},
+        ThreadPool, ThreadPoolBuilder,
+    },
     std::{
         borrow::Cow,
         cell::RefCell,
@@ -3383,10 +3384,10 @@ impl Bank {
 
         let genesis_hash = genesis_config.hash();
         self.block_seed = genesis_hash;
-        self.blockhash_queue.write().unwrap().genesis_hash(
-            &genesis_hash,
-            self.fee_rate_governor.lamports_per_signature,
-        );
+        self.blockhash_queue
+            .write()
+            .unwrap()
+            .genesis_hash(&genesis_hash, self.fee_rate_governor.lamports_per_signature);
 
         self.hashes_per_tick = genesis_config.hashes_per_tick();
         self.ticks_per_slot = genesis_config.ticks_per_slot();
@@ -3567,7 +3568,7 @@ impl Bank {
                     NoncePartial::new(address, account).lamports_per_signature()
                 })
         })?;
-        
+
         Some(Self::calculate_fee(
             message,
             lamports_per_signature,
@@ -4943,7 +4944,6 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
     ) -> u64 {
-        
         // Fee based on compute units and signatures
         let congestion_multiplier = if lamports_per_signature == 0 {
             0.0 // test only
@@ -4958,15 +4958,16 @@ impl Bank {
         let send_account = format!("{}", message.account_keys()[0]);
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
 
-        let (risk_scores, _): (Vec<f64>, Vec<String>) = risk_score_map
-        .get(&send_account)
-        .map(|account_entry| {
-            (
-                account_entry.values().cloned().collect(),
-                account_entry.keys().cloned().collect(),
-            )
-        })
-        .unwrap_or_default();
+        // Create empty vectors to store risk_scores and timeouts
+        let mut risk_scores: Vec<f64> = Vec::new();
+        let mut timeouts: Vec<u64> = Vec::new();
+
+        if let Some(account_entry) = risk_score_map.get(&send_account) {
+            for reward_data in account_entry.values() {
+                risk_scores.push(reward_data.risk_score);
+                timeouts.push(reward_data.timeout);
+            }
+        }
 
         drop(risk_score_map);
 
@@ -5014,11 +5015,12 @@ impl Bank {
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
-            * congestion_multiplier* (10.0).powf(average_risk_score) as f64)
+            * congestion_multiplier
+            * (10.0).powf(average_risk_score) as f64)
             .round() as u64
     }
 
-    //Return fee and the reward to AI node 
+    //Return fee and the reward to AI node
     pub fn calculate_fee_with_ai_node(
         message: &SanitizedMessage,
         lamports_per_signature: u64,
@@ -5030,7 +5032,6 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
     ) -> (u64, u64, Vec<Pubkey>) {
-        
         // Fee based on compute units and signatures
         let congestion_multiplier = if lamports_per_signature == 0 {
             0.0 // test only
@@ -5045,15 +5046,19 @@ impl Bank {
         let send_account = format!("{}", message.account_keys()[0]);
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
 
-        let (risk_scores, rewards_accounts): (Vec<f64>, Vec<String>) = risk_score_map
-        .get(&send_account)
-        .map(|account_entry| {
-            (
-                account_entry.values().cloned().collect(),
-                account_entry.keys().cloned().collect(),
-            )
-        })
-        .unwrap_or_default();
+        let mut risk_scores: Vec<f64> = Vec::new();
+        let mut rewards_accounts: Vec<String> = Vec::new();
+        let mut timeouts: Vec<usize> = Vec::new();
+        let mut timestamps: Vec<String> = Vec::new();
+
+        if let Some(account_entry) = risk_score_map.get(&send_account) {
+            for (key, reward_data) in account_entry.iter() {
+                risk_scores.push(reward_data.risk_score);
+                timeouts.push(reward_data.timeout);
+                timestamps.push(reward_data.timestamp);
+                rewards_accounts.push(key.clone());
+            }
+        }
 
         drop(risk_score_map);
 
@@ -5095,25 +5100,52 @@ impl Bank {
                     .map(|bin| bin.fee)
                     .unwrap_or_default()
             });
-        let total_risk_score: f64 = risk_scores.iter().sum();
-        let average_risk_score = total_risk_score / risk_scores.len() as f64;
+
+        let current_time = Utc::now();
+
+        // Filter risk scores based on their timestamp and timeout
+        let valid_risk_scores: Vec<f64> = risk_scores
+            .into_iter()
+            .zip(timeouts.iter())
+            .zip(timestamps.iter())
+            .filter_map(|((risk_score, timeout), timestamp_str)| {
+                if let Ok(timestamp) = DateTime::parse_from_rfc3339(timestamp_str) {
+                    let timestamp = timestamp.with_timezone(&Utc);
+                    if current_time <= timestamp + Duration::seconds(*timeout as i64) {
+                        return Some(risk_score);
+                    }
+                }
+                None
+            })
+            .collect();
+
+        let total_risk_score: f64 = valid_risk_scores.iter().sum();
+        let average_risk_score = if valid_risk_scores.is_empty() {
+            0.0
+        } else {
+            total_risk_score / valid_risk_scores.len() as f64
+        };
         let fee = ((prioritization_fee
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
             .saturating_add(compute_fee) as f64)
-            * congestion_multiplier* (10.0).powf(average_risk_score))
-            .round() as u64;
-        
+            * congestion_multiplier
+            * (10.0).powf(average_risk_score))
+        .round() as u64;
+
         let mut ai_fee = 0;
-        if *message.fee_payer()== Pubkey::try_from("2wLcxrcaZyDL22DzhVkntLCVShVw3BKagwP8WNMm4Lpf").unwrap() {
+        if *message.fee_payer()
+            == Pubkey::try_from("2wLcxrcaZyDL22DzhVkntLCVShVw3BKagwP8WNMm4Lpf").unwrap()
+        {
             ai_fee = (fee as f64 * (*AI_REWARDS_RATE.get().unwrap_or(&0.3))) as u64;
-            println!{"Pay ID {:?}, ai_fee {:?}", message.fee_payer(), ai_fee};
+            println! {"Pay ID {:?}, ai_fee {:?}", message.fee_payer(), ai_fee};
         }
-        
+
         //println!("ai_fee: {:?}", ai_fee);
         let mut ai_node_rewards = vec![];
-        ai_node_rewards.push(Pubkey::try_from("5gEs3hAEKwqwiFhjCwTZWQiyQRuLhceGrunGrqtXUgDx").unwrap());
-        (fee - ai_fee, ai_fee , ai_node_rewards)
+        ai_node_rewards
+            .push(Pubkey::try_from("5gEs3hAEKwqwiFhjCwTZWQiyQRuLhceGrunGrqtXUgDx").unwrap());
+        (fee - ai_fee, ai_fee, ai_node_rewards)
     }
 
     // Calculate cost of loaded accounts size in the same way heap cost is charged at
@@ -6030,7 +6062,8 @@ impl Bank {
     fn use_multi_epoch_collection_cycle(&self, epoch: Epoch) -> bool {
         // Force normal behavior, disabling multi epoch collection cycle for manual local testing
         #[cfg(not(test))]
-        if self.slot_count_per_normal_epoch() == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
+        if self.slot_count_per_normal_epoch()
+            == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
         {
             return false;
         }
@@ -6042,7 +6075,8 @@ impl Bank {
     pub(crate) fn use_fixed_collection_cycle(&self) -> bool {
         // Force normal behavior, disabling fixed collection cycle for manual local testing
         #[cfg(not(test))]
-        if self.slot_count_per_normal_epoch() == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
+        if self.slot_count_per_normal_epoch()
+            == domichain_sdk::epoch_schedule::MINIMUM_SLOTS_PER_EPOCH
         {
             return false;
         }
@@ -7847,13 +7881,14 @@ impl Bank {
         };
 
         if reconfigure_token2_native_mint {
-            let mut native_mint_account = domichain_sdk::account::AccountSharedData::from(Account {
-                owner: inline_spl_token::id(),
-                data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
-                lamports: domi_to_lamports(1.),
-                executable: false,
-                rent_epoch: self.epoch() + 1,
-            });
+            let mut native_mint_account =
+                domichain_sdk::account::AccountSharedData::from(Account {
+                    owner: inline_spl_token::id(),
+                    data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
+                    lamports: domi_to_lamports(1.),
+                    executable: false,
+                    rent_epoch: self.epoch() + 1,
+                });
 
             // As a workaround for
             // https://Domino-Blockchain/domichain-program-library/issues/374, ensure that the

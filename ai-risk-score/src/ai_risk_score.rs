@@ -28,6 +28,14 @@ struct ParsedResponse {
     data: String,
     public_key: String,
     signature: String,
+    timeout: u64,
+    timestamp: String,
+}
+
+struct RewardData {
+    risk_score: f64,
+    timeout: u64,
+    timestamp: String,
 }
 
 fn from_base58_str(s: &str) -> Vec<u8> {
@@ -83,6 +91,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                 let reward_account: &String = &entry.public_key;
                 let risk_score = entry.risk_score;
                 let timeout = entry.timeout;
+                let timestamp: &String = &entry.timestamp;
 
                 let data_hex = &entry.data;
                 let signature_hex = &entry.signature;
@@ -94,8 +103,13 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                     let wallet_entry = risk_score_map
                         .entry(wallet.to_owned())
                         .or_insert_with(HashMap::new);
+                    let reward_data = RewardData {
+                        risk_score,
+                        timeout,
+                        timestamp,
+                    };
                     let rewards_entry = wallet_entry.entry(reward_account.to_owned());
-                    rewards_entry.or_insert(risk_score);
+                    rewards_entry.or_insert(reward_data);
                 } else {
                     warn!("Invalid signature for wallet: {}", wallet);
                 }
