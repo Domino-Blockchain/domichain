@@ -4969,12 +4969,10 @@ impl Bank {
             for (key, reward_data) in account_entry.iter() {
                 risk_scores.push(reward_data.risk_score);
                 timeouts.push(reward_data.timeout);
-                timestamps.push(reward_data.timestamp);
+                timestamps.push(reward_data.timestamp.clone());
                 rewards_accounts.push(key.clone());
             }
         }
-
-        drop(risk_score_map);
 
         drop(risk_score_map);
 
@@ -5062,7 +5060,7 @@ impl Bank {
             for (key, reward_data) in account_entry.iter() {
                 risk_scores.push(reward_data.risk_score);
                 timeouts.push(reward_data.timeout);
-                timestamps.push(reward_data.timestamp);
+                timestamps.push(reward_data.timestamp.clone());
                 rewards_accounts.push(key.clone());
             }
         }
