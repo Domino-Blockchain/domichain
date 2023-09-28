@@ -28,7 +28,7 @@ struct ParsedResponse {
     data: String,
     public_key: String,
     signature: String,
-    timeout: usize,
+    timeout: String,
     timestamp: String,
 }
 
@@ -92,7 +92,13 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                 let reward_account: &String = &entry.public_key;
                 let risk_score = entry.risk_score;
                 let timeout = entry.timeout;
-                let timestamp: &String = &entry.timestamp;
+                let timeout_str = &entry.timeout;
+                let timeout = match timeout_str.parse::<usize>() {
+                    Ok(parsed_timeout) => parsed_timeout,
+                    Err(_) => {
+                        0
+                    }
+                };
 
                 let data_hex = &entry.data;
                 let signature_hex = &entry.signature;
