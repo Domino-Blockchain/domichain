@@ -33,7 +33,8 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
-use chrono::{DateTime, Duration, Utc};
+use chrono::DateTime;
+use chrono::Utc;
 use core::f64;
 
 #[allow(deprecated)]
@@ -4958,16 +4959,21 @@ impl Bank {
         let send_account = format!("{}", message.account_keys()[0]);
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
 
-        // Create empty vectors to store risk_scores and timeouts
         let mut risk_scores: Vec<f64> = Vec::new();
-        let mut timeouts: Vec<u64> = Vec::new();
+        let mut rewards_accounts: Vec<String> = Vec::new();
+        let mut timeouts: Vec<usize> = Vec::new();
+        let mut timestamps: Vec<String> = Vec::new();
 
         if let Some(account_entry) = risk_score_map.get(&send_account) {
-            for reward_data in account_entry.values() {
+            for (key, reward_data) in account_entry.iter() {
                 risk_scores.push(reward_data.risk_score);
                 timeouts.push(reward_data.timeout);
+                timestamps.push(reward_data.timestamp);
+                rewards_accounts.push(key.clone());
             }
         }
+
+        drop(risk_score_map);
 
         drop(risk_score_map);
 

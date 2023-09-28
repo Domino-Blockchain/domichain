@@ -28,14 +28,14 @@ struct ParsedResponse {
     data: String,
     public_key: String,
     signature: String,
-    timeout: u64,
+    timeout: usize,
     timestamp: String,
 }
 
 #[allow(dead_code)]
 pub struct RewardData {
     pub risk_score: f64,
-    pub timeout: u64,
+    pub timeout: usize,
     pub timestamp: String,
 }
 
