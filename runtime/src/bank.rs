@@ -5080,6 +5080,7 @@ impl Bank {
 
         let send_account = format!("{}", message.account_keys()[0]);
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
+        println!("Risk Score Map: {:?}", risk_score_map);
 
         let mut risk_scores: Vec<f64> = Vec::new();
         let mut rewards_accounts: Vec<String> = Vec::new();
@@ -5154,8 +5155,11 @@ impl Bank {
             })
             .collect();
 
+        println!("Valid Risk Scores(1): {:?}", valid_risk_scores);
+
         valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
+        println!("Valid Risk Scores(2): {:?}", valid_risk_scores);
         let median_risk_score = if valid_risk_scores.is_empty() {
             0.0
         } else if valid_risk_scores.len() % 2 == 1 {
