@@ -13,7 +13,7 @@ use tokio::sync::OnceCell;
 use tokio::time;
 
 lazy_static! {
-    pub static ref RISK_SCORE_MAP: Arc<RwLock<HashMap<String, HashMap<String, f64>>>> =
+    pub static ref RISK_SCORE_MAP: Arc<RwLock<HashMap<String, HashMap<String, RewardData>>>> =
         Arc::new(RwLock::new(HashMap::new()));
 }
 
@@ -33,9 +33,9 @@ struct ParsedResponse {
 }
 
 struct RewardData {
-    risk_score: f64,
-    timeout: u64,
-    timestamp: String,
+    pub risk_score: f64,
+    pub timeout: u64,
+    pub timestamp: String,
 }
 
 fn from_base58_str(s: &str) -> Vec<u8> {
@@ -106,7 +106,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                     let reward_data = RewardData {
                         risk_score,
                         timeout,
-                        timestamp,
+                        timestamp: timestamp.to_string(),
                     };
                     let rewards_entry = wallet_entry.entry(reward_account.to_owned());
                     rewards_entry.or_insert(reward_data);
