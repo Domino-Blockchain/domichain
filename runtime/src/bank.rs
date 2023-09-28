@@ -37,7 +37,6 @@ use chrono::DateTime;
 use chrono::Duration as CDuration;
 use chrono::Utc;
 use core::f64;
-use std::cmp::Ordering;
 
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
@@ -187,7 +186,7 @@ use {
         sync::{
             atomic::{
                 AtomicBool, AtomicI64, AtomicU64, AtomicUsize,
-                Ordering::{self, AcqRel, Acquire, Relaxed},
+                Ordering::{self, AcqRel, Acquire, Equal, Greater, Less, Relaxed},
             },
             Arc, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard,
         },
@@ -5019,7 +5018,7 @@ impl Bank {
         let current_time = Utc::now();
 
         // Filter risk scores based on their timestamp and timeout
-        let valid_risk_scores: Vec<f64> = risk_scores
+        let mut valid_risk_scores: Vec<f64> = risk_scores
             .into_iter()
             .zip(timeouts.iter())
             .zip(timestamps.iter())
@@ -5052,6 +5051,8 @@ impl Bank {
             * congestion_multiplier
             * (10.0).powf(median_risk_score))
         .round() as u64;
+
+        return fee;
     }
 
     //Return fee and the reward to AI node
@@ -6421,7 +6422,7 @@ impl Bank {
         let old_account_data_size =
             if let Some(old_account) = self.get_account_with_fixed_root(pubkey) {
                 match new_account.lamports().cmp(&old_account.lamports()) {
-                    std::cmp::Ordering::Greater => {
+                    Ordering::Greater => {
                         let increased = new_account.lamports() - old_account.lamports();
                         trace!(
                             "store_account_and_update_capitalization: increased: {} {}",
@@ -6430,7 +6431,7 @@ impl Bank {
                         );
                         self.capitalization.fetch_add(increased, Relaxed);
                     }
-                    std::cmp::Ordering::Less => {
+                    Ordering::Less => {
                         let decreased = old_account.lamports() - new_account.lamports();
                         trace!(
                             "store_account_and_update_capitalization: decreased: {} {}",
@@ -6439,7 +6440,7 @@ impl Bank {
                         );
                         self.capitalization.fetch_sub(decreased, Relaxed);
                     }
-                    std::cmp::Ordering::Equal => {}
+                    Ordering::Equal => {}
                 }
                 old_account.data().len()
             } else {
