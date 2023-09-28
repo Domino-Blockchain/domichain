@@ -5165,6 +5165,8 @@ impl Bank {
             (valid_risk_scores[mid - 1] + valid_risk_scores[mid]) / 2.0
         };
 
+        println!("Median Risk Score: {}", median_risk_score);
+
         let fee = ((prioritization_fee
             .saturating_add(signature_fee)
             .saturating_add(write_lock_fee)
@@ -5172,6 +5174,11 @@ impl Bank {
             * congestion_multiplier
             * (10.0).powf(median_risk_score))
         .round() as u64;
+
+        println!("Prioritization fee: {}", prioritization_fee);
+        println!("Signature fee: {}", signature_fee);
+        println!("Write lock fee: {}", write_lock_fee);
+        println!("Compute fee: {}", compute_fee);
 
         let mut ai_fee = 0;
         if *message.fee_payer()
