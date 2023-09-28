@@ -34,6 +34,7 @@
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
 use chrono::DateTime;
+use chrono::Duration as CDuration;
 use chrono::Utc;
 use core::f64;
 
@@ -5117,7 +5118,7 @@ impl Bank {
             .filter_map(|((risk_score, timeout), timestamp_str)| {
                 if let Ok(timestamp) = DateTime::parse_from_rfc3339(timestamp_str) {
                     let timestamp = timestamp.with_timezone(&Utc);
-                    if current_time <= timestamp + Duration::seconds(*timeout as i64) {
+                    if current_time <= timestamp + CDuration::seconds(*timeout as i64) {
                         return Some(risk_score);
                     }
                 }
