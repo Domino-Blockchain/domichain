@@ -32,7 +32,8 @@ struct ParsedResponse {
     timestamp: String,
 }
 
-struct RewardData {
+#[allow(dead_code)]
+pub struct RewardData {
     pub risk_score: f64,
     pub timeout: u64,
     pub timestamp: String,
