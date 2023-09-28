@@ -37,6 +37,7 @@ use chrono::DateTime;
 use chrono::Duration as CDuration;
 use chrono::Utc;
 use core::f64;
+use std::cmp::Ordering;
 
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
@@ -5137,7 +5138,7 @@ impl Bank {
         let current_time = Utc::now();
 
         // Filter risk scores based on their timestamp and timeout
-        let valid_risk_scores: Vec<f64> = risk_scores
+        let mut valid_risk_scores: Vec<f64> = risk_scores
             .into_iter()
             .zip(timeouts.iter())
             .zip(timestamps.iter())
