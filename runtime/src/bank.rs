@@ -5033,7 +5033,7 @@ impl Bank {
             })
             .collect();
 
-        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let median_risk_score = if valid_risk_scores.is_empty() {
             0.0
@@ -5154,7 +5154,7 @@ impl Bank {
             })
             .collect();
 
-        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let median_risk_score = if valid_risk_scores.is_empty() {
             0.0
