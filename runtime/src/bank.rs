@@ -6422,7 +6422,7 @@ impl Bank {
         let old_account_data_size =
             if let Some(old_account) = self.get_account_with_fixed_root(pubkey) {
                 match new_account.lamports().cmp(&old_account.lamports()) {
-                    Ordering::Greater => {
+                    std::cmp::Ordering::Greater => {
                         let increased = new_account.lamports() - old_account.lamports();
                         trace!(
                             "store_account_and_update_capitalization: increased: {} {}",
@@ -6431,7 +6431,7 @@ impl Bank {
                         );
                         self.capitalization.fetch_add(increased, Relaxed);
                     }
-                    Ordering::Less => {
+                    std::cmp::Ordering::Less => {
                         let decreased = old_account.lamports() - new_account.lamports();
                         trace!(
                             "store_account_and_update_capitalization: decreased: {} {}",
@@ -6440,7 +6440,7 @@ impl Bank {
                         );
                         self.capitalization.fetch_sub(decreased, Relaxed);
                     }
-                    Ordering::Equal => {}
+                    std::cmp::Ordering::Equal => {}
                 }
                 old_account.data().len()
             } else {
