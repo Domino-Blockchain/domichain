@@ -1,6 +1,6 @@
 //! Basic low-level memory operations.
 //!
-//! Within the BPF environment, these are implemented as syscalls and executed by
+//! Within the SBF environment, these are implemented as syscalls and executed by
 //! the runtime in native code.
 
 /// Like C `memcpy`.
@@ -13,13 +13,13 @@
 ///
 /// # Errors
 ///
-/// When executed within a BPF program, the memory regions spanning `n` bytes
+/// When executed within a SBF program, the memory regions spanning `n` bytes
 /// from from the start of `dst` and `src` must be mapped program memory. If not,
 /// the program will abort.
 ///
 /// The memory regions spanning `n` bytes from `dst` and `src` from the start
 /// of `dst` and `src` must not overlap. If they do, then the program will abort
-/// or, if run outside of the BPF VM, will panic.
+/// or, if run outside of the SBF VM, will panic.
 ///
 /// # Safety
 ///
@@ -33,12 +33,12 @@
 /// likely introduce undefined behavior.
 #[inline]
 pub fn sol_memcpy(dst: &mut [u8], src: &[u8], n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memcpy_(dst.as_mut_ptr(), src.as_ptr(), n as u64);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memcpy(dst.as_mut_ptr(), src.as_ptr(), n);
 }
 
@@ -52,7 +52,7 @@ pub fn sol_memcpy(dst: &mut [u8], src: &[u8], n: usize) {
 ///
 /// # Errors
 ///
-/// When executed within a BPF program, the memory regions spanning `n` bytes
+/// When executed within a SBF program, the memory regions spanning `n` bytes
 /// from from `dst` and `src` must be mapped program memory. If not, the program
 /// will abort.
 ///
@@ -63,10 +63,10 @@ pub fn sol_memcpy(dst: &mut [u8], src: &[u8], n: usize) {
 /// [`ptr::copy`]: https://doc.rust-lang.org/std/ptr/fn.copy.html
 #[inline]
 pub unsafe fn sol_memmove(dst: *mut u8, src: *mut u8, n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     crate::syscalls::sol_memmove_(dst, src, n as u64);
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memmove(dst, src, n);
 }
 
@@ -80,7 +80,7 @@ pub unsafe fn sol_memmove(dst: *mut u8, src: *mut u8, n: usize) {
 ///
 /// # Errors
 ///
-/// When executed within a BPF program, the memory regions spanning `n` bytes
+/// When executed within a SBF program, the memory regions spanning `n` bytes
 /// from from the start of `dst` and `src` must be mapped program memory. If not,
 /// the program will abort.
 ///
@@ -98,12 +98,12 @@ pub unsafe fn sol_memmove(dst: *mut u8, src: *mut u8, n: usize) {
 pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
     let mut result = 0;
 
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memcmp_(s1.as_ptr(), s2.as_ptr(), n as u64, &mut result as *mut i32);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memcmp(s1.as_ptr(), s2.as_ptr(), n, &mut result as *mut i32);
 
     result
@@ -119,7 +119,7 @@ pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
 ///
 /// # Errors
 ///
-/// When executed within a BPF program, the memory region spanning `n` bytes
+/// When executed within a SBF program, the memory region spanning `n` bytes
 /// from from the start of `s` must be mapped program memory. If not, the program
 /// will abort.
 ///
@@ -135,11 +135,11 @@ pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
 /// undefined behavior.
 #[inline]
 pub fn sol_memset(s: &mut [u8], c: u8, n: usize) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_memset_(s.as_mut_ptr(), c, n as u64);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_memset(s.as_mut_ptr(), c, n);
 }

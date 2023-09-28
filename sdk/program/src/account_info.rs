@@ -1,36 +1,168 @@
 //! Account information.
 
+use std::{marker::PhantomData, mem::transmute};
+
 use {
     crate::{
-        clock::Epoch, debug_account_data::*, program_error::ProgramError,
-        program_memory::sol_memset, pubkey::Pubkey,
+        clock::Epoch, debug_account_data::*, entrypoint::MAX_PERMITTED_DATA_INCREASE,
+        program_error::ProgramError, program_memory::sol_memset, pubkey::Pubkey,
     },
     std::{
         cell::{Ref, RefCell, RefMut},
         fmt,
         rc::Rc,
+        slice::from_raw_parts_mut,
     },
 };
 
+// [programs/wasm_loader/src/syscalls/cpi.rs:406] size_of::<AccountInfo>() = 48
+// [programs/wasm_loader/src/syscalls/cpi.rs:407] size_of::<&Pubkey>() = 8
+// [programs/wasm_loader/src/syscalls/cpi.rs:408] size_of::<Rc<RefCell<&'a mut u64>>>() = 8
+// [programs/wasm_loader/src/syscalls/cpi.rs:409] size_of::<Rc<RefCell<&'a mut [u8]>>>() = 8
+
 /// Account information
 #[derive(Clone)]
+#[repr(C)]
 pub struct AccountInfo<'a> {
     /// Public key of the account
     pub key: &'a Pubkey,
-    /// Was the transaction signed by this account's public key?
-    pub is_signer: bool,
-    /// Is the account writable?
-    pub is_writable: bool,
     /// The lamports in the account.  Modifiable by programs.
     pub lamports: Rc<RefCell<&'a mut u64>>,
     /// The data held in this account.  Modifiable by programs.
     pub data: Rc<RefCell<&'a mut [u8]>>,
     /// Program that owns this account
     pub owner: &'a Pubkey,
-    /// This account's data contains a loaded program (and is now read-only)
-    pub executable: bool,
     /// The epoch at which this account will next owe rent
     pub rent_epoch: Epoch,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
+    /// This account's data contains a loaded program (and is now read-only)
+    pub executable: bool,
+}
+
+impl<'a> AccountInfo<'a> {
+    pub fn into_raw(&self) -> AccountInfoRaw<'a> {
+        let lamports = self.lamports.as_ptr() as *const _;
+        let lamports = unsafe { *transmute::<_, *const &u64>(lamports) };
+
+        let ptr_to_slice = self.data.as_ptr() as *const &mut [u8];
+        let slice = unsafe { *transmute::<_, *const &[u8]>(ptr_to_slice) };
+
+        AccountInfoRaw {
+            key: (self.key as *const _ as u64).try_into().unwrap(),
+            lamports: (lamports as *const _ as u64).try_into().unwrap(),
+            ptr_to_slice: (ptr_to_slice as usize as u64).try_into().unwrap(),
+            data: (slice as *const [u8] as *const () as usize as u64).try_into().unwrap(),
+            data_len: slice.len().try_into().unwrap(),
+            owner: (self.owner as *const _ as u64).try_into().unwrap(),
+            rent_epoch: self.rent_epoch,
+            is_signer: self.is_signer,
+            is_writable: self.is_writable,
+            executable: self.executable,
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+
+/// Account information with raw mut pointers
+#[derive(Clone)]
+#[repr(C)]
+pub struct AccountInfoRaw<'a> {
+    /// Public key of the account
+    pub key: u32, // &'a Pubkey,
+    /// The lamports in the account.  Modifiable by programs.
+    pub lamports: u32, // *mut u64,
+    /// The data held in this account.  Modifiable by programs.
+    pub ptr_to_slice: u32, // *const *mut [u8],
+    pub data: u32, // *mut [u8],
+    pub data_len: u32, // *mut usize
+    /// Program that owns this account
+    pub owner: u32, // &'a Pubkey,
+    /// The epoch at which this account will next owe rent
+    pub rent_epoch: Epoch,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
+    /// This account's data contains a loaded program (and is now read-only)
+    pub executable: bool,
+
+    phantom_data: PhantomData<&'a Pubkey>,
+}
+
+impl<'a> fmt::Debug for AccountInfoRaw<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut f = f.debug_struct("AccountInfoRaw");
+
+        f.field("key", &format_args!("{:p}", self.key as *const ()))
+            .field("owner", &format_args!("{:p}", self.owner as *const ()))
+            .field("is_signer", &self.is_signer)
+            .field("is_writable", &self.is_writable)
+            .field("executable", &self.executable)
+            .field("rent_epoch", &self.rent_epoch)
+            .field("lamports", &format_args!("{:p}", self.lamports as *const ()))
+            .field("data.len", &self.data_len)
+            .field("data", &format_args!("{:p}", self.data as *const ()))
+            .field("ptr_to_slice", &format_args!("{:p}", self.ptr_to_slice as *const ()));
+
+        f.finish_non_exhaustive()
+    }
+}
+
+
+
+
+
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:382] size_of::<AccountInfo>() = 32
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:383] size_of::<&Pubkey>() = 4
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:384] size_of::<Rc<RefCell<&mut u64>>>() = 4
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:385] size_of::<Rc<RefCell<&mut [u8]>>>() = 4
+
+
+// [syscall] [/home/zotho/domichain_backporting/sdk/program/src/program.rs:382] size_of::<AccountInfoFromWasm>() = 32
+// [programs/wasm_loader/src/syscalls/cpi.rs:406] size_of::<AccountInfoFromWasm>() = 32
+
+/// Account information from WASM
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct AccountInfoFromWasm<'a> {
+    /// Public key of the account
+    pub key: u32, // &'a Pubkey
+    /// The lamports in the account.  Modifiable by programs.
+    pub lamports: u32, // Rc<RefCell<&'a mut u64>>
+    /// The data held in this account.  Modifiable by programs.
+    pub data: u32, // Rc<RefCell<&'a mut [u8]>>
+    /// Program that owns this account
+    pub owner: u32, // &'a Pubkey
+    /// The epoch at which this account will next owe rent
+    pub rent_epoch: Epoch,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
+    /// This account's data contains a loaded program (and is now read-only)
+    pub executable: bool,
+
+    phantom_data: PhantomData<&'a Pubkey>,
+}
+
+impl<'a> AccountInfoFromWasm<'a> {
+    pub fn key(&self) -> &'a Pubkey {
+        unsafe { transmute(self.key as u64 as *mut Pubkey) }
+    }
+    pub fn lamports(&self) -> &Rc<RefCell<&'a mut u64>> {
+        dbg!(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>);
+        unsafe { transmute(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>) }
+    }
+    pub fn data(&self) -> &Rc<RefCell<&'a mut [u8]>> {
+        unsafe { transmute(self.data as u64 as *mut Rc<RefCell<&'a mut [u8]>>) }
+    }
+    pub fn owner(&self) -> &'a Pubkey {
+        unsafe { transmute(self.owner as u64 as *mut Pubkey) }
+    }
 }
 
 impl<'a> fmt::Debug for AccountInfo<'a> {
@@ -70,6 +202,19 @@ impl<'a> AccountInfo<'a> {
 
     pub fn try_lamports(&self) -> Result<u64, ProgramError> {
         Ok(**self.try_borrow_lamports()?)
+    }
+
+    /// Return the account's original data length when it was serialized for the
+    /// current program invocation.
+    ///
+    /// # Safety
+    ///
+    /// This method assumes that the original data length was serialized as a u32
+    /// integer in the 4 bytes immediately preceding the serialized account key.
+    pub unsafe fn original_data_len(&self) -> usize {
+        let key_ptr = self.key as *const _ as *const u8;
+        let original_data_len_ptr = key_ptr.offset(-4) as *const u32;
+        *original_data_len_ptr as usize
     }
 
     pub fn data_len(&self) -> usize {
@@ -123,27 +268,45 @@ impl<'a> AccountInfo<'a> {
     /// call a program reallocs from larger to smaller and back to larger again
     /// the new space could contain stale data.  Pass `true` for `zero_init` in
     /// this case, otherwise compute units will be wasted re-zero-initializing.
+    ///
+    /// # Safety
+    ///
+    /// This method makes assumptions about the layout and location of memory
+    /// referenced by `AccountInfo` fields. It should only be called for
+    /// instances of `AccountInfo` that were created by the runtime and received
+    /// in the `process_instruction` entrypoint of a program.
     pub fn realloc(&self, new_len: usize, zero_init: bool) -> Result<(), ProgramError> {
-        let orig_len = self.data_len();
+        let mut data = self.try_borrow_mut_data()?;
+        let old_len = data.len();
+
+        // Return early if length hasn't changed
+        if new_len == old_len {
+            return Ok(());
+        }
+
+        // Return early if the length increase from the original serialized data
+        // length is too large and would result in an out of bounds allocation.
+        let original_data_len = unsafe { self.original_data_len() };
+        if new_len.saturating_sub(original_data_len) > MAX_PERMITTED_DATA_INCREASE {
+            return Err(ProgramError::InvalidRealloc);
+        }
 
         // realloc
         unsafe {
-            // First set new length in the serialized data
-            let ptr = self.try_borrow_mut_data()?.as_mut_ptr().offset(-8) as *mut u64;
-            *ptr = new_len as u64;
+            let data_ptr = data.as_mut_ptr();
 
-            // Then set the new length in the local slice
-            let ptr = &mut *(((self.data.as_ptr() as *const u64).offset(1) as u64) as *mut u64);
-            *ptr = new_len as u64;
+            // First set new length in the serialized data
+            *(data_ptr.offset(-8) as *mut u64) = new_len as u64;
+
+            // Then recreate the local slice with the new length
+            *data = from_raw_parts_mut(data_ptr, new_len)
         }
 
-        // zero-init if requested
-        if zero_init && new_len > orig_len {
-            sol_memset(
-                &mut self.try_borrow_mut_data()?[orig_len..],
-                0,
-                new_len.saturating_sub(orig_len),
-            );
+        if zero_init {
+            let len_increase = new_len.saturating_sub(old_len);
+            if len_increase > 0 {
+                sol_memset(&mut data[old_len..], 0, len_increase);
+            }
         }
 
         Ok(())
@@ -418,7 +581,7 @@ mod tests {
         let data_str = format!("{:?}", Hex(&data[..MAX_DEBUG_ACCOUNT_DATA]));
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{:?}", info),
+            format!("{info:?}"),
             format!(
                 "AccountInfo {{ \
                 key: {}, \
@@ -446,7 +609,7 @@ mod tests {
         let data_str = format!("{:?}", Hex(&data));
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{:?}", info),
+            format!("{info:?}"),
             format!(
                 "AccountInfo {{ \
                 key: {}, \
@@ -473,7 +636,7 @@ mod tests {
         let mut data = vec![];
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{:?}", info),
+            format!("{info:?}"),
             format!(
                 "AccountInfo {{ \
                 key: {}, \

@@ -161,7 +161,7 @@ mod test {
         crate::parse_token::test::*,
         domichain_sdk::pubkey::Pubkey,
         spl_token_2022::{
-            extension::transfer_fee::instruction::*, solana_program::message::Message,
+            extension::transfer_fee::instruction::*, domichain_program::message::Message,
         },
     };
 
@@ -188,7 +188,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -217,7 +217,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -254,7 +254,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -304,7 +304,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -348,7 +348,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -378,7 +378,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -412,7 +412,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -447,7 +447,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -480,7 +480,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -510,7 +510,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -542,7 +542,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {

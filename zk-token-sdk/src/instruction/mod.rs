@@ -1,88 +1,72 @@
-pub mod close_account;
+pub mod batched_grouped_ciphertext_validity;
+pub mod batched_range_proof;
+pub mod ciphertext_ciphertext_equality;
+pub mod ciphertext_commitment_equality;
+pub mod grouped_ciphertext_validity;
+pub mod pubkey_validity;
+pub mod range_proof;
 pub mod transfer;
-pub mod transfer_with_fee;
 pub mod withdraw;
-pub mod withdraw_withheld;
+pub mod zero_balance;
 
-#[cfg(not(target_os = "domichain"))]
-use {
-    crate::{
-        encryption::{
-            elgamal::ElGamalCiphertext,
-            pedersen::{PedersenCommitment, PedersenOpening},
-        },
-        errors::ProofError,
-    },
-    curve25519_dalek::scalar::Scalar,
-    subtle::ConstantTimeEq,
-};
+#[cfg(not(target_os = "wasi"))]
+use crate::errors::ProofError;
+use num_derive::{FromPrimitive, ToPrimitive};
 pub use {
-    close_account::CloseAccountData, transfer::TransferData,
-    transfer_with_fee::TransferWithFeeData, withdraw::WithdrawData,
-    withdraw_withheld::WithdrawWithheldTokensData,
+    batched_grouped_ciphertext_validity::{
+        BatchedGroupedCiphertext2HandlesValidityProofContext,
+        BatchedGroupedCiphertext2HandlesValidityProofData,
+    },
+    batched_range_proof::{
+        batched_range_proof_u128::BatchedRangeProofU128Data,
+        batched_range_proof_u256::BatchedRangeProofU256Data,
+        batched_range_proof_u64::BatchedRangeProofU64Data, BatchedRangeProofContext,
+    },
+    bytemuck::Pod,
+    ciphertext_ciphertext_equality::{
+        CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
+    },
+    ciphertext_commitment_equality::{
+        CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
+    },
+    grouped_ciphertext_validity::{
+        GroupedCiphertext2HandlesValidityProofContext, GroupedCiphertext2HandlesValidityProofData,
+    },
+    pubkey_validity::{PubkeyValidityData, PubkeyValidityProofContext},
+    range_proof::{RangeProofContext, RangeProofU64Data},
+    transfer::{
+        FeeParameters, TransferData, TransferProofContext, TransferWithFeeData,
+        TransferWithFeeProofContext,
+    },
+    withdraw::{WithdrawData, WithdrawProofContext},
+    zero_balance::{ZeroBalanceProofContext, ZeroBalanceProofData},
 };
 
-#[cfg(not(target_os = "domichain"))]
-pub trait Verifiable {
-    fn verify(&self) -> Result<(), ProofError>;
+#[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ProofType {
+    /// Empty proof type used to distinguish if a proof context account is initialized
+    Uninitialized,
+    ZeroBalance,
+    Withdraw,
+    CiphertextCiphertextEquality,
+    Transfer,
+    TransferWithFee,
+    PubkeyValidity,
+    RangeProofU64,
+    BatchedRangeProofU64,
+    BatchedRangeProofU128,
+    BatchedRangeProofU256,
+    CiphertextCommitmentEquality,
+    GroupedCiphertext2HandlesValidity,
+    BatchedGroupedCiphertext2HandlesValidity,
 }
 
-#[cfg(not(target_os = "domichain"))]
-#[derive(Debug, Copy, Clone)]
-pub enum Role {
-    Source,
-    Dest,
-    Auditor,
-}
+pub trait ZkProofData<T: Pod> {
+    const PROOF_TYPE: ProofType;
 
-/// Takes in a 64-bit number `amount` and a bit length `bit_length`. It returns:
-///  - the `bit_length` low bits of `amount` interpretted as u64
-///  - the (64 - `bit_length`) high bits of `amount` interpretted as u64
-#[cfg(not(target_os = "domichain"))]
-pub fn split_u64(
-    amount: u64,
-    lo_bit_length: usize,
-    hi_bit_length: usize,
-) -> Result<(u64, u64), ProofError> {
-    assert!(lo_bit_length <= 64);
-    assert!(hi_bit_length <= 64);
+    fn context_data(&self) -> &T;
 
-    if !bool::from((amount >> (lo_bit_length + hi_bit_length)).ct_eq(&0u64)) {
-        return Err(ProofError::TransferAmount);
-    }
-
-    let lo = amount << (64 - lo_bit_length) >> (64 - lo_bit_length);
-    let hi = amount >> lo_bit_length;
-
-    Ok((lo, hi))
-}
-
-#[cfg(not(target_os = "domichain"))]
-fn combine_lo_hi_ciphertexts(
-    ciphertext_lo: &ElGamalCiphertext,
-    ciphertext_hi: &ElGamalCiphertext,
-    bit_length: usize,
-) -> ElGamalCiphertext {
-    let two_power = (1_u64) << bit_length;
-    ciphertext_lo + &(ciphertext_hi * &Scalar::from(two_power))
-}
-
-#[cfg(not(target_os = "domichain"))]
-pub fn combine_lo_hi_commitments(
-    comm_lo: &PedersenCommitment,
-    comm_hi: &PedersenCommitment,
-    bit_length: usize,
-) -> PedersenCommitment {
-    let two_power = (1_u64) << bit_length;
-    comm_lo + comm_hi * &Scalar::from(two_power)
-}
-
-#[cfg(not(target_os = "domichain"))]
-pub fn combine_lo_hi_openings(
-    opening_lo: &PedersenOpening,
-    opening_hi: &PedersenOpening,
-    bit_length: usize,
-) -> PedersenOpening {
-    let two_power = (1_u64) << bit_length;
-    opening_lo + opening_hi * &Scalar::from(two_power)
+    #[cfg(not(target_os = "wasi"))]
+    fn verify_proof(&self) -> Result<(), ProofError>;
 }

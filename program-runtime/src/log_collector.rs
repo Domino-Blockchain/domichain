@@ -23,6 +23,7 @@ impl Default for LogCollector {
 
 impl LogCollector {
     pub fn log(&mut self, message: &str) {
+        // dbg!(message);
         let limit = match self.bytes_limit {
             Some(limit) => limit,
             None => {

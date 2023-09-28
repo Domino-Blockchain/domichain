@@ -3,13 +3,12 @@ use {
         check_num_accounts, ParsableProgram, ParseInstructionError, ParsedInstructionEnum,
     },
     extension::{
-        default_account_state::*, memo_transfer::*, mint_close_authority::*, reallocate::*,
+        confidential_transfer::*, cpi_guard::*, default_account_state::*, interest_bearing_mint::*,
+        memo_transfer::*, mint_close_authority::*, permanent_delegate::*, reallocate::*,
         transfer_fee::*,
     },
     serde_json::{json, Map, Value},
-    domichain_account_decoder::parse_token::{
-        pubkey_from_spl_token, token_amount_to_ui_amount, UiAccountState,
-    },
+    domichain_account_decoder::parse_token::{token_amount_to_ui_amount, UiAccountState},
     domichain_sdk::{
         instruction::{AccountMeta, CompiledInstruction, Instruction},
         message::AccountKeys,
@@ -17,7 +16,7 @@ use {
     spl_token_2022::{
         extension::ExtensionType,
         instruction::{AuthorityType, TokenInstruction},
-        solana_program::{
+        domichain_program::{
             instruction::Instruction as SplTokenInstruction, program_option::COption,
             pubkey::Pubkey,
         },
@@ -227,7 +226,10 @@ pub fn parse_token(
                 | AuthorityType::FreezeAccount
                 | AuthorityType::TransferFeeConfig
                 | AuthorityType::WithheldWithdraw
-                | AuthorityType::CloseMint => "mint",
+                | AuthorityType::CloseMint
+                | AuthorityType::InterestRate
+                | AuthorityType::PermanentDelegate
+                | AuthorityType::ConfidentialTransferMint => "mint",
                 AuthorityType::AccountOwner | AuthorityType::CloseAccount => "account",
             };
             let mut value = json!({
@@ -509,8 +511,10 @@ pub fn parse_token(
                 account_keys,
             )
         }
-        TokenInstruction::ConfidentialTransferExtension => Err(
-            ParseInstructionError::InstructionNotParsable(ParsableProgram::SplToken),
+        TokenInstruction::ConfidentialTransferExtension => parse_confidential_transfer_instruction(
+            &instruction.data[1..],
+            &instruction.accounts,
+            account_keys,
         ),
         TokenInstruction::DefaultAccountStateExtension => {
             if instruction.data.len() <= 2 {
@@ -550,6 +554,42 @@ pub fn parse_token(
                 }),
             })
         }
+        TokenInstruction::InitializeNonTransferableMint => {
+            check_num_token_accounts(&instruction.accounts, 1)?;
+            Ok(ParsedInstructionEnum {
+                instruction_type: "initializeNonTransferableMint".to_string(),
+                info: json!({
+                    "mint": account_keys[instruction.accounts[0] as usize].to_string(),
+                }),
+            })
+        }
+        TokenInstruction::InterestBearingMintExtension => {
+            if instruction.data.len() < 2 {
+                return Err(ParseInstructionError::InstructionNotParsable(
+                    ParsableProgram::SplToken,
+                ));
+            }
+            parse_interest_bearing_mint_instruction(
+                &instruction.data[1..],
+                &instruction.accounts,
+                account_keys,
+            )
+        }
+        TokenInstruction::CpiGuardExtension => {
+            if instruction.data.len() < 2 {
+                return Err(ParseInstructionError::InstructionNotParsable(
+                    ParsableProgram::SplToken,
+                ));
+            }
+            parse_cpi_guard_instruction(&instruction.data[1..], &instruction.accounts, account_keys)
+        }
+        TokenInstruction::InitializePermanentDelegate { delegate } => {
+            parse_initialize_permanent_delegate_instruction(
+                delegate,
+                &instruction.accounts,
+                account_keys,
+            )
+        }
     }
 }
 
@@ -563,6 +603,9 @@ pub enum UiAuthorityType {
     TransferFeeConfig,
     WithheldWithdraw,
     CloseMint,
+    InterestRate,
+    PermanentDelegate,
+    ConfidentialTransferMint,
 }
 
 impl From<AuthorityType> for UiAuthorityType {
@@ -575,6 +618,9 @@ impl From<AuthorityType> for UiAuthorityType {
             AuthorityType::TransferFeeConfig => UiAuthorityType::TransferFeeConfig,
             AuthorityType::WithheldWithdraw => UiAuthorityType::WithheldWithdraw,
             AuthorityType::CloseMint => UiAuthorityType::CloseMint,
+            AuthorityType::InterestRate => UiAuthorityType::InterestRate,
+            AuthorityType::PermanentDelegate => UiAuthorityType::PermanentDelegate,
+            AuthorityType::ConfidentialTransferMint => UiAuthorityType::ConfidentialTransferMint,
         }
     }
 }
@@ -591,6 +637,11 @@ pub enum UiExtensionType {
     DefaultAccountState,
     ImmutableOwner,
     MemoTransfer,
+    NonTransferable,
+    InterestBearingConfig,
+    CpiGuard,
+    PermanentDelegate,
+    NonTransferableAccount,
 }
 
 impl From<ExtensionType> for UiExtensionType {
@@ -607,6 +658,11 @@ impl From<ExtensionType> for UiExtensionType {
             ExtensionType::DefaultAccountState => UiExtensionType::DefaultAccountState,
             ExtensionType::ImmutableOwner => UiExtensionType::ImmutableOwner,
             ExtensionType::MemoTransfer => UiExtensionType::MemoTransfer,
+            ExtensionType::NonTransferable => UiExtensionType::NonTransferable,
+            ExtensionType::InterestBearingConfig => UiExtensionType::InterestBearingConfig,
+            ExtensionType::CpiGuard => UiExtensionType::CpiGuard,
+            ExtensionType::PermanentDelegate => UiExtensionType::PermanentDelegate,
+            ExtensionType::NonTransferableAccount => UiExtensionType::NonTransferableAccount,
         }
     }
 }
@@ -641,14 +697,15 @@ fn check_num_token_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInst
     check_num_accounts(accounts, num, ParsableProgram::SplToken)
 }
 
+#[deprecated(since = "1.16.0", note = "Instruction conversions no longer needed")]
 pub fn spl_token_instruction(instruction: SplTokenInstruction) -> Instruction {
     Instruction {
-        program_id: pubkey_from_spl_token(&instruction.program_id),
+        program_id: instruction.program_id.into(),
         accounts: instruction
             .accounts
             .iter()
             .map(|meta| AccountMeta {
-                pubkey: pubkey_from_spl_token(&meta.pubkey),
+                pubkey: meta.pubkey.into(),
                 is_signer: meta.is_signer,
                 is_writable: meta.is_writable,
             })
@@ -671,12 +728,12 @@ mod test {
         domichain_sdk::{instruction::CompiledInstruction, pubkey::Pubkey},
         spl_token_2022::{
             instruction::*,
-            solana_program::{
+            domichain_program::{
                 instruction::CompiledInstruction as SplTokenCompiledInstruction, message::Message,
                 pubkey::Pubkey as SplTokenPubkey,
             },
         },
-        std::str::FromStr,
+        std::{iter::repeat_with, str::FromStr},
     };
 
     pub(super) fn convert_pubkey(pubkey: Pubkey) -> SplTokenPubkey {
@@ -691,14 +748,6 @@ mod test {
             accounts: instruction.accounts.clone(),
             data: instruction.data.clone(),
         }
-    }
-
-    pub(super) fn convert_account_keys(message: &Message) -> Vec<Pubkey> {
-        message
-            .account_keys
-            .iter()
-            .map(pubkey_from_spl_token)
-            .collect()
     }
 
     fn test_parse_token(program_id: &SplTokenPubkey) {
@@ -721,7 +770,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -749,7 +798,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -777,7 +826,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -806,7 +855,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -833,7 +882,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -860,7 +909,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -894,7 +943,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -929,7 +978,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -963,7 +1012,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -995,7 +1044,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1028,7 +1077,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1059,7 +1108,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1090,7 +1139,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1118,7 +1167,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1147,7 +1196,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1176,7 +1225,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1205,7 +1254,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1233,7 +1282,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1260,7 +1309,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1287,7 +1336,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1317,7 +1366,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1356,7 +1405,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1397,7 +1446,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1436,7 +1485,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1476,7 +1525,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1511,7 +1560,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1537,7 +1586,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1556,7 +1605,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1579,7 +1628,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1601,7 +1650,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1624,7 +1673,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1644,7 +1693,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1658,13 +1707,11 @@ mod test {
     }
 
     #[test]
-    #[allow(clippy::same_item_push)]
     fn test_parse_token_v3() {
         test_parse_token(&spl_token::id());
     }
 
     #[test]
-    #[allow(clippy::same_item_push)]
     fn test_parse_token_2022() {
         test_parse_token(&spl_token_2022::id());
     }
@@ -1679,7 +1726,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -1694,10 +1741,7 @@ mod test {
     }
 
     fn test_token_ix_not_enough_keys(program_id: &SplTokenPubkey) {
-        let mut keys: Vec<Pubkey> = vec![];
-        for _ in 0..10 {
-            keys.push(domichain_sdk::pubkey::new_rand());
-        }
+        let keys: Vec<Pubkey> = repeat_with(domichain_sdk::pubkey::new_rand).take(10).collect();
 
         // Test InitializeMint variations
         let initialize_mint_ix = initialize_mint(
@@ -2172,13 +2216,11 @@ mod test {
     }
 
     #[test]
-    #[allow(clippy::same_item_push)]
     fn test_not_enough_keys_token_v3() {
         test_token_ix_not_enough_keys(&spl_token::id());
     }
 
     #[test]
-    #[allow(clippy::same_item_push)]
     fn test_not_enough_keys_token_2022() {
         test_token_ix_not_enough_keys(&spl_token_2022::id());
     }

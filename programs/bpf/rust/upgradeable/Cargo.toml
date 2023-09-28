@@ -10,7 +10,7 @@ documentation = "https://docs.rs/domichain-bpf-rust-upgradeable"
 edition = "2021"
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
 
 [lib]
 name = "domichain_bpf_rust_upgradeable"

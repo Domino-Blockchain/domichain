@@ -1,27 +1,28 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-edition = "2021"
 name = "domichain-watchtower"
 description = "Blockchain, Rebuilt for Scale"
-version = "1.11.1"
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-watchtower"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-clap = "2.33.1"
-humantime = "2.0.1"
-log = "0.4.17"
-domichain-clap-utils = { path = "../clap-utils", version = "=1.11.1" }
-domichain-cli-config = { path = "../cli-config", version = "=1.11.1" }
-domichain-cli-output = { path = "../cli-output", version = "=1.11.1" }
-domichain-client = { path = "../client", version = "=1.11.1" }
-domichain-logger = { path = "../logger", version = "=1.11.1" }
-domichain-metrics = { path = "../metrics", version = "=1.11.1" }
-domichain-notifier = { path = "../notifier", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-version = { path = "../version", version = "=1.11.1" }
+clap = { workspace = true }
+humantime = { workspace = true }
+log = { workspace = true }
+domichain-clap-utils = { workspace = true }
+domichain-cli-config = { workspace = true }
+domichain-cli-output = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-notifier = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-rpc-client-api = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-version = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

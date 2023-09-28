@@ -1,30 +1,29 @@
 [package]
 name = "domichain-bpf-loader-program"
-version = "1.11.1"
 description = "Domichain BPF loader"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-bpf-loader-program"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bincode = "1.3.3"
-byteorder = "1.4.3"
-libsecp256k1 = "0.6.0"
-log = "0.4.17"
-domichain-measure = { path = "../../measure", version = "=1.11.1" }
-domichain-metrics = { path = "../../metrics", version = "=1.11.1" }
-domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
-domichain-zk-token-sdk = { path = "../../zk-token-sdk", version = "=1.11.1" }
-solana_rbpf = "=0.2.31"
-thiserror = "1.0"
+bincode = { workspace = true }
+byteorder = { workspace = true }
+libsecp256k1 = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-program-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-zk-token-sdk = { workspace = true }
+solana_rbpf = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
-rand = "0.7.3"
-domichain-runtime = { path = "../../runtime", version = "=1.11.1" }
+memoffset = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

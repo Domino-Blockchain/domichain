@@ -1,22 +1,25 @@
 [package]
 name = "domichain-version"
-version = "1.11.1"
 description = "Domichain Version"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-version"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-log = "0.4.17"
-semver = "1.0.9"
-serde = "1.0.137"
-serde_derive = "1.0.103"
-domichain-frozen-abi = { path = "../frozen-abi", version = "=1.11.1" }
-domichain-frozen-abi-macro = { path = "../frozen-abi/macro", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
+log = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+domichain-frozen-abi = { workspace = true }
+domichain-frozen-abi-macro = { workspace = true }
+domichain-sdk = { workspace = true }
+
+[features]
+dummy-for-ci-check = []
 
 [lib]
 name = "domichain_version"
@@ -25,4 +28,4 @@ name = "domichain_version"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [build-dependencies]
-rustc_version = "0.4"
+rustc_version = { workspace = true }

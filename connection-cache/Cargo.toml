@@ -1,0 +1,31 @@
+[package]
+name = "domichain-connection-cache"
+description = "Domichain Connection Cache"
+documentation = "https://docs.rs/domichain-connection-cache"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+async-trait = { workspace = true }
+bincode = { workspace = true }
+futures-util = { workspace = true }
+indexmap = { workspace = true }
+indicatif = { workspace = true, optional = true }
+log = { workspace = true }
+rand = { workspace = true }
+rayon = { workspace = true }
+rcgen = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-sdk = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+rand_chacha = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-net-utils = { workspace = true }

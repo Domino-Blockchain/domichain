@@ -3,7 +3,7 @@
  * @brief Domichain assert and panic utilities
  */
 
-#include <sol/types.h>
+#include <domi/types.h>
 
 #ifdef __cplusplus
 extern "C" {

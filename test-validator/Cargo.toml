@@ -1,34 +1,38 @@
 [package]
 name = "domichain-test-validator"
 description = "Blockchain, Rebuilt for Scale"
-version = "1.11.1"
-homepage = "https://domichain.com/"
-documentation = "https://docs.rs/domichain-test-validator"
 readme = "../README.md"
-repository = "https://Domino-Blockchain/domichain"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-license = "Apache-2.0"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-base64 = "0.13.0"
-log = "0.4.17"
-serde_derive = "1.0.103"
-serde_json = "1.0.81"
-domichain-cli-output = { path = "../cli-output", version = "=1.11.1" }
-domichain-client = { path = "../client", version = "=1.11.1" }
-domichain-core = { path = "../core", version = "=1.11.1" }
-domichain-gossip = { path = "../gossip", version = "=1.11.1" }
-domichain-ledger = { path = "../ledger", version = "=1.11.1" }
-domichain-logger = { path = "../logger", version = "=1.11.1" }
-domichain-net-utils = { path = "../net-utils", version = "=1.11.1" }
-domichain-program-runtime = { path = "../program-runtime", version = "=1.11.1" }
-domichain-program-test = { path = "../program-test", version = "=1.11.1" }
-domichain-rpc = { path = "../rpc", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-streamer = { path = "../streamer", version = "=1.11.1" }
-tokio = { version = "~1.14.1", features = ["full"] }
+base64 = { workspace = true }
+bincode = { workspace = true }
+crossbeam-channel = { workspace = true }
+log = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+domichain-cli-output = { workspace = true }
+domichain-client = { workspace = true }
+domichain-core = { workspace = true }
+domichain-geyser-plugin-manager = { workspace = true }
+domichain-gossip = { workspace = true }
+domichain-ledger = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-net-utils = { workspace = true }
+domichain-program-runtime = { workspace = true }
+domichain-program-test = { workspace = true }
+domichain-rpc = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-streamer = { workspace = true }
+domichain-tpu-client = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

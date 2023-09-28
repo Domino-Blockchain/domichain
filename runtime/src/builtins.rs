@@ -1,258 +1,124 @@
-#[cfg(RUSTC_WITH_SPECIALIZATION)]
-use domichain_frozen_abi::abi_example::AbiExample;
-#[cfg(debug_assertions)]
-#[allow(deprecated)]
-use domichain_sdk::AutoTraitBreakSendSync;
 use {
-    crate::system_instruction_processor,
-    domichain_program_runtime::invoke_context::{InvokeContext, ProcessInstructionWithContext},
+    domichain_program_runtime::invoke_context::ProcessInstructionWithContext,
     domichain_sdk::{
-        feature_set, instruction::InstructionError, pubkey::Pubkey, stake, system_program,
+        bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+        feature_set, pubkey::Pubkey,
     },
-    std::fmt,
 };
 
-#[derive(Clone)]
-pub struct Builtin {
-    pub name: String,
-    pub id: Pubkey,
-    pub process_instruction_with_context: ProcessInstructionWithContext,
+/// Transitions of built-in programs at epoch bondaries when features are activated.
+pub struct BuiltinPrototype {
+    pub feature_id: Option<Pubkey>,
+    pub program_id: Pubkey,
+    pub name: &'static str,
+    pub entrypoint: ProcessInstructionWithContext,
 }
 
-impl Builtin {
-    pub fn new(
-        name: &str,
-        id: Pubkey,
-        process_instruction_with_context: ProcessInstructionWithContext,
-    ) -> Self {
-        Self {
-            name: name.to_string(),
-            id,
-            process_instruction_with_context,
-        }
-    }
-}
-
-impl fmt::Debug for Builtin {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Builtin [name={}, id={}]", self.name, self.id)
+impl std::fmt::Debug for BuiltinPrototype {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let mut builder = f.debug_struct("BuiltinPrototype");
+        builder.field("program_id", &self.program_id);
+        builder.field("name", &self.name);
+        builder.field("feature_id", &self.feature_id);
+        builder.finish()
     }
 }
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
-impl AbiExample for Builtin {
+impl domichain_frozen_abi::abi_example::AbiExample for BuiltinPrototype {
     fn example() -> Self {
+        // BuiltinPrototype isn't serializable by definition.
+        domichain_program_runtime::declare_process_instruction!(entrypoint, 0, |_invoke_context| {
+            // Do nothing
+            Ok(())
+        });
         Self {
-            name: String::default(),
-            id: Pubkey::default(),
-            process_instruction_with_context: |_, _| Ok(()),
+            feature_id: None,
+            program_id: Pubkey::default(),
+            name: "",
+            entrypoint,
         }
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct Builtins {
-    /// Builtin programs that are always available
-    pub genesis_builtins: Vec<Builtin>,
-
-    /// Dynamic feature transitions for builtin programs
-    pub feature_transitions: Vec<BuiltinFeatureTransition>,
-}
-
-/// Actions taken by a bank when managing the list of active builtin programs.
-#[derive(Debug, Clone)]
-pub enum BuiltinAction {
-    Add(Builtin),
-    Remove(Pubkey),
-}
-
-/// State transition enum used for adding and removing builtin programs through
-/// feature activations.
-#[derive(Debug, Clone, AbiExample)]
-enum InnerBuiltinFeatureTransition {
-    /// Add a builtin program if a feature is activated.
-    Add {
-        builtin: Builtin,
-        feature_id: Pubkey,
+pub static BUILTINS: &[BuiltinPrototype] = &[
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_system_program::id(),
+        name: "system_program",
+        entrypoint: domichain_system_program::system_processor::process_instruction,
     },
-    /// Remove a builtin program if a feature is activated or
-    /// retain a previously added builtin.
-    RemoveOrRetain {
-        previously_added_builtin: Builtin,
-        addition_feature_id: Pubkey,
-        removal_feature_id: Pubkey,
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_vote_program::id(),
+        name: "vote_program",
+        entrypoint: domichain_vote_program::vote_processor::process_instruction,
     },
-}
-
-#[allow(deprecated)]
-#[cfg(debug_assertions)]
-impl AutoTraitBreakSendSync for InnerBuiltinFeatureTransition {}
-
-#[derive(AbiExample, Clone, Debug)]
-pub struct BuiltinFeatureTransition(InnerBuiltinFeatureTransition);
-
-// https://Domino-Blockchain/domichain/pull/23233 added `BuiltinFeatureTransition`
-// to `Bank` which triggers https://github.com/rust-lang/rust/issues/92987 while
-// attempting to resolve `Sync` on `BankRc` in `AccountsBackgroundService::new` ala,
-//
-// query stack during panic:
-// #0 [evaluate_obligation] evaluating trait selection obligation `bank::BankRc: core::marker::Sync`
-// #1 [typeck] type-checking `accounts_background_service::<impl at runtime/src/accounts_background_service.rs:358:1: 520:2>::new`
-// #2 [typeck_item_bodies] type-checking all item bodies
-// #3 [analysis] running analysis passes on this crate
-// end of query stack
-//
-// Yoloing a `Sync` onto it avoids the auto trait evaluation and thus the ICE.
-//
-// We should remove this when upgrading to Rust 1.60.0, where the bug has been
-// fixed by https://github.com/rust-lang/rust/pull/93064
-unsafe impl Send for BuiltinFeatureTransition {}
-unsafe impl Sync for BuiltinFeatureTransition {}
-
-impl BuiltinFeatureTransition {
-    pub fn to_action(
-        &self,
-        should_apply_action_for_feature: &impl Fn(&Pubkey) -> bool,
-    ) -> Option<BuiltinAction> {
-        match &self.0 {
-            InnerBuiltinFeatureTransition::Add {
-                builtin,
-                ref feature_id,
-            } => {
-                if should_apply_action_for_feature(feature_id) {
-                    Some(BuiltinAction::Add(builtin.clone()))
-                } else {
-                    None
-                }
-            }
-            InnerBuiltinFeatureTransition::RemoveOrRetain {
-                previously_added_builtin,
-                ref addition_feature_id,
-                ref removal_feature_id,
-            } => {
-                if should_apply_action_for_feature(removal_feature_id) {
-                    Some(BuiltinAction::Remove(previously_added_builtin.id))
-                } else if should_apply_action_for_feature(addition_feature_id) {
-                    // Retaining is no different from adding a new builtin.
-                    Some(BuiltinAction::Add(previously_added_builtin.clone()))
-                } else {
-                    None
-                }
-            }
-        }
-    }
-}
-
-/// Builtin programs that are always available
-fn genesis_builtins() -> Vec<Builtin> {
-    vec![
-        Builtin::new(
-            "system_program",
-            system_program::id(),
-            system_instruction_processor::process_instruction,
-        ),
-        Builtin::new(
-            "vote_program",
-            domichain_vote_program::id(),
-            domichain_vote_program::vote_processor::process_instruction,
-        ),
-        Builtin::new(
-            "stake_program",
-            stake::program::id(),
-            domichain_stake_program::stake_instruction::process_instruction,
-        ),
-        Builtin::new(
-            "config_program",
-            domichain_config_program::id(),
-            domichain_config_program::config_processor::process_instruction,
-        ),
-    ]
-}
-
-/// place holder for precompile programs, remove when the precompile program is deactivated via feature activation
-fn dummy_process_instruction(
-    _first_instruction_account: usize,
-    _invoke_context: &mut InvokeContext,
-) -> Result<(), InstructionError> {
-    Ok(())
-}
-
-/// Dynamic feature transitions for builtin programs
-fn builtin_feature_transitions() -> Vec<BuiltinFeatureTransition> {
-    vec![
-        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
-            builtin: Builtin::new(
-                "compute_budget_program",
-                domichain_sdk::compute_budget::id(),
-                domichain_compute_budget_program::process_instruction,
-            ),
-            feature_id: feature_set::add_compute_budget_program::id(),
-        }),
-        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::RemoveOrRetain {
-            previously_added_builtin: Builtin::new(
-                "secp256k1_program",
-                domichain_sdk::secp256k1_program::id(),
-                dummy_process_instruction,
-            ),
-            addition_feature_id: feature_set::secp256k1_program_enabled::id(),
-            removal_feature_id: feature_set::prevent_calling_precompiles_as_programs::id(),
-        }),
-        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::RemoveOrRetain {
-            previously_added_builtin: Builtin::new(
-                "ed25519_program",
-                domichain_sdk::ed25519_program::id(),
-                dummy_process_instruction,
-            ),
-            addition_feature_id: feature_set::ed25519_program_enabled::id(),
-            removal_feature_id: feature_set::prevent_calling_precompiles_as_programs::id(),
-        }),
-        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
-            builtin: Builtin::new(
-                "address_lookup_table_program",
-                domichain_address_lookup_table_program::id(),
-                domichain_address_lookup_table_program::processor::process_instruction,
-            ),
-            feature_id: feature_set::versioned_tx_message_enabled::id(),
-        }),
-        BuiltinFeatureTransition(InnerBuiltinFeatureTransition::Add {
-            builtin: Builtin::new(
-                "zk_token_proof_program",
-                domichain_zk_token_sdk::zk_token_proof_program::id(),
-                domichain_zk_token_proof_program::process_instruction,
-            ),
-            feature_id: feature_set::zk_token_sdk_enabled::id(),
-        }),
-    ]
-}
-
-pub(crate) fn get() -> Builtins {
-    Builtins {
-        genesis_builtins: genesis_builtins(),
-        feature_transitions: builtin_feature_transitions(),
-    }
-}
-
-/// Returns the addresses of all builtin programs.
-pub fn get_pubkeys() -> Vec<Pubkey> {
-    let builtins = get();
-
-    let mut pubkeys = Vec::new();
-    pubkeys.extend(builtins.genesis_builtins.iter().map(|b| b.id));
-    pubkeys.extend(
-        builtins
-            .feature_transitions
-            .iter()
-            .filter_map(|f| match &f.0 {
-                InnerBuiltinFeatureTransition::Add {
-                    builtin,
-                    feature_id: _,
-                } => Some(builtin.id),
-                InnerBuiltinFeatureTransition::RemoveOrRetain {
-                    previously_added_builtin: _,
-                    addition_feature_id: _,
-                    removal_feature_id: _,
-                } => None,
-            }),
-    );
-    pubkeys
-}
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_stake_program::id(),
+        name: "stake_program",
+        entrypoint: domichain_stake_program::stake_instruction::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_config_program::id(),
+        name: "config_program",
+        entrypoint: domichain_config_program::config_processor::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: bpf_loader_deprecated::id(),
+        name: "domichain_bpf_loader_deprecated_program",
+        entrypoint: domichain_bpf_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: bpf_loader::id(),
+        name: "domichain_bpf_loader_program",
+        entrypoint: domichain_bpf_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: bpf_loader_upgradeable::id(),
+        name: "domichain_bpf_loader_upgradeable_program",
+        entrypoint: domichain_bpf_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader_deprecated::id(),
+        name: "domichain_wasm_loader_deprecated_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader::id(),
+        name: "domichain_wasm_loader_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: wasm_loader_upgradeable::id(),
+        name: "domichain_wasm_loader_upgradeable_program",
+        entrypoint: domichain_wasm_loader_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_sdk::compute_budget::id(),
+        name: "compute_budget_program",
+        entrypoint: domichain_compute_budget_program::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: None,
+        program_id: domichain_address_lookup_table_program::id(),
+        name: "address_lookup_table_program",
+        entrypoint: domichain_address_lookup_table_program::processor::process_instruction,
+    },
+    BuiltinPrototype {
+        feature_id: Some(feature_set::zk_token_sdk_enabled::id()),
+        program_id: domichain_zk_token_sdk::zk_token_proof_program::id(),
+        name: "zk_token_proof_program",
+        entrypoint: domichain_zk_token_proof_program::process_instruction,
+    },
+];

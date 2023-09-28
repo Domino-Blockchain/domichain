@@ -11,7 +11,7 @@ Domichain's Rust crates are [published to crates.io][crates.io] and can be found
 Some important crates:
 
 - [`domichain-program`] &mdash; Imported by programs running on Domichain, compiled
-  to BPF. This crate contains many fundamental data types and is re-exported from
+  to SBF. This crate contains many fundamental data types and is re-exported from
   [`domichain-sdk`], which cannot be imported from a Domichain program.
 
 - [`domichain-sdk`] &mdash; The basic off-chain SDK, it re-exports
@@ -19,7 +19,7 @@ Some important crates:
   that do not run on-chain will import this.
 
 - [`domichain-client`] &mdash; For interacting with a Domichain node via the
-  [JSON RPC API](jsonrpc-api).
+  [JSON RPC API](/api).
 
 - [`domichain-cli-config`] &mdash; Loading and saving the Domichain CLI configuration
   file.

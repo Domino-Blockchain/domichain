@@ -1,6 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 #[macro_use]
 extern crate matches;
 

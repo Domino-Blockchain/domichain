@@ -14,8 +14,8 @@ default = ["program"]
 program = []
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
-domichain-bpf-rust-realloc = { path = "../realloc", version = "=1.11.1", default-features = false }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
+domichain-bpf-rust-realloc = { path = "../realloc", version = "=1.16.1", default-features = false }
 
 [lib]
 crate-type = ["lib", "cdylib"]

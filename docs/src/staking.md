@@ -74,11 +74,6 @@ Follow the wallet's instructions for selecting a validator.  You can get
 information about potentially performant validators from the links below.
 The Domichain Foundation does not recommend any particular validator.
 
-The Mainnet Beta validators introduce themselves and their services on this
-Domichain Forum thread:
-
-- https://forums.domichain.com/t/validator-information-thread
-
 The site domichainbeach.io is built and maintained by one of our validators,
 Staking Facilities. It provides a some high-level graphical information about
 the network as a whole, as well as a list of each validator and some recent

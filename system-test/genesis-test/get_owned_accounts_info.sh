@@ -59,11 +59,11 @@ function display_results_summary {
   done
   } < "$results_file"
 
-  stake_account_balance_total_sol="$(bc <<< "scale=3; $stake_account_balance_total/$LAMPORTS_PER_SOL")"
-  system_account_balance_sol="$(bc <<< "scale=3; $system_account_balance/$LAMPORTS_PER_SOL")"
+  stake_account_balance_total_sol="$(bc <<< "scale=3; $stake_account_balance_total/$LAMPORTS_PER_DOMI")"
+  system_account_balance_sol="$(bc <<< "scale=3; $system_account_balance/$LAMPORTS_PER_DOMI")"
 
   all_account_total_balance="$(bc <<< "scale=3; $system_account_balance+$stake_account_balance_total")"
-  all_account_total_balance_sol="$(bc <<< "scale=3; ($system_account_balance+$stake_account_balance_total)/$LAMPORTS_PER_SOL")"
+  all_account_total_balance_sol="$(bc <<< "scale=3; ($system_account_balance+$stake_account_balance_total)/$LAMPORTS_PER_DOMI")"
 
   echo "--------------------------------------------------------------------------------------"
   echo "Results written to: $results_file"
@@ -87,7 +87,7 @@ function display_results_details {
   cat "$results_file" | column -t -s,
 }
 
-LAMPORTS_PER_SOL=1000000000 # 1 billion
+LAMPORTS_PER_DOMI=1000000000 # 1 billion
 all_stake_accounts_json_file=all_stake_accounts_data.json
 all_stake_accounts_csv_file=all_stake_accounts_data.csv
 

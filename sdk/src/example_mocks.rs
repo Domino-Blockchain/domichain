@@ -11,21 +11,12 @@
 //! appear to import from that crate.
 
 #![doc(hidden)]
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
-pub mod domichain_client {
-    pub mod client_error {
-        use thiserror::Error;
-
-        #[derive(Error, Debug)]
-        #[error("mock-error")]
-        pub struct ClientError;
-        pub type Result<T> = std::result::Result<T, ClientError>;
-    }
-
+pub mod domichain_rpc_client {
     pub mod rpc_client {
         use {
-            super::client_error::Result as ClientResult,
+            super::super::domichain_rpc_client_api::client_error::Result as ClientResult,
             crate::{hash::Hash, signature::Signature, transaction::Transaction},
         };
 
@@ -45,5 +36,16 @@ pub mod domichain_client {
                 Ok(Signature::default())
             }
         }
+    }
+}
+
+pub mod domichain_rpc_client_api {
+    pub mod client_error {
+        use thiserror::Error;
+
+        #[derive(Error, Debug)]
+        #[error("mock-error")]
+        pub struct ClientError;
+        pub type Result<T> = std::result::Result<T, ClientError>;
     }
 }

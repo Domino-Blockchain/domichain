@@ -71,6 +71,15 @@ pub enum LedgerError {
     #[error("Ledger received invalid Domichain message")]
     DomichainInvalidMessage = 0x6a80,
 
+    #[error("Ledger received message with invalid header")]
+    SolanaInvalidMessageHeader = 0x6a81,
+
+    #[error("Ledger received message in invalid format")]
+    SolanaInvalidMessageFormat = 0x6a82,
+
+    #[error("Ledger received message with invalid size")]
+    SolanaInvalidMessageSize = 0x6a83,
+
     #[error("Domichain summary finalization failed on Ledger device")]
     DomichainSummaryFinalizeFailed = 0x6f00,
 

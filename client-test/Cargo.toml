@@ -1,38 +1,40 @@
 [package]
 name = "domichain-client-test"
-version = "1.11.1"
 description = "Domichain RPC Test"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-client-test"
-edition = "2021"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-futures-util = "0.3.21"
-serde_json = "1.0.81"
-serial_test = "0.6.0"
-domichain-client = { path = "../client", version = "=1.11.1" }
-domichain-ledger = { path = "../ledger", version = "=1.11.1" }
-domichain-measure = { path = "../measure", version = "=1.11.1" }
-domichain-merkle-tree = { path = "../merkle-tree", version = "=1.11.1" }
-domichain-metrics = { path = "../metrics", version = "=1.11.1" }
-domichain-perf = { path = "../perf", version = "=1.11.1" }
-domichain-rayon-threadlimit = { path = "../rayon-threadlimit", version = "=1.11.1" }
-domichain-rpc = { path = "../rpc", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-streamer = { path = "../streamer", version = "=1.11.1" }
-domichain-test-validator = { path = "../test-validator", version = "=1.11.1" }
-domichain-transaction-status = { path = "../transaction-status", version = "=1.11.1" }
-domichain-version = { path = "../version", version = "=1.11.1" }
-systemstat = "0.1.11"
-tokio = { version = "~1.14.1", features = ["full"] }
+futures-util = { workspace = true }
+serde_json = { workspace = true }
+domichain-ledger = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-merkle-tree = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-perf = { workspace = true }
+domichain-pubsub-client = { workspace = true }
+domichain-rayon-threadlimit = { workspace = true }
+domichain-rpc = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-rpc-client-api = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-streamer = { workspace = true }
+domichain-test-validator = { workspace = true }
+domichain-transaction-status = { workspace = true }
+domichain-version = { workspace = true }
+systemstat = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tungstenite = { workspace = true, features = ["rustls-tls-webpki-roots"] }
 
 [dev-dependencies]
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-logger = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

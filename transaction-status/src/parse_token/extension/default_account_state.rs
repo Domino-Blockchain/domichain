@@ -19,7 +19,7 @@ pub(in crate::parse_token) fn parse_default_account_state_instruction(
         DefaultAccountStateInstruction::Initialize => {
             check_num_token_accounts(account_indexes, 1)?;
             Ok(ParsedInstructionEnum {
-                instruction_type: format!("initialize{}", instruction_type),
+                instruction_type: format!("initialize{instruction_type}"),
                 info: json!({
                     "mint": account_keys[account_indexes[0] as usize].to_string(),
                     "accountState": UiAccountState::from(account_state),
@@ -42,7 +42,7 @@ pub(in crate::parse_token) fn parse_default_account_state_instruction(
                 "multisigFreezeAuthority",
             );
             Ok(ParsedInstructionEnum {
-                instruction_type: format!("update{}", instruction_type),
+                instruction_type: format!("update{instruction_type}"),
                 info: value,
             })
         }
@@ -59,7 +59,7 @@ mod test {
             extension::default_account_state::instruction::{
                 initialize_default_account_state, update_default_account_state,
             },
-            solana_program::message::Message,
+            domichain_program::message::Message,
             state::AccountState,
         },
     };
@@ -78,7 +78,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -105,7 +105,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -138,7 +138,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {

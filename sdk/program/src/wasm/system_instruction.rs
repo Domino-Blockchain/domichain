@@ -1,5 +1,5 @@
 //! `SystemInstruction` Javascript interface
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))]
 #![allow(non_snake_case)]
 use {
     crate::{instruction::Instruction, pubkey::Pubkey, system_instruction::*},

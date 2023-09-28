@@ -1,18 +1,20 @@
 [package]
 name = "domichain-cargo-build-bpf"
-version = "1.11.1"
 description = "Compile a local package and all of its dependencies using the Domichain SBF SDK"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-homepage = "https://domichain.com/"
-license = "Apache-2.0"
-edition = "2021"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-cargo_metadata = "0.14.2"
+cargo_metadata = { workspace = true }
 clap = { version = "3.1.5", features = ["cargo", "env"] }
-domichain-sdk = { path = "..", version = "=1.11.1" }
+log = { workspace = true, features = ["std"] }
+domichain-logger = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [features]
 program = []

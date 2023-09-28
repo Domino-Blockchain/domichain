@@ -1,5 +1,7 @@
+//! Definitions of commitment levels.
+
 #![allow(deprecated)]
-#![cfg(feature = "full")]
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {std::str::FromStr, thiserror::Error};
 
@@ -60,19 +62,19 @@ impl CommitmentConfig {
         }
     }
 
-    pub fn finalized() -> Self {
+    pub const fn finalized() -> Self {
         Self {
             commitment: CommitmentLevel::Finalized,
         }
     }
 
-    pub fn confirmed() -> Self {
+    pub const fn confirmed() -> Self {
         Self {
             commitment: CommitmentLevel::Confirmed,
         }
     }
 
-    pub fn processed() -> Self {
+    pub const fn processed() -> Self {
         Self {
             commitment: CommitmentLevel::Processed,
         }
@@ -230,7 +232,7 @@ impl std::fmt::Display for CommitmentLevel {
             CommitmentLevel::Confirmed => "confirmed",
             CommitmentLevel::Finalized => "finalized",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

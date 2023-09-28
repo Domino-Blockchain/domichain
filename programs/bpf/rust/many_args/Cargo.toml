@@ -10,8 +10,8 @@ documentation = "https://docs.rs/domichain-bpf-rust-many-args"
 edition = "2021"
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
-domichain-bpf-rust-many-args-dep = { path = "../many_args_dep", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
+domichain-bpf-rust-many-args-dep = { path = "../many_args_dep", version = "=1.16.1" }
 
 [lib]
 crate-type = ["cdylib"]

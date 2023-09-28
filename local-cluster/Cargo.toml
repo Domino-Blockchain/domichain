@@ -1,40 +1,46 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-edition = "2021"
 name = "domichain-local-cluster"
 description = "Blockchain, Rebuilt for Scale"
-version = "1.11.1"
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-local-cluster"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-crossbeam-channel = "0.5"
-fs_extra = "1.2.0"
-itertools = "0.10.3"
-log = "0.4.17"
-rand = "0.7.0"
-rayon = "1.5.3"
-domichain-client = { path = "../client", version = "=1.11.1" }
-domichain-config-program = { path = "../programs/config", version = "=1.11.1" }
-domichain-core = { path = "../core", version = "=1.11.1" }
-domichain-entry = { path = "../entry", version = "=1.11.1" }
-domichain-gossip = { path = "../gossip", version = "=1.11.1" }
-domichain-ledger = { path = "../ledger", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-stake-program = { path = "../programs/stake", version = "=1.11.1" }
-domichain-streamer = { path = "../streamer", version = "=1.11.1" }
-domichain-vote-program = { path = "../programs/vote", version = "=1.11.1" }
-tempfile = "3.3.0"
+crossbeam-channel = { workspace = true }
+itertools = { workspace = true }
+log = { workspace = true }
+rand = { workspace = true }
+rayon = { workspace = true }
+domichain-client = { workspace = true }
+domichain-config-program = { workspace = true }
+domichain-core = { workspace = true }
+domichain-entry = { workspace = true }
+domichain-gossip = { workspace = true }
+domichain-ledger = { workspace = true }
+domichain-pubsub-client = { workspace = true }
+domichain-rpc-client = { workspace = true }
+domichain-rpc-client-api = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-stake-program = { workspace = true }
+domichain-streamer = { workspace = true }
+domichain-thin-client = { workspace = true }
+domichain-tpu-client = { workspace = true }
+domichain-vote-program = { workspace = true }
+tempfile = { workspace = true }
+trees = { workspace = true }
 
 [dev-dependencies]
-assert_matches = "1.5.0"
-gag = "1.0.0"
-serial_test = "0.6.0"
-domichain-download-utils = { path = "../download-utils", version = "=1.11.1" }
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+assert_matches = { workspace = true }
+fs_extra = { workspace = true }
+gag = { workspace = true }
+serial_test = { workspace = true }
+domichain-download-utils = { workspace = true }
+domichain-logger = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

@@ -13,13 +13,13 @@ edition = "2021"
 test-bpf = []
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
 
 [dev-dependencies]
-domichain-logger = { path = "../../../../logger", version = "=1.11.1" }
-domichain-program-test = { path = "../../../../program-test", version = "=1.11.1" }
-domichain-sdk = { path = "../../../../sdk", version = "=1.11.1" }
-domichain-validator = { path = "../../../../validator", version = "=1.11.1" }
+domichain-logger = { path = "../../../../logger", version = "=1.16.1" }
+domichain-program-test = { path = "../../../../program-test", version = "=1.16.1" }
+domichain-sdk = { path = "../../../../sdk", version = "=1.16.1" }
+domichain-validator = { path = "../../../../validator", version = "=1.16.1" }
 
 [lib]
 crate-type = ["cdylib", "lib"]

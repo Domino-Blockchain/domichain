@@ -30,7 +30,7 @@
 //! more account keys into a transaction than the legacy format. The
 //! [`VersionedMessage`] type is a thin wrapper around either message version.
 //!
-//! [future message format]: https://docs.domichain.com/proposals/transactions-v2
+//! [future message format]: https://docs.domichain.com/proposals/versioned-transactions
 //!
 //! Despite living in the `domichain-program` crate, there is no way to access the
 //! runtime's messages from within a Domichain program, and only the legacy message
@@ -40,20 +40,20 @@
 mod compiled_keys;
 pub mod legacy;
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 #[path = ""]
-mod non_bpf_modules {
+mod non_wasm_modules {
     mod account_keys;
+    mod address_loader;
     mod sanitized;
     mod versions;
 
-    pub use {account_keys::*, sanitized::*, versions::*};
+    pub use {account_keys::*, address_loader::*, sanitized::*, versions::*};
 }
 
-use compiled_keys::*;
-pub use legacy::Message;
-#[cfg(not(target_os = "domichain"))]
-pub use non_bpf_modules::*;
+#[cfg(not(target_os = "wasi"))]
+pub use non_wasm_modules::*;
+pub use {compiled_keys::CompileError, legacy::Message};
 
 /// The length of a message header in bytes.
 pub const MESSAGE_HEADER_LENGTH: usize = 3;

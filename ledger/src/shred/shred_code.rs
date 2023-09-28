@@ -3,14 +3,15 @@ use {
         common::dispatch,
         legacy, merkle,
         traits::{Shred, ShredCode as ShredCodeTrait},
-        CodingShredHeader, Error, ShredCommonHeader, ShredType, MAX_DATA_SHREDS_PER_FEC_BLOCK,
-        MAX_DATA_SHREDS_PER_SLOT, SIZE_OF_NONCE,
+        CodingShredHeader, Error, ShredCommonHeader, ShredType, SignedData,
+        DATA_SHREDS_PER_FEC_BLOCK, MAX_DATA_SHREDS_PER_SLOT, SIZE_OF_NONCE,
     },
     domichain_sdk::{clock::Slot, packet::PACKET_DATA_SIZE, signature::Signature},
     static_assertions::const_assert_eq,
 };
 
-const MAX_CODE_SHREDS_PER_SLOT: usize = MAX_DATA_SHREDS_PER_SLOT;
+const_assert_eq!(MAX_CODE_SHREDS_PER_SLOT, 32_768);
+pub const MAX_CODE_SHREDS_PER_SLOT: usize = MAX_DATA_SHREDS_PER_SLOT;
 
 const_assert_eq!(ShredCode::SIZE_OF_PAYLOAD, 1228);
 
@@ -34,11 +35,17 @@ impl ShredCode {
     dispatch!(pub(super) fn payload(&self) -> &Vec<u8>);
     dispatch!(pub(super) fn sanitize(&self) -> Result<(), Error>);
     dispatch!(pub(super) fn set_signature(&mut self, signature: Signature));
-    dispatch!(pub(super) fn signed_message(&self) -> &[u8]);
 
     // Only for tests.
     dispatch!(pub(super) fn set_index(&mut self, index: u32));
     dispatch!(pub(super) fn set_slot(&mut self, slot: Slot));
+
+    pub(super) fn signed_data(&self) -> Result<SignedData, Error> {
+        match self {
+            Self::Legacy(shred) => Ok(SignedData::Chunk(shred.signed_data()?)),
+            Self::Merkle(shred) => Ok(SignedData::MerkleRoot(shred.signed_data()?)),
+        }
+    }
 
     pub(super) fn new_from_parity_shard(
         slot: Slot,
@@ -74,8 +81,15 @@ impl ShredCode {
     pub(super) fn erasure_mismatch(&self, other: &ShredCode) -> bool {
         match (self, other) {
             (Self::Legacy(shred), Self::Legacy(other)) => erasure_mismatch(shred, other),
-            (Self::Merkle(shred), Self::Merkle(other)) => shred.erasure_mismatch(other),
-            _ => true,
+            (Self::Legacy(_), Self::Merkle(_)) => true,
+            (Self::Merkle(_), Self::Legacy(_)) => true,
+            (Self::Merkle(shred), Self::Merkle(other)) => {
+                // Merkle shreds within the same erasure batch have the same
+                // merkle root. The root of the merkle tree is signed. So
+                // either the signatures match or one fails sigverify.
+                erasure_mismatch(shred, other)
+                    || shred.common_header().signature != other.common_header().signature
+            }
         }
     }
 }
@@ -117,7 +131,7 @@ pub(super) fn erasure_shard_index<T: ShredCodeTrait>(shred: &T) -> Option<usize>
     let position = usize::from(coding_header.position);
     let fec_set_size = num_data_shreds.checked_add(num_coding_shreds)?;
     let index = position.checked_add(num_data_shreds)?;
-    (index < fec_set_size).then(|| index)
+    (index < fec_set_size).then_some(index)
 }
 
 pub(super) fn sanitize<T: ShredCodeTrait>(shred: &T) -> Result<(), Error> {
@@ -132,8 +146,8 @@ pub(super) fn sanitize<T: ShredCodeTrait>(shred: &T) -> Result<(), Error> {
             common_header.index,
         ));
     }
-    let num_coding_shreds = u32::from(coding_header.num_coding_shreds);
-    if num_coding_shreds > 8 * MAX_DATA_SHREDS_PER_FEC_BLOCK {
+    let num_coding_shreds = usize::from(coding_header.num_coding_shreds);
+    if num_coding_shreds > 8 * DATA_SHREDS_PER_FEC_BLOCK {
         return Err(Error::InvalidNumCodingShreds(
             coding_header.num_coding_shreds,
         ));

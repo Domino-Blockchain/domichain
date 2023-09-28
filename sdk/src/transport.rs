@@ -1,4 +1,6 @@
-#![cfg(feature = "full")]
+//! Defines the [`TransportError`] type.
+
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use {crate::transaction::TransactionError, std::io, thiserror::Error};
 

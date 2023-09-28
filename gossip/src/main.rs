@@ -6,10 +6,13 @@ use {
         SubCommand,
     },
     domichain_clap_utils::{
-        input_parsers::keypair_of,
+        hidden_unless_forced,
+        input_parsers::{keypair_of, pubkeys_of},
         input_validators::{is_keypair_or_ask_keyword, is_port, is_pubkey},
     },
-    domichain_gossip::{contact_info::ContactInfo, gossip_service::discover},
+    domichain_gossip::{
+        gossip_service::discover, legacy_contact_info::LegacyContactInfo as ContactInfo,
+    },
     domichain_sdk::pubkey::Pubkey,
     domichain_streamer::socket::SocketAddrSpace,
     std::{
@@ -37,7 +40,7 @@ fn parse_matches() -> ArgMatches<'static> {
                 .long("allow-private-addr")
                 .takes_value(false)
                 .help("Allow contacting private ip addresses")
-                .hidden(true),
+                .hidden(hidden_unless_forced()),
         )
         .subcommand(
             SubCommand::with_name("rpc-url")
@@ -139,6 +142,7 @@ fn parse_matches() -> ArgMatches<'static> {
                         .value_name("PUBKEY")
                         .takes_value(true)
                         .validator(is_pubkey)
+                        .multiple(true)
                         .help("Public key of a specific node to wait for"),
                 )
                 .arg(&shred_version_arg)
@@ -158,21 +162,18 @@ fn parse_gossip_host(matches: &ArgMatches, entrypoint_addr: Option<SocketAddr>) 
         .value_of("gossip_host")
         .map(|gossip_host| {
             domichain_net_utils::parse_host(gossip_host).unwrap_or_else(|e| {
-                eprintln!("failed to parse gossip-host: {}", e);
+                eprintln!("failed to parse gossip-host: {e}");
                 exit(1);
             })
         })
         .unwrap_or_else(|| {
             if let Some(entrypoint_addr) = entrypoint_addr {
                 domichain_net_utils::get_public_ip_addr(&entrypoint_addr).unwrap_or_else(|err| {
-                    eprintln!(
-                        "Failed to contact cluster entrypoint {}: {}",
-                        entrypoint_addr, err
-                    );
+                    eprintln!("Failed to contact cluster entrypoint {entrypoint_addr}: {err}");
                     exit(1);
                 })
             } else {
-                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
+                IpAddr::V4(Ipv4Addr::LOCALHOST)
             }
         })
 }
@@ -182,7 +183,7 @@ fn process_spy_results(
     validators: Vec<ContactInfo>,
     num_nodes: Option<usize>,
     num_nodes_exactly: Option<usize>,
-    pubkey: Option<Pubkey>,
+    pubkeys: Option<&[Pubkey]>,
 ) {
     if timeout.is_some() {
         if let Some(num) = num_nodes {
@@ -192,26 +193,22 @@ fn process_spy_results(
                 } else {
                     " or more"
                 };
-                eprintln!(
-                    "Error: Insufficient validators discovered.  Expecting {}{}",
-                    num, add,
-                );
+                eprintln!("Error: Insufficient validators discovered.  Expecting {num}{add}",);
                 exit(1);
             }
         }
-        if let Some(node) = pubkey {
-            if !validators.iter().any(|x| x.id == node) {
-                eprintln!("Error: Could not find node {:?}", node);
-                exit(1);
+        if let Some(nodes) = pubkeys {
+            for node in nodes {
+                if !validators.iter().any(|x| x.pubkey() == node) {
+                    eprintln!("Error: Could not find node {node:?}");
+                    exit(1);
+                }
             }
         }
     }
     if let Some(num_nodes_exactly) = num_nodes_exactly {
         if validators.len() > num_nodes_exactly {
-            eprintln!(
-                "Error: Extra nodes discovered.  Expecting exactly {}",
-                num_nodes_exactly
-            );
+            eprintln!("Error: Extra nodes discovered.  Expecting exactly {num_nodes_exactly}");
             exit(1);
         }
     }
@@ -228,9 +225,7 @@ fn process_spy(matches: &ArgMatches, socket_addr_space: SocketAddrSpace) -> std:
     let timeout = matches
         .value_of("timeout")
         .map(|secs| secs.to_string().parse().unwrap());
-    let pubkey = matches
-        .value_of("node_pubkey")
-        .map(|pubkey_str| pubkey_str.parse::<Pubkey>().unwrap());
+    let pubkeys = pubkeys_of(matches, "node_pubkey");
     let shred_version = value_t_or_exit!(matches, "shred_version", u16);
     let identity_keypair = keypair_of(matches, "identity");
 
@@ -242,7 +237,7 @@ fn process_spy(matches: &ArgMatches, socket_addr_space: SocketAddrSpace) -> std:
         gossip_host,
         value_t!(matches, "gossip_port", u16).unwrap_or_else(|_| {
             domichain_net_utils::find_available_port_in_range(
-                IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+                IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                 (0, 1),
             )
             .expect("unable to find an available gossip port")
@@ -254,14 +249,20 @@ fn process_spy(matches: &ArgMatches, socket_addr_space: SocketAddrSpace) -> std:
         entrypoint_addr.as_ref(),
         num_nodes,
         discover_timeout,
-        pubkey,             // find_node_by_pubkey
+        pubkeys.as_deref(), // find_nodes_by_pubkey
         None,               // find_node_by_gossip_addr
         Some(&gossip_addr), // my_gossip_addr
         shred_version,
         socket_addr_space,
     )?;
 
-    process_spy_results(timeout, validators, num_nodes, num_nodes_exactly, pubkey);
+    process_spy_results(
+        timeout,
+        validators,
+        num_nodes,
+        num_nodes_exactly,
+        pubkeys.as_deref(),
+    );
 
     Ok(())
 }
@@ -269,7 +270,7 @@ fn process_spy(matches: &ArgMatches, socket_addr_space: SocketAddrSpace) -> std:
 fn parse_entrypoint(matches: &ArgMatches) -> Option<SocketAddr> {
     matches.value_of("entrypoint").map(|entrypoint| {
         domichain_net_utils::parse_host_port(entrypoint).unwrap_or_else(|e| {
-            eprintln!("failed to parse entrypoint address: {}", e);
+            eprintln!("failed to parse entrypoint address: {e}");
             exit(1);
         })
     })
@@ -289,7 +290,7 @@ fn process_rpc_url(
         entrypoint_addr.as_ref(),
         Some(1), // num_nodes
         Duration::from_secs(timeout),
-        None,                     // find_node_by_pubkey
+        None,                     // find_nodes_by_pubkey
         entrypoint_addr.as_ref(), // find_node_by_gossip_addr
         None,                     // my_gossip_addr
         shred_version,
@@ -298,14 +299,15 @@ fn process_rpc_url(
 
     let rpc_addrs: Vec<_> = validators
         .iter()
-        .filter_map(|contact_info| {
-            if (any || all || Some(contact_info.gossip) == entrypoint_addr)
-                && ContactInfo::is_valid_address(&contact_info.rpc, &socket_addr_space)
-            {
-                return Some(contact_info.rpc);
-            }
-            None
+        .filter(|node| {
+            any || all
+                || node
+                    .gossip()
+                    .map(|addr| Some(addr) == entrypoint_addr)
+                    .unwrap_or_default()
         })
+        .filter_map(|node| node.rpc().ok())
+        .filter(|addr| socket_addr_space.check(addr))
         .collect();
 
     if rpc_addrs.is_empty() {
@@ -314,7 +316,7 @@ fn process_rpc_url(
     }
 
     for rpc_addr in rpc_addrs {
-        println!("http://{}", rpc_addr);
+        println!("http://{rpc_addr}");
         if any {
             break;
         }

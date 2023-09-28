@@ -1,20 +1,21 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-edition = "2021"
 name = "domichain-store-tool"
 description = "Tool to inspect append vecs"
-version = "1.11.1"
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-clap = "2.33.1"
-log = { version = "0.4.17" }
-domichain-logger = { path = "../../logger", version = "=1.11.1" }
-domichain-runtime = { path = "..", version = "=1.11.1" }
-domichain-version = { path = "../../version", version = "=1.11.1" }
+clap = { workspace = true }
+log = { workspace = true }
+domichain-logger = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-version = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

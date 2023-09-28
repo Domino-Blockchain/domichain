@@ -1,4 +1,5 @@
-//! useful extras for Account state
+//! Useful extras for `Account` state.
+
 use {
     crate::{
         account::{Account, AccountSharedData},
@@ -24,7 +25,7 @@ where
 {
     fn state(&self) -> Result<T, InstructionError> {
         self.deserialize_data()
-            .map_err(|_| InstructionError::InvalidAccountData)
+            .map_err(|_| dbg!(InstructionError::InvalidAccountData))
     }
     fn set_state(&mut self, state: &T) -> Result<(), InstructionError> {
         self.serialize_data(state).map_err(|err| match *err {
@@ -40,7 +41,7 @@ where
 {
     fn state(&self) -> Result<T, InstructionError> {
         self.deserialize_data()
-            .map_err(|_| InstructionError::InvalidAccountData)
+            .map_err(|_| dbg!(InstructionError::InvalidAccountData))
     }
     fn set_state(&mut self, state: &T) -> Result<(), InstructionError> {
         self.serialize_data(state).map_err(|err| match *err {
@@ -56,7 +57,7 @@ where
 {
     fn state(&self) -> Result<T, InstructionError> {
         self.deserialize_data()
-            .map_err(|_| InstructionError::InvalidAccountData)
+            .map_err(|_| dbg!(InstructionError::InvalidAccountData))
     }
     fn set_state(&mut self, _state: &T) -> Result<(), InstructionError> {
         panic!("illegal");

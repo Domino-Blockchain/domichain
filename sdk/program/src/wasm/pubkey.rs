@@ -1,5 +1,5 @@
 //! `Pubkey` Javascript interface
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(not(target_os = "wasi"), target_arch = "wasm32"))]
 #![allow(non_snake_case)]
 use {
     crate::{pubkey::*, wasm::display_to_jsvalue},
@@ -34,7 +34,8 @@ impl Pubkey {
         if let Some(base58_str) = value.as_string() {
             base58_str.parse::<Pubkey>().map_err(display_to_jsvalue)
         } else if let Some(uint8_array) = value.dyn_ref::<Uint8Array>() {
-            Ok(Pubkey::new(&uint8_array.to_vec()))
+            Pubkey::try_from(uint8_array.to_vec())
+                .map_err(|err| JsValue::from(format!("Invalid Uint8Array pubkey: {err:?}")))
         } else if let Some(array) = value.dyn_ref::<Array>() {
             let mut bytes = vec![];
             let iterator = js_sys::try_iter(&array.values())?.expect("array to be iterable");
@@ -49,7 +50,8 @@ impl Pubkey {
                 }
                 return Err(format!("Invalid array argument: {:?}", x).into());
             }
-            Ok(Pubkey::new(&bytes))
+            Pubkey::try_from(bytes)
+                .map_err(|err| JsValue::from(format!("Invalid Array pubkey: {err:?}")))
         } else if value.is_undefined() {
             Ok(Pubkey::default())
         } else {

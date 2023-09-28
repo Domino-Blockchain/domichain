@@ -2,8 +2,8 @@ use {
     crate::rpc_subscriptions::{NotificationEntry, RpcNotification, TimestampedNotificationEntry},
     dashmap::{mapref::entry::Entry as DashEntry, DashMap},
     domichain_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
-    domichain_client::rpc_filter::RpcFilterType,
     domichain_metrics::{CounterToken, TokenCounter},
+    domichain_rpc_client_api::filter::RpcFilterType,
     domichain_runtime::{
         bank::{TransactionLogCollectorConfig, TransactionLogCollectorFilter},
         bank_forks::BankForks,

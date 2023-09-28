@@ -1,0 +1,29 @@
+[package]
+name = "domichain-system-program"
+description = "Domichain System program"
+documentation = "https://docs.rs/domichain-system-program"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+bincode = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+domichain-program-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+
+[dev-dependencies]
+assert_matches = { workspace = true }
+domichain-logger = { workspace = true }
+
+[lib]
+crate-type = ["lib"]
+name = "domichain_system_program"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

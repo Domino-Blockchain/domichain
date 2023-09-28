@@ -48,7 +48,7 @@ impl ClusterSlotsService {
         Self::initialize_lowest_slot(&blockstore, &cluster_info);
         Self::initialize_epoch_slots(&bank_forks, &cluster_info);
         let t_cluster_slots_service = Builder::new()
-            .name("domichain-cluster-slots-service".to_string())
+            .name("domiClusterSlots".to_string())
             .spawn(move || {
                 Self::run(
                     blockstore,
@@ -182,19 +182,16 @@ mod test {
     use {
         super::*,
         domichain_gossip::{cluster_info::Node, crds_value::LowestSlot},
-        domichain_sdk::{pubkey::Pubkey, signature::Keypair},
+        domichain_sdk::signature::{Keypair, Signer},
         domichain_streamer::socket::SocketAddrSpace,
     };
 
     #[test]
     pub fn test_update_lowest_slot() {
-        let pubkey = Pubkey::new_unique();
+        let keypair = Arc::new(Keypair::new());
+        let pubkey = keypair.pubkey();
         let node_info = Node::new_localhost_with_pubkey(&pubkey);
-        let cluster_info = ClusterInfo::new(
-            node_info.info,
-            Arc::new(Keypair::new()),
-            SocketAddrSpace::Unspecified,
-        );
+        let cluster_info = ClusterInfo::new(node_info.info, keypair, SocketAddrSpace::Unspecified);
         ClusterSlotsService::update_lowest_slot(5, &cluster_info);
         cluster_info.flush_push_queue();
         let lowest = {

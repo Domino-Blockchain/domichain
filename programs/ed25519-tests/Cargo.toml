@@ -1,19 +1,19 @@
 [package]
 name = "domichain-ed25519-program-tests"
-version = "1.11.1"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
-edition = "2021"
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dev-dependencies]
-assert_matches = "1.5.0"
-ed25519-dalek = "=1.0.1"
-rand = "0.7.0"
-domichain-program-test = { path = "../../program-test", version = "=1.11.1" }
-domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
+assert_matches = { workspace = true }
+ed25519-dalek = { workspace = true }
+rand = { workspace = true }
+domichain-program-test = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

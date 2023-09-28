@@ -4,8 +4,9 @@ use {
     },
     bincode::deserialize,
     serde_json::json,
-    domichain_sdk::{instruction::CompiledInstruction, message::AccountKeys},
-    domichain_vote_program::vote_instruction::VoteInstruction,
+    domichain_sdk::{
+        instruction::CompiledInstruction, message::AccountKeys, vote::instruction::VoteInstruction,
+    },
 };
 
 pub fn parse_vote(
@@ -102,7 +103,7 @@ pub fn parse_vote(
             })
         }
         VoteInstruction::UpdateVoteState(vote_state_update) => {
-            check_num_vote_accounts(&instruction.accounts, 4)?;
+            check_num_vote_accounts(&instruction.accounts, 2)?;
             let vote_state_update = json!({
                 "lockouts": vote_state_update.lockouts,
                 "root": vote_state_update.root,
@@ -114,15 +115,13 @@ pub fn parse_vote(
                 instruction_type: "updatevotestate".to_string(),
                 info: json!({
                     "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
-                    "slotHashesSysvar": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "clockSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "voteAuthority": account_keys[instruction.accounts[3] as usize].to_string(),
+                    "voteAuthority": account_keys[instruction.accounts[1] as usize].to_string(),
                     "voteStateUpdate": vote_state_update,
                 }),
             })
         }
         VoteInstruction::UpdateVoteStateSwitch(vote_state_update, hash) => {
-            check_num_vote_accounts(&instruction.accounts, 4)?;
+            check_num_vote_accounts(&instruction.accounts, 2)?;
             let vote_state_update = json!({
                 "lockouts": vote_state_update.lockouts,
                 "root": vote_state_update.root,
@@ -133,9 +132,42 @@ pub fn parse_vote(
                 instruction_type: "updatevotestateswitch".to_string(),
                 info: json!({
                     "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
-                    "slotHashesSysvar": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "clockSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "voteAuthority": account_keys[instruction.accounts[3] as usize].to_string(),
+                    "voteAuthority": account_keys[instruction.accounts[1] as usize].to_string(),
+                    "voteStateUpdate": vote_state_update,
+                    "hash": hash.to_string(),
+                }),
+            })
+        }
+        VoteInstruction::CompactUpdateVoteState(vote_state_update) => {
+            check_num_vote_accounts(&instruction.accounts, 2)?;
+            let vote_state_update = json!({
+                "lockouts": vote_state_update.lockouts,
+                "root": vote_state_update.root,
+                "hash": vote_state_update.hash.to_string(),
+                "timestamp": vote_state_update.timestamp,
+            });
+            Ok(ParsedInstructionEnum {
+                instruction_type: "compactupdatevotestate".to_string(),
+                info: json!({
+                    "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
+                    "voteAuthority": account_keys[instruction.accounts[1] as usize].to_string(),
+                    "voteStateUpdate": vote_state_update,
+                }),
+            })
+        }
+        VoteInstruction::CompactUpdateVoteStateSwitch(vote_state_update, hash) => {
+            check_num_vote_accounts(&instruction.accounts, 2)?;
+            let vote_state_update = json!({
+                "lockouts": vote_state_update.lockouts,
+                "root": vote_state_update.root,
+                "hash": vote_state_update.hash.to_string(),
+                "timestamp": vote_state_update.timestamp,
+            });
+            Ok(ParsedInstructionEnum {
+                instruction_type: "compactupdatevotestateswitch".to_string(),
+                info: json!({
+                    "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
+                    "voteAuthority": account_keys[instruction.accounts[1] as usize].to_string(),
                     "voteStateUpdate": vote_state_update,
                     "hash": hash.to_string(),
                 }),
@@ -219,10 +251,15 @@ fn check_num_vote_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInstr
 mod test {
     use {
         super::*,
-        domichain_sdk::{hash::Hash, message::Message, pubkey::Pubkey, sysvar},
-        domichain_vote_program::{
-            vote_instruction,
-            vote_state::{Vote, VoteAuthorize, VoteInit},
+        domichain_sdk::{
+            hash::Hash,
+            message::Message,
+            pubkey::Pubkey,
+            sysvar,
+            vote::{
+                instruction as vote_instruction,
+                state::{Vote, VoteAuthorize, VoteInit, VoteStateUpdate, VoteStateVersions},
+            },
         },
     };
 
@@ -242,11 +279,15 @@ mod test {
             commission,
         };
 
-        let instructions = vote_instruction::create_account(
+        let instructions = vote_instruction::create_account_with_config(
             &Pubkey::new_unique(),
             &vote_pubkey,
             &vote_init,
             lamports,
+            vote_instruction::CreateVoteAccountConfig {
+                space: VoteStateVersions::vote_state_size_of(true) as u64,
+                ..vote_instruction::CreateVoteAccountConfig::default()
+            },
         );
         let mut message = Message::new(&instructions, None);
         assert_eq!(
@@ -641,6 +682,182 @@ mod test {
         assert!(parse_vote(
             &message.instructions[0],
             &AccountKeys::new(&message.account_keys[0..3], None)
+        )
+        .is_err());
+        let keys = message.account_keys.clone();
+        message.instructions[0].accounts.pop();
+        assert!(parse_vote(&message.instructions[0], &AccountKeys::new(&keys, None)).is_err());
+    }
+
+    #[test]
+    fn test_parse_vote_state_update_ix() {
+        let vote_state_update = VoteStateUpdate::from(vec![(0, 3), (1, 2), (2, 1)]);
+
+        let vote_pubkey = Pubkey::new_unique();
+        let authorized_voter_pubkey = Pubkey::new_unique();
+        let instruction = vote_instruction::update_vote_state(
+            &vote_pubkey,
+            &authorized_voter_pubkey,
+            vote_state_update.clone(),
+        );
+        let mut message = Message::new(&[instruction], None);
+        assert_eq!(
+            parse_vote(
+                &message.instructions[0],
+                &AccountKeys::new(&message.account_keys, None)
+            )
+            .unwrap(),
+            ParsedInstructionEnum {
+                instruction_type: "updatevotestate".to_string(),
+                info: json!({
+                    "voteAccount": vote_pubkey.to_string(),
+                    "voteAuthority": authorized_voter_pubkey.to_string(),
+                    "voteStateUpdate": {
+                        "lockouts": vote_state_update.lockouts,
+                        "root": None::<u64>,
+                        "hash": Hash::default().to_string(),
+                        "timestamp": None::<u64>,
+                    },
+                }),
+            }
+        );
+        assert!(parse_vote(
+            &message.instructions[0],
+            &AccountKeys::new(&message.account_keys[0..1], None)
+        )
+        .is_err());
+        let keys = message.account_keys.clone();
+        message.instructions[0].accounts.pop();
+        assert!(parse_vote(&message.instructions[0], &AccountKeys::new(&keys, None)).is_err());
+    }
+
+    #[test]
+    fn test_parse_vote_state_update_switch_ix() {
+        let vote_state_update = VoteStateUpdate::from(vec![(0, 3), (1, 2), (2, 1)]);
+
+        let vote_pubkey = Pubkey::new_unique();
+        let authorized_voter_pubkey = Pubkey::new_unique();
+        let proof_hash = Hash::new_from_array([2; 32]);
+        let instruction = vote_instruction::update_vote_state_switch(
+            &vote_pubkey,
+            &authorized_voter_pubkey,
+            vote_state_update.clone(),
+            proof_hash,
+        );
+        let mut message = Message::new(&[instruction], None);
+        assert_eq!(
+            parse_vote(
+                &message.instructions[0],
+                &AccountKeys::new(&message.account_keys, None)
+            )
+            .unwrap(),
+            ParsedInstructionEnum {
+                instruction_type: "updatevotestateswitch".to_string(),
+                info: json!({
+                    "voteAccount": vote_pubkey.to_string(),
+                    "voteAuthority": authorized_voter_pubkey.to_string(),
+                    "voteStateUpdate": {
+                        "lockouts": vote_state_update.lockouts,
+                        "root": None::<u64>,
+                        "hash": Hash::default().to_string(),
+                        "timestamp": None::<u64>,
+                    },
+                    "hash": proof_hash.to_string(),
+                }),
+            }
+        );
+        assert!(parse_vote(
+            &message.instructions[0],
+            &AccountKeys::new(&message.account_keys[0..1], None)
+        )
+        .is_err());
+        let keys = message.account_keys.clone();
+        message.instructions[0].accounts.pop();
+        assert!(parse_vote(&message.instructions[0], &AccountKeys::new(&keys, None)).is_err());
+    }
+
+    #[test]
+    fn test_parse_compact_vote_state_update_ix() {
+        let vote_state_update = VoteStateUpdate::from(vec![(0, 3), (1, 2), (2, 1)]);
+        let compact_vote_state_update = vote_state_update.clone();
+
+        let vote_pubkey = Pubkey::new_unique();
+        let authorized_voter_pubkey = Pubkey::new_unique();
+        let instruction = vote_instruction::compact_update_vote_state(
+            &vote_pubkey,
+            &authorized_voter_pubkey,
+            compact_vote_state_update,
+        );
+        let mut message = Message::new(&[instruction], None);
+        assert_eq!(
+            parse_vote(
+                &message.instructions[0],
+                &AccountKeys::new(&message.account_keys, None)
+            )
+            .unwrap(),
+            ParsedInstructionEnum {
+                instruction_type: "compactupdatevotestate".to_string(),
+                info: json!({
+                    "voteAccount": vote_pubkey.to_string(),
+                    "voteAuthority": authorized_voter_pubkey.to_string(),
+                    "voteStateUpdate": {
+                        "lockouts": vote_state_update.lockouts,
+                        "root": None::<u64>,
+                        "hash": Hash::default().to_string(),
+                        "timestamp": None::<u64>,
+                    },
+                }),
+            }
+        );
+        assert!(parse_vote(
+            &message.instructions[0],
+            &AccountKeys::new(&message.account_keys[0..1], None)
+        )
+        .is_err());
+        let keys = message.account_keys.clone();
+        message.instructions[0].accounts.pop();
+        assert!(parse_vote(&message.instructions[0], &AccountKeys::new(&keys, None)).is_err());
+    }
+
+    #[test]
+    fn test_parse_compact_vote_state_update_switch_ix() {
+        let vote_state_update = VoteStateUpdate::from(vec![(0, 3), (1, 2), (2, 1)]);
+        let compact_vote_state_update = vote_state_update.clone();
+
+        let vote_pubkey = Pubkey::new_unique();
+        let authorized_voter_pubkey = Pubkey::new_unique();
+        let proof_hash = Hash::new_from_array([2; 32]);
+        let instruction = vote_instruction::compact_update_vote_state_switch(
+            &vote_pubkey,
+            &authorized_voter_pubkey,
+            compact_vote_state_update,
+            proof_hash,
+        );
+        let mut message = Message::new(&[instruction], None);
+        assert_eq!(
+            parse_vote(
+                &message.instructions[0],
+                &AccountKeys::new(&message.account_keys, None)
+            )
+            .unwrap(),
+            ParsedInstructionEnum {
+                instruction_type: "compactupdatevotestateswitch".to_string(),
+                info: json!({
+                    "voteAccount": vote_pubkey.to_string(),
+                    "voteAuthority": authorized_voter_pubkey.to_string(),
+                    "voteStateUpdate": {
+                        "lockouts": vote_state_update.lockouts,
+                        "root": None::<u64>,
+                        "hash": Hash::default().to_string(),
+                        "timestamp": None::<u64>,
+                    },
+                    "hash": proof_hash.to_string(),
+                }),
+            }
+        );
+        assert!(parse_vote(
+            &message.instructions[0],
+            &AccountKeys::new(&message.account_keys[0..1], None)
         )
         .is_err());
         let keys = message.account_keys.clone();

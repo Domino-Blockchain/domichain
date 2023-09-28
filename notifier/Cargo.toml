@@ -1,18 +1,19 @@
 [package]
 name = "domichain-notifier"
-version = "1.11.1"
 description = "Domichain Notifier"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-notifier"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-log = "0.4.17"
-reqwest = { version = "0.11.10", default-features = false, features = ["blocking", "rustls-tls", "json"] }
-serde_json = "1.0"
+log = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "brotli", "deflate", "gzip", "rustls-tls", "json"] }
+serde_json = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [lib]
 name = "domichain_notifier"

@@ -12,14 +12,13 @@ args=(
   --no-os-network-limits-test
 )
 airdrops_enabled=1
-node_sol=500 # 500 DOMI: number of DOMI to airdrop the node for transaction fees and vote account rent exemption (ignored if airdrops_enabled=0)
+node_domi=500 # 500 DOMI: number of DOMI to airdrop the node for transaction fees and vote account rent exemption (ignored if airdrops_enabled=0)
 label=
 identity=
 vote_account=
 no_restart=0
 gossip_entrypoint=
 ledger_dir=
-maybe_allow_private_addr=
 
 usage() {
   if [[ -n $1 ]]; then
@@ -37,7 +36,7 @@ OPTIONS:
   --init-complete-file FILE - create this file, if it doesn't already exist, once node initialization is complete
   --label LABEL             - Append the given label to the configuration files, useful when running
                               multiple validators in the same workspace
-  --node-domi DOMI            - Number of DOMI this node has been funded from the genesis config (default: $node_sol)
+  --node-domi DOMI            - Number of DOMI this node has been funded from the genesis config (default: $node_domi)
   --no-voting               - start node without vote signer
   --rpc-port port           - custom RPC port for this node
   --no-restart              - do not restart the node if it exits
@@ -60,7 +59,7 @@ while [[ -n $1 ]]; do
       no_restart=1
       shift
     elif [[ $1 = --node-domi ]]; then
-      node_sol="$2"
+      node_domi="$2"
       shift 2
     elif [[ $1 = --no-airdrop ]]; then
       airdrops_enabled=0
@@ -97,6 +96,9 @@ while [[ -n $1 ]]; do
       args+=("$1" "$2")
       shift 2
     elif [[ $1 = --no-snapshot-fetch ]]; then
+      args+=("$1")
+      shift
+    elif [[ $1 == --allow-private-addr ]]; then
       args+=("$1")
       shift
     elif [[ $1 = --no-voting ]]; then
@@ -147,7 +149,13 @@ while [[ -n $1 ]]; do
     elif [[ $1 = --skip-poh-verify ]]; then
       args+=("$1")
       shift
-    elif [[ $1 = --tpu-use-quic ]]; then
+    elif [[ $1 = --tpu-disable-quic ]]; then
+      args+=("$1")
+      shift
+    elif [[ $1 = --help ]]; then
+      args+=("$1")
+      shift
+    elif [[ $1 = --tpu-enable-udp ]]; then
       args+=("$1")
       shift
     elif [[ $1 = --rpc-send-batch-ms ]]; then
@@ -174,10 +182,6 @@ while [[ -n $1 ]]; do
     elif [[ $1 == --expected-bank-hash ]]; then
       args+=("$1" "$2")
       shift 2
-    elif [[ $1 == --allow-private-addr ]]; then
-      args+=("$1")
-      maybe_allow_private_addr=$1
-      shift
     elif [[ $1 == --accounts-db-skip-shrink ]]; then
       args+=("$1")
       shift
@@ -262,6 +266,7 @@ default_arg --ledger "$ledger_dir"
 default_arg --log -
 default_arg --full-rpc-api
 default_arg --no-incremental-snapshots
+default_arg --allow-private-addr
 
 if [[ $maybeRequireTower = true ]]; then
   default_arg --require-tower
@@ -304,7 +309,7 @@ wallet() {
 }
 
 setup_validator_accounts() {
-  declare node_sol=$1
+  declare node_domi=$1
 
   if [[ -n "$SKIP_ACCOUNTS_CREATION" ]]; then
     return 0
@@ -312,12 +317,12 @@ setup_validator_accounts() {
 
   if ! wallet vote-account "$vote_account"; then
     if ((airdrops_enabled)); then
-      echo "Adding $node_sol to validator identity account:"
+      echo "Adding $node_domi to validator identity account:"
       (
         set -x
         $domichain_cli \
           --keypair "$DOMICHAIN_CONFIG_DIR/faucet.json" --url "$rpc_url" \
-          transfer --allow-unfunded-recipient "$identity" "$node_sol"
+          transfer --allow-unfunded-recipient "$identity" "$node_domi"
       ) || return $?
     fi
 
@@ -332,14 +337,14 @@ setup_validator_accounts() {
   return 0
 }
 
-# shellcheck disable=SC2086 # Don't want to double quote "$maybe_allow_private_addr"
-rpc_url=$($domichain_gossip $maybe_allow_private_addr rpc-url --timeout 180 --entrypoint "$gossip_entrypoint")
+# shellcheck disable=SC2086
+rpc_url=$($domichain_gossip --allow-private-addr rpc-url --timeout 180 --entrypoint "$gossip_entrypoint")
 
 [[ -r "$identity" ]] || $domichain_keygen new --no-passphrase -so "$identity"
 [[ -r "$vote_account" ]] || $domichain_keygen new --no-passphrase -so "$vote_account"
 [[ -r "$authorized_withdrawer" ]] || $domichain_keygen new --no-passphrase -so "$authorized_withdrawer"
 
-setup_validator_accounts "$node_sol"
+setup_validator_accounts "$node_domi"
 
 while true; do
   echo "$PS4$program ${args[*]}"

@@ -44,6 +44,11 @@ impl EpochStakes {
         self.total_stake
     }
 
+    /// For tests
+    pub fn set_total_stake(&mut self, total_stake: u64) {
+        self.total_stake = total_stake;
+    }
+
     pub fn node_id_to_vote_accounts(&self) -> &Arc<NodeIdToVoteAccounts> {
         &self.node_id_to_vote_accounts
     }
@@ -55,9 +60,7 @@ impl EpochStakes {
     pub fn vote_account_stake(&self, vote_account: &Pubkey) -> u64 {
         self.stakes
             .vote_accounts()
-            .get(vote_account)
-            .map(|(stake, _)| *stake)
-            .unwrap_or(0)
+            .get_delegated_stake(vote_account)
     }
 
     fn parse_epoch_vote_accounts(
@@ -79,7 +82,7 @@ impl EpochStakes {
                             "parse_epoch_vote_accounts",
                             (
                                 "warn",
-                                format!("Unable to get vote_state from account {}", key),
+                                format!("Unable to get vote_state from account {key}"),
                                 String
                             ),
                         );

@@ -1,29 +1,34 @@
 [package]
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-edition = "2021"
 name = "domichain-geyser-plugin-manager"
 description = "The Domichain Geyser plugin manager."
-version = "1.11.1"
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-geyser-plugin-manager"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-bs58 = "0.4.0"
-crossbeam-channel = "0.5"
-json5 = "0.4.1"
-libloading = "0.7.3"
-log = "0.4.17"
-serde_json = "1.0.81"
-domichain-geyser-plugin-interface = { path = "../geyser-plugin-interface", version = "=1.11.1" }
-domichain-measure = { path = "../measure", version = "=1.11.1" }
-domichain-metrics = { path = "../metrics", version = "=1.11.1" }
-domichain-rpc = { path = "../rpc", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-domichain-transaction-status = { path = "../transaction-status", version = "=1.11.1" }
-thiserror = "1.0.31"
+
+bs58 = { workspace = true }
+crossbeam-channel = { workspace = true }
+json5 = { workspace = true }
+jsonrpc-core = { workspace = true }
+jsonrpc-server-utils = { workspace = true }
+libloading = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true }
+domichain-entry = { workspace = true }
+domichain-geyser-plugin-interface = { workspace = true }
+domichain-ledger = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-rpc = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-transaction-status = { workspace = true }
+thiserror = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

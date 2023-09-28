@@ -42,6 +42,7 @@ $ sudo apt-get install libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang c
 
 ```bash
 $ git clone https://Domino-Blockchain/domichain.git
+$ git clone https://Domino-Blockchain/domichain-program-library.git
 $ cd domichain
 ```
 

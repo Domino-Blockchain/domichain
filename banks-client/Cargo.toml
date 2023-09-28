@@ -1,28 +1,28 @@
 [package]
 name = "domichain-banks-client"
-version = "1.11.1"
 description = "Domichain banks client"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-banks-client"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-borsh = "0.9.3"
-futures = "0.3"
-domichain-banks-interface = { path = "../banks-interface", version = "=1.11.1" }
-domichain-program = { path = "../sdk/program", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-tarpc = { version = "0.29.0", features = ["full"] }
-thiserror = "1.0"
-tokio = { version = "~1.14.1", features = ["full"] }
-tokio-serde = { version = "0.8", features = ["bincode"] }
+borsh = { workspace = true }
+futures = { workspace = true }
+domichain-banks-interface = { workspace = true }
+domichain-program = { workspace = true }
+domichain-sdk = { workspace = true }
+tarpc = { workspace = true, features = ["full"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tokio-serde = { workspace = true, features = ["bincode"] }
 
 [dev-dependencies]
-domichain-banks-server = { path = "../banks-server", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
+domichain-banks-server = { workspace = true }
+domichain-runtime = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

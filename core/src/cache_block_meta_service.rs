@@ -23,7 +23,6 @@ pub struct CacheBlockMetaService {
 const CACHE_BLOCK_TIME_WARNING_MS: u64 = 150;
 
 impl CacheBlockMetaService {
-    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         cache_block_meta_receiver: CacheBlockMetaReceiver,
         blockstore: Arc<Blockstore>,
@@ -31,7 +30,7 @@ impl CacheBlockMetaService {
     ) -> Self {
         let exit = exit.clone();
         let thread_hdl = Builder::new()
-            .name("domichain-cache-block-time".to_string())
+            .name("domiCacheBlkTime".to_string())
             .spawn(move || loop {
                 if exit.load(Ordering::Relaxed) {
                     break;

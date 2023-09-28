@@ -1,26 +1,26 @@
 [package]
 name = "domichain-send-transaction-service"
-version = "1.11.1"
 description = "Domichain send transaction service"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-send-transaction-service"
-license = "Apache-2.0"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-crossbeam-channel = "0.5"
-log = "0.4.17"
-domichain-client = { path = "../client", version = "=1.11.1" }
-domichain-measure = { path = "../measure", version = "=1.11.1" }
-domichain-metrics = { path = "../metrics", version = "=1.11.1" }
-domichain-runtime = { path = "../runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-
+crossbeam-channel = { workspace = true }
+log = { workspace = true }
+domichain-client = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-metrics = { workspace = true }
+domichain-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
+domichain-tpu-client = { workspace = true }
 
 [dev-dependencies]
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+domichain-logger = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

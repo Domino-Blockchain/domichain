@@ -75,6 +75,7 @@ NDEBUG=1 DOMICHAIN_CUDA=1 ./multinode-demo/bootstrap-validator.sh
 NDEBUG=1 DOMICHAIN_CUDA=1 ./multinode-demo/validator.sh
 ```
 
+
 ### Testnet Client Demo
 
 Now that your singlenode or multinode testnet is up and running let's send it some transactions!
@@ -99,7 +100,7 @@ For example
   export RUST_LOG=domichain=info,domichain::banking_stage=debug
   ```
 
-- To enable BPF program logging:
+- To enable SBF program logging:
 
   ```bash
   export RUST_LOG=domichain_bpf_loader=trace

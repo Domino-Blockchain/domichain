@@ -7,16 +7,17 @@
 //!
 //! [`legacy`]: crate::message::legacy
 //! [`v0`]: crate::message::v0
-//! [future message format]: https://docs.domichain.com/proposals/transactions-v2
+//! [future message format]: https://docs.domichain.com/proposals/versioned-transactions
 
 use crate::{
     address_lookup_table_account::AddressLookupTableAccount,
-    bpf_loader_upgradeable,
+    wasm_loader_upgradeable,
     hash::Hash,
     instruction::{CompiledInstruction, Instruction},
     message::{
-        compiled_keys::CompileError, legacy::is_builtin_key_or_sysvar, AccountKeys, CompiledKeys,
-        MessageHeader, MESSAGE_VERSION_PREFIX,
+        compiled_keys::{CompileError, CompiledKeys},
+        legacy::is_builtin_key_or_sysvar,
+        AccountKeys, MessageHeader, MESSAGE_VERSION_PREFIX,
     },
     pubkey::Pubkey,
     sanitize::SanitizeError,
@@ -129,6 +130,8 @@ impl Message {
 
         // the combined number of static and dynamic account keys must be <= 256
         // since account indices are encoded as `u8`
+        // Note that this is different from the per-transaction account load cap
+        // as defined in `Bank::get_transaction_account_lock_limit`
         let total_account_keys = num_static_account_keys.saturating_add(num_dynamic_account_keys);
         if total_account_keys > 256 {
             return Err(SanitizeError::IndexOutOfBounds);
@@ -179,24 +182,24 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_address_lookup_table_program`], [`domichain_client`], [`domichain_sdk`], and [`anyhow`] crates.
+    /// This example uses the [`domichain_address_lookup_table_program`], [`domichain_rpc_client`], [`domichain_sdk`], and [`anyhow`] crates.
     ///
     /// [`domichain_address_lookup_table_program`]: https://docs.rs/domichain-address-lookup-table-program
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-rpc-client
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::{
     /// #     domichain_address_lookup_table_program,
-    /// #     domichain_client,
+    /// #     domichain_rpc_client,
     /// #     domichain_sdk,
     /// # };
     /// # use std::borrow::Cow;
     /// # use domichain_sdk::account::Account;
     /// use anyhow::Result;
     /// use domichain_address_lookup_table_program::state::AddressLookupTable;
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///      address_lookup_table_account::AddressLookupTableAccount,
     ///      instruction::{AccountMeta, Instruction},
@@ -328,11 +331,11 @@ impl Message {
         }
     }
 
-    /// Returns true if any static account key is the bpf upgradeable loader
+    /// Returns true if any static account key is the wasam upgradeable loader
     fn is_upgradeable_loader_in_static_keys(&self) -> bool {
         self.account_keys
             .iter()
-            .any(|&key| key == bpf_loader_upgradeable::id())
+            .any(|&key| key == wasm_loader_upgradeable::id())
     }
 
     /// Returns true if the account at the specified index was requested as writable.

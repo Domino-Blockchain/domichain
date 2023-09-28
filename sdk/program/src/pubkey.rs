@@ -121,14 +121,33 @@ impl FromStr for Pubkey {
         if pubkey_vec.len() != mem::size_of::<Pubkey>() {
             Err(ParsePubkeyError::WrongSize)
         } else {
-            Ok(Pubkey::new(&pubkey_vec))
+            Pubkey::try_from(pubkey_vec).map_err(|_| ParsePubkeyError::Invalid)
         }
     }
 }
 
 impl From<[u8; 32]> for Pubkey {
+    #[inline]
     fn from(from: [u8; 32]) -> Self {
         Self(from)
+    }
+}
+
+impl TryFrom<&[u8]> for Pubkey {
+    type Error = std::array::TryFromSliceError;
+
+    #[inline]
+    fn try_from(pubkey: &[u8]) -> Result<Self, Self::Error> {
+        <[u8; 32]>::try_from(pubkey).map(Self::from)
+    }
+}
+
+impl TryFrom<Vec<u8>> for Pubkey {
+    type Error = Vec<u8>;
+
+    #[inline]
+    fn try_from(pubkey: Vec<u8>) -> Result<Self, Self::Error> {
+        <[u8; 32]>::try_from(pubkey).map(Self::from)
     }
 }
 
@@ -139,23 +158,25 @@ impl TryFrom<&str> for Pubkey {
     }
 }
 
+#[allow(clippy::used_underscore_binding)]
 pub fn bytes_are_curve_point<T: AsRef<[u8]>>(_bytes: T) -> bool {
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     {
         curve25519_dalek::edwards::CompressedEdwardsY::from_slice(_bytes.as_ref())
             .decompress()
             .is_some()
     }
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unimplemented!();
 }
 
 impl Pubkey {
+    #[deprecated(
+        since = "1.14.14",
+        note = "Please use 'Pubkey::from' or 'Pubkey::try_from' instead"
+    )]
     pub fn new(pubkey_vec: &[u8]) -> Self {
-        Self(
-            <[u8; 32]>::try_from(<&[u8]>::clone(&pubkey_vec))
-                .expect("Slice must be the same length as a Pubkey"),
-        )
+        Self::try_from(pubkey_vec).expect("Slice must be the same length as a Pubkey")
     }
 
     pub const fn new_from_array(pubkey_array: [u8; 32]) -> Self {
@@ -163,10 +184,10 @@ impl Pubkey {
     }
 
     #[deprecated(since = "1.3.9", note = "Please use 'Pubkey::new_unique' instead")]
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     pub fn new_rand() -> Self {
         // Consider removing Pubkey::new_rand() entirely in the v1.5 or v1.6 timeframe
-        Pubkey::new(&rand::random::<[u8; 32]>())
+        Pubkey::from(rand::random::<[u8; 32]>())
     }
 
     /// unique Pubkey for tests and benchmarks.
@@ -176,8 +197,10 @@ impl Pubkey {
 
         let mut b = [0u8; 32];
         let i = I.fetch_add(1);
-        b[0..8].copy_from_slice(&i.to_le_bytes());
-        Self::new(&b)
+        // use big endian representation to ensure that recent unique pubkeys
+        // are always greater than less recent unique pubkeys
+        b[0..8].copy_from_slice(&i.to_be_bytes());
+        Self::from(b)
     }
 
     pub fn create_with_seed(
@@ -196,10 +219,8 @@ impl Pubkey {
                 return Err(PubkeyError::IllegalOwner);
             }
         }
-
-        Ok(Pubkey::new(
-            hashv(&[base.as_ref(), seed.as_ref(), owner]).as_ref(),
-        ))
+        let hash = hashv(&[base.as_ref(), seed.as_ref(), owner]);
+        Ok(Pubkey::from(hash.to_bytes()))
     }
 
     /// Find a valid [program derived address][pda] and its corresponding bump seed.
@@ -370,7 +391,7 @@ impl Pubkey {
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// # use domichain_program::example_mocks::{domichain_sdk, domichain_client};
+    /// # use domichain_program::example_mocks::{domichain_sdk, domichain_rpc_client};
     /// # use domichain_program::{
     /// #     pubkey::Pubkey,
     /// #     instruction::Instruction,
@@ -383,7 +404,7 @@ impl Pubkey {
     /// #     signature::{Signer, Signature},
     /// #     transaction::Transaction,
     /// # };
-    /// # use domichain_client::rpc_client::RpcClient;
+    /// # use domichain_rpc_client::rpc_client::RpcClient;
     /// # use std::convert::TryFrom;
     /// # use anyhow::Result;
     /// #
@@ -474,7 +495,7 @@ impl Pubkey {
     pub fn try_find_program_address(seeds: &[&[u8]], program_id: &Pubkey) -> Option<(Pubkey, u8)> {
         // Perform the calculation inline, calling this from within a program is
         // not supported
-        #[cfg(not(target_os = "domichain"))]
+        #[cfg(not(target_os = "wasi"))]
         {
             let mut bump_seed = [std::u8::MAX];
             for _ in 0..std::u8::MAX {
@@ -482,7 +503,11 @@ impl Pubkey {
                     let mut seeds_with_bump = seeds.to_vec();
                     seeds_with_bump.push(&bump_seed);
                     match Self::create_program_address(&seeds_with_bump, program_id) {
-                        Ok(address) => return Some((address, bump_seed[0])),
+                        Ok(address) => {
+                            dbg!(seeds_with_bump.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
+                            dbg!(program_id, address);
+                            return Some((address, bump_seed[0]))
+                        },
                         Err(PubkeyError::InvalidSeeds) => (),
                         _ => break,
                     }
@@ -492,7 +517,7 @@ impl Pubkey {
             None
         }
         // Call via a system call to perform the calculation
-        #[cfg(target_os = "domichain")]
+        #[cfg(target_os = "wasi")]
         {
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
@@ -506,7 +531,7 @@ impl Pubkey {
                 )
             };
             match result {
-                crate::entrypoint::SUCCESS => Some((Pubkey::new(&bytes), bump_seed)),
+                crate::entrypoint::SUCCESS => Some((Pubkey::from(bytes), bump_seed)),
                 _ => None,
             }
         }
@@ -569,7 +594,7 @@ impl Pubkey {
 
         // Perform the calculation inline, calling this from within a program is
         // not supported
-        #[cfg(not(target_os = "domichain"))]
+        #[cfg(not(target_os = "wasi"))]
         {
             let mut hasher = crate::hash::Hasher::default();
             for seed in seeds.iter() {
@@ -582,10 +607,12 @@ impl Pubkey {
                 return Err(PubkeyError::InvalidSeeds);
             }
 
-            Ok(Pubkey::new(hash.as_ref()))
+            // dbg!(seeds.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
+            // dbg!(program_id, Pubkey::from(hash.to_bytes()));
+            Ok(Pubkey::from(hash.to_bytes()))
         }
         // Call via a system call to perform the calculation
-        #[cfg(target_os = "domichain")]
+        #[cfg(target_os = "wasi")]
         {
             let mut bytes = [0; 32];
             let result = unsafe {
@@ -597,7 +624,7 @@ impl Pubkey {
                 )
             };
             match result {
-                crate::entrypoint::SUCCESS => Ok(Pubkey::new(&bytes)),
+                crate::entrypoint::SUCCESS => Ok(Pubkey::from(bytes)),
                 _ => Err(result.into()),
             }
         }
@@ -613,12 +640,12 @@ impl Pubkey {
 
     /// Log a `Pubkey` from a program
     pub fn log(&self) {
-        #[cfg(target_os = "domichain")]
+        #[cfg(target_os = "wasi")]
         unsafe {
             crate::syscalls::sol_log_pubkey(self.as_ref() as *const _ as *const u8)
         };
 
-        #[cfg(not(target_os = "domichain"))]
+        #[cfg(not(target_os = "wasi"))]
         crate::program_stubs::sol_log(&self.to_string());
     }
 }

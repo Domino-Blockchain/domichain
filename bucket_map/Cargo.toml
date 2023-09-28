@@ -1,28 +1,30 @@
 [package]
 name = "domichain-bucket-map"
-version = "1.11.1"
 description = "domichain-bucket-map"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-bucket-map"
 readme = "../README.md"
-repository = "https://Domino-Blockchain/domichain"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-license = "Apache-2.0"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-log = { version = "0.4.17" }
-memmap2 = "0.5.3"
-modular-bitfield = "0.11.2"
-rand = "0.7.0"
-domichain-measure = { path = "../measure", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-tempfile = "3.3.0"
+bv = { workspace = true, features = ["serde"] }
+log = { workspace = true }
+memmap2 = { workspace = true }
+modular-bitfield = { workspace = true }
+num_enum = { workspace = true }
+rand = { workspace = true }
+domichain-measure = { workspace = true }
+domichain-sdk = { workspace = true }
+tempfile = { workspace = true }
 
 [dev-dependencies]
-fs_extra = "1.2.0"
-rayon = "1.5.3"
-domichain-logger = { path = "../logger", version = "=1.11.1" }
+fs_extra = { workspace = true }
+rayon = { workspace = true }
+domichain-logger = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

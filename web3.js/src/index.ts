@@ -31,4 +31,4 @@ export * from './util/cluster';
 /**
  * There are 1-billion lamports in one DOMI
  */
-export const LAMPORTS_PER_SOL = 1000000000;
+export const LAMPORTS_PER_DOMI = 1000000000;

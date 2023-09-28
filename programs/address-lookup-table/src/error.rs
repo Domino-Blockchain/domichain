@@ -1,5 +1,5 @@
-#[cfg(not(target_os = "domichain"))]
-use domichain_sdk::transaction::TransactionError;
+#[cfg(not(target_os = "wasi"))]
+use domichain_program::message::AddressLoaderError;
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
@@ -21,14 +21,14 @@ pub enum AddressLookupError {
     InvalidLookupIndex,
 }
 
-#[cfg(not(target_os = "domichain"))]
-impl From<AddressLookupError> for TransactionError {
+#[cfg(not(target_os = "wasi"))]
+impl From<AddressLookupError> for AddressLoaderError {
     fn from(err: AddressLookupError) -> Self {
         match err {
-            AddressLookupError::LookupTableAccountNotFound => Self::AddressLookupTableNotFound,
-            AddressLookupError::InvalidAccountOwner => Self::InvalidAddressLookupTableOwner,
-            AddressLookupError::InvalidAccountData => Self::InvalidAddressLookupTableData,
-            AddressLookupError::InvalidLookupIndex => Self::InvalidAddressLookupTableIndex,
+            AddressLookupError::LookupTableAccountNotFound => Self::LookupTableAccountNotFound,
+            AddressLookupError::InvalidAccountOwner => Self::InvalidAccountOwner,
+            AddressLookupError::InvalidAccountData => Self::InvalidAccountData,
+            AddressLookupError::InvalidLookupIndex => Self::InvalidLookupIndex,
         }
     }
 }

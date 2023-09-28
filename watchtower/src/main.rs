@@ -5,16 +5,18 @@ use {
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg},
     log::*,
     domichain_clap_utils::{
+        hidden_unless_forced,
         input_parsers::pubkeys_of,
-        input_validators::{is_parsable, is_pubkey_or_keypair, is_url},
+        input_validators::{is_parsable, is_pubkey_or_keypair, is_url, is_valid_percentage},
     },
     domichain_cli_output::display::format_labeled_address,
-    domichain_client::{client_error, rpc_client::RpcClient, rpc_response::RpcVoteAccountStatus},
     domichain_metrics::{datapoint_error, datapoint_info},
-    domichain_notifier::Notifier,
+    domichain_notifier::{NotificationType, Notifier},
+    domichain_rpc_client::rpc_client::RpcClient,
+    domichain_rpc_client_api::{client_error, response::RpcVoteAccountStatus},
     domichain_sdk::{
         hash::Hash,
-        native_token::{sol_to_lamports, Domi},
+        native_token::{domi_to_lamports, Domi},
         pubkey::Pubkey,
     },
     std::{
@@ -30,10 +32,13 @@ struct Config {
     ignore_http_bad_gateway: bool,
     interval: Duration,
     json_rpc_url: String,
+    rpc_timeout: Duration,
     minimum_validator_identity_balance: u64,
     monitor_active_stake: bool,
+    active_stake_alert_threshold: u8,
     unhealthy_threshold: usize,
     validator_identity_pubkeys: Vec<Pubkey>,
+    name_suffix: String,
 }
 
 fn get_config() -> Config {
@@ -41,7 +46,7 @@ fn get_config() -> Config {
         .about(crate_description!())
         .version(domichain_version::version!())
         .after_help("ADDITIONAL HELP:
-        To receive a Slack, Discord and/or Telegram notification on sanity failure,
+        To receive a Slack, Discord, PagerDuty and/or Telegram notification on sanity failure,
         define environment variables before running `domichain-watchtower`:
 
         export SLACK_WEBHOOK=...
@@ -51,6 +56,10 @@ fn get_config() -> Config {
 
         export TELEGRAM_BOT_TOKEN=...
         export TELEGRAM_CHAT_ID=...
+
+        PagerDuty requires an Integration Key from the Events API v2 (Add this integration to your PagerDuty service to get this)
+
+        export PAGERDUTY_INTEGRATION_KEY=...
 
         To receive a Twilio SMS notification on failure, having a Twilio account,
         and a sending number owned by that account,
@@ -78,6 +87,14 @@ fn get_config() -> Config {
                 .takes_value(true)
                 .validator(is_url)
                 .help("JSON RPC URL for the cluster"),
+        )
+        .arg(
+            Arg::with_name("rpc_timeout")
+                .long("rpc-timeout")
+                .value_name("SECONDS")
+                .takes_value(true)
+                .default_value("30")
+                .help("Timeout value for RPC requests"),
         )
         .arg(
             Arg::with_name("interval")
@@ -117,13 +134,22 @@ fn get_config() -> Config {
             // Deprecated parameter, now always enabled
             Arg::with_name("no_duplicate_notifications")
                 .long("no-duplicate-notifications")
-                .hidden(true)
+                .hidden(hidden_unless_forced())
         )
         .arg(
             Arg::with_name("monitor_active_stake")
                 .long("monitor-active-stake")
                 .takes_value(false)
-                .help("Alert when the current stake for the cluster drops below 80%"),
+                .help("Alert when the current stake for the cluster drops below the amount specified by --active-stake-alert-threshold"),
+        )
+        .arg(
+            Arg::with_name("active_stake_alert_threshold")
+                .long("active-stake-alert-threshold")
+                .value_name("PERCENTAGE")
+                .takes_value(true)
+                .validator(is_valid_percentage)
+                .default_value("80")
+                .help("Alert when the current stake for the cluster drops below this value"),
         )
         .arg(
             Arg::with_name("ignore_http_bad_gateway")
@@ -133,6 +159,14 @@ fn get_config() -> Config {
                     This flag can help reduce false positives, at the expense of \
                     no alerting should a Bad Gateway error be a side effect of \
                     the real problem")
+        )
+        .arg(
+            Arg::with_name("name_suffix")
+                .long("name-suffix")
+                .value_name("SUFFIX")
+                .takes_value(true)
+                .default_value("")
+                .help("Add this string into all notification messages after \"domichain-watchtower\"")
         )
         .get_matches();
 
@@ -144,30 +178,39 @@ fn get_config() -> Config {
 
     let interval = Duration::from_secs(value_t_or_exit!(matches, "interval", u64));
     let unhealthy_threshold = value_t_or_exit!(matches, "unhealthy_threshold", usize);
-    let minimum_validator_identity_balance = sol_to_lamports(value_t_or_exit!(
+    let minimum_validator_identity_balance = domi_to_lamports(value_t_or_exit!(
         matches,
         "minimum_validator_identity_balance",
         f64
     ));
     let json_rpc_url =
         value_t!(matches, "json_rpc_url", String).unwrap_or_else(|_| config.json_rpc_url.clone());
+    let rpc_timeout = value_t_or_exit!(matches, "rpc_timeout", u64);
+    let rpc_timeout = Duration::from_secs(rpc_timeout);
     let validator_identity_pubkeys: Vec<_> = pubkeys_of(&matches, "validator_identities")
         .unwrap_or_default()
         .into_iter()
         .collect();
 
     let monitor_active_stake = matches.is_present("monitor_active_stake");
+    let active_stake_alert_threshold =
+        value_t_or_exit!(matches, "active_stake_alert_threshold", u8);
     let ignore_http_bad_gateway = matches.is_present("ignore_http_bad_gateway");
+
+    let name_suffix = value_t_or_exit!(matches, "name_suffix", String);
 
     let config = Config {
         address_labels: config.address_labels,
         ignore_http_bad_gateway,
         interval,
         json_rpc_url,
+        rpc_timeout,
         minimum_validator_identity_balance,
         monitor_active_stake,
+        active_stake_alert_threshold,
         unhealthy_threshold,
         validator_identity_pubkeys,
+        name_suffix,
     };
 
     info!("RPC URL: {}", config.json_rpc_url);
@@ -208,13 +251,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let config = get_config();
 
-    let rpc_client = RpcClient::new(config.json_rpc_url.clone());
+    let rpc_client = RpcClient::new_with_timeout(config.json_rpc_url.clone(), config.rpc_timeout);
     let notifier = Notifier::default();
     let mut last_transaction_count = 0;
     let mut last_recent_blockhash = Hash::default();
     let mut last_notification_msg = "".into();
     let mut num_consecutive_failures = 0;
     let mut last_success = Instant::now();
+    let mut incident = Hash::new_unique();
 
     loop {
         let failure = match get_cluster_info(&config, &rpc_client) {
@@ -256,8 +300,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     failures.push((
                         "transaction-count",
                         format!(
-                            "Transaction count is not advancing: {} <= {}",
-                            transaction_count, last_transaction_count
+                            "Transaction count is not advancing: {transaction_count} <= {last_transaction_count}"
                         ),
                     ));
                 }
@@ -267,14 +310,16 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 } else {
                     failures.push((
                         "recent-blockhash",
-                        format!("Unable to get new blockhash: {}", recent_blockhash),
+                        format!("Unable to get new blockhash: {recent_blockhash}"),
                     ));
                 }
 
-                if config.monitor_active_stake && current_stake_percent < 80. {
+                if config.monitor_active_stake
+                    && current_stake_percent < config.active_stake_alert_threshold as f64
+                {
                     failures.push((
                         "current-stake",
-                        format!("Current stake is {:.2}%", current_stake_percent),
+                        format!("Current stake is {current_stake_percent:.2}%"),
                     ));
                 }
 
@@ -289,14 +334,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                         .iter()
                         .any(|vai| vai.node_pubkey == *validator_identity.to_string())
                     {
-                        validator_errors
-                            .push(format!("{} delinquent", formatted_validator_identity));
+                        validator_errors.push(format!("{formatted_validator_identity} delinquent"));
                     } else if !vote_accounts
                         .current
                         .iter()
                         .any(|vai| vai.node_pubkey == *validator_identity.to_string())
                     {
-                        validator_errors.push(format!("{} missing", formatted_validator_identity));
+                        validator_errors.push(format!("{formatted_validator_identity} missing"));
                     }
 
                     if let Some(balance) = validator_balances.get(validator_identity) {
@@ -321,7 +365,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             Err(err) => {
                 let mut failure = Some(("rpc-error", err.to_string()));
 
-                if let client_error::ClientErrorKind::Reqwest(reqwest_err) = err.kind() {
+                if let client_error::ErrorKind::Reqwest(reqwest_err) = err.kind() {
                     if let Some(client_error::reqwest::StatusCode::BAD_GATEWAY) =
                         reqwest_err.status()
                     {
@@ -337,14 +381,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         if let Some((failure_test_name, failure_error_message)) = &failure {
             let notification_msg = format!(
-                "domichain-watchtower: Error: {}: {}",
-                failure_test_name, failure_error_message
+                "domichain-watchtower{}: Error: {}: {}",
+                config.name_suffix, failure_test_name, failure_error_message
             );
             num_consecutive_failures += 1;
             if num_consecutive_failures > config.unhealthy_threshold {
                 datapoint_info!("watchtower-sanity", ("ok", false, bool));
                 if last_notification_msg != notification_msg {
-                    notifier.send(&notification_msg);
+                    notifier.send(&notification_msg, &NotificationType::Trigger { incident });
                 }
                 datapoint_error!(
                     "watchtower-sanity-failure",
@@ -370,11 +414,15 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     humantime::format_duration(alarm_duration)
                 );
                 info!("{}", all_clear_msg);
-                notifier.send(&format!("domichain-watchtower: {}", all_clear_msg));
+                notifier.send(
+                    &format!("domichain-watchtower{}: {}", config.name_suffix, all_clear_msg),
+                    &NotificationType::Resolve { incident },
+                );
             }
             last_notification_msg = "".into();
             last_success = Instant::now();
             num_consecutive_failures = 0;
+            incident = Hash::new_unique();
         }
         sleep(config.interval);
     }

@@ -8,8 +8,13 @@
 //! [`invoke_signed`]: invoke_signed
 //! [cpi]: https://docs.domichain.com/developing/programming-model/calling-between-programs
 
+use std::{mem::{size_of, transmute, size_of_val}, rc::Rc, cell::RefCell};
+
+use borsh::BorshSerialize;
+
 use crate::{
-    account_info::AccountInfo, entrypoint::ProgramResult, instruction::Instruction, pubkey::Pubkey,
+    account_info::{AccountInfo, AccountInfoFromWasm, AccountInfoRaw}, entrypoint::ProgramResult, instruction::{Instruction, AccountMeta}, pubkey::Pubkey,
+    stable_layout::{stable_instruction::{StableInstruction, StableInstructionFixed}, stable_vec::{StableVecFixed, StableVec}}, msg, dbg_syscall,
 };
 
 /// Invoke a cross-program instruction.
@@ -23,6 +28,8 @@ use crate::{
 /// required by the callee program must transitively be required by the caller
 /// program, and provided by _its_ caller. The same is true of the program ID of
 /// the called program.
+///
+/// [entrypoint!]: crate::entrypoint!
 ///
 /// The `Instruction` is usually built from within the calling program, but may
 /// be deserialized from an external source.
@@ -286,17 +293,114 @@ pub fn invoke_signed(
 pub fn invoke_signed_unchecked(
     instruction: &Instruction,
     account_infos: &[AccountInfo],
-    signers_seeds: &[&[&[u8]]],
+    signers_seeds_: &[&[&[u8]]],
 ) -> ProgramResult {
-    #[cfg(target_os = "domichain")]
+    // FIXME: we prevent AccessViolation here
+    let signers_seeds_owned: Vec<_> = signers_seeds_.into_iter().map(|s| {
+        s.into_iter().map(|s2| {
+            Vec::from(*s2)
+        }).collect::<Vec<_>>()
+    }).collect();
+
+    #[derive(Debug, BorshSerialize)]
+    struct SignersSeedsOwned(pub Vec<Vec<Vec<u8>>>);
+
+    let signers_seeds_serialized = SignersSeedsOwned(signers_seeds_owned.clone())
+        .try_to_vec()
+        .unwrap();
+    let signers_seeds_serialized_slice = signers_seeds_serialized.as_slice();
+
+    fn vecs_to_slices<T>(vecs: &[Vec<T>]) -> Vec<&[T]> {
+        vecs.iter().map(Vec::as_slice).collect()
+    }
+
+    let t: Vec<&[Vec<u8>]> = vecs_to_slices(&signers_seeds_owned);
+    let t2: Vec<Vec<&[u8]>> = t.iter().map(|s| vecs_to_slices(*s)).collect();
+    let t3: Vec<&[&[u8]]> = t2.iter().map(|v| v.as_slice()).collect();
+    let signers_seeds: &[&[&[u8]]] = t3.as_slice();
+
+    fn as_bytes<T>(t: &T) -> &[u8] {
+        unsafe { &transmute::<&T, &[u8; 1024]>(t)[..size_of::<T>()] }
+    }
+
+    // as_bytes(&instruction.program_id);
+    // as_bytes(&instruction.accounts);
+    // as_bytes(&instruction.data);
+
+    for i in 0..account_infos.len() {
+        dbg_syscall!(&account_infos[i]);
+    }
+
+    #[cfg(target_os = "wasi")]
     {
+        // dbg_syscall!(format_args!("{signers_seeds_owned:?}"));
+        
+        // dbg_syscall!(format_args!("{signers_seeds_:?}"));
+        // dbg_syscall!(signers_seeds_.len());
+        // dbg_syscall!(format_args!("{:?}", signers_seeds_.iter().map(|s| s.len()).collect::<Vec<_>>()));
+
+        // let signers_seeds_dbg: Vec<_> = signers_seeds_
+        //     .into_iter()
+        //     .map(|s| s.into_iter().map(|ss| Pubkey::try_from(*ss).map_err(|_| ss)).collect::<Vec<_>>())
+        //     .collect();
+        // dbg_syscall!(format_args!("{signers_seeds_dbg:?}"));
+        // dbg_syscall!(signers_seeds_dbg.len());
+        // dbg_syscall!(format_args!("{:?}", signers_seeds_dbg.iter().map(|s| s.len()).collect::<Vec<_>>()));
+
+        // dbg_syscall!(format_args!("{signers_seeds_serialized_slice:?}"));
+
+        // dbg_syscall!(format_args!("{:?}", as_bytes(instruction)));
+        // dbg_syscall!(as_bytes(instruction).len());
+
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.program_id)));
+        // dbg_syscall!(as_bytes(&instruction.program_id).len());
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.accounts)));
+        // dbg_syscall!(as_bytes(&instruction.accounts).len());
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.data)));
+        // dbg_syscall!(as_bytes(&instruction.data).len());
+
+
+        let instruction = StableInstruction::from(instruction.clone());
+        // dbg_syscall!(&instruction);
+        let instruction = Box::new(StableInstructionFixed::from(instruction));
+        // dbg_syscall!(&instruction);
+
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&*instruction)));
+        // dbg_syscall!(as_bytes(&*instruction).len());
+
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.program_id)));
+        // dbg_syscall!(as_bytes(&instruction.program_id).len());
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.accounts)));
+        // dbg_syscall!(as_bytes(&instruction.accounts).len());
+        // dbg_syscall!(format_args!("{:?}", as_bytes(&instruction.data)));
+        // dbg_syscall!(as_bytes(&instruction.data).len());
+
+        // dbg_syscall!(size_of::<StableInstruction>());
+        // dbg_syscall!(size_of::<StableVec<AccountMeta>>());
+        // dbg_syscall!(size_of::<StableVec<u8>>());
+        // dbg_syscall!(size_of::<StableInstructionFixed>());
+        // dbg_syscall!(size_of::<StableVecFixed<AccountMeta>>());
+        // dbg_syscall!(size_of::<StableVecFixed<u8>>());
+        // dbg_syscall!(size_of::<AccountMeta>());
+        dbg_syscall!(size_of::<AccountInfo>());
+        dbg_syscall!(size_of::<AccountInfoRaw>());
+
+        let account_infos: Vec<_> = account_infos
+            .into_iter()
+            .map(|i| i.into_raw())
+            .collect();
+        for i in 0..account_infos.len() {
+            dbg_syscall!(&account_infos[i]);
+        }
+        dbg_syscall!(account_infos.len());
+
         let result = unsafe {
             crate::syscalls::sol_invoke_signed_rust(
-                instruction as *const _ as *const u8,
-                account_infos as *const _ as *const u8,
+                &*instruction as *const _ as *const u8,
+                account_infos.as_slice() as *const _ as *const u8,
                 account_infos.len() as u64,
-                signers_seeds as *const _ as *const u8,
-                signers_seeds.len() as u64,
+                signers_seeds_serialized_slice as *const _ as *const u8,
+                signers_seeds_serialized_slice.len() as u64,
             )
         };
         match result {
@@ -305,7 +409,7 @@ pub fn invoke_signed_unchecked(
         }
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_invoke_signed(instruction, account_infos, signers_seeds)
 }
 
@@ -320,12 +424,12 @@ pub const MAX_RETURN_DATA: usize = 1024;
 /// The maximum size of return data is [`MAX_RETURN_DATA`]. Return data is
 /// retrieved by the caller with [`get_return_data`].
 pub fn set_return_data(data: &[u8]) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_set_return_data(data.as_ptr(), data.len() as u64)
     };
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_set_return_data(data)
 }
 
@@ -359,7 +463,7 @@ pub fn set_return_data(data: &[u8]) {
 ///
 /// [rdp]: https://docs.domichain.com/proposals/return-data
 pub fn get_return_data() -> Option<(Pubkey, Vec<u8>)> {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     {
         use std::cmp::min;
 
@@ -382,7 +486,7 @@ pub fn get_return_data() -> Option<(Pubkey, Vec<u8>)> {
         }
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_get_return_data()
 }
 
@@ -430,17 +534,18 @@ pub fn check_type_assumptions() {
             accounts: vec![account_meta1.clone(), account_meta2.clone()],
             data: data.clone(),
         };
+        let instruction = StableInstruction::from(instruction);
         let instruction_addr = &instruction as *const _ as u64;
 
         // program id
-        assert_eq!(offset_of!(Instruction, program_id), 48);
+        assert_eq!(offset_of!(StableInstruction, program_id), 48);
         let pubkey_ptr = (instruction_addr + 48) as *const Pubkey;
         unsafe {
             assert_eq!(*pubkey_ptr, pubkey1);
         }
 
         // accounts
-        assert_eq!(offset_of!(Instruction, accounts), 0);
+        assert_eq!(offset_of!(StableInstruction, accounts), 0);
         let accounts_ptr = (instruction_addr) as *const *const AccountMeta;
         let accounts_cap = (instruction_addr + 8) as *const usize;
         let accounts_len = (instruction_addr + 16) as *const usize;
@@ -453,7 +558,7 @@ pub fn check_type_assumptions() {
         }
 
         // data
-        assert_eq!(offset_of!(Instruction, data), 24);
+        assert_eq!(offset_of!(StableInstruction, data), 24);
         let data_ptr = (instruction_addr + 24) as *const *const [u8; 5];
         let data_cap = (instruction_addr + 24 + 8) as *const usize;
         let data_len = (instruction_addr + 24 + 16) as *const usize;
@@ -491,20 +596,6 @@ pub fn check_type_assumptions() {
             assert_eq!(**key_ptr, key);
         }
 
-        // is_signer
-        assert_eq!(offset_of!(AccountInfo, is_signer), 40);
-        let is_signer_ptr = (account_info_addr + 40) as *const bool;
-        unsafe {
-            assert!(*is_signer_ptr);
-        }
-
-        // is_writable
-        assert_eq!(offset_of!(AccountInfo, is_writable), 41);
-        let is_writable_ptr = (account_info_addr + 41) as *const bool;
-        unsafe {
-            assert!(!*is_writable_ptr);
-        }
-
         // lamports
         assert_eq!(offset_of!(AccountInfo, lamports), 8);
         let lamports_ptr = (account_info_addr + 8) as *const Rc<RefCell<&mut u64>>;
@@ -526,18 +617,32 @@ pub fn check_type_assumptions() {
             assert_eq!(**owner_ptr, owner);
         }
 
-        // executable
-        assert_eq!(offset_of!(AccountInfo, executable), 42);
-        let executable_ptr = (account_info_addr + 42) as *const bool;
-        unsafe {
-            assert!(*executable_ptr);
-        }
-
         // rent_epoch
         assert_eq!(offset_of!(AccountInfo, rent_epoch), 32);
         let renbt_epoch_ptr = (account_info_addr + 32) as *const Epoch;
         unsafe {
             assert_eq!(*renbt_epoch_ptr, 42);
+        }
+
+        // is_signer
+        assert_eq!(offset_of!(AccountInfo, is_signer), 40);
+        let is_signer_ptr = (account_info_addr + 40) as *const bool;
+        unsafe {
+            assert!(*is_signer_ptr);
+        }
+
+        // is_writable
+        assert_eq!(offset_of!(AccountInfo, is_writable), 41);
+        let is_writable_ptr = (account_info_addr + 41) as *const bool;
+        unsafe {
+            assert!(!*is_writable_ptr);
+        }
+
+        // executable
+        assert_eq!(offset_of!(AccountInfo, executable), 42);
+        let executable_ptr = (account_info_addr + 42) as *const bool;
+        unsafe {
+            assert!(*executable_ptr);
         }
     }
 }

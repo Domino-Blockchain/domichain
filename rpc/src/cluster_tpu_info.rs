@@ -1,24 +1,24 @@
 use {
-    domichain_gossip::cluster_info::ClusterInfo,
+    domichain_gossip::{cluster_info::ClusterInfo, contact_info::Protocol},
     domichain_poh::poh_recorder::PohRecorder,
     domichain_sdk::{clock::NUM_CONSECUTIVE_LEADER_SLOTS, pubkey::Pubkey},
     domichain_send_transaction_service::tpu_info::TpuInfo,
     std::{
         collections::HashMap,
         net::SocketAddr,
-        sync::{Arc, Mutex},
+        sync::{Arc, RwLock},
     },
 };
 
 #[derive(Clone)]
 pub struct ClusterTpuInfo {
     cluster_info: Arc<ClusterInfo>,
-    poh_recorder: Arc<Mutex<PohRecorder>>,
-    recent_peers: HashMap<Pubkey, SocketAddr>,
+    poh_recorder: Arc<RwLock<PohRecorder>>,
+    recent_peers: HashMap<Pubkey, (SocketAddr, SocketAddr)>, // values are socket address for UDP and QUIC protocols
 }
 
 impl ClusterTpuInfo {
-    pub fn new(cluster_info: Arc<ClusterInfo>, poh_recorder: Arc<Mutex<PohRecorder>>) -> Self {
+    pub fn new(cluster_info: Arc<ClusterInfo>, poh_recorder: Arc<RwLock<PohRecorder>>) -> Self {
         Self {
             cluster_info,
             poh_recorder,
@@ -33,19 +33,30 @@ impl TpuInfo for ClusterTpuInfo {
             .cluster_info
             .tpu_peers()
             .into_iter()
-            .map(|ci| (ci.id, ci.tpu))
+            .filter_map(|node| {
+                Some((
+                    *node.pubkey(),
+                    (
+                        node.tpu(Protocol::UDP).ok()?,
+                        node.tpu(Protocol::QUIC).ok()?,
+                    ),
+                ))
+            })
             .collect();
     }
 
-    fn get_leader_tpus(&self, max_count: u64) -> Vec<&SocketAddr> {
-        let recorder = self.poh_recorder.lock().unwrap();
+    fn get_leader_tpus(&self, max_count: u64, protocol: Protocol) -> Vec<&SocketAddr> {
+        let recorder = self.poh_recorder.read().unwrap();
         let leaders: Vec<_> = (0..max_count)
             .filter_map(|i| recorder.leader_after_n_slots(i * NUM_CONSECUTIVE_LEADER_SLOTS))
             .collect();
         drop(recorder);
         let mut unique_leaders = vec![];
         for leader in leaders.iter() {
-            if let Some(addr) = self.recent_peers.get(leader) {
+            if let Some(addr) = self.recent_peers.get(leader).map(|addr| match protocol {
+                Protocol::UDP => &addr.0,
+                Protocol::QUIC => &addr.1,
+            }) {
                 if !unique_leaders.contains(&addr) {
                     unique_leaders.push(addr);
                 }
@@ -71,11 +82,12 @@ mod test {
         },
         domichain_sdk::{
             poh_config::PohConfig,
+            quic::QUIC_PORT_OFFSET,
             signature::{Keypair, Signer},
             timing::timestamp,
         },
         domichain_streamer::socket::SocketAddrSpace,
-        std::sync::atomic::AtomicBool,
+        std::{net::Ipv4Addr, sync::atomic::AtomicBool},
     };
 
     #[test]
@@ -106,9 +118,9 @@ mod test {
                 Some((2, 2)),
                 bank.ticks_per_slot(),
                 &Pubkey::default(),
-                &Arc::new(blockstore),
+                Arc::new(blockstore),
                 &Arc::new(LeaderScheduleCache::new_from_bank(&bank)),
-                &Arc::new(PohConfig::default()),
+                &PohConfig::default(),
                 Arc::new(AtomicBool::default()),
             );
 
@@ -119,9 +131,18 @@ mod test {
                 SocketAddrSpace::Unspecified,
             ));
 
-            let validator0_socket = SocketAddr::from(([127, 0, 0, 1], 1111));
-            let validator1_socket = SocketAddr::from(([127, 0, 0, 1], 2222));
-            let validator2_socket = SocketAddr::from(([127, 0, 0, 1], 3333));
+            let validator0_socket = (
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 1111)),
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 1111 + QUIC_PORT_OFFSET)),
+            );
+            let validator1_socket = (
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 2222)),
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 2222 + QUIC_PORT_OFFSET)),
+            );
+            let validator2_socket = (
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 3333)),
+                SocketAddr::from((Ipv4Addr::LOCALHOST, 3333 + QUIC_PORT_OFFSET)),
+            );
             let recent_peers: HashMap<_, _> = vec![
                 (
                     validator_vote_keypairs0.node_keypair.pubkey(),
@@ -141,7 +162,7 @@ mod test {
             .collect();
             let leader_info = ClusterTpuInfo {
                 cluster_info,
-                poh_recorder: Arc::new(Mutex::new(poh_recorder)),
+                poh_recorder: Arc::new(RwLock::new(poh_recorder)),
                 recent_peers: recent_peers.clone(),
             };
 
@@ -149,8 +170,8 @@ mod test {
             let first_leader =
                 domichain_ledger::leader_schedule_utils::slot_leader_at(slot, &bank).unwrap();
             assert_eq!(
-                leader_info.get_leader_tpus(1),
-                vec![recent_peers.get(&first_leader).unwrap()]
+                leader_info.get_leader_tpus(1, Protocol::UDP),
+                vec![&recent_peers.get(&first_leader).unwrap().0]
             );
 
             let second_leader = domichain_ledger::leader_schedule_utils::slot_leader_at(
@@ -159,11 +180,14 @@ mod test {
             )
             .unwrap();
             let mut expected_leader_sockets = vec![
-                recent_peers.get(&first_leader).unwrap(),
-                recent_peers.get(&second_leader).unwrap(),
+                &recent_peers.get(&first_leader).unwrap().0,
+                &recent_peers.get(&second_leader).unwrap().0,
             ];
             expected_leader_sockets.dedup();
-            assert_eq!(leader_info.get_leader_tpus(2), expected_leader_sockets);
+            assert_eq!(
+                leader_info.get_leader_tpus(2, Protocol::UDP),
+                expected_leader_sockets
+            );
 
             let third_leader = domichain_ledger::leader_schedule_utils::slot_leader_at(
                 slot + (2 * NUM_CONSECUTIVE_LEADER_SLOTS),
@@ -171,15 +195,18 @@ mod test {
             )
             .unwrap();
             let mut expected_leader_sockets = vec![
-                recent_peers.get(&first_leader).unwrap(),
-                recent_peers.get(&second_leader).unwrap(),
-                recent_peers.get(&third_leader).unwrap(),
+                &recent_peers.get(&first_leader).unwrap().0,
+                &recent_peers.get(&second_leader).unwrap().0,
+                &recent_peers.get(&third_leader).unwrap().0,
             ];
             expected_leader_sockets.dedup();
-            assert_eq!(leader_info.get_leader_tpus(3), expected_leader_sockets);
+            assert_eq!(
+                leader_info.get_leader_tpus(3, Protocol::UDP),
+                expected_leader_sockets
+            );
 
             for x in 4..8 {
-                assert!(leader_info.get_leader_tpus(x).len() <= recent_peers.len());
+                assert!(leader_info.get_leader_tpus(x, Protocol::UDP).len() <= recent_peers.len());
             }
         }
         Blockstore::destroy(&ledger_path).unwrap();

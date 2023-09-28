@@ -33,7 +33,7 @@ mod test {
         super::*,
         crate::parse_token::test::*,
         domichain_sdk::pubkey::Pubkey,
-        spl_token_2022::{instruction::reallocate, solana_program::message::Message},
+        spl_token_2022::{instruction::reallocate, domichain_program::message::Message},
     };
 
     #[test]
@@ -62,7 +62,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -98,7 +98,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&convert_account_keys(&message), None)
+                &AccountKeys::new(&message.account_keys, None)
             )
             .unwrap(),
             ParsedInstructionEnum {

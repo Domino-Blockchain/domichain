@@ -1,4 +1,8 @@
-#![cfg(feature = "full")]
+//! Calculation of [shred] versions.
+//!
+//! [shred]: https://docs.solana.com/terminology#shred
+
+#![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
 use domichain_sdk::{
     hard_forks::HardForks,

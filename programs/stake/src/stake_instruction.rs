@@ -3,14 +3,15 @@ use {
         config,
         stake_state::{
             authorize, authorize_with_seed, deactivate, deactivate_delinquent, delegate,
-            initialize, merge, set_lockup, split, withdraw,
+            initialize, merge, redelegate, set_lockup, split, withdraw,
         },
     },
     log::*,
     domichain_program_runtime::{
-        invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
+        declare_process_instruction, sysvar_cache::get_sysvar_with_account_check,
     },
     domichain_sdk::{
+        clock::Clock,
         feature_set,
         instruction::InstructionError,
         program_utils::limited_deserialize,
@@ -20,15 +21,14 @@ use {
             program::id,
             state::{Authorized, Lockup},
         },
-        sysvar::clock::Clock,
-        transaction_context::{InstructionContext, TransactionContext},
+        transaction_context::{IndexOfAccount, InstructionContext, TransactionContext},
     },
 };
 
 fn get_optional_pubkey<'a>(
     transaction_context: &'a TransactionContext,
     instruction_context: &'a InstructionContext,
-    instruction_account_index: usize,
+    instruction_account_index: IndexOfAccount,
     should_be_signer: bool,
 ) -> Result<Option<&'a Pubkey>, InstructionError> {
     Ok(
@@ -51,10 +51,7 @@ fn get_optional_pubkey<'a>(
     )
 }
 
-pub fn process_instruction(
-    _first_instruction_account: usize,
-    invoke_context: &mut InvokeContext,
-) -> Result<(), InstructionError> {
+declare_process_instruction!(process_instruction, 750, |invoke_context| {
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let data = instruction_context.get_instruction_data();
@@ -69,7 +66,7 @@ pub fn process_instruction(
         Ok(me)
     };
 
-    let signers = instruction_context.get_signers(transaction_context);
+    let signers = instruction_context.get_signers(transaction_context)?;
     match limited_deserialize(data) {
         Ok(StakeInstruction::Initialize(authorized, lockup)) => {
             let mut me = get_stake_account()?;
@@ -177,6 +174,7 @@ pub fn process_instruction(
             let config = config::from(&config_account).ok_or(InstructionError::InvalidArgument)?;
             drop(config_account);
             delegate(
+                invoke_context,
                 transaction_context,
                 instruction_context,
                 0,
@@ -424,6 +422,50 @@ pub fn process_instruction(
                 Err(InstructionError::InvalidInstructionData)
             }
         }
+        Ok(StakeInstruction::Redelegate) => {
+            let mut me = get_stake_account()?;
+            if invoke_context
+                .feature_set
+                .is_active(&feature_set::stake_redelegate_instruction::id())
+            {
+                instruction_context.check_number_of_instruction_accounts(3)?;
+                let config_account =
+                    instruction_context.try_borrow_instruction_account(transaction_context, 3)?;
+                if !config::check_id(config_account.get_key()) {
+                    return Err(InstructionError::InvalidArgument);
+                }
+                let config =
+                    config::from(&config_account).ok_or(InstructionError::InvalidArgument)?;
+                drop(config_account);
+
+                redelegate(
+                    invoke_context,
+                    transaction_context,
+                    instruction_context,
+                    &mut me,
+                    1,
+                    2,
+                    &config,
+                    &signers,
+                )
+            } else {
+                Err(InstructionError::InvalidInstructionData)
+            }
+        }
+        // In order to prevent consensus issues, any new StakeInstruction variant added before the
+        // `add_get_minimum_delegation_instruction_to_stake_program` is activated needs to check
+        // the validity of the stake account by calling the `get_stake_account()` method outside
+        // its own feature gate, as per the following pattern:
+        //  ```
+        //  Ok(StakeInstruction::Variant) -> {
+        //      let mut me = get_stake_account()?;
+        //      if invoke_context
+        //         .feature_set
+        //         .is_active(&feature_set::stake_variant_feature::id()) { .. }
+        //  }
+        // ```
+        // TODO: Remove this comment when `add_get_minimum_delegation_instruction_to_stake_program`
+        // is cleaned up
         Err(err) => {
             if !invoke_context.feature_set.is_active(
                 &feature_set::add_get_minimum_delegation_instruction_to_stake_program::id(),
@@ -433,7 +475,7 @@ pub fn process_instruction(
             Err(err)
         }
     }
-}
+});
 
 #[cfg(test)]
 mod tests {
@@ -449,7 +491,10 @@ mod tests {
             invoke_context::mock_process_instruction, sysvar_cache::SysvarCache,
         },
         domichain_sdk::{
-            account::{self, AccountSharedData, ReadableAccount, WritableAccount},
+            account::{
+                create_account_shared_data_for_test, AccountSharedData, ReadableAccount,
+                WritableAccount,
+            },
             account_utils::StateMut,
             clock::{Epoch, UnixTimestamp},
             feature_set::FeatureSet,
@@ -463,15 +508,46 @@ mod tests {
                     set_lockup_checked, AuthorizeCheckedWithSeedArgs, AuthorizeWithSeedArgs,
                     LockupArgs, StakeError,
                 },
-                state::{Authorized, Lockup, StakeAuthorize},
+                state::{Authorized, Lockup, StakeActivationStatus, StakeAuthorize},
                 MINIMUM_DELINQUENT_EPOCHS_FOR_DEACTIVATION,
             },
             stake_history::{StakeHistory, StakeHistoryEntry},
-            system_program, sysvar,
+            system_program,
+            sysvar::{clock, rent, rewards, stake_history},
         },
         domichain_vote_program::vote_state::{self, VoteState, VoteStateVersions},
-        std::{borrow::BorrowMut, collections::HashSet, str::FromStr, sync::Arc},
+        std::{
+            borrow::{Borrow, BorrowMut},
+            collections::HashSet,
+            str::FromStr,
+            sync::Arc,
+        },
+        test_case::test_case,
     };
+
+    /// The "new" behavior enables all features
+    fn feature_set_new_behavior() -> Arc<FeatureSet> {
+        Arc::new(FeatureSet::all_enabled())
+    }
+
+    /// The "old" behavior is before the stake minimum delegation was raised
+    fn feature_set_old_behavior() -> Arc<FeatureSet> {
+        let mut feature_set = feature_set_new_behavior();
+        Arc::get_mut(&mut feature_set)
+            .unwrap()
+            .deactivate(&feature_set::stake_raise_minimum_delegation_to_1_domi::id());
+        feature_set
+    }
+
+    /// The "old old" behavior is both before the stake minimum delegation was raised *and* before
+    /// undelegated stake accounts could have zero lamports beyond rent
+    fn feature_set_old_old_behavior() -> Arc<FeatureSet> {
+        let mut feature_set = feature_set_old_behavior();
+        Arc::get_mut(&mut feature_set)
+            .unwrap()
+            .deactivate(&feature_set::stake_allow_zero_undelegated_amount::id());
+        feature_set
+    }
 
     fn create_default_account() -> AccountSharedData {
         AccountSharedData::new(0, 0, &Pubkey::new_unique())
@@ -498,28 +574,10 @@ mod tests {
     }
 
     fn process_instruction(
-        feature_set: &FeatureSet,
+        feature_set: Arc<FeatureSet>,
         instruction_data: &[u8],
         transaction_accounts: Vec<(Pubkey, AccountSharedData)>,
         instruction_accounts: Vec<AccountMeta>,
-        expected_result: Result<(), InstructionError>,
-    ) -> Vec<AccountSharedData> {
-        process_instruction_with_overrides(
-            instruction_data,
-            transaction_accounts,
-            instruction_accounts,
-            None,
-            Some(Arc::new(feature_set.clone())),
-            expected_result,
-        )
-    }
-
-    fn process_instruction_with_overrides(
-        instruction_data: &[u8],
-        transaction_accounts: Vec<(Pubkey, AccountSharedData)>,
-        instruction_accounts: Vec<AccountMeta>,
-        sysvar_cache_override: Option<&SysvarCache>,
-        feature_set_override: Option<Arc<FeatureSet>>,
         expected_result: Result<(), InstructionError>,
     ) -> Vec<AccountSharedData> {
         mock_process_instruction(
@@ -528,15 +586,17 @@ mod tests {
             instruction_data,
             transaction_accounts,
             instruction_accounts,
-            sysvar_cache_override,
-            feature_set_override,
             expected_result,
             super::process_instruction,
+            |invoke_context| {
+                invoke_context.feature_set = Arc::clone(&feature_set);
+            },
+            |_invoke_context| {},
         )
     }
 
     fn process_instruction_as_one_arg(
-        feature_set: &FeatureSet,
+        feature_set: Arc<FeatureSet>,
         instruction: &Instruction,
         expected_result: Result<(), InstructionError>,
     ) -> Vec<AccountSharedData> {
@@ -545,26 +605,22 @@ mod tests {
             .iter()
             .map(|meta| meta.pubkey)
             .collect();
-        pubkeys.insert(sysvar::clock::id());
+        pubkeys.insert(clock::id());
         let transaction_accounts = pubkeys
             .iter()
             .map(|pubkey| {
                 (
                     *pubkey,
-                    if sysvar::clock::check_id(pubkey) {
-                        account::create_account_shared_data_for_test(
-                            &sysvar::clock::Clock::default(),
-                        )
-                    } else if sysvar::rewards::check_id(pubkey) {
-                        account::create_account_shared_data_for_test(
-                            &sysvar::rewards::Rewards::new(0.0),
-                        )
-                    } else if sysvar::stake_history::check_id(pubkey) {
-                        account::create_account_shared_data_for_test(&StakeHistory::default())
+                    if clock::check_id(pubkey) {
+                        create_account_shared_data_for_test(&clock::Clock::default())
+                    } else if rewards::check_id(pubkey) {
+                        create_account_shared_data_for_test(&rewards::Rewards::new(0.0))
+                    } else if stake_history::check_id(pubkey) {
+                        create_account_shared_data_for_test(&StakeHistory::default())
                     } else if stake_config::check_id(pubkey) {
                         config::create_account(0, &stake_config::Config::default())
-                    } else if sysvar::rent::check_id(pubkey) {
-                        account::create_account_shared_data_for_test(&Rent::default())
+                    } else if rent::check_id(pubkey) {
+                        create_account_shared_data_for_test(&Rent::default())
                     } else if *pubkey == invalid_stake_state_pubkey() {
                         AccountSharedData::new(0, 0, &id())
                     } else if *pubkey == invalid_vote_state_pubkey() {
@@ -578,7 +634,7 @@ mod tests {
             })
             .collect();
         process_instruction(
-            feature_set,
+            Arc::clone(&feature_set),
             &instruction.data,
             transaction_accounts,
             instruction.accounts.clone(),
@@ -599,9 +655,11 @@ mod tests {
         )
     }
 
-    fn do_test_stake_process_instruction(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_process_instruction(feature_set: Arc<FeatureSet>) {
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::initialize(
                 &Pubkey::new_unique(),
                 &Authorized::default(),
@@ -610,7 +668,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::authorize(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -621,7 +679,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::split(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -631,7 +689,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::merge(
                 &Pubkey::new_unique(),
                 &invalid_stake_state_pubkey(),
@@ -640,7 +698,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::split_with_seed(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -652,7 +710,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::delegate_stake(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -661,7 +719,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::withdraw(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -672,12 +730,12 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_stake(&Pubkey::new_unique(), &Pubkey::new_unique()),
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::set_lockup(
                 &Pubkey::new_unique(),
                 &LockupArgs::default(),
@@ -686,7 +744,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_delinquent_stake(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -695,7 +753,7 @@ mod tests {
             Err(InstructionError::IncorrectProgramId),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_delinquent_stake(
                 &Pubkey::new_unique(),
                 &invalid_vote_state_pubkey(),
@@ -704,7 +762,7 @@ mod tests {
             Err(InstructionError::InvalidAccountData),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_delinquent_stake(
                 &Pubkey::new_unique(),
                 &invalid_vote_state_pubkey(),
@@ -714,9 +772,11 @@ mod tests {
         );
     }
 
-    fn do_test_spoofed_stake_accounts(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_spoofed_stake_accounts(feature_set: Arc<FeatureSet>) {
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::initialize(
                 &spoofed_stake_state_pubkey(),
                 &Authorized::default(),
@@ -725,7 +785,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::authorize(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -736,7 +796,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::split(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -746,7 +806,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::split(
                 &Pubkey::new_unique(),
                 &Pubkey::new_unique(),
@@ -756,7 +816,7 @@ mod tests {
             Err(InstructionError::IncorrectProgramId),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::merge(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -765,7 +825,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::merge(
                 &Pubkey::new_unique(),
                 &spoofed_stake_state_pubkey(),
@@ -774,7 +834,7 @@ mod tests {
             Err(InstructionError::IncorrectProgramId),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::split_with_seed(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -786,7 +846,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::delegate_stake(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -795,7 +855,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::withdraw(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -806,12 +866,12 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_stake(&spoofed_stake_state_pubkey(), &Pubkey::new_unique()),
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::set_lockup(
                 &spoofed_stake_state_pubkey(),
                 &LockupArgs::default(),
@@ -820,7 +880,7 @@ mod tests {
             Err(InstructionError::InvalidAccountOwner),
         );
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction::deactivate_delinquent_stake(
                 &spoofed_stake_state_pubkey(),
                 &Pubkey::new_unique(),
@@ -828,26 +888,35 @@ mod tests {
             ),
             Err(InstructionError::InvalidAccountOwner),
         );
+        process_instruction_as_one_arg(
+            Arc::clone(&feature_set),
+            &instruction::redelegate(
+                &spoofed_stake_state_pubkey(),
+                &Pubkey::new_unique(),
+                &Pubkey::new_unique(),
+                &Pubkey::new_unique(),
+            )[2],
+            Err(InstructionError::InvalidAccountOwner),
+        );
     }
 
-    fn do_test_stake_process_instruction_decode_bail(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_process_instruction_decode_bail(feature_set: Arc<FeatureSet>) {
         // these will not call stake_state, have bogus contents
         let stake_address = Pubkey::new_unique();
         let stake_account = create_default_stake_account();
-        let rent_address = sysvar::rent::id();
+        let rent_address = rent::id();
         let rent = Rent::default();
-        let rent_account = account::create_account_shared_data_for_test(&rent);
-        let rewards_address = sysvar::rewards::id();
-        let rewards_account =
-            account::create_account_shared_data_for_test(&sysvar::rewards::Rewards::new(0.0));
-        let stake_history_address = sysvar::stake_history::id();
-        let stake_history_account =
-            account::create_account_shared_data_for_test(&StakeHistory::default());
+        let rent_account = create_account_shared_data_for_test(&rent);
+        let rewards_address = rewards::id();
+        let rewards_account = create_account_shared_data_for_test(&rewards::Rewards::new(0.0));
+        let stake_history_address = stake_history::id();
+        let stake_history_account = create_account_shared_data_for_test(&StakeHistory::default());
         let vote_address = Pubkey::new_unique();
         let vote_account = AccountSharedData::new(0, 0, &domichain_vote_program::id());
-        let clock_address = sysvar::clock::id();
-        let clock_account =
-            account::create_account_shared_data_for_test(&sysvar::clock::Clock::default());
+        let clock_address = clock::id();
+        let clock_account = create_account_shared_data_for_test(&clock::Clock::default());
         let config_address = stake_config::id();
         let config_account = config::create_account(0, &stake_config::Config::default());
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -856,7 +925,7 @@ mod tests {
 
         // gets the "is_empty()" check
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::default(),
                 Lockup::default(),
@@ -869,7 +938,7 @@ mod tests {
 
         // no account for rent
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::default(),
                 Lockup::default(),
@@ -879,14 +948,14 @@ mod tests {
             vec![AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             }],
             Err(InstructionError::NotEnoughAccountKeys),
         );
 
         // fails to deserialize stake state
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::default(),
                 Lockup::default(),
@@ -900,7 +969,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: rent_address,
@@ -913,33 +982,33 @@ mod tests {
 
         // gets the first check in delegate, wrong number of accounts
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             vec![(stake_address, stake_account.clone())],
             vec![AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             }],
             Err(InstructionError::NotEnoughAccountKeys),
         );
 
         // gets the sub-check for number of args
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             vec![(stake_address, stake_account.clone())],
             vec![AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             }],
             Err(InstructionError::NotEnoughAccountKeys),
         );
 
         // gets the check non-deserialize-able account in delegate_stake
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             vec![
                 (stake_address, stake_account.clone()),
@@ -952,7 +1021,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -980,7 +1049,7 @@ mod tests {
 
         // Tests 3rd keyed account is of correct type (Clock instead of rewards) in withdraw
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(withdrawal_amount)).unwrap(),
             vec![
                 (stake_address, stake_account.clone()),
@@ -992,7 +1061,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -1015,20 +1084,20 @@ mod tests {
 
         // Tests correct number of accounts are provided in withdraw
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(withdrawal_amount)).unwrap(),
             vec![(stake_address, stake_account.clone())],
             vec![AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             }],
             Err(InstructionError::NotEnoughAccountKeys),
         );
 
         // Tests 2nd keyed account is of correct type (Clock instead of rewards) in deactivate
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             vec![
                 (stake_address, stake_account.clone()),
@@ -1038,7 +1107,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: rewards_address,
@@ -1051,7 +1120,7 @@ mod tests {
 
         // Tests correct number of accounts are provided in deactivate
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             Vec::new(),
             Vec::new(),
@@ -1060,32 +1129,32 @@ mod tests {
 
         // Tests correct number of accounts are provided in deactivate_delinquent
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DeactivateDelinquent).unwrap(),
             Vec::new(),
             Vec::new(),
             Err(InstructionError::NotEnoughAccountKeys),
         );
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DeactivateDelinquent).unwrap(),
             vec![(stake_address, stake_account.clone())],
             vec![AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             }],
             Err(InstructionError::NotEnoughAccountKeys),
         );
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DeactivateDelinquent).unwrap(),
             vec![(stake_address, stake_account), (vote_address, vote_account)],
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -1097,7 +1166,9 @@ mod tests {
         );
     }
 
-    fn do_test_stake_checked_instructions(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_checked_instructions(feature_set: Arc<FeatureSet>) {
         let stake_address = Pubkey::new_unique();
         let staker = Pubkey::new_unique();
         let staker_account = create_default_account();
@@ -1106,13 +1177,13 @@ mod tests {
         let authorized_address = Pubkey::new_unique();
         let authorized_account = create_default_account();
         let new_authorized_account = create_default_account();
-        let clock_address = sysvar::clock::id();
-        let clock_account = account::create_account_shared_data_for_test(&Clock::default());
+        let clock_address = clock::id();
+        let clock_account = create_account_shared_data_for_test(&Clock::default());
         let custodian = Pubkey::new_unique();
         let custodian_account = create_default_account();
         let rent = Rent::default();
-        let rent_address = sysvar::rent::id();
-        let rent_account = account::create_account_shared_data_for_test(&rent);
+        let rent_address = rent::id();
+        let rent_account = create_account_shared_data_for_test(&rent);
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
 
@@ -1121,7 +1192,7 @@ mod tests {
             initialize_checked(&stake_address, &Authorized { staker, withdrawer });
         instruction.accounts[3] = AccountMeta::new_readonly(withdrawer, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1133,7 +1204,7 @@ mod tests {
             &id(),
         );
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::InitializeChecked).unwrap(),
             vec![
                 (stake_address, stake_account),
@@ -1145,7 +1216,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: rent_address,
@@ -1176,7 +1247,7 @@ mod tests {
         );
         instruction.accounts[3] = AccountMeta::new_readonly(staker, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1190,7 +1261,7 @@ mod tests {
         );
         instruction.accounts[3] = AccountMeta::new_readonly(withdrawer, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1204,7 +1275,7 @@ mod tests {
         )
         .unwrap();
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::AuthorizeChecked(StakeAuthorize::Staker)).unwrap(),
             vec![
                 (stake_address, stake_account.clone()),
@@ -1216,7 +1287,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: clock_address,
@@ -1238,7 +1309,7 @@ mod tests {
         );
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::AuthorizeChecked(
                 StakeAuthorize::Withdrawer,
             ))
@@ -1253,7 +1324,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: clock_address,
@@ -1290,7 +1361,7 @@ mod tests {
         );
         instruction.accounts[3] = AccountMeta::new_readonly(staker, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1306,7 +1377,7 @@ mod tests {
         );
         instruction.accounts[3] = AccountMeta::new_readonly(staker, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1320,7 +1391,7 @@ mod tests {
         )
         .unwrap();
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::AuthorizeCheckedWithSeed(
                 AuthorizeCheckedWithSeedArgs {
                     stake_authorize: StakeAuthorize::Staker,
@@ -1339,7 +1410,7 @@ mod tests {
                 AccountMeta {
                     pubkey: address_with_seed,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: authorized_owner,
@@ -1361,7 +1432,7 @@ mod tests {
         );
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::AuthorizeCheckedWithSeed(
                 AuthorizeCheckedWithSeedArgs {
                     stake_authorize: StakeAuthorize::Withdrawer,
@@ -1380,7 +1451,7 @@ mod tests {
                 AccountMeta {
                     pubkey: address_with_seed,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: authorized_owner,
@@ -1413,7 +1484,7 @@ mod tests {
         );
         instruction.accounts[2] = AccountMeta::new_readonly(custodian, false);
         process_instruction_as_one_arg(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction,
             Err(InstructionError::MissingRequiredSignature),
         );
@@ -1428,7 +1499,7 @@ mod tests {
         .unwrap();
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction.data,
             vec![
                 (clock_address, clock_account),
@@ -1440,7 +1511,7 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: withdrawer,
@@ -1457,7 +1528,9 @@ mod tests {
         );
     }
 
-    fn do_test_stake_initialize(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_initialize(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let stake_lamports = rent_exempt_reserve;
@@ -1476,19 +1549,16 @@ mod tests {
         .unwrap();
         let mut transaction_accounts = vec![
             (stake_address, stake_account.clone()),
-            (
-                sysvar::rent::id(),
-                account::create_account_shared_data_for_test(&rent),
-            ),
+            (rent::id(), create_account_shared_data_for_test(&rent)),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::rent::id(),
+                pubkey: rent::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -1496,7 +1566,7 @@ mod tests {
 
         // should pass
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1515,7 +1585,7 @@ mod tests {
         // 2nd time fails, can't move it from anything other than uninit->init
         transaction_accounts[0] = (stake_address, accounts[0].clone());
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1525,14 +1595,14 @@ mod tests {
 
         // not enough balance for rent
         transaction_accounts[1] = (
-            sysvar::rent::id(),
-            account::create_account_shared_data_for_test(&Rent {
+            rent::id(),
+            create_account_shared_data_for_test(&Rent {
                 lamports_per_byte_year: rent.lamports_per_byte_year + 1,
                 ..rent
             }),
         );
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1544,7 +1614,7 @@ mod tests {
             AccountSharedData::new(stake_lamports, StakeState::size_of() + 1, &id());
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1555,7 +1625,7 @@ mod tests {
             AccountSharedData::new(stake_lamports, StakeState::size_of() - 1, &id());
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts,
             instruction_accounts,
@@ -1563,7 +1633,9 @@ mod tests {
         );
     }
 
-    fn do_test_authorize(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_authorize(feature_set: Arc<FeatureSet>) {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let authority_address_2 = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -1582,22 +1654,22 @@ mod tests {
             (to_address, to_account),
             (authority_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
         ];
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -1610,7 +1682,7 @@ mod tests {
 
         // should fail, uninit
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Staker,
@@ -1631,7 +1703,7 @@ mod tests {
         .unwrap();
         transaction_accounts[0] = (stake_address, stake_account);
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Staker,
@@ -1643,7 +1715,7 @@ mod tests {
         );
         transaction_accounts[0] = (stake_address, accounts[0].clone());
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Withdrawer,
@@ -1663,7 +1735,7 @@ mod tests {
 
         // A second authorization signed by the stake account should fail
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address_2,
                 StakeAuthorize::Staker,
@@ -1678,7 +1750,7 @@ mod tests {
         instruction_accounts[0].is_signer = false;
         instruction_accounts[2].is_signer = true;
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address_2,
                 StakeAuthorize::Staker,
@@ -1699,20 +1771,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -1723,7 +1795,7 @@ mod tests {
             },
         ];
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1734,7 +1806,7 @@ mod tests {
         // Test that withdrawal to account fails without authorized withdrawer
         instruction_accounts[4].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -1742,7 +1814,9 @@ mod tests {
         );
     }
 
-    fn do_test_authorize_override(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_authorize_override(feature_set: Arc<FeatureSet>) {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let mallory_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -1758,18 +1832,18 @@ mod tests {
             (stake_address, stake_account),
             (authority_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
         ];
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -1782,7 +1856,7 @@ mod tests {
 
         // Authorize a staker pubkey and move the withdrawer key into cold storage.
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Staker,
@@ -1798,7 +1872,7 @@ mod tests {
         instruction_accounts[0].is_signer = false;
         instruction_accounts[2].is_signer = true;
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 mallory_address,
                 StakeAuthorize::Staker,
@@ -1812,7 +1886,7 @@ mod tests {
 
         // Verify the original staker no longer has access.
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Staker,
@@ -1827,7 +1901,7 @@ mod tests {
         instruction_accounts[0].is_signer = true;
         instruction_accounts[2].is_signer = false;
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Withdrawer,
@@ -1847,7 +1921,7 @@ mod tests {
             is_writable: false,
         };
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Withdrawer,
@@ -1859,7 +1933,9 @@ mod tests {
         );
     }
 
-    fn do_test_authorize_with_seed(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_authorize_with_seed(feature_set: Arc<FeatureSet>) {
         let authority_base_address = domichain_sdk::pubkey::new_rand();
         let authority_address = domichain_sdk::pubkey::new_rand();
         let seed = "42";
@@ -1876,15 +1952,15 @@ mod tests {
             (stake_address, stake_account),
             (authority_base_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
         ];
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: authority_base_address,
@@ -1892,7 +1968,7 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -1900,7 +1976,7 @@ mod tests {
 
         // Wrong seed
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::AuthorizeWithSeed(
                 AuthorizeWithSeedArgs {
                     new_authorized_pubkey: authority_address,
@@ -1927,7 +2003,7 @@ mod tests {
         ))
         .unwrap();
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1937,7 +2013,7 @@ mod tests {
 
         // Set stake authority
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1956,7 +2032,7 @@ mod tests {
         ))
         .unwrap();
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -1966,7 +2042,7 @@ mod tests {
 
         // No longer withdraw authority
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts,
             instruction_accounts,
@@ -1974,7 +2050,9 @@ mod tests {
         );
     }
 
-    fn do_test_authorize_delegated_stake(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_authorize_delegated_stake(feature_set: Arc<FeatureSet>) {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -2002,12 +2080,12 @@ mod tests {
                 AccountSharedData::new(42, 0, &system_program::id()),
             ),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -2018,7 +2096,7 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: vote_address,
@@ -2026,12 +2104,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -2044,7 +2122,7 @@ mod tests {
 
         // delegate stake
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2054,17 +2132,17 @@ mod tests {
 
         // deactivate, so we can re-delegate
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2075,7 +2153,7 @@ mod tests {
 
         // authorize
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authority_address,
                 StakeAuthorize::Staker,
@@ -2086,10 +2164,10 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2111,7 +2189,7 @@ mod tests {
         instruction_accounts[0].is_signer = false;
         instruction_accounts[1].pubkey = vote_address_2;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2125,7 +2203,7 @@ mod tests {
             is_writable: false,
         });
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts,
@@ -2139,17 +2217,17 @@ mod tests {
 
         // Test another staking action
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts,
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2163,10 +2241,12 @@ mod tests {
         );
     }
 
-    fn do_test_stake_delegate(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_delegate(feature_set: Arc<FeatureSet>) {
         let mut vote_state = VoteState::default();
         for i in 0..1000 {
-            vote_state.process_slot_vote_unchecked(i);
+            vote_state::process_slot_vote_unchecked(&mut vote_state, i);
         }
         let vote_state_credits = vote_state.credits();
         let vote_address = domichain_sdk::pubkey::new_rand();
@@ -2205,13 +2285,10 @@ mod tests {
             (stake_address, stake_account.clone()),
             (vote_address, vote_account),
             (vote_address_2, vote_account_2.clone()),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -2222,7 +2299,7 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: vote_address,
@@ -2230,12 +2307,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -2249,7 +2326,7 @@ mod tests {
         // should fail, unsigned stake account
         instruction_accounts[0].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2259,7 +2336,7 @@ mod tests {
 
         // should pass
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2283,12 +2360,9 @@ mod tests {
         // verify that delegate fails as stake is active and not deactivating
         clock.epoch += 1;
         transaction_accounts[0] = (stake_address, accounts[0].clone());
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2297,17 +2371,17 @@ mod tests {
 
         // deactivate
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2320,7 +2394,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
         instruction_accounts[1].pubkey = vote_address_2;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2331,7 +2405,7 @@ mod tests {
         // verify that delegate succeeds to same vote account
         // when stake is deactivating
         let accounts_2 = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2346,7 +2420,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts_2[0].clone());
         instruction_accounts[1].pubkey = vote_address_2;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2355,15 +2429,12 @@ mod tests {
 
         // without stake history, cool down is instantaneous
         clock.epoch += 1;
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
 
         // verify that delegate can be called to new vote account, 2nd is redelegate
         transaction_accounts[0] = (stake_address, accounts[0].clone());
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2391,7 +2462,7 @@ mod tests {
             .1
             .set_owner(domichain_sdk::pubkey::new_rand());
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2403,7 +2474,7 @@ mod tests {
         stake_account.set_state(&stake_state).unwrap();
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -2411,7 +2482,9 @@ mod tests {
         );
     }
 
-    fn do_test_redelegate_consider_balance_changes(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_redelegate_consider_balance_changes(feature_set: Arc<FeatureSet>) {
         let mut clock = Clock::default();
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -2441,13 +2514,10 @@ mod tests {
                 AccountSharedData::new(1, 0, &system_program::id()),
             ),
             (authority_address, AccountSharedData::default()),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -2458,7 +2528,7 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: vote_address,
@@ -2466,12 +2536,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -2490,10 +2560,10 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -2505,7 +2575,7 @@ mod tests {
         ];
 
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             delegate_instruction_accounts.clone(),
@@ -2514,12 +2584,9 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         clock.epoch += 1;
-        transaction_accounts[2] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             deactivate_instruction_accounts.clone(),
@@ -2529,33 +2596,30 @@ mod tests {
 
         // Once deactivated, we withdraw stake to new account
         clock.epoch += 1;
-        transaction_accounts[2] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
         let withdraw_lamports = initial_lamports / 2;
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(withdraw_lamports)).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: recipient_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2572,12 +2636,9 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         clock.epoch += 1;
-        transaction_accounts[2] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             delegate_instruction_accounts.clone(),
@@ -2590,12 +2651,9 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         clock.epoch += 1;
-        transaction_accounts[2] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             deactivate_instruction_accounts,
@@ -2610,12 +2668,9 @@ mod tests {
             .unwrap();
 
         clock.epoch += 1;
-        transaction_accounts[2] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts,
             delegate_instruction_accounts,
@@ -2627,7 +2682,9 @@ mod tests {
         );
     }
 
-    fn do_test_split(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation * 2;
@@ -2642,27 +2699,27 @@ mod tests {
         let mut transaction_accounts = vec![
             (stake_address, AccountSharedData::default()),
             (split_to_address, split_to_account),
+            (
+                rent::id(),
+                create_account_shared_data_for_test(&Rent {
+                    lamports_per_byte_year: 0,
+                    ..Rent::default()
+                }),
+            ),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
-        // Define rent here so that it's used consistently for setting the rent exempt reserve
-        // and in the sysvar cache used for mock instruction processing.
-        let mut sysvar_cache_override = SysvarCache::default();
-        sysvar_cache_override.set_rent(Rent {
-            lamports_per_byte_year: 0,
-            ..Rent::default()
-        });
         let feature_set = Arc::new(feature_set);
 
         for state in [
@@ -2679,22 +2736,20 @@ mod tests {
             transaction_accounts[0] = (stake_address, stake_account);
 
             // should fail, split more than available
-            process_instruction_with_overrides(
+            process_instruction(
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
-                Some(&sysvar_cache_override),
-                Some(Arc::clone(&feature_set)),
                 Err(InstructionError::InsufficientFunds),
             );
 
             // should pass
-            let accounts = process_instruction_with_overrides(
+            let accounts = process_instruction(
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
-                Some(&sysvar_cache_override),
-                Some(Arc::clone(&feature_set)),
                 Ok(()),
             );
             // no lamport leakage
@@ -2725,17 +2780,18 @@ mod tests {
         )
         .unwrap();
         transaction_accounts[1] = (split_to_address, split_to_account);
-        process_instruction_with_overrides(
+        process_instruction(
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
-            Some(&sysvar_cache_override),
-            Some(Arc::clone(&feature_set)),
             Err(InstructionError::IncorrectProgramId),
         );
     }
 
-    fn do_test_withdraw_stake(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_withdraw_stake(feature_set: Arc<FeatureSet>) {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let authority_address = domichain_sdk::pubkey::new_rand();
         let custodian_address = domichain_sdk::pubkey::new_rand();
@@ -2765,16 +2821,16 @@ mod tests {
             ),
             (custodian_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::rent::id(),
-                account::create_account_shared_data_for_test(&Rent::free()),
+                rent::id(),
+                create_account_shared_data_for_test(&Rent::free()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -2785,20 +2841,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: recipient_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -2812,7 +2868,7 @@ mod tests {
         // should fail, no signer
         instruction_accounts[4].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2822,7 +2878,7 @@ mod tests {
 
         // should pass, signed keyed account and uninitialized
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2838,7 +2894,7 @@ mod tests {
             custodian: custodian_address,
         };
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::auto(&stake_address),
                 lockup,
@@ -2849,10 +2905,10 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::rent::id(),
+                    pubkey: rent::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2863,7 +2919,7 @@ mod tests {
 
         // should fail, signed keyed account and locked up, more than available
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2872,14 +2928,14 @@ mod tests {
 
         // Stake some lamports (available lamports for withdrawals will reduce to zero)
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -2887,12 +2943,12 @@ mod tests {
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2911,7 +2967,7 @@ mod tests {
 
         // withdrawal before deactivate works for rewards amount
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(10)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2920,7 +2976,7 @@ mod tests {
 
         // withdrawal of rewards fails if not in excess of stake
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(11)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2929,17 +2985,17 @@ mod tests {
 
         // deactivate the stake before withdrawal
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -2953,14 +3009,11 @@ mod tests {
             epoch: 100,
             ..Clock::default()
         };
-        transaction_accounts[5] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[5] = (clock::id(), create_account_shared_data_for_test(&clock));
 
         // Try to withdraw more than what's available
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports + 11)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2969,7 +3022,7 @@ mod tests {
 
         // Try to withdraw all lamports
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports + 10)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -2999,7 +3052,7 @@ mod tests {
         transaction_accounts[2] = (recipient_address, stake_account);
         instruction_accounts[4].pubkey = authority_address;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(u64::MAX - 10)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3016,7 +3069,7 @@ mod tests {
         .unwrap();
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -3024,7 +3077,9 @@ mod tests {
         );
     }
 
-    fn do_test_withdraw_stake_before_warmup(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_withdraw_stake_before_warmup(feature_set: Arc<FeatureSet>) {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -3051,13 +3106,10 @@ mod tests {
             (stake_address, stake_account),
             (vote_address, vote_account),
             (recipient_address, AccountSharedData::default()),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -3068,7 +3120,7 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: recipient_address,
@@ -3076,12 +3128,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3094,14 +3146,14 @@ mod tests {
 
         // Stake some lamports (available lamports for withdrawals will reduce to zero)
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -3109,12 +3161,12 @@ mod tests {
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -3135,16 +3187,13 @@ mod tests {
             &[stake_from(&accounts[0]).unwrap().delegation],
         );
         transaction_accounts[4] = (
-            sysvar::stake_history::id(),
-            account::create_account_shared_data_for_test(&stake_history),
+            stake_history::id(),
+            create_account_shared_data_for_test(&stake_history),
         );
         clock.epoch = 0;
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(
                 total_lamports - stake_lamports + 1,
             ))
@@ -3155,7 +3204,9 @@ mod tests {
         );
     }
 
-    fn do_test_withdraw_lockup(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_withdraw_lockup(feature_set: Arc<FeatureSet>) {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -3180,33 +3231,30 @@ mod tests {
             (stake_address, stake_account.clone()),
             (recipient_address, AccountSharedData::default()),
             (custodian_address, AccountSharedData::default()),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
         ];
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: recipient_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3219,7 +3267,7 @@ mod tests {
 
         // should fail, lockup is still in force
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3233,7 +3281,7 @@ mod tests {
             is_writable: false,
         });
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3253,7 +3301,7 @@ mod tests {
         .unwrap();
         transaction_accounts[0] = (stake_address, stake_account_self_as_custodian);
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3265,12 +3313,9 @@ mod tests {
         // should pass, lockup has expired
         instruction_accounts.pop();
         clock.epoch += 1;
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -3279,7 +3324,9 @@ mod tests {
         assert_eq!(from(&accounts[0]).unwrap(), StakeState::Uninitialized);
     }
 
-    fn do_test_withdraw_rent_exempt(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_withdraw_rent_exempt(feature_set: Arc<FeatureSet>) {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -3302,32 +3349,32 @@ mod tests {
             (recipient_address, AccountSharedData::default()),
             (custodian_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: recipient_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3340,7 +3387,7 @@ mod tests {
 
         // should pass, withdrawing initialized account down to minimum balance
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3349,7 +3396,7 @@ mod tests {
 
         // should fail, withdrawal that would leave less than rent-exempt reserve
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(stake_lamports + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3358,7 +3405,7 @@ mod tests {
 
         // should pass, withdrawal of complete account
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(
                 stake_lamports + rent_exempt_reserve,
             ))
@@ -3369,7 +3416,9 @@ mod tests {
         );
     }
 
-    fn do_test_deactivate(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_deactivate(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
@@ -3390,12 +3439,12 @@ mod tests {
             (stake_address, stake_account),
             (vote_address, vote_account),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -3406,10 +3455,10 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3418,7 +3467,7 @@ mod tests {
         // should fail, not signed
         instruction_accounts[0].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3428,7 +3477,7 @@ mod tests {
 
         // should fail, not staked yet
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3437,14 +3486,14 @@ mod tests {
 
         // Staking
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -3452,12 +3501,12 @@ mod tests {
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -3473,7 +3522,7 @@ mod tests {
 
         // should pass
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3483,7 +3532,7 @@ mod tests {
 
         // should fail, only works once
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -3491,7 +3540,9 @@ mod tests {
         );
     }
 
-    fn do_test_set_lockup(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_set_lockup(feature_set: Arc<FeatureSet>) {
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -3522,16 +3573,16 @@ mod tests {
             (authorized_address, AccountSharedData::default()),
             (custodian_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::rent::id(),
-                account::create_account_shared_data_for_test(&Rent::free()),
+                rent::id(),
+                create_account_shared_data_for_test(&Rent::free()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
@@ -3542,10 +3593,10 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3558,7 +3609,7 @@ mod tests {
 
         // should fail, wrong state
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3572,7 +3623,7 @@ mod tests {
             custodian: custodian_address,
         };
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::auto(&stake_address),
                 lockup,
@@ -3583,10 +3634,10 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::rent::id(),
+                    pubkey: rent::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -3598,7 +3649,7 @@ mod tests {
         // should fail, not signed
         instruction_accounts[2].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3608,7 +3659,7 @@ mod tests {
 
         // should pass
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3617,14 +3668,14 @@ mod tests {
 
         // Staking
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: vote_address,
@@ -3632,12 +3683,12 @@ mod tests {
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -3654,7 +3705,7 @@ mod tests {
         // should fail, not signed
         instruction_accounts[2].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3664,7 +3715,7 @@ mod tests {
 
         // should pass
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3683,7 +3734,7 @@ mod tests {
         instruction_accounts[0].is_signer = true;
         instruction_accounts[2].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3694,7 +3745,7 @@ mod tests {
 
         // should pass, custodian can change it
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3707,14 +3758,11 @@ mod tests {
             epoch: Epoch::MAX,
             ..Clock::default()
         };
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[4] = (clock::id(), create_account_shared_data_for_test(&clock));
 
         // should fail, custodian cannot change it
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3725,7 +3773,7 @@ mod tests {
         instruction_accounts[0].is_signer = true;
         instruction_accounts[2].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -3734,7 +3782,7 @@ mod tests {
 
         // Change authorized withdrawer
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Authorize(
                 authorized_address,
                 StakeAuthorize::Withdrawer,
@@ -3745,10 +3793,10 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -3764,7 +3812,7 @@ mod tests {
 
         // should fail, previous authorized withdrawer cannot change the lockup anymore
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &instruction_data,
             transaction_accounts,
             instruction_accounts,
@@ -3775,7 +3823,9 @@ mod tests {
     /// Ensure that `initialize()` respects the minimum balance requirements
     /// - Assert 1: accounts with a balance equal-to the rent exemption initialize OK
     /// - Assert 2: accounts with a balance less-than the rent exemption do not initialize
-    fn do_test_initialize_minimum_balance(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_initialize_minimum_balance(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let stake_address = domichain_sdk::pubkey::new_rand();
@@ -3788,10 +3838,10 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::rent::id(),
+                pubkey: rent::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3805,14 +3855,11 @@ mod tests {
         ] {
             let stake_account = AccountSharedData::new(lamports, StakeState::size_of(), &id());
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &instruction_data,
                 vec![
                     (stake_address, stake_account),
-                    (
-                        sysvar::rent::id(),
-                        account::create_account_shared_data_for_test(&rent),
-                    ),
+                    (rent::id(), create_account_shared_data_for_test(&rent)),
                 ],
                 instruction_accounts.clone(),
                 expected_result,
@@ -3831,7 +3878,9 @@ mod tests {
     /// withdrawing below the minimum delegation, then re-delegating successfully (see
     /// `test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation()` for
     /// more information.)
-    fn do_test_delegate_minimum_stake_delegation(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_delegate_minimum_stake_delegation(feature_set: Arc<FeatureSet>) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -3847,7 +3896,7 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: vote_address,
@@ -3855,12 +3904,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -3889,18 +3938,18 @@ mod tests {
                 )
                 .unwrap();
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::DelegateStake).unwrap(),
                     vec![
                         (stake_address, stake_account),
                         (vote_address, vote_account.clone()),
                         (
-                            sysvar::clock::id(),
-                            account::create_account_shared_data_for_test(&Clock::default()),
+                            clock::id(),
+                            create_account_shared_data_for_test(&Clock::default()),
                         ),
                         (
-                            sysvar::stake_history::id(),
-                            account::create_account_shared_data_for_test(&StakeHistory::default()),
+                            stake_history::id(),
+                            create_account_shared_data_for_test(&StakeHistory::default()),
                         ),
                         (
                             stake_config::id(),
@@ -3924,7 +3973,9 @@ mod tests {
     ///  EQ     | LT   | Err
     ///  LT     | EQ   | Err
     ///  LT     | LT   | Err
-    fn do_test_split_minimum_stake_delegation(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_minimum_stake_delegation(feature_set: Arc<FeatureSet>) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -3945,12 +3996,12 @@ mod tests {
             AccountMeta {
                 pubkey: source_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: dest_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
         for (source_reserve, dest_reserve, expected_result) in [
@@ -3993,15 +4044,12 @@ mod tests {
                 )
                 .unwrap();
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Split(dest_reserve + delegation)).unwrap(),
                     vec![
                         (source_address, source_account),
                         (dest_address, dest_account.clone()),
-                        (
-                            sysvar::rent::id(),
-                            account::create_account_shared_data_for_test(&rent),
-                        ),
+                        (rent::id(), create_account_shared_data_for_test(&rent)),
                     ],
                     instruction_accounts.clone(),
                     expected_result.clone(),
@@ -4017,7 +4065,9 @@ mod tests {
     ///             delegation is OK
     /// - Assert 2: splitting the full amount from an account that has less than the minimum
     ///             delegation is not OK
-    fn do_test_split_full_amount_minimum_stake_delegation(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_full_amount_minimum_stake_delegation(feature_set: Arc<FeatureSet>) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -4038,12 +4088,12 @@ mod tests {
             AccountMeta {
                 pubkey: source_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: dest_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
         for (reserve, expected_result) in [
@@ -4068,15 +4118,12 @@ mod tests {
                 )
                 .unwrap();
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Split(source_account.lamports())).unwrap(),
                     vec![
                         (source_address, source_account),
                         (dest_address, dest_account.clone()),
-                        (
-                            sysvar::rent::id(),
-                            account::create_account_shared_data_for_test(&rent),
-                        ),
+                        (rent::id(), create_account_shared_data_for_test(&rent)),
                     ],
                     instruction_accounts.clone(),
                     expected_result.clone(),
@@ -4088,7 +4135,9 @@ mod tests {
     /// Ensure that `split()` correctly handles prefunded destination accounts from
     /// initialized stakes.  When a destination account already has funds, ensure
     /// the minimum split amount reduces accordingly.
-    fn do_test_initialized_split_destination_minimum_balance(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_initialized_split_destination_minimum_balance(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let source_address = Pubkey::new_unique();
@@ -4097,12 +4146,12 @@ mod tests {
             AccountMeta {
                 pubkey: source_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: destination_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
         for (destination_starting_balance, split_amount, expected_result) in [
@@ -4164,15 +4213,12 @@ mod tests {
             .unwrap();
 
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(split_amount)).unwrap(),
                 vec![
                     (source_address, source_account),
                     (destination_address, destination_account),
-                    (
-                        sysvar::rent::id(),
-                        account::create_account_shared_data_for_test(&rent),
-                    ),
+                    (rent::id(), create_account_shared_data_for_test(&rent)),
                 ],
                 instruction_accounts.clone(),
                 expected_result.clone(),
@@ -4183,8 +4229,10 @@ mod tests {
     /// Ensure that `split()` correctly handles prefunded destination accounts from staked stakes.
     /// When a destination account already has funds, ensure the minimum split amount reduces
     /// accordingly.
-    fn do_test_staked_split_destination_minimum_balance(
-        feature_set: FeatureSet,
+    #[test_case(feature_set_old_behavior(), &[Ok(()), Ok(())]; "old_behavior")]
+    #[test_case(feature_set_new_behavior(), &[ Err(StakeError::InsufficientDelegation.into()), Err(StakeError::InsufficientDelegation.into()) ] ; "new_behavior")]
+    fn test_staked_split_destination_minimum_balance(
+        feature_set: Arc<FeatureSet>,
         expected_results: &[Result<(), InstructionError>],
     ) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4196,12 +4244,12 @@ mod tests {
             AccountMeta {
                 pubkey: source_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: destination_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
         for (destination_starting_balance, split_amount, expected_result) in [
@@ -4293,15 +4341,12 @@ mod tests {
             )
             .unwrap();
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(split_amount)).unwrap(),
                 vec![
                     (source_address, source_account.clone()),
                     (destination_address, destination_account),
-                    (
-                        sysvar::rent::id(),
-                        account::create_account_shared_data_for_test(&rent),
-                    ),
+                    (rent::id(), create_account_shared_data_for_test(&rent)),
                 ],
                 instruction_accounts.clone(),
                 expected_result.clone(),
@@ -4334,7 +4379,9 @@ mod tests {
     /// Ensure that `withdraw()` respects the minimum delegation requirements
     /// - Assert 1: withdrawing so remaining stake is equal-to the minimum is OK
     /// - Assert 2: withdrawing so remaining stake is less-than the minimum is not OK
-    fn do_test_withdraw_minimum_stake_delegation(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_withdraw_minimum_stake_delegation(feature_set: Arc<FeatureSet>) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -4348,20 +4395,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: recipient_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -4394,7 +4441,7 @@ mod tests {
                 let withdraw_amount =
                     (starting_stake_delegation + rewards_balance) - ending_stake_delegation;
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Withdraw(withdraw_amount)).unwrap(),
                     vec![
                         (stake_address, stake_account),
@@ -4403,16 +4450,16 @@ mod tests {
                             AccountSharedData::new(rent_exempt_reserve, 0, &system_program::id()),
                         ),
                         (
-                            sysvar::clock::id(),
-                            account::create_account_shared_data_for_test(&Clock::default()),
+                            clock::id(),
+                            create_account_shared_data_for_test(&Clock::default()),
                         ),
                         (
-                            sysvar::rent::id(),
-                            account::create_account_shared_data_for_test(&Rent::free()),
+                            rent::id(),
+                            create_account_shared_data_for_test(&Rent::free()),
                         ),
                         (
-                            sysvar::stake_history::id(),
-                            account::create_account_shared_data_for_test(&StakeHistory::default()),
+                            stake_history::id(),
+                            create_account_shared_data_for_test(&StakeHistory::default()),
                         ),
                         (
                             stake_config::id(),
@@ -4437,8 +4484,15 @@ mod tests {
     /// 3. Deactives the delegation
     /// 4. Withdraws from the account such that the ending balance is *below* rent + minimum delegation
     /// 5. Re-delegates, now with less than the minimum delegation, but it still succeeds
-    fn do_test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation(
-        feature_set: FeatureSet,
+    //
+    // The "old old" behavior relies on `validate_delegated_amount()` *not* checking if the
+    // stake amount meets the minimum delegation.  Once the
+    // `stake_allow_zero_undelegated_amount` feature is activated, `the expected_result`
+    // parameter can be removed and consolidated.
+    #[test_case(feature_set_old_old_behavior(), Ok(()); "old_old_behavior")]
+    #[test_case(feature_set_new_behavior(), Err(StakeError::InsufficientDelegation.into()); "new_behavior")]
+    fn test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation(
+        feature_set: Arc<FeatureSet>,
         expected_result: Result<(), InstructionError>,
     ) {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4462,28 +4516,22 @@ mod tests {
                 recipient_address,
                 AccountSharedData::new(rent_exempt_reserve, 0, &system_program::id()),
             ),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
             (
                 stake_config::id(),
                 config::create_account(0, &stake_config::Config::default()),
             ),
-            (
-                sysvar::rent::id(),
-                account::create_account_shared_data_for_test(&rent),
-            ),
+            (rent::id(), create_account_shared_data_for_test(&rent)),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: vote_address,
@@ -4491,12 +4539,12 @@ mod tests {
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -4508,7 +4556,7 @@ mod tests {
         ];
 
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Initialize(
                 Authorized::auto(&stake_address),
                 Lockup::default(),
@@ -4519,10 +4567,10 @@ mod tests {
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::rent::id(),
+                    pubkey: rent::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -4532,7 +4580,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -4542,22 +4590,19 @@ mod tests {
         transaction_accounts[1] = (vote_address, accounts[1].clone());
 
         clock.epoch += 1;
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Deactivate).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: true,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -4567,34 +4612,31 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         clock.epoch += 1;
-        transaction_accounts[3] = (
-            sysvar::clock::id(),
-            account::create_account_shared_data_for_test(&clock),
-        );
+        transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         let withdraw_amount =
             accounts[0].lamports() - (rent_exempt_reserve + minimum_delegation - 1);
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(withdraw_amount)).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
                     pubkey: stake_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
                     pubkey: recipient_address,
                     is_signer: false,
-                    is_writable: false,
+                    is_writable: true,
                 },
                 AccountMeta {
-                    pubkey: sysvar::clock::id(),
+                    pubkey: clock::id(),
                     is_signer: false,
                     is_writable: false,
                 },
                 AccountMeta {
-                    pubkey: sysvar::stake_history::id(),
+                    pubkey: stake_history::id(),
                     is_signer: false,
                     is_writable: false,
                 },
@@ -4609,7 +4651,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -4617,7 +4659,9 @@ mod tests {
         );
     }
 
-    fn do_test_split_source_uninitialized(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_source_uninitialized(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4646,12 +4690,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -4664,28 +4708,28 @@ mod tests {
             //
             // and splitting should fail when the split amount is greater than the balance
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(0)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -4696,7 +4740,7 @@ mod tests {
         // this should work
         instruction_accounts[1].pubkey = split_to_address;
         let accounts = process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
@@ -4707,7 +4751,7 @@ mod tests {
         // no signers should fail
         instruction_accounts[0].is_signer = false;
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -4715,7 +4759,9 @@ mod tests {
         );
     }
 
-    fn do_test_split_split_not_uninitialized(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_split_not_uninitialized(feature_set: Arc<FeatureSet>) {
         let stake_lamports = 42;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
@@ -4730,12 +4776,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -4752,7 +4798,7 @@ mod tests {
             )
             .unwrap();
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
                 vec![
                     (stake_address, stake_account.clone()),
@@ -4764,7 +4810,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_more_than_staked(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_more_than_staked(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4794,34 +4842,33 @@ mod tests {
         let transaction_accounts = vec![
             (stake_address, stake_account),
             (split_to_address, split_to_account),
-            (
-                sysvar::rent::id(),
-                account::create_account_shared_data_for_test(&rent),
-            ),
+            (rent::id(), create_account_shared_data_for_test(&rent)),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
-            Err(StakeError::InsufficientStake.into()),
+            Err(StakeError::InsufficientDelegation.into()),
         );
     }
 
-    fn do_test_split_with_rent(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_with_rent(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4838,12 +4885,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
         let meta = Meta {
@@ -4871,15 +4918,12 @@ mod tests {
             let mut transaction_accounts = vec![
                 (stake_address, stake_account),
                 (split_to_address, split_to_account.clone()),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // not enough to make a non-zero stake account
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(minimum_balance - 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -4888,7 +4932,7 @@ mod tests {
 
             // doesn't leave enough for initial stake to be non-zero
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(
                     stake_lamports - minimum_balance + 1,
                 ))
@@ -4901,7 +4945,7 @@ mod tests {
             // split account already has way enough lamports
             transaction_accounts[1].1.set_lamports(*minimum_balance);
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports - minimum_balance)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -4929,7 +4973,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_to_account_with_rent_exempt_reserve(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_to_account_with_rent_exempt_reserve(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -4953,12 +4999,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -4983,15 +5029,12 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account.clone()),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // split more than available fails
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -5000,7 +5043,7 @@ mod tests {
 
             // should work
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5052,7 +5095,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_from_larger_sized_account(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_from_larger_sized_account(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let source_larger_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -5077,12 +5122,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -5107,15 +5152,12 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account.clone()),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // split more than available fails
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -5124,7 +5166,7 @@ mod tests {
 
             // should work
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -5181,7 +5223,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_from_smaller_sized_account(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_from_smaller_sized_account(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let source_smaller_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
@@ -5205,12 +5249,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -5232,15 +5276,12 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account.clone()),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // should always return error when splitting to larger account
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(split_amount)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
@@ -5249,7 +5290,7 @@ mod tests {
 
             // Splitting 100% of source should not make a difference
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5258,7 +5299,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_100_percent_of_source(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_100_percent_of_source(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -5281,12 +5324,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -5305,15 +5348,12 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account),
                 (split_to_address, split_to_account.clone()),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // split 100% over to dest
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5352,7 +5392,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_100_percent_of_source_to_account_with_lamports(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_100_percent_of_source_to_account_with_lamports(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -5376,12 +5418,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -5406,15 +5448,12 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account.clone()),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
 
             // split 100% over to dest
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5446,7 +5485,9 @@ mod tests {
         }
     }
 
-    fn do_test_split_rent_exemptness(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_split_rent_exemptness(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let source_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
@@ -5463,12 +5504,12 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: true,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: split_to_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
         ];
 
@@ -5494,13 +5535,10 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
             process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5526,13 +5564,10 @@ mod tests {
             let transaction_accounts = vec![
                 (stake_address, stake_account),
                 (split_to_address, split_to_account),
-                (
-                    sysvar::rent::id(),
-                    account::create_account_shared_data_for_test(&rent),
-                ),
+                (rent::id(), create_account_shared_data_for_test(&rent)),
             ];
             let accounts = process_instruction(
-                &feature_set,
+                Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
@@ -5582,7 +5617,9 @@ mod tests {
         }
     }
 
-    fn do_test_merge(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
@@ -5592,20 +5629,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: merge_from_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -5643,19 +5680,19 @@ mod tests {
                     (merge_from_address, merge_from_account),
                     (authorized_address, AccountSharedData::default()),
                     (
-                        sysvar::clock::id(),
-                        account::create_account_shared_data_for_test(&Clock::default()),
+                        clock::id(),
+                        create_account_shared_data_for_test(&Clock::default()),
                     ),
                     (
-                        sysvar::stake_history::id(),
-                        account::create_account_shared_data_for_test(&StakeHistory::default()),
+                        stake_history::id(),
+                        create_account_shared_data_for_test(&StakeHistory::default()),
                     ),
                 ];
 
                 // Authorized staker signature required...
                 instruction_accounts[4].is_signer = false;
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts.clone(),
                     instruction_accounts.clone(),
@@ -5664,7 +5701,7 @@ mod tests {
                 instruction_accounts[4].is_signer = true;
 
                 let accounts = process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts,
                     instruction_accounts.clone(),
@@ -5710,7 +5747,9 @@ mod tests {
         }
     }
 
-    fn do_test_merge_self_fails(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge_self_fails(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
         let rent = Rent::default();
@@ -5740,32 +5779,32 @@ mod tests {
             (stake_address, stake_account),
             (authorized_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -5777,7 +5816,7 @@ mod tests {
         ];
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Merge).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -5785,7 +5824,9 @@ mod tests {
         );
     }
 
-    fn do_test_merge_incorrect_authorized_staker(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge_incorrect_authorized_staker(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
@@ -5795,20 +5836,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: merge_from_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -5847,18 +5888,18 @@ mod tests {
                     (authorized_address, AccountSharedData::default()),
                     (wrong_authorized_address, AccountSharedData::default()),
                     (
-                        sysvar::clock::id(),
-                        account::create_account_shared_data_for_test(&Clock::default()),
+                        clock::id(),
+                        create_account_shared_data_for_test(&Clock::default()),
                     ),
                     (
-                        sysvar::stake_history::id(),
-                        account::create_account_shared_data_for_test(&StakeHistory::default()),
+                        stake_history::id(),
+                        create_account_shared_data_for_test(&StakeHistory::default()),
                     ),
                 ];
 
                 instruction_accounts[4].pubkey = wrong_authorized_address;
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts.clone(),
                     instruction_accounts.clone(),
@@ -5867,7 +5908,7 @@ mod tests {
                 instruction_accounts[4].pubkey = authorized_address;
 
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts,
                     instruction_accounts.clone(),
@@ -5877,7 +5918,9 @@ mod tests {
         }
     }
 
-    fn do_test_merge_invalid_account_data(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge_invalid_account_data(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
@@ -5886,20 +5929,20 @@ mod tests {
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: merge_from_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -5936,17 +5979,17 @@ mod tests {
                     (merge_from_address, merge_from_account),
                     (authorized_address, AccountSharedData::default()),
                     (
-                        sysvar::clock::id(),
-                        account::create_account_shared_data_for_test(&Clock::default()),
+                        clock::id(),
+                        create_account_shared_data_for_test(&Clock::default()),
                     ),
                     (
-                        sysvar::stake_history::id(),
-                        account::create_account_shared_data_for_test(&StakeHistory::default()),
+                        stake_history::id(),
+                        create_account_shared_data_for_test(&StakeHistory::default()),
                     ),
                 ];
 
                 process_instruction(
-                    &feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts,
                     instruction_accounts.clone(),
@@ -5956,7 +5999,9 @@ mod tests {
         }
     }
 
-    fn do_test_merge_fake_stake_source(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge_fake_stake_source(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
@@ -5980,32 +6025,32 @@ mod tests {
             (merge_from_address, merge_from_account),
             (authorized_address, AccountSharedData::default()),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&Clock::default()),
+                clock::id(),
+                create_account_shared_data_for_test(&Clock::default()),
             ),
             (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&StakeHistory::default()),
+                stake_history::id(),
+                create_account_shared_data_for_test(&StakeHistory::default()),
             ),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: merge_from_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -6017,7 +6062,7 @@ mod tests {
         ];
 
         process_instruction(
-            &feature_set,
+            Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Merge).unwrap(),
             transaction_accounts,
             instruction_accounts,
@@ -6025,7 +6070,9 @@ mod tests {
         );
     }
 
-    fn do_test_merge_active_stake(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_merge_active_stake(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
@@ -6088,33 +6135,30 @@ mod tests {
             (stake_address, stake_account),
             (merge_from_address, merge_from_account),
             (authorized_address, AccountSharedData::default()),
+            (clock::id(), create_account_shared_data_for_test(&clock)),
             (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            ),
-            (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&stake_history),
+                stake_history::id(),
+                create_account_shared_data_for_test(&stake_history),
             ),
         ];
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: merge_from_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
-                pubkey: sysvar::clock::id(),
+                pubkey: clock::id(),
                 is_signer: false,
                 is_writable: false,
             },
             AccountMeta {
-                pubkey: sysvar::stake_history::id(),
+                pubkey: stake_history::id(),
                 is_signer: false,
                 is_writable: false,
             },
@@ -6126,7 +6170,7 @@ mod tests {
         ];
 
         fn try_merge(
-            feature_set: &FeatureSet,
+            feature_set: Arc<FeatureSet>,
             transaction_accounts: Vec<(Pubkey, AccountSharedData)>,
             mut instruction_accounts: Vec<AccountMeta>,
             expected_result: Result<(), InstructionError>,
@@ -6136,7 +6180,7 @@ mod tests {
                     instruction_accounts.swap(0, 1);
                 }
                 let accounts = process_instruction(
-                    feature_set,
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::Merge).unwrap(),
                     transaction_accounts.clone(),
                     instruction_accounts.clone(),
@@ -6153,7 +6197,7 @@ mod tests {
 
         // stake activation epoch, source initialized succeeds
         try_merge(
-            &feature_set,
+            Arc::clone(&feature_set),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -6177,13 +6221,10 @@ mod tests {
                     deactivating,
                 },
             );
-            transaction_accounts[3] = (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            );
+            transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
             transaction_accounts[4] = (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&stake_history),
+                stake_history::id(),
+                create_account_shared_data_for_test(&stake_history),
             );
             if stake_amount == stake.stake(clock.epoch, Some(&stake_history))
                 && merge_from_amount == merge_from_stake.stake(clock.epoch, Some(&stake_history))
@@ -6191,7 +6232,7 @@ mod tests {
                 break;
             }
             try_merge(
-                &feature_set,
+                Arc::clone(&feature_set),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::from(StakeError::MergeTransientStake)),
@@ -6200,7 +6241,7 @@ mod tests {
 
         // Both fully activated works
         try_merge(
-            &feature_set,
+            Arc::clone(&feature_set),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -6253,13 +6294,10 @@ mod tests {
                     deactivating,
                 },
             );
-            transaction_accounts[3] = (
-                sysvar::clock::id(),
-                account::create_account_shared_data_for_test(&clock),
-            );
+            transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
             transaction_accounts[4] = (
-                sysvar::stake_history::id(),
-                account::create_account_shared_data_for_test(&stake_history),
+                stake_history::id(),
+                create_account_shared_data_for_test(&stake_history),
             );
             if 0 == stake.stake(clock.epoch, Some(&stake_history))
                 && 0 == merge_from_stake.stake(clock.epoch, Some(&stake_history))
@@ -6267,7 +6305,7 @@ mod tests {
                 break;
             }
             try_merge(
-                &feature_set,
+                Arc::clone(&feature_set),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::from(StakeError::MergeTransientStake)),
@@ -6276,14 +6314,16 @@ mod tests {
 
         // Both fully deactivated works
         try_merge(
-            &feature_set,
+            Arc::clone(&feature_set),
             transaction_accounts,
             instruction_accounts,
             Ok(()),
         );
     }
 
-    fn do_test_stake_get_minimum_delegation(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_get_minimum_delegation(feature_set: Arc<FeatureSet>) {
         let stake_address = Pubkey::new_unique();
         let stake_account = create_default_stake_account();
         let instruction_data = serialize(&StakeInstruction::GetMinimumDelegation).unwrap();
@@ -6291,7 +6331,7 @@ mod tests {
         let instruction_accounts = vec![AccountMeta {
             pubkey: stake_address,
             is_signer: false,
-            is_writable: false,
+            is_writable: true,
         }];
 
         mock_process_instruction(
@@ -6300,17 +6340,17 @@ mod tests {
             &instruction_data,
             transaction_accounts,
             instruction_accounts,
-            None,
-            Some(Arc::new(feature_set)),
             Ok(()),
-            |first_instruction_account, invoke_context| {
-                super::process_instruction(first_instruction_account, invoke_context)?;
+            super::process_instruction,
+            |invoke_context| {
+                invoke_context.feature_set = Arc::clone(&feature_set);
+            },
+            |invoke_context| {
                 let expected_minimum_delegation =
                     crate::get_minimum_delegation(&invoke_context.feature_set).to_le_bytes();
                 let actual_minimum_delegation =
                     invoke_context.transaction_context.get_return_data().1;
                 assert_eq!(expected_minimum_delegation, actual_minimum_delegation);
-                Ok(())
             },
         );
     }
@@ -6336,10 +6376,12 @@ mod tests {
     // disabled | bad         | some    || Err InvalidInstructionData
     // disabled | good        | none    || Err NotEnoughAccountKeys
     // disabled | bad         | none    || Err NotEnoughAccountKeys
-    fn do_test_stake_process_instruction_error_ordering(feature_set: FeatureSet) {
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_stake_process_instruction_error_ordering(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
-        let rent_address = sysvar::rent::id();
-        let rent_account = account::create_account_shared_data_for_test(&rent);
+        let rent_address = rent::id();
+        let rent_account = create_account_shared_data_for_test(&rent);
 
         let good_stake_address = Pubkey::new_unique();
         let good_stake_account = AccountSharedData::new(u64::MAX, StakeState::size_of(), &id());
@@ -6356,7 +6398,7 @@ mod tests {
             AccountMeta {
                 pubkey: good_stake_address,
                 is_signer: false,
-                is_writable: false,
+                is_writable: true,
             },
             AccountMeta {
                 pubkey: rent_address,
@@ -6419,31 +6461,26 @@ mod tests {
                 Err(InstructionError::NotEnoughAccountKeys),
             ),
         ] {
-            let mut feature_set = feature_set.clone();
+            let mut feature_set = Arc::new(FeatureSet::clone(&feature_set));
             if !is_feature_enabled {
-                feature_set.deactivate(
+                Arc::get_mut(&mut feature_set).unwrap().deactivate(
                     &feature_set::add_get_minimum_delegation_instruction_to_stake_program::id(),
                 );
             }
 
-            mock_process_instruction(
-                &id(),
-                Vec::new(),
+            process_instruction(
+                feature_set,
                 &instruction.data,
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
-                None,
-                Some(Arc::new(feature_set)),
                 expected_result,
-                super::process_instruction,
             );
         }
     }
 
-    fn do_test_deactivate_delinquent(feature_set: FeatureSet) {
-        let feature_set = Arc::new(feature_set);
-        let mut sysvar_cache_override = SysvarCache::default();
-
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_deactivate_delinquent(feature_set: Arc<FeatureSet>) {
         let reference_vote_address = Pubkey::new_unique();
         let vote_address = Pubkey::new_unique();
         let stake_address = Pubkey::new_unique();
@@ -6485,23 +6522,26 @@ mod tests {
 
         let current_epoch = 20;
 
-        sysvar_cache_override.set_clock(Clock {
-            epoch: current_epoch,
-            ..Clock::default()
-        });
-
         let process_instruction_deactivate_delinquent =
             |stake_address: &Pubkey,
              stake_account: &AccountSharedData,
              vote_account: &AccountSharedData,
              reference_vote_account: &AccountSharedData,
              expected_result| {
-                process_instruction_with_overrides(
+                process_instruction(
+                    Arc::clone(&feature_set),
                     &serialize(&StakeInstruction::DeactivateDelinquent).unwrap(),
                     vec![
                         (*stake_address, stake_account.clone()),
                         (vote_address, vote_account.clone()),
                         (reference_vote_address, reference_vote_account.clone()),
+                        (
+                            clock::id(),
+                            create_account_shared_data_for_test(&Clock {
+                                epoch: current_epoch,
+                                ..Clock::default()
+                            }),
+                        ),
                     ],
                     vec![
                         AccountMeta {
@@ -6520,8 +6560,6 @@ mod tests {
                             is_writable: false,
                         },
                     ],
-                    Some(&sysvar_cache_override),
-                    Some(Arc::clone(&feature_set)),
                     expected_result,
                 )
             };
@@ -6708,397 +6746,622 @@ mod tests {
         );
     }
 
-    mod old_behavior {
-        use super::*;
+    #[test_case(feature_set_old_behavior(); "old_behavior")]
+    #[test_case(feature_set_new_behavior(); "new_behavior")]
+    fn test_redelegate(feature_set: Arc<FeatureSet>) {
+        let feature_set = Arc::new(feature_set);
 
-        fn new_feature_set() -> FeatureSet {
-            let mut feature_set = FeatureSet::all_enabled();
-            feature_set.deactivate(&feature_set::stake_raise_minimum_delegation_to_1_sol::id());
-            feature_set
-        }
+        let minimum_delegation = crate::get_minimum_delegation(&feature_set);
+        let rent = Rent::default();
+        let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
+        let stake_history = StakeHistory::default();
+        let current_epoch = 100;
 
-        #[test]
-        fn test_stake_process_instruction() {
-            do_test_stake_process_instruction(new_feature_set());
-        }
-        #[test]
-        fn test_stake_process_instruction_decode_bail() {
-            do_test_stake_process_instruction_decode_bail(new_feature_set());
-        }
-        #[test]
-        fn test_stake_checked_instructions() {
-            do_test_stake_checked_instructions(new_feature_set());
-        }
-        #[test]
-        fn test_stake_initialize() {
-            do_test_stake_initialize(new_feature_set());
-        }
-        #[test]
-        fn test_authorize() {
-            do_test_authorize(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_override() {
-            do_test_authorize_override(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_with_seed() {
-            do_test_authorize_with_seed(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_delegated_stake() {
-            do_test_authorize_delegated_stake(new_feature_set());
-        }
-        #[test]
-        fn test_stake_delegate() {
-            do_test_stake_delegate(new_feature_set());
-        }
-        #[test]
-        fn test_redelegate_consider_balance_changes() {
-            do_test_redelegate_consider_balance_changes(new_feature_set());
-        }
-        #[test]
-        fn test_split() {
-            do_test_split(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_stake() {
-            do_test_withdraw_stake(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_stake_before_warmup() {
-            do_test_withdraw_stake_before_warmup(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_lockup() {
-            do_test_withdraw_lockup(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_rent_exempt() {
-            do_test_withdraw_rent_exempt(new_feature_set());
-        }
-        #[test]
-        fn test_deactivate() {
-            do_test_deactivate(new_feature_set());
-        }
-        #[test]
-        fn test_set_lockup() {
-            do_test_set_lockup(new_feature_set());
-        }
-        #[test]
-        fn test_initialize_minimum_balance() {
-            do_test_initialize_minimum_balance(new_feature_set());
-        }
-        #[test]
-        fn test_delegate_minimum_stake_delegation() {
-            do_test_delegate_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_split_minimum_stake_delegation() {
-            do_test_split_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_split_full_amount_minimum_stake_delegation() {
-            do_test_split_full_amount_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_initialized_split_destination_minimum_balance() {
-            do_test_initialized_split_destination_minimum_balance(new_feature_set());
-        }
-        #[test]
-        fn test_staked_split_destination_minimum_balance() {
-            do_test_staked_split_destination_minimum_balance(new_feature_set(), &[Ok(()), Ok(())]);
-        }
-        #[test]
-        fn test_withdraw_minimum_stake_delegation() {
-            do_test_withdraw_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation() {
-            let mut feature_set = new_feature_set();
-            // The "old" behavior relies on `validate_delegated_amount()` *not* checking if the
-            // stake amount meets the minimum delegation.  Once the
-            // `stake_allow_zero_undelegated_amount` feature is activated, `the expected_result`
-            // parameter can be removed and consolidated.
-            feature_set.deactivate(&feature_set::stake_allow_zero_undelegated_amount::id());
-            do_test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation(
-                feature_set,
-                Ok(()),
+        let mut sysvar_cache_override = SysvarCache::default();
+        sysvar_cache_override.set_stake_history(stake_history.clone());
+        sysvar_cache_override.set_rent(rent);
+        sysvar_cache_override.set_clock(Clock {
+            epoch: current_epoch,
+            ..Clock::default()
+        });
+
+        let authorized_staker = Pubkey::new_unique();
+        let vote_address = Pubkey::new_unique();
+        let new_vote_address = Pubkey::new_unique();
+        let stake_address = Pubkey::new_unique();
+        let uninitialized_stake_address = Pubkey::new_unique();
+
+        let prepare_stake_account = |activation_epoch, expected_stake_activation_status| {
+            let initial_stake_delegation = minimum_delegation + rent_exempt_reserve;
+            let initial_stake_state = StakeState::Stake(
+                Meta {
+                    authorized: Authorized {
+                        staker: authorized_staker,
+                        withdrawer: Pubkey::new_unique(),
+                    },
+                    rent_exempt_reserve,
+                    ..Meta::default()
+                },
+                new_stake(
+                    initial_stake_delegation,
+                    &vote_address,
+                    &VoteState::default(),
+                    activation_epoch,
+                    &stake_config::Config::default(),
+                ),
             );
-        }
-        #[test]
-        fn test_split_source_uninitialized() {
-            do_test_split_source_uninitialized(new_feature_set());
-        }
-        #[test]
-        fn test_split_split_not_uninitialized() {
-            do_test_split_split_not_uninitialized(new_feature_set());
-        }
-        #[test]
-        fn test_split_more_than_staked() {
-            do_test_split_more_than_staked(new_feature_set());
-        }
-        #[test]
-        fn test_split_with_rent() {
-            do_test_split_with_rent(new_feature_set());
-        }
-        #[test]
-        fn test_split_to_account_with_rent_exempt_reserve() {
-            do_test_split_to_account_with_rent_exempt_reserve(new_feature_set());
-        }
-        #[test]
-        fn test_split_from_larger_sized_account() {
-            do_test_split_from_larger_sized_account(new_feature_set());
-        }
-        #[test]
-        fn test_split_from_smaller_sized_account() {
-            do_test_split_from_smaller_sized_account(new_feature_set());
-        }
-        #[test]
-        fn test_split_100_percent_of_source() {
-            do_test_split_100_percent_of_source(new_feature_set());
-        }
-        #[test]
-        fn test_split_100_percent_of_source_to_account_with_lamports() {
-            do_test_split_100_percent_of_source_to_account_with_lamports(new_feature_set());
-        }
-        #[test]
-        fn test_split_rent_exemptness() {
-            do_test_split_rent_exemptness(new_feature_set());
-        }
-        #[test]
-        fn test_merge() {
-            do_test_merge(new_feature_set());
-        }
-        #[test]
-        fn test_merge_self_fails() {
-            do_test_merge_self_fails(new_feature_set());
-        }
-        #[test]
-        fn test_merge_incorrect_authorized_staker() {
-            do_test_merge_incorrect_authorized_staker(new_feature_set());
-        }
-        #[test]
-        fn test_merge_invalid_account_data() {
-            do_test_merge_invalid_account_data(new_feature_set());
-        }
-        #[test]
-        fn test_merge_fake_stake_source() {
-            do_test_merge_fake_stake_source(new_feature_set());
-        }
-        #[test]
-        fn test_merge_active_stake() {
-            do_test_merge_active_stake(new_feature_set());
-        }
-        #[test]
-        fn test_stake_get_minimum_delegation() {
-            do_test_stake_get_minimum_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_stake_process_instruction_error_ordering() {
-            do_test_stake_process_instruction_error_ordering(new_feature_set());
-        }
-        #[test]
-        fn test_deactivate_delinquent() {
-            do_test_deactivate_delinquent(new_feature_set());
-        }
-    }
 
-    mod new_behavior {
-        use super::*;
+            if let Some(expected_stake_activation_status) = expected_stake_activation_status {
+                assert_eq!(
+                    expected_stake_activation_status,
+                    initial_stake_state
+                        .delegation()
+                        .unwrap()
+                        .stake_activating_and_deactivating(current_epoch, Some(&stake_history))
+                );
+            }
 
-        fn new_feature_set() -> FeatureSet {
-            FeatureSet::all_enabled()
-        }
+            AccountSharedData::new_data_with_space(
+                rent_exempt_reserve + initial_stake_delegation, /* lamports */
+                &initial_stake_state,
+                StakeState::size_of(),
+                &id(),
+            )
+            .unwrap()
+        };
 
-        #[test]
-        fn test_stake_process_instruction() {
-            do_test_stake_process_instruction(new_feature_set());
-        }
-        #[test]
-        fn test_spoofed_stake_accounts() {
-            do_test_spoofed_stake_accounts(new_feature_set());
-        }
-        #[test]
-        fn test_stake_process_instruction_decode_bail() {
-            do_test_stake_process_instruction_decode_bail(new_feature_set());
-        }
-        #[test]
-        fn test_stake_checked_instructions() {
-            do_test_stake_checked_instructions(new_feature_set());
-        }
-        #[test]
-        fn test_stake_initialize() {
-            do_test_stake_initialize(new_feature_set());
-        }
-        #[test]
-        fn test_authorize() {
-            do_test_authorize(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_override() {
-            do_test_authorize_override(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_with_seed() {
-            do_test_authorize_with_seed(new_feature_set());
-        }
-        #[test]
-        fn test_authorize_delegated_stake() {
-            do_test_authorize_delegated_stake(new_feature_set());
-        }
-        #[test]
-        fn test_stake_delegate() {
-            do_test_stake_delegate(new_feature_set());
-        }
-        #[test]
-        fn test_redelegate_consider_balance_changes() {
-            do_test_redelegate_consider_balance_changes(new_feature_set());
-        }
-        #[test]
-        fn test_split() {
-            do_test_split(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_stake() {
-            do_test_withdraw_stake(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_stake_before_warmup() {
-            do_test_withdraw_stake_before_warmup(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_lockup() {
-            do_test_withdraw_lockup(new_feature_set());
-        }
-        #[test]
-        fn test_withdraw_rent_exempt() {
-            do_test_withdraw_rent_exempt(new_feature_set());
-        }
-        #[test]
-        fn test_deactivate() {
-            do_test_deactivate(new_feature_set());
-        }
-        #[test]
-        fn test_set_lockup() {
-            do_test_set_lockup(new_feature_set());
-        }
-        #[test]
-        fn test_initialize_minimum_balance() {
-            do_test_initialize_minimum_balance(new_feature_set());
-        }
-        #[test]
-        fn test_delegate_minimum_stake_delegation() {
-            do_test_delegate_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_split_minimum_stake_delegation() {
-            do_test_split_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_split_full_amount_minimum_stake_delegation() {
-            do_test_split_full_amount_minimum_stake_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_initialized_split_destination_minimum_balance() {
-            do_test_initialized_split_destination_minimum_balance(new_feature_set());
-        }
-        #[test]
-        fn test_staked_split_destination_minimum_balance() {
-            do_test_staked_split_destination_minimum_balance(
-                new_feature_set(),
-                &[
-                    Err(InstructionError::InsufficientFunds),
-                    Err(InstructionError::InsufficientFunds),
-                ],
+        let new_vote_account = AccountSharedData::new_data_with_space(
+            1, /* lamports */
+            &VoteStateVersions::new_current(VoteState::default()),
+            VoteState::size_of(),
+            &domichain_vote_program::id(),
+        )
+        .unwrap();
+
+        let process_instruction_redelegate =
+            |stake_address: &Pubkey,
+             stake_account: &AccountSharedData,
+             authorized_staker: &Pubkey,
+             vote_address: &Pubkey,
+             vote_account: &AccountSharedData,
+             uninitialized_stake_address: &Pubkey,
+             uninitialized_stake_account: &AccountSharedData,
+             expected_result| {
+                process_instruction(
+                    Arc::clone(&feature_set),
+                    &serialize(&StakeInstruction::Redelegate).unwrap(),
+                    vec![
+                        (*stake_address, stake_account.clone()),
+                        (
+                            *uninitialized_stake_address,
+                            uninitialized_stake_account.clone(),
+                        ),
+                        (*vote_address, vote_account.clone()),
+                        (*authorized_staker, AccountSharedData::default()),
+                        (
+                            stake_config::id(),
+                            config::create_account(0, &stake_config::Config::default()),
+                        ),
+                        (
+                            stake_history::id(),
+                            create_account_shared_data_for_test(&stake_history),
+                        ),
+                        (rent::id(), create_account_shared_data_for_test(&rent)),
+                        (
+                            clock::id(),
+                            create_account_shared_data_for_test(&Clock {
+                                epoch: current_epoch,
+                                ..Clock::default()
+                            }),
+                        ),
+                    ],
+                    vec![
+                        AccountMeta {
+                            pubkey: *stake_address,
+                            is_signer: false,
+                            is_writable: true,
+                        },
+                        AccountMeta {
+                            pubkey: *uninitialized_stake_address,
+                            is_signer: false,
+                            is_writable: true,
+                        },
+                        AccountMeta {
+                            pubkey: *vote_address,
+                            is_signer: false,
+                            is_writable: false,
+                        },
+                        AccountMeta {
+                            pubkey: stake_config::id(),
+                            is_signer: false,
+                            is_writable: false,
+                        },
+                        AccountMeta {
+                            pubkey: *authorized_staker,
+                            is_signer: true,
+                            is_writable: false,
+                        },
+                    ],
+                    expected_result,
+                )
+            };
+
+        //
+        // Failure: incorrect authorized staker
+        //
+        let stake_account = prepare_stake_account(0 /*activation_epoch*/, None);
+        let uninitialized_stake_account =
+            AccountSharedData::new(0 /* lamports */, StakeState::size_of(), &id());
+
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &Pubkey::new_unique(), // <-- Incorrect authorized staker
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(InstructionError::MissingRequiredSignature),
+        );
+
+        //
+        // Success: normal case
+        //
+        let output_accounts = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Ok(()),
+        );
+
+        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve);
+        if let StakeState::Stake(meta, stake) =
+            output_accounts[0].borrow().deserialize_data().unwrap()
+        {
+            assert_eq!(meta.rent_exempt_reserve, rent_exempt_reserve);
+            assert_eq!(
+                stake.delegation.stake,
+                minimum_delegation + rent_exempt_reserve
             );
+            assert_eq!(stake.delegation.activation_epoch, 0);
+            assert_eq!(stake.delegation.deactivation_epoch, current_epoch);
+        } else {
+            panic!("Invalid output_accounts[0] data");
         }
-        #[test]
-        fn test_withdraw_minimum_stake_delegation() {
-            do_test_withdraw_minimum_stake_delegation(new_feature_set());
+        assert_eq!(
+            output_accounts[1].lamports(),
+            minimum_delegation + rent_exempt_reserve
+        );
+        if let StakeState::Stake(meta, stake) =
+            output_accounts[1].borrow().deserialize_data().unwrap()
+        {
+            assert_eq!(meta.rent_exempt_reserve, rent_exempt_reserve);
+            assert_eq!(stake.delegation.stake, minimum_delegation);
+            assert_eq!(stake.delegation.activation_epoch, current_epoch);
+            assert_eq!(stake.delegation.deactivation_epoch, u64::MAX);
+        } else {
+            panic!("Invalid output_accounts[1] data");
         }
-        #[test]
-        fn test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation() {
-            do_test_behavior_withdrawal_then_redelegate_with_less_than_minimum_stake_delegation(
-                new_feature_set(),
+
+        //
+        // Variations of rescinding the deactivation of `stake_account`
+        //
+        let deactivated_stake_accounts = [
+            (
+                // Failure: insufficient stake in `stake_account` to even delegate normally
+                {
+                    let mut deactivated_stake_account = output_accounts[0].clone();
+                    deactivated_stake_account
+                        .checked_add_lamports(minimum_delegation - 1)
+                        .unwrap();
+                    deactivated_stake_account
+                },
                 Err(StakeError::InsufficientDelegation.into()),
+            ),
+            (
+                // Failure: `stake_account` holds the "virtual stake" that's cooling now, with the
+                //          real stake now warming up in `uninitialized_stake_account`
+                {
+                    let mut deactivated_stake_account = output_accounts[0].clone();
+                    deactivated_stake_account
+                        .checked_add_lamports(minimum_delegation)
+                        .unwrap();
+                    deactivated_stake_account
+                },
+                Err(StakeError::TooSoonToRedelegate.into()),
+            ),
+            (
+                // Success: `stake_account` has been replenished with additional lamports to
+                // fully realize its "virtual stake"
+                {
+                    let mut deactivated_stake_account = output_accounts[0].clone();
+                    deactivated_stake_account
+                        .checked_add_lamports(minimum_delegation + rent_exempt_reserve)
+                        .unwrap();
+                    deactivated_stake_account
+                },
+                Ok(()),
+            ),
+            (
+                // Failure: `stake_account` has been replenished with 1 lamport less than what's
+                // necessary to fully realize its "virtual stake"
+                {
+                    let mut deactivated_stake_account = output_accounts[0].clone();
+                    deactivated_stake_account
+                        .checked_add_lamports(minimum_delegation + rent_exempt_reserve - 1)
+                        .unwrap();
+                    deactivated_stake_account
+                },
+                Err(StakeError::TooSoonToRedelegate.into()),
+            ),
+        ];
+        for (deactivated_stake_account, expected_result) in deactivated_stake_accounts {
+            process_instruction(
+                Arc::clone(&feature_set),
+                &serialize(&StakeInstruction::DelegateStake).unwrap(),
+                vec![
+                    (stake_address, deactivated_stake_account),
+                    (vote_address, new_vote_account.clone()),
+                    (authorized_staker, AccountSharedData::default()),
+                    (
+                        stake_config::id(),
+                        config::create_account(0, &stake_config::Config::default()),
+                    ),
+                    (
+                        stake_history::id(),
+                        create_account_shared_data_for_test(&stake_history),
+                    ),
+                    (rent::id(), create_account_shared_data_for_test(&rent)),
+                    (
+                        clock::id(),
+                        create_account_shared_data_for_test(&Clock {
+                            epoch: current_epoch,
+                            ..Clock::default()
+                        }),
+                    ),
+                ],
+                vec![
+                    AccountMeta {
+                        pubkey: stake_address,
+                        is_signer: false,
+                        is_writable: true,
+                    },
+                    AccountMeta {
+                        pubkey: vote_address,
+                        is_signer: false,
+                        is_writable: false,
+                    },
+                    AccountMeta {
+                        pubkey: clock::id(),
+                        is_signer: false,
+                        is_writable: false,
+                    },
+                    AccountMeta {
+                        pubkey: stake_history::id(),
+                        is_signer: false,
+                        is_writable: false,
+                    },
+                    AccountMeta {
+                        pubkey: stake_config::id(),
+                        is_signer: false,
+                        is_writable: false,
+                    },
+                    AccountMeta {
+                        pubkey: authorized_staker,
+                        is_signer: true,
+                        is_writable: false,
+                    },
+                ],
+                expected_result,
             );
         }
-        #[test]
-        fn test_split_source_uninitialized() {
-            do_test_split_source_uninitialized(new_feature_set());
+
+        //
+        // Success: `uninitialized_stake_account` starts with 42 extra lamports
+        //
+        let uninitialized_stake_account_with_extra_lamports =
+            AccountSharedData::new(42 /* lamports */, StakeState::size_of(), &id());
+        let output_accounts = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account_with_extra_lamports,
+            Ok(()),
+        );
+
+        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve);
+        assert_eq!(
+            output_accounts[1].lamports(),
+            minimum_delegation + rent_exempt_reserve + 42
+        );
+        if let StakeState::Stake(meta, stake) =
+            output_accounts[1].borrow().deserialize_data().unwrap()
+        {
+            assert_eq!(meta.rent_exempt_reserve, rent_exempt_reserve);
+            assert_eq!(stake.delegation.stake, minimum_delegation + 42);
+            assert_eq!(stake.delegation.activation_epoch, current_epoch);
+            assert_eq!(stake.delegation.deactivation_epoch, u64::MAX);
+        } else {
+            panic!("Invalid output_accounts[1] data");
         }
-        #[test]
-        fn test_split_split_not_uninitialized() {
-            do_test_split_split_not_uninitialized(new_feature_set());
+
+        //
+        // Success: `stake_account` is over-allocated and holds a greater than required `rent_exempt_reserve`
+        //
+        let mut stake_account_over_allocated =
+            prepare_stake_account(0 /*activation_epoch:*/, None);
+        if let StakeState::Stake(mut meta, stake) = stake_account_over_allocated
+            .borrow_mut()
+            .deserialize_data()
+            .unwrap()
+        {
+            meta.rent_exempt_reserve += 42;
+            stake_account_over_allocated
+                .set_state(&StakeState::Stake(meta, stake))
+                .unwrap();
         }
-        #[test]
-        fn test_split_more_than_staked() {
-            do_test_split_more_than_staked(new_feature_set());
+        stake_account_over_allocated
+            .checked_add_lamports(42)
+            .unwrap();
+        assert_eq!(
+            stake_account_over_allocated.lamports(),
+            (minimum_delegation + rent_exempt_reserve) + (rent_exempt_reserve + 42),
+        );
+        assert_eq!(uninitialized_stake_account.lamports(), 0);
+        let output_accounts = process_instruction_redelegate(
+            &stake_address,
+            &stake_account_over_allocated,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Ok(()),
+        );
+
+        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve + 42);
+        if let StakeState::Stake(meta, _stake) =
+            output_accounts[0].borrow().deserialize_data().unwrap()
+        {
+            assert_eq!(meta.rent_exempt_reserve, rent_exempt_reserve + 42);
+        } else {
+            panic!("Invalid output_accounts[0] data");
         }
-        #[test]
-        fn test_split_with_rent() {
-            do_test_split_with_rent(new_feature_set());
+        assert_eq!(
+            output_accounts[1].lamports(),
+            minimum_delegation + rent_exempt_reserve,
+        );
+        if let StakeState::Stake(meta, stake) =
+            output_accounts[1].borrow().deserialize_data().unwrap()
+        {
+            assert_eq!(meta.rent_exempt_reserve, rent_exempt_reserve);
+            assert_eq!(stake.delegation.stake, minimum_delegation);
+        } else {
+            panic!("Invalid output_accounts[1] data");
         }
-        #[test]
-        fn test_split_to_account_with_rent_exempt_reserve() {
-            do_test_split_to_account_with_rent_exempt_reserve(new_feature_set());
+
+        //
+        // Failure: `uninitialized_stake_account` with invalid program id
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &AccountSharedData::new(
+                0, /* lamports */
+                StakeState::size_of(),
+                &Pubkey::new_unique(), // <-- Invalid program id
+            ),
+            Err(InstructionError::IncorrectProgramId),
+        );
+
+        //
+        // Failure: `uninitialized_stake_account` with size too small
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &AccountSharedData::new(0 /* lamports */, StakeState::size_of() - 1, &id()), // <-- size too small
+            Err(InstructionError::InvalidAccountData),
+        );
+
+        //
+        // Failure: `uninitialized_stake_account` with size too large
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &AccountSharedData::new(0 /* lamports */, StakeState::size_of() + 1, &id()), // <-- size too large
+            Err(InstructionError::InvalidAccountData),
+        );
+
+        //
+        // Failure: `uninitialized_stake_account` with initialized stake account
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &stake_account.clone(), // <-- Initialized stake account
+            Err(InstructionError::AccountAlreadyInitialized),
+        );
+
+        //
+        // Failure: invalid `new_vote_account`
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &uninitialized_stake_account, // <-- Invalid vote account
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(InstructionError::IncorrectProgramId),
+        );
+
+        //
+        // Failure: invalid `stake_account`
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &uninitialized_stake_account, // <-- Uninitialized stake account
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(InstructionError::InvalidAccountData),
+        );
+
+        //
+        // Failure: stake is inactive, activating or deactivating
+        //
+        let inactive_stake_account = prepare_stake_account(
+            current_epoch + 1, /*activation_epoch*/
+            Some(StakeActivationStatus {
+                effective: 0,
+                activating: 0,
+                deactivating: 0,
+            }),
+        );
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &inactive_stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(StakeError::RedelegateTransientOrInactiveStake.into()),
+        );
+
+        let activating_stake_account = prepare_stake_account(
+            current_epoch, /*activation_epoch*/
+            Some(StakeActivationStatus {
+                effective: 0,
+                activating: minimum_delegation + rent_exempt_reserve,
+                deactivating: 0,
+            }),
+        );
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &activating_stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(StakeError::RedelegateTransientOrInactiveStake.into()),
+        );
+
+        let mut deactivating_stake_account =
+            prepare_stake_account(0 /*activation_epoch:*/, None);
+        if let StakeState::Stake(meta, mut stake) = deactivating_stake_account
+            .borrow_mut()
+            .deserialize_data()
+            .unwrap()
+        {
+            stake.deactivate(current_epoch).unwrap();
+            assert_eq!(
+                StakeActivationStatus {
+                    effective: minimum_delegation + rent_exempt_reserve,
+                    activating: 0,
+                    deactivating: minimum_delegation + rent_exempt_reserve,
+                },
+                stake
+                    .delegation
+                    .stake_activating_and_deactivating(current_epoch, Some(&stake_history))
+            );
+
+            deactivating_stake_account
+                .set_state(&StakeState::Stake(meta, stake))
+                .unwrap();
         }
-        #[test]
-        fn test_split_from_larger_sized_account() {
-            do_test_split_from_larger_sized_account(new_feature_set());
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &deactivating_stake_account,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(StakeError::RedelegateTransientOrInactiveStake.into()),
+        );
+
+        //
+        // Failure: `stake_account` has insufficient stake
+        //          (less than `minimum_delegation + rent_exempt_reserve`)
+        //
+        let mut stake_account_too_few_lamports = stake_account.clone();
+        if let StakeState::Stake(meta, mut stake) = stake_account_too_few_lamports
+            .borrow_mut()
+            .deserialize_data()
+            .unwrap()
+        {
+            stake.delegation.stake -= 1;
+            assert_eq!(
+                stake.delegation.stake,
+                minimum_delegation + rent_exempt_reserve - 1
+            );
+            stake_account_too_few_lamports
+                .set_state(&StakeState::Stake(meta, stake))
+                .unwrap();
+        } else {
+            panic!("Invalid stake_account");
         }
-        #[test]
-        fn test_split_from_smaller_sized_account() {
-            do_test_split_from_smaller_sized_account(new_feature_set());
-        }
-        #[test]
-        fn test_split_100_percent_of_source() {
-            do_test_split_100_percent_of_source(new_feature_set());
-        }
-        #[test]
-        fn test_split_100_percent_of_source_to_account_with_lamports() {
-            do_test_split_100_percent_of_source_to_account_with_lamports(new_feature_set());
-        }
-        #[test]
-        fn test_split_rent_exemptness() {
-            do_test_split_rent_exemptness(new_feature_set());
-        }
-        #[test]
-        fn test_merge() {
-            do_test_merge(new_feature_set());
-        }
-        #[test]
-        fn test_merge_self_fails() {
-            do_test_merge_self_fails(new_feature_set());
-        }
-        #[test]
-        fn test_merge_incorrect_authorized_staker() {
-            do_test_merge_incorrect_authorized_staker(new_feature_set());
-        }
-        #[test]
-        fn test_merge_invalid_account_data() {
-            do_test_merge_invalid_account_data(new_feature_set());
-        }
-        #[test]
-        fn test_merge_fake_stake_source() {
-            do_test_merge_fake_stake_source(new_feature_set());
-        }
-        #[test]
-        fn test_merge_active_stake() {
-            do_test_merge_active_stake(new_feature_set());
-        }
-        #[test]
-        fn test_stake_get_minimum_delegation() {
-            do_test_stake_get_minimum_delegation(new_feature_set());
-        }
-        #[test]
-        fn test_stake_process_instruction_error_ordering() {
-            do_test_stake_process_instruction_error_ordering(new_feature_set());
-        }
-        #[test]
-        fn test_deactivate_delinquent() {
-            do_test_deactivate_delinquent(new_feature_set());
-        }
+        stake_account_too_few_lamports
+            .checked_sub_lamports(1)
+            .unwrap();
+        assert_eq!(
+            stake_account_too_few_lamports.lamports(),
+            minimum_delegation + 2 * rent_exempt_reserve - 1
+        );
+
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account_too_few_lamports,
+            &authorized_staker,
+            &new_vote_address,
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(StakeError::InsufficientDelegation.into()),
+        );
+
+        //
+        // Failure: redelegate to same vote addresss
+        //
+        let _ = process_instruction_redelegate(
+            &stake_address,
+            &stake_account,
+            &authorized_staker,
+            &vote_address, // <-- Same vote address
+            &new_vote_account,
+            &uninitialized_stake_address,
+            &uninitialized_stake_account,
+            Err(StakeError::RedelegateToSameVoteAccount.into()),
+        );
     }
 }

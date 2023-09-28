@@ -1,16 +1,18 @@
+//! Domichain account addresses.
+
 pub use domichain_program::pubkey::*;
 
 /// New random Pubkey for tests and benchmarks.
-#[cfg(feature = "full")]
+#[cfg(all(not(target_os = "wasi"), feature = "full"))]
 pub fn new_rand() -> Pubkey {
-    Pubkey::new(&rand::random::<[u8; PUBKEY_BYTES]>())
+    Pubkey::from(rand::random::<[u8; PUBKEY_BYTES]>())
 }
 
-#[cfg(feature = "full")]
+#[cfg(all(not(target_os = "wasi"), feature = "full"))]
 pub fn write_pubkey_file(outfile: &str, pubkey: Pubkey) -> Result<(), Box<dyn std::error::Error>> {
     use std::io::Write;
 
-    let printable = format!("{}", pubkey);
+    let printable = format!("{pubkey}");
     let serialized = serde_json::to_string(&printable)?;
 
     if let Some(outdir) = std::path::Path::new(&outfile).parent() {
@@ -22,7 +24,7 @@ pub fn write_pubkey_file(outfile: &str, pubkey: Pubkey) -> Result<(), Box<dyn st
     Ok(())
 }
 
-#[cfg(feature = "full")]
+#[cfg(all(not(target_os = "wasi"), feature = "full"))]
 pub fn read_pubkey_file(infile: &str) -> Result<Pubkey, Box<dyn std::error::Error>> {
     let f = std::fs::File::open(infile)?;
     let printable: String = serde_json::from_reader(f)?;

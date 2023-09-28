@@ -10,8 +10,8 @@ documentation = "https://docs.rs/domichain-bpf-rust-zktoken_crypto"
 edition = "2021"
 
 [dependencies]
-domichain-program = { path = "../../../../sdk/program", version = "=1.11.1" }
-domichain-zk-token-sdk = { path = "../../../../zk-token-sdk", version = "=1.11.1" }
+domichain-program = { path = "../../../../sdk/program", version = "=1.16.1" }
+domichain-zk-token-sdk = { path = "../../../../zk-token-sdk", version = "=1.16.1" }
 
 [lib]
 crate-type = ["cdylib"]

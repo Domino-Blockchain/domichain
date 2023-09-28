@@ -8,14 +8,14 @@ use {
 
 pub fn parse_nonce(data: &[u8]) -> Result<UiNonceState, ParseAccountError> {
     let nonce_versions: Versions = bincode::deserialize(data)
-        .map_err(|_| ParseAccountError::from(InstructionError::InvalidAccountData))?;
+        .map_err(|_| ParseAccountError::from(dbg!(InstructionError::InvalidAccountData)))?;
     match nonce_versions.state() {
         // This prevents parsing an allocated System-owned account with empty data of any non-zero
         // length as `uninitialized` nonce. An empty account of the wrong length can never be
         // initialized as a nonce account, and an empty account of the correct length may not be an
         // uninitialized nonce account, since it can be assigned to another program.
         State::Uninitialized => Err(ParseAccountError::from(
-            InstructionError::InvalidAccountData,
+            dbg!(InstructionError::InvalidAccountData),
         )),
         State::Initialized(data) => Ok(UiNonceState::Initialized(UiNonceData {
             authority: data.authority.to_string(),
@@ -57,10 +57,7 @@ mod test {
 
     #[test]
     fn test_parse_nonce() {
-        let nonce_data = Versions::new(
-            State::Initialized(Data::default()),
-            true, // separate_domains
-        );
+        let nonce_data = Versions::new(State::Initialized(Data::default()));
         let nonce_account_data = bincode::serialize(&nonce_data).unwrap();
         assert_eq!(
             parse_nonce(&nonce_account_data).unwrap(),

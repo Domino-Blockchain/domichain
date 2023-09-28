@@ -3,13 +3,15 @@ use {
         Args, AuthorizeArgs, Command, CountArgs, MoveArgs, NewArgs, QueryArgs, RebaseArgs,
         SetLockupArgs,
     },
-    clap::{value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand},
+    clap::{
+        crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand,
+    },
     domichain_clap_utils::{
         input_parsers::unix_timestamp_from_rfc3339_datetime,
         input_validators::{is_amount, is_rfc3339_datetime, is_valid_pubkey, is_valid_signer},
     },
     domichain_cli_config::CONFIG_FILE,
-    domichain_sdk::native_token::sol_to_lamports,
+    domichain_sdk::native_token::domi_to_lamports,
     std::{ffi::OsString, process::exit},
 };
 
@@ -106,7 +108,7 @@ fn lockup_epoch_arg<'a, 'b>() -> Arg<'a, 'b> {
         .long("lockup-epoch")
         .takes_value(true)
         .value_name("NUMBER")
-        .help("The epoch height at which each account will be available for withdrawl")
+        .help("The epoch height at which each account will be available for withdrawal")
 }
 
 fn lockup_date_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -115,7 +117,7 @@ fn lockup_date_arg<'a, 'b>() -> Arg<'a, 'b> {
         .value_name("RFC3339 DATETIME")
         .validator(is_rfc3339_datetime)
         .takes_value(true)
-        .help("The date and time at which each account will be available for withdrawl")
+        .help("The date and time at which each account will be available for withdrawal")
 }
 
 fn num_accounts_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -133,9 +135,9 @@ where
     T: Into<OsString> + Clone,
 {
     let default_config_file = CONFIG_FILE.as_ref().unwrap();
-    App::new("domichain-stake-accounts")
-        .about("about")
-        .version("version")
+    App::new(crate_name!())
+        .about(crate_description!())
+        .version(domichain_version::version!())
         .arg(
             Arg::with_name("config_file")
                 .long("config")
@@ -281,7 +283,7 @@ fn parse_new_args(matches: &ArgMatches<'_>) -> NewArgs<String, String> {
     NewArgs {
         fee_payer: value_t_or_exit!(matches, "fee_payer", String),
         funding_keypair: value_t_or_exit!(matches, "funding_keypair", String),
-        lamports: sol_to_lamports(value_t_or_exit!(matches, "amount", f64)),
+        lamports: domi_to_lamports(value_t_or_exit!(matches, "amount", f64)),
         base_keypair: value_t_or_exit!(matches, "base_keypair", String),
         stake_authority: value_t_or_exit!(matches, "stake_authority", String),
         withdraw_authority: value_t_or_exit!(matches, "withdraw_authority", String),

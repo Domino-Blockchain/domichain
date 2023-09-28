@@ -1,16 +1,16 @@
 [package]
 name = "fail"
-version = "1.11.1"
+version = "1.16.1"
 description = "Domichain SBF test program written in Rust"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
+authors = ["Domichain Labs Maintainers <maintainers@domichainlabs.com>"]
+repository = "https://github.com/domichain-labs/domichain"
 license = "Apache-2.0"
-homepage = "https://domichain.com/"
+homepage = "https://domichainlabs.com/"
 edition = "2021"
 publish = false
 
 [dependencies]
-domichain-program = { path = "../../../../program", version = "=1.11.1" }
+domichain-program = { path = "../../../../program", version = "=1.16.1" }
 
 [lib]
 crate-type = ["cdylib"]

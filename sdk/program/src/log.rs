@@ -7,7 +7,7 @@
 //! The most common way to emit logs is through the [`msg!`] macro, which logs
 //! simple strings, as well as [formatted strings][fs].
 //!
-//! [`msg!`]: msg
+//! [`msg!`]: crate::msg!
 //! [fs]: https://doc.rust-lang.org/std/fmt/
 //!
 //! Logs can be viewed in multiple ways:
@@ -16,16 +16,16 @@
 //!   network. Note though that transactions that fail during pre-flight
 //!   simulation are not displayed here.
 //! - When submitting transactions via [`RpcClient`], if Rust's own logging is
-//!   active then the `domichain_client` crate logs at the "debug" level any logs
+//!   active then the `domichain_rpc_client` crate logs at the "debug" level any logs
 //!   for transactions that failed during simulation. If using [`env_logger`]
-//!   these logs can be activated by setting `RUST_LOG=domichain_client=debug`.
+//!   these logs can be activated by setting `RUST_LOG=domichain_rpc_client=debug`.
 //! - Logs can be retrieved from a finalized transaction by calling
 //!   [`RpcClient::get_transaction`].
 //! - Block explorers may display logs.
 //!
-//! [`RpcClient`]: https://docs.rs/domichain-client/latest/domichain_client/rpc_client/struct.RpcClient.html
+//! [`RpcClient`]: https://docs.rs/domichain-rpc-client/latest/domichain_rpc_client/rpc_client/struct.RpcClient.html
 //! [`env_logger`]: https://docs.rs/env_logger
-//! [`RpcClient::get_transaction`]: https://docs.rs/domichain-client/latest/domichain_client/rpc_client/struct.RpcClient.html#method.get_transaction
+//! [`RpcClient::get_transaction`]: https://docs.rs/domichain-rpc-client/latest/domichain_rpc_client/rpc_client/struct.RpcClient.html#method.get_transaction
 //!
 //! While most logging functions are defined in this module, [`Pubkey`]s can
 //! also be efficiently logged with the [`Pubkey::log`] function.
@@ -88,38 +88,103 @@ macro_rules! msg {
     ($($arg:tt)*) => ($crate::log::sol_log(&format!($($arg)*)));
 }
 
+#[macro_export]
+macro_rules! dbg_syscall {
+    // NOTE: We cannot use `concat!` to make a static string as a format argument
+    // of `eprintln!` because `file!` could contain a `{` or
+    // `$val` expression could be a block (`{ .. }`), in which case the `eprintln!`
+    // will be malformed.
+    () => {
+        $crate::msg!("[{}:{}]", file!(), line!())
+    };
+    ($val:expr $(,)?) => {
+        // Use of `match` here is intentional because it affects the lifetimes
+        // of temporaries - https://stackoverflow.com/a/48732525/1063961
+        match $val {
+            tmp => {
+                $crate::msg!("[{}:{}] {} = {:#?}",
+                    file!(), line!(), stringify!($val), &tmp);
+                tmp
+            }
+        }
+    };
+    ($($val:expr),+ $(,)?) => {
+        ($($crate::dbg_syscall!($val)),+,)
+    };
+}
+
+#[macro_export]
+macro_rules! msg_static {
+    ($msg:expr) => {
+        $crate::log::sol_log($msg)
+    };
+    ($($arg:tt)*) => {
+        let mut s: [u8; 256] = [0; 256];
+        {
+            use std::io::Write;
+            write!(s.as_mut(), $($arg)*).unwrap();
+        }
+        $crate::log::sol_log(std::str::from_utf8(&s).unwrap())
+    };
+}
+
+#[macro_export]
+macro_rules! dbg_static {
+    // NOTE: We cannot use `concat!` to make a static string as a format argument
+    // of `eprintln!` because `file!` could contain a `{` or
+    // `$val` expression could be a block (`{ .. }`), in which case the `eprintln!`
+    // will be malformed.
+    () => {
+        $crate::msg_static!("[{}:{}]", "syscall", line!())
+    };
+    ($val:expr $(,)?) => {
+        // Use of `match` here is intentional because it affects the lifetimes
+        // of temporaries - https://stackoverflow.com/a/48732525/1063961
+        match $val {
+            tmp => {
+                $crate::msg_static!("[{}:{}] {} = {:#?}",
+                    "syscall", line!(), stringify!($val), &tmp);
+                tmp
+            }
+        }
+    };
+    ($($val:expr),+ $(,)?) => {
+        ($($crate::dbg_static!($val)),+,)
+    };
+}
+
 /// Print a string to the log.
 #[inline]
 pub fn sol_log(message: &str) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_log_(message.as_ptr(), message.len() as u64);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_log(message);
 }
 
 /// Print 64-bit values represented as hexadecimal to the log.
 #[inline]
 pub fn sol_log_64(arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_log_64_(arg1, arg2, arg3, arg4, arg5);
     }
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_log_64(arg1, arg2, arg3, arg4, arg5);
 }
 
 /// Print some slices as base64.
 pub fn sol_log_data(data: &[&[u8]]) {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_log_data(data as *const _ as *const u8, data.len() as u64)
     };
 
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_log_data(data);
 }
 
@@ -158,10 +223,10 @@ pub fn sol_log_params(accounts: &[AccountInfo], data: &[u8]) {
 /// Print the remaining compute units available to the program.
 #[inline]
 pub fn sol_log_compute_units() {
-    #[cfg(target_os = "domichain")]
+    #[cfg(target_os = "wasi")]
     unsafe {
         crate::syscalls::sol_log_compute_units_();
     }
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     crate::program_stubs::sol_log_compute_units();
 }

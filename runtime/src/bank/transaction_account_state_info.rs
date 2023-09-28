@@ -4,8 +4,11 @@ use {
         bank::Bank,
     },
     domichain_sdk::{
-        account::ReadableAccount, feature_set, message::SanitizedMessage, native_loader,
-        transaction::Result, transaction_context::TransactionContext,
+        account::ReadableAccount,
+        message::SanitizedMessage,
+        native_loader,
+        transaction::Result,
+        transaction_context::{IndexOfAccount, TransactionContext},
     },
 };
 
@@ -22,7 +25,9 @@ impl Bank {
         (0..message.account_keys().len())
             .map(|i| {
                 let rent_state = if message.is_writable(i) {
-                    let state = if let Ok(account) = transaction_context.get_account_at_index(i) {
+                    let state = if let Ok(account) =
+                        transaction_context.get_account_at_index(i as IndexOfAccount)
+                    {
                         let account = account.borrow();
 
                         // Native programs appear to be RentPaying because they carry low lamport
@@ -55,9 +60,6 @@ impl Bank {
         post_state_infos: &[TransactionAccountStateInfo],
         transaction_context: &TransactionContext,
     ) -> Result<()> {
-        let include_account_index_in_err = self
-            .feature_set
-            .is_active(&feature_set::include_account_index_in_rent_error::id());
         for (i, (pre_state_info, post_state_info)) in
             pre_state_infos.iter().zip(post_state_infos).enumerate()
         {
@@ -65,8 +67,7 @@ impl Bank {
                 pre_state_info.rent_state.as_ref(),
                 post_state_info.rent_state.as_ref(),
                 transaction_context,
-                i,
-                include_account_index_in_err,
+                i as IndexOfAccount,
             )?;
         }
         Ok(())

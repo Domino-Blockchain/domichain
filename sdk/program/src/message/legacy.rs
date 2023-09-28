@@ -7,16 +7,17 @@
 //!
 //! [`legacy`]: crate::message::legacy
 //! [`v0`]: crate::message::v0
-//! [future message format]: https://docs.domichain.com/proposals/transactions-v2
+//! [future message format]: https://docs.domichain.com/proposals/versioned-transactions
 
 #![allow(clippy::integer_arithmetic)]
 
 use {
     crate::{
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+        wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
         hash::Hash,
         instruction::{CompiledInstruction, Instruction},
-        message::{CompiledKeys, MessageHeader},
+        message::{compiled_keys::CompiledKeys, MessageHeader},
         pubkey::Pubkey,
         sanitize::{Sanitize, SanitizeError},
         short_vec, system_instruction, system_program, sysvar, wasm_bindgen,
@@ -27,7 +28,7 @@ use {
 
 lazy_static! {
     // Copied keys over since direct references create cyclical dependency.
-    pub static ref BUILTIN_PROGRAMS_KEYS: [Pubkey; 10] = {
+    pub static ref BUILTIN_PROGRAMS_KEYS: [Pubkey; 13] = {
         let parse = |s| Pubkey::from_str(s).unwrap();
         [
             parse("Config1111111111111111111111111111111111111"),
@@ -40,6 +41,9 @@ lazy_static! {
             bpf_loader::id(),
             bpf_loader_deprecated::id(),
             bpf_loader_upgradeable::id(),
+            wasm_loader::id(),
+            wasm_loader_deprecated::id(),
+            wasm_loader_upgradeable::id(),
         ]
     };
 }
@@ -169,18 +173,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
@@ -240,18 +244,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
@@ -336,18 +340,18 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`domichain_sdk`], [`domichain_client`] and [`anyhow`] crates.
+    /// This example uses the [`domichain_sdk`], [`domichain_rpc_client`] and [`anyhow`] crates.
     ///
     /// [`domichain_sdk`]: https://docs.rs/domichain-sdk
-    /// [`domichain_client`]: https://docs.rs/domichain-client
+    /// [`domichain_rpc_client`]: https://docs.rs/domichain-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use domichain_program::example_mocks::domichain_sdk;
-    /// # use domichain_program::example_mocks::domichain_client;
+    /// # use domichain_program::example_mocks::domichain_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use domichain_client::rpc_client::RpcClient;
+    /// use domichain_rpc_client::rpc_client::RpcClient;
     /// use domichain_sdk::{
     ///     hash::Hash,
     ///     instruction::Instruction,
@@ -465,14 +469,14 @@ impl Message {
     }
 
     /// Compute the blake3 hash of this transaction's message.
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     pub fn hash(&self) -> Hash {
         let message_bytes = self.serialize();
         Self::hash_raw_message(&message_bytes)
     }
 
     /// Compute the blake3 hash of a raw transaction message.
-    #[cfg(not(target_os = "domichain"))]
+    #[cfg(not(target_os = "wasi"))]
     pub fn hash_raw_message(message_bytes: &[u8]) -> Hash {
         use blake3::traits::digest::Digest;
         let mut hasher = blake3::Hasher::new();
@@ -605,11 +609,11 @@ impl Message {
         false
     }
 
-    /// Returns `true` if any account is the BPF upgradeable loader.
+    /// Returns `true` if any account is the WASM upgradeable loader.
     pub fn is_upgradeable_loader_present(&self) -> bool {
         self.account_keys
             .iter()
-            .any(|&key| key == bpf_loader_upgradeable::id())
+            .any(|&key| key == wasm_loader_upgradeable::id())
     }
 }
 
@@ -627,7 +631,7 @@ mod tests {
         let keys: HashSet<Pubkey> = BUILTIN_PROGRAMS_KEYS.iter().copied().collect();
         assert_eq!(keys.len(), 10);
         for k in keys {
-            let k = format!("{}", k);
+            let k = format!("{k}");
             assert!(k.ends_with("11111111111111111111111"));
         }
     }

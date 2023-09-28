@@ -28,7 +28,7 @@
 //! [serialization]: #serialization
 //! [np]: #native-programs
 //! [cpi]: #cross-program-instruction-execution
-//! [sysvar]: #sysvars
+//! [sysvar]: crate::sysvar
 //!
 //! Idiomatic examples of `domichain-program` usage can be found in
 //! [the Domichain Program Library][spl].
@@ -112,22 +112,22 @@
 //! and off-chain execution, the environments of which are significantly
 //! different, it extensively uses [conditional compilation][cc] to tailor its
 //! implementation to the environment. The `cfg` predicate used for identifying
-//! compilation for on-chain programs is `target_os = "domichain"`, as in this
+//! compilation for on-chain programs is `target_os = "wasi"`, as in this
 //! example from the `domichain-program` codebase that logs a message via a
 //! syscall when run on-chain, and via a library call when offchain:
 //!
-//! [rbpf]: https://github.com/solana-labs/rbpf
+//! [rbpf]: https://github.com/domichain-labs/rbpf
 //! [eBPF]: https://ebpf.io/
 //! [cc]: https://doc.rust-lang.org/reference/conditional-compilation.html
 //!
 //! ```
 //! pub fn sol_log(message: &str) {
-//!     #[cfg(target_os = "domichain")]
+//!     #[cfg(target_os = "wasi")]
 //!     unsafe {
 //!         sol_log_(message.as_ptr(), message.len() as u64);
 //!     }
 //!
-//!     #[cfg(not(target_os = "domichain"))]
+//!     #[cfg(not(target_os = "wasi"))]
 //!     program_stubs::sol_log(message);
 //! }
 //! # mod program_stubs {
@@ -298,20 +298,16 @@
 //!
 //!     let payer = next_account_info(account_info_iter)?;
 //!     let recipient = next_account_info(account_info_iter)?;
-//!     // The system program is a required account to invoke a system
-//!     // instruction, even though we don't use it directly.
-//!     let system_account = next_account_info(account_info_iter)?;
 //!
 //!     assert!(payer.is_writable);
 //!     assert!(payer.is_signer);
 //!     assert!(recipient.is_writable);
-//!     assert!(system_program::check_id(system_account.key));
 //!
 //!     let lamports = 1000000;
 //!
 //!     invoke(
 //!         &system_instruction::transfer(payer.key, recipient.key, lamports),
-//!         &[payer.clone(), recipient.clone(), system_account.clone()],
+//!         &[payer.clone(), recipient.clone()],
 //!     )
 //! }
 //! ```
@@ -465,90 +461,24 @@
 //!   - Instruction: [`domichain_program::loader_instruction`]
 //!   - Invokable by programs? yes
 //!
-//! [lut]: https://docs.domichain.com/proposals/transactions-v2
+//! - __WASM Loader__: Deploys, and executes immutable programs on the chain.
+//!   - ID: [`domichain_program::wasm_loader`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
+//!   - Invokable by programs? yes
 //!
-//! # Sysvars
+//! - __Upgradable WASM Loader__: Deploys, upgrades, and executes upgradable
+//!   programs on the chain.
+//!   - ID: [`domichain_program::wasm_loader_upgradeable`]
+//!   - Instruction: [`domichain_program::loader_upgradeable_instruction`]
+//!   - Invokable by programs? yes
 //!
-//! Sysvars are special accounts that contain dynamically-updated data about
-//! the network cluster, the blockchain history, and the executing transaction.
+//! - __Deprecated WASM Loader__: Deploys, and executes immutable programs on the
+//!   chain.
+//!   - ID: [`domichain_program::wasm_loader_deprecated`]
+//!   - Instruction: [`domichain_program::loader_instruction`]
+//!   - Invokable by programs? yes
 //!
-//! The program IDs for sysvars are defined in the [`sysvar`] module, and simple
-//! sysvars implement the [`Sysvar::get`] method, which loads a sysvar directly
-//! from the runtime, as in this example that logs the `clock` sysvar:
-//!
-//! [`Sysvar::get`]: sysvar::Sysvar::get
-//!
-//! ```
-//! use domichain_program::{
-//!     account_info::AccountInfo,
-//!     clock,
-//!     entrypoint::ProgramResult,
-//!     msg,
-//!     pubkey::Pubkey,
-//!     sysvar::Sysvar,
-//! };
-//!
-//! fn process_instruction(
-//!     program_id: &Pubkey,
-//!     accounts: &[AccountInfo],
-//!     instruction_data: &[u8],
-//! ) -> ProgramResult {
-//!     let clock = clock::Clock::get()?;
-//!     msg!("clock: {:#?}", clock);
-//!     Ok(())
-//! }
-//! ```
-//!
-//! Since Domichain sysvars are accounts, if the `AccountInfo` is provided to the
-//! program, then the program can deserialize the sysvar with
-//! [`Sysvar::from_account_info`] to access its data, as in this example that
-//! again logs the [`clock`][clk] sysvar.
-//!
-//! [`Sysvar::from_account_info`]: sysvar::Sysvar::from_account_info
-//! [clk]: sysvar::clock
-//!
-//! ```
-//! use domichain_program::{
-//!     account_info::{next_account_info, AccountInfo},
-//!     clock,
-//!     entrypoint::ProgramResult,
-//!     msg,
-//!     pubkey::Pubkey,
-//!     sysvar::Sysvar,
-//! };
-//!
-//! fn process_instruction(
-//!     program_id: &Pubkey,
-//!     accounts: &[AccountInfo],
-//!     instruction_data: &[u8],
-//! ) -> ProgramResult {
-//!     let account_info_iter = &mut accounts.iter();
-//!     let clock_account = next_account_info(account_info_iter)?;
-//!     let clock = clock::Clock::from_account_info(&clock_account)?;
-//!     msg!("clock: {:#?}", clock);
-//!     Ok(())
-//! }
-//! ```
-//!
-//! When possible, programs should prefer to call `Sysvar::get` instead of
-//! deserializing with `Sysvar::from_account_info`, as the latter imposes extra
-//! overhead of deserialization while also requiring the sysvar account address
-//! be passed to the program, wasting the limited space available to
-//! transactions. Deserializing sysvars that can instead be retrieved with
-//! `Sysvar::get` should be only be considered for compatibility with older
-//! programs that pass around sysvar accounts.
-//!
-//! Some sysvars are too large to deserialize within a program, and
-//! `Sysvar::from_account_info` returns an error. Some sysvars are too large
-//! to deserialize within a program, and attempting to will exhaust the
-//! program's compute budget. Some sysvars do not implement `Sysvar::get` and
-//! return an error. Some sysvars have custom deserializers that do not
-//! implement the `Sysvar` trait. These cases are documented in the modules for
-//! individual sysvars.
-//!
-//! For more details see the Domichain [documentation on sysvars][sysvardoc].
-//!
-//! [sysvardoc]: https://docs.domichain.com/developing/runtime-facilities/sysvars
+//! [lut]: https://docs.domichain.com/proposals/versioned-transactions
 
 #![allow(incomplete_features)]
 #![cfg_attr(RUSTC_WITH_SPECIALIZATION, feature(specialization))]
@@ -559,12 +489,17 @@ extern crate self as domichain_program;
 
 pub mod account_info;
 pub mod address_lookup_table_account;
+pub mod alt_bn128;
 pub(crate) mod atomic_u64;
+pub mod big_mod_exp;
 pub mod blake3;
 pub mod borsh;
 pub mod bpf_loader;
 pub mod bpf_loader_deprecated;
 pub mod bpf_loader_upgradeable;
+pub mod wasm_loader;
+pub mod wasm_loader_deprecated;
+pub mod wasm_loader_upgradeable;
 pub mod clock;
 pub mod debug_account_data;
 pub mod decode_error;
@@ -581,6 +516,8 @@ pub mod keccak;
 pub mod lamports;
 pub mod loader_instruction;
 pub mod loader_upgradeable_instruction;
+pub mod loader_v4;
+pub mod loader_v4_instruction;
 pub mod log;
 pub mod message;
 pub mod native_token;
@@ -597,25 +534,27 @@ pub mod rent;
 pub mod sanitize;
 pub mod secp256k1_program;
 pub mod secp256k1_recover;
+pub mod serde_varint;
 pub mod serialize_utils;
 pub mod short_vec;
 pub mod slot_hashes;
 pub mod slot_history;
+pub mod stable_layout;
 pub mod stake;
 pub mod stake_history;
-#[cfg(target_os = "domichain")]
 pub mod syscalls;
 pub mod system_instruction;
 pub mod system_program;
 pub mod sysvar;
+pub mod vote;
 pub mod wasm;
 
-#[cfg(target_os = "domichain")]
+#[cfg(target_os = "wasi")]
 pub use domichain_sdk_macro::wasm_bindgen_stub as wasm_bindgen;
 /// Re-export of [wasm-bindgen].
 ///
 /// [wasm-bindgen]: https://rustwasm.github.io/docs/wasm-bindgen/
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub use wasm_bindgen::prelude::wasm_bindgen;
 
 /// The [config native program][np].
@@ -627,20 +566,13 @@ pub mod config {
     }
 }
 
-/// The [vote native program][np].
-///
-/// [np]: https://docs.domichain.com/developing/runtime-facilities/programs#vote-program
-pub mod vote {
-    pub mod program {
-        crate::declare_id!("Vote111111111111111111111111111111111111111");
-    }
-}
-
-/// A vector of Domichain SDK IDs
+/// A vector of Domichain SDK IDs.
 pub mod sdk_ids {
     use {
         crate::{
-            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, config, ed25519_program,
+            bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
+            wasm_loader, wasm_loader_deprecated, wasm_loader_upgradeable,
+            config, ed25519_program,
             feature, incinerator, secp256k1_program, domichain_program::pubkey::Pubkey, stake,
             system_program, sysvar, vote,
         },
@@ -656,11 +588,14 @@ pub mod sdk_ids {
                 sysvar::id(),
                 bpf_loader::id(),
                 bpf_loader_upgradeable::id(),
+                wasm_loader::id(),
+                wasm_loader_upgradeable::id(),
                 incinerator::id(),
                 config::program::id(),
                 vote::program::id(),
                 feature::id(),
                 bpf_loader_deprecated::id(),
+                wasm_loader_deprecated::id(),
                 stake::config::id(),
             ];
             sdk_ids.extend(sysvar::ALL_IDS.iter());
@@ -833,32 +768,13 @@ macro_rules! unchecked_div_by_const {
     }};
 }
 
-use std::{mem::MaybeUninit, ptr::write_bytes};
-
-#[macro_export]
-macro_rules! copy_field {
-    ($ptr:expr, $self:ident, $field:ident) => {
-        std::ptr::addr_of_mut!((*$ptr).$field).write($self.$field)
-    };
-}
-
-pub fn clone_zeroed<T, F>(clone: F) -> T
-where
-    F: Fn(&mut MaybeUninit<T>),
-{
-    let mut value = MaybeUninit::<T>::uninit();
-    unsafe { write_bytes(&mut value, 0, 1) }
-    clone(&mut value);
-    unsafe { value.assume_init() }
-}
-
 // This module is purposefully listed after all other exports: because of an
 // interaction within rustdoc between the reexports inside this module of
 // `domichain_program`'s top-level modules, and `domichain_sdk`'s glob re-export of
 // `domichain_program`'s top-level modules, if this module is not lexically last
 // rustdoc fails to generate documentation for the re-exports within
 // `domichain_sdk`.
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 pub mod example_mocks;
 
 #[cfg(test)]

@@ -72,7 +72,7 @@ domichain --version
   installer into a temporary directory:
 
 ```bash
-curl https://release.domichain.com/LATEST_DOMICHAIN_RELEASE_VERSION/domichain-install-init-x86_64-pc-windows-msvc.exe --output C:\domichain-install-tmp\domichain-install-init.exe --create-dirs
+cmd /c "curl https://release.domichain.com/LATEST_DOMICHAIN_RELEASE_VERSION/domichain-install-init-x86_64-pc-windows-msvc.exe --output C:\domichain-install-tmp\domichain-install-init.exe --create-dirs"
 ```
 
 - Copy and paste the following command, then press Enter to install the latest
@@ -107,7 +107,7 @@ manually download and install the binaries.
 
 Download the binaries by navigating to
 [https://Domino-Blockchain/domichain/releases/latest](https://Domino-Blockchain/domichain/releases/latest),
-download **domichain-release-x86_64-unknown-linux-msvc.tar.bz2**, then extract the
+download **domichain-release-x86_64-unknown-linux-gnu.tar.bz2**, then extract the
 archive:
 
 ```bash

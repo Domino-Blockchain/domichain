@@ -1,17 +1,16 @@
 //! The zero-balance sigma proof system.
 //!
-//! A zero-balance proof is defined with respect to a twisted ElGamal ciphertext. The proof
-//! certifies that a given ciphertext encrypts the message 0 (`Scalar::zero()`). To generate the
-//! proof, a prover must provide the decryption key for the ciphertext.
-//!
 //! The protocol guarantees computationally soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 use {
-    crate::encryption::{
-        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
-        pedersen::H,
+    crate::{
+        encryption::{
+            elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+            pedersen::H,
+        },
+        errors::ProofVerificationError,
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
@@ -40,7 +39,7 @@ pub struct ZeroBalanceProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "domichain"))]
+#[cfg(not(target_os = "wasi"))]
 impl ZeroBalanceProof {
     /// Zero-balance proof constructor.
     ///
@@ -61,6 +60,8 @@ impl ZeroBalanceProof {
         ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Self {
+        transcript.zero_balance_proof_domain_separator();
+
         // extract the relevant scalar and Ristretto points from the input
         let P = elgamal_keypair.public.get_point();
         let s = elgamal_keypair.secret.get_scalar();
@@ -98,6 +99,8 @@ impl ZeroBalanceProof {
         ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), ZeroBalanceProofError> {
+        transcript.zero_balance_proof_domain_separator();
+
         // extract the relevant scalar and Ristretto points from the input
         let P = elgamal_pubkey.get_point();
         let C = ciphertext.commitment.get_point();
@@ -112,9 +115,15 @@ impl ZeroBalanceProof {
 
         let w_negated = -&w;
 
-        // decompress R or return verification error
-        let Y_P = self.Y_P.decompress().ok_or(ZeroBalanceProofError::Format)?;
-        let Y_D = self.Y_D.decompress().ok_or(ZeroBalanceProofError::Format)?;
+        // decompress Y or return verification error
+        let Y_P = self
+            .Y_P
+            .decompress()
+            .ok_or(ProofVerificationError::Deserialization)?;
+        let Y_D = self
+            .Y_D
+            .decompress()
+            .ok_or(ProofVerificationError::Deserialization)?;
 
         // check the required algebraic relation
         let check = RistrettoPoint::multiscalar_mul(
@@ -139,7 +148,7 @@ impl ZeroBalanceProof {
         if check.is_identity() {
             Ok(())
         } else {
-            Err(ZeroBalanceProofError::AlgebraicRelation)
+            Err(ProofVerificationError::AlgebraicRelation.into())
         }
     }
 
@@ -152,13 +161,17 @@ impl ZeroBalanceProof {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ZeroBalanceProofError> {
+        if bytes.len() != 96 {
+            return Err(ProofVerificationError::Deserialization.into());
+        }
+
         let bytes = array_ref![bytes, 0, 96];
         let (Y_P, Y_D, z) = array_refs![bytes, 32, 32, 32];
 
         let Y_P = CompressedRistretto::from_slice(Y_P);
         let Y_D = CompressedRistretto::from_slice(Y_D);
 
-        let z = Scalar::from_canonical_bytes(*z).ok_or(ZeroBalanceProofError::Format)?;
+        let z = Scalar::from_canonical_bytes(*z).ok_or(ProofVerificationError::Deserialization)?;
 
         Ok(ZeroBalanceProof { Y_P, Y_D, z })
     }

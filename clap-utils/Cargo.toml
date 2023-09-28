@@ -1,28 +1,28 @@
 [package]
 name = "domichain-clap-utils"
-version = "1.11.1"
 description = "Domichain utilities for the clap"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/domichain"
-license = "Apache-2.0"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-clap-utils"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-chrono = "0.4"
+chrono = { workspace = true, features = ["default"] }
 clap = "2.33.0"
-rpassword = "6.0"
-domichain-perf = { path = "../perf", version = "=1.11.1" }
-domichain-remote-wallet = { path = "../remote-wallet", version = "=1.11.1", default-features = false }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-thiserror = "1.0.31"
-tiny-bip39 = "0.8.2"
-uriparse = "0.6.4"
-url = "2.2.2"
+rpassword = { workspace = true }
+domichain-perf = { workspace = true }
+domichain-remote-wallet = { workspace = true }
+domichain-sdk = { workspace = true }
+thiserror = { workspace = true }
+tiny-bip39 = { workspace = true }
+uriparse = { workspace = true }
+url = { workspace = true }
 
 [dev-dependencies]
-tempfile = "3.3.0"
+tempfile = { workspace = true }
 
 [lib]
 name = "domichain_clap_utils"

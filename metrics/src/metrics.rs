@@ -98,7 +98,7 @@ pub fn serialize_points(points: &Vec<DataPoint>, host_id: &str) -> String {
     for point in points {
         let _ = write!(line, "{},host_id={}", &point.name, host_id);
         for (name, value) in point.tags.iter() {
-            let _ = write!(line, ",{}={}", name, value);
+            let _ = write!(line, ",{name}={value}");
         }
 
         let mut first = true;
@@ -108,7 +108,7 @@ pub fn serialize_points(points: &Vec<DataPoint>, host_id: &str) -> String {
         }
         let timestamp = point.timestamp.duration_since(UNIX_EPOCH);
         let nanos = timestamp.unwrap().as_nanos();
-        let _ = writeln!(line, " {}", nanos);
+        let _ = writeln!(line, " {nanos}");
     }
     line
 }
@@ -173,14 +173,17 @@ impl MetricsAgent {
         max_points_per_sec: usize,
     ) -> Self {
         let (sender, receiver) = unbounded::<MetricsCommand>();
-        thread::spawn(move || Self::run(&receiver, &writer, write_frequency, max_points_per_sec));
+
+        thread::Builder::new()
+            .name("domiMetricsAgent".into())
+            .spawn(move || Self::run(&receiver, &writer, write_frequency, max_points_per_sec))
+            .unwrap();
 
         Self { sender }
     }
 
     fn collect_points(points: &mut Vec<DataPoint>, counters: &mut CounterMap) -> Vec<DataPoint> {
-        let mut ret: Vec<DataPoint> = Vec::default();
-        std::mem::swap(&mut ret, points);
+        let mut ret = std::mem::take(points);
         ret.extend(counters.values().map(|v| v.into()));
         counters.clear();
         ret
@@ -323,16 +326,12 @@ impl Drop for MetricsAgent {
     }
 }
 
-fn get_singleton_agent() -> Arc<Mutex<MetricsAgent>> {
-    static INIT: Once = Once::new();
-    static mut AGENT: Option<Arc<Mutex<MetricsAgent>>> = None;
-    unsafe {
-        INIT.call_once(|| AGENT = Some(Arc::new(Mutex::new(MetricsAgent::default()))));
-        match AGENT {
-            Some(ref agent) => agent.clone(),
-            None => panic!("Failed to initialize metrics agent"),
-        }
-    }
+fn get_singleton_agent() -> &'static MetricsAgent {
+    lazy_static! {
+        static ref AGENT: MetricsAgent = MetricsAgent::default();
+    };
+
+    &AGENT
 }
 
 lazy_static! {
@@ -354,16 +353,14 @@ pub fn set_host_id(host_id: String) {
 /// Submits a new point from any thread.  Note that points are internally queued
 /// and transmitted periodically in batches.
 pub fn submit(point: DataPoint, level: log::Level) {
-    let agent_mutex = get_singleton_agent();
-    let agent = agent_mutex.lock().unwrap();
+    let agent = get_singleton_agent();
     agent.submit(point, level);
 }
 
 /// Submits a new counter or updates an existing counter from any thread.  Note that points are
 /// internally queued and transmitted periodically in batches.
 pub(crate) fn submit_counter(point: CounterPoint, level: log::Level, bucket: u64) {
-    let agent_mutex = get_singleton_agent();
-    let agent = agent_mutex.lock().unwrap();
+    let agent = get_singleton_agent();
     agent.submit_counter(point, level, bucket);
 }
 
@@ -387,13 +384,13 @@ impl MetricsConfig {
 fn get_metrics_config() -> Result<MetricsConfig, String> {
     let mut config = MetricsConfig::default();
 
-    let config_var = env::var("DOMICHAIN_METRICS_CONFIG")
-        .map_err(|err| format!("DOMICHAIN_METRICS_CONFIG: {}", err))?;
+    let config_var =
+        env::var("DOMICHAIN_METRICS_CONFIG").map_err(|err| format!("DOMICHAIN_METRICS_CONFIG: {err}"))?;
 
     for pair in config_var.split(',') {
         let nv: Vec<_> = pair.split('=').collect();
         if nv.len() != 2 {
-            return Err(format!("DOMICHAIN_METRICS_CONFIG is invalid: '{}'", pair));
+            return Err(format!("DOMICHAIN_METRICS_CONFIG is invalid: '{pair}'"));
         }
         let v = nv[1].to_string();
         match nv[0] {
@@ -401,7 +398,7 @@ fn get_metrics_config() -> Result<MetricsConfig, String> {
             "db" => config.db = v,
             "u" => config.username = v,
             "p" => config.password = v,
-            _ => return Err(format!("DOMICHAIN_METRICS_CONFIG is invalid: '{}'", pair)),
+            _ => return Err(format!("DOMICHAIN_METRICS_CONFIG is invalid: '{pair}'")),
         }
     }
 
@@ -429,8 +426,7 @@ pub fn query(q: &str) -> Result<String, String> {
 /// Blocks until all pending points from previous calls to `submit` have been
 /// transmitted.
 pub fn flush() {
-    let agent_mutex = get_singleton_agent();
-    let agent = agent_mutex.lock().unwrap();
+    let agent = get_singleton_agent();
     agent.flush();
 }
 

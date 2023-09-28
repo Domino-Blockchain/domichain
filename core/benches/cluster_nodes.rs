@@ -8,7 +8,7 @@ use {
         cluster_nodes::{make_test_cluster, new_cluster_nodes, ClusterNodes},
         retransmit_stage::RetransmitStage,
     },
-    domichain_gossip::contact_info::ContactInfo,
+    domichain_gossip::legacy_contact_info::LegacyContactInfo as ContactInfo,
     domichain_ledger::{
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         shred::{Shred, ShredFlags},
@@ -36,7 +36,7 @@ fn get_retransmit_peers_deterministic(
     root_bank: &Bank,
     num_simulated_shreds: usize,
 ) {
-    let parent_offset = if slot == 0 { 0 } else { 1 };
+    let parent_offset = u16::from(slot != 0);
     for i in 0..num_simulated_shreds {
         let index = i as u32;
         let shred = Shred::new_from_data(
@@ -49,9 +49,9 @@ fn get_retransmit_peers_deterministic(
             0,
             0,
         );
-        let (_root_distance, _neighbors, _children) = cluster_nodes.get_retransmit_peers(
-            *slot_leader,
-            &shred,
+        let _retransmit_peers = cluster_nodes.get_retransmit_peers(
+            slot_leader,
+            &shred.id(),
             root_bank,
             domichain_gossip::cluster_info::DATA_PLANE_FANOUT,
         );
@@ -63,7 +63,7 @@ fn get_retransmit_peers_deterministic_wrapper(b: &mut Bencher, unstaked_ratio: O
     let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10_000);
     let bank = Bank::new_for_benches(&genesis_config);
     let (nodes, cluster_nodes) = make_cluster_nodes(&mut rng, unstaked_ratio);
-    let slot_leader = nodes[1..].choose(&mut rng).unwrap().id;
+    let slot_leader = *nodes[1..].choose(&mut rng).unwrap().pubkey();
     let slot = rand::random::<u64>();
     b.iter(|| {
         get_retransmit_peers_deterministic(

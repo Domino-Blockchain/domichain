@@ -1,20 +1,13 @@
 [package]
 name = "rbpf-cli"
-version = "1.11.1"
-description = "CLI to test and analyze eBPF programs"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-repository = "https://Domino-Blockchain/rbpf"
-homepage = "https://domichain.com/"
-keywords = ["BPF", "eBPF", "interpreter", "JIT"]
-edition = "2021"
+description = "Decommissioned CLI to test and analyze SBF programs"
+keywords = ["SBF", "interpreter", "JIT"]
 publish = false
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-clap = { version = "3.1.5", features = ["cargo"] }
-serde = "1.0.137"
-serde_json = "1.0.81"
-domichain-bpf-loader-program = { path = "../programs/bpf_loader", version = "=1.11.1" }
-domichain-logger = { path = "../logger", version = "=1.11.1" }
-domichain-program-runtime = { path = "../program-runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../sdk", version = "=1.11.1" }
-solana_rbpf = "=0.2.31"

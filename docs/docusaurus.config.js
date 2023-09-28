@@ -45,6 +45,9 @@ module.exports = {
     },
   },
   themeConfig: {
+    prism: {
+      additionalLanguages: ["rust"],
+    },
     navbar: {
       logo: {
         alt: "Domichain Logo",
@@ -53,49 +56,69 @@ module.exports = {
       },
       items: [
         {
-          href: "https://spl.domichain.com",
-          label: "Program Library »",
-          position: "left",
-        },
-        {
-          to: "developing/programming-model/overview",
-          label: "Develop",
-          position: "left",
-        },
-        {
-          to: "running-validator",
-          label: "Validate",
-          position: "left",
-        },
-        {
-          to: "integrations/exchange",
-          label: "Integrate",
+          to: "introduction",
+          label: "Learn",
           position: "left",
         },
         {
           to: "cluster/overview",
-          label: "Learn",
+          label: "Architecture",
           position: "left",
+        },
+        {
+          to: "cli",
+          label: "CLI",
+          position: "left",
+        },
+        {
+          to: "/developers",
+          label: "Developers",
+          position: "left",
+        },
+        {
+          to: "running-validator",
+          label: "Validators",
+          position: "left",
+        },
+        {
+          label: "More",
+          position: "left",
+          items: [
+            { label: "Terminology", to: "terminology" },
+            { label: "Staking", to: "staking" },
+            { label: "Integrations", to: "integrations/exchange" },
+            { label: "Economics", to: "economics_overview" },
+            { label: "Proposals", to: "proposals" },
+            {
+              href: "https://spl.domichain.com",
+              label: "Domichain Program Library »",
+            },
+          ],
         },
         {
           type: "localeDropdown",
           position: "right",
         },
         {
-          href: "https://discordapp.com/invite/pquxPsq",
-          label: "Chat",
+          href: "https://domichain.com/discord",
+          // label: "Discord",
+          className: "header-link-icon header-discord-link",
+          "aria-label": "Domichain Discord",
           position: "right",
         },
         {
           href: "https://Domino-Blockchain/domichain",
-          label: "GitHub",
+          // label: "GitHub",
+          className: "header-link-icon header-github-link",
+          "aria-label": "GitHub repository",
           position: "right",
         },
       ],
     },
     algolia: {
       // This API key is "search-only" and safe to be published
-      apiKey: "d58e0d68c875346d52645d68b13f3ac0",
+      apiKey: "011e01358301f5023b02da5db6af7f4d",
+      appId: "FQ12ISJR4B",
       indexName: "domichain",
       contextualSearch: true,
     },
@@ -103,11 +126,27 @@ module.exports = {
       style: "dark",
       links: [
         {
-          title: "Docs",
+          title: "Documentation",
           items: [
             {
-              label: "Introduction",
+              label: "Learn",
               to: "introduction",
+            },
+            {
+              label: "Developers",
+              to: "/developers",
+            },
+            {
+              label: "Validators",
+              to: "running-validator",
+            },
+            {
+              label: "Command Line",
+              to: "cli",
+            },
+            {
+              label: "Architecture",
+              to: "cluster/overview",
             },
           ],
         },
@@ -115,25 +154,41 @@ module.exports = {
           title: "Community",
           items: [
             {
-              label: "Discord",
-              href: "https://discordapp.com/invite/pquxPsq",
+              label: "Stack Exchange »",
+              href: "https://domichain.stackexchange.com/",
             },
             {
-              label: "Twitter",
+              label: "GitHub »",
+              href: "https://Domino-Blockchain/domichain",
+            },
+            {
+              label: "Discord »",
+              href: "https://domichain.com/discord",
+            },
+            {
+              label: "Twitter »",
               href: "https://twitter.com/domichain",
             },
             {
-              label: "Forums",
-              href: "https://forums.domichain.com",
+              label: "Forum »",
+              href: "https://forum.domichain.com",
             },
           ],
         },
         {
-          title: "More",
+          title: "Resources",
           items: [
             {
-              label: "GitHub",
-              href: "https://Domino-Blockchain/domichain",
+              label: "Proposals",
+              to: "proposals",
+            },
+            {
+              label: "Integrations",
+              to: "integrations/exchange",
+            },
+            {
+              href: "https://spl.domichain.com",
+              label: "Domichain Program Library »",
             },
           ],
         },
@@ -147,6 +202,7 @@ module.exports = {
       {
         docs: {
           path: "src",
+          breadcrumbs: false,
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
           remarkPlugins: [math],
@@ -154,6 +210,12 @@ module.exports = {
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
+        },
+        // Google Analytics are only active in prod
+        gtag: {
+          // this GA code is safe to be published
+          trackingID: "G-94WS0LRZRS",
+          anonymizeIP: true,
         },
       },
     ],

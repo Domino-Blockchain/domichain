@@ -1,17 +1,17 @@
 [package]
 name = "domichain-compute-budget-program"
 description = "Domichain Compute Budget program"
-version = "1.11.1"
-homepage = "https://domichain.com/"
 documentation = "https://docs.rs/domichain-compute-budget-program"
-repository = "https://Domino-Blockchain/domichain"
-authors = ["Domichain Maintainers <maintainers@domichain.foundation>"]
-license = "Apache-2.0"
-edition = "2021"
+version = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
-domichain-program-runtime = { path = "../../program-runtime", version = "=1.11.1" }
-domichain-sdk = { path = "../../sdk", version = "=1.11.1" }
+domichain-program-runtime = { workspace = true }
+domichain-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

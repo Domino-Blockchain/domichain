@@ -5,12 +5,13 @@ use {
     clap::{value_t, ArgMatches},
     log::*,
     domichain_bench_tps::{
-        bench::{generate_keypairs, fund_keypairs},
+        bench::fund_keypairs,
         bench_tps_client::BenchTpsClient,
         cli,
+        send_batch::generate_keypairs,
     },
     domichain_client::{
-        connection_cache::{ConnectionCache, UseQUIC},
+        connection_cache::ConnectionCache,
         thin_client::ThinClient,
     },
     domichain_gossip::gossip_service::{discover_cluster, get_client, try_get_multi_client},
@@ -20,16 +21,9 @@ use {
 };
 
 fn get_bench_client(cli_config: &cli::Config, matches: &ArgMatches) -> ThinClient {
-    let cli::Config {
-        use_quic,
-        tpu_connection_pool_size,
-        ..
-    } = &cli_config;
-
-    let use_quic = UseQUIC::new(*use_quic).expect("Failed to initialize QUIC flags");
     let connection_cache =
-        Arc::new(ConnectionCache::new(use_quic, *tpu_connection_pool_size));
-
+        Arc::new(ConnectionCache::new("bench-tps-simple"));
+    
     let client = if let Ok(rpc_addr) = value_t!(matches, "rpc_addr", String) {
         let rpc = rpc_addr.parse().unwrap_or_else(|e| {
             eprintln!("RPC address should parse as socketaddr {:?}", e);
@@ -42,12 +36,12 @@ fn get_bench_client(cli_config: &cli::Config, matches: &ArgMatches) -> ThinClien
                 eprintln!("TPU address should parse to a socket: {:?}", e);
                 exit(1);
             });
-
+    
         ThinClient::new(rpc, tpu, connection_cache)
     } else {
         wait_client(cli_config, connection_cache)
     };
-
+    
     client
 }
 
@@ -76,7 +70,7 @@ fn discover_client(
         target_node,
         ..
     } = &cli_config;
-
+    
     let nodes =
         discover_cluster(entrypoint_addr, *num_nodes, SocketAddrSpace::Unspecified)
             .unwrap_or_else(|err| {
@@ -98,7 +92,7 @@ fn discover_client(
         info!("Searching for target_node: {:?}", target_node);
         let mut target_client = None;
         for node in nodes {
-            if node.id == *target_node {
+            if node.pubkey() == target_node {
                 target_client = Some(get_client(
                     &[node],
                     &SocketAddrSpace::Unspecified,
@@ -127,10 +121,10 @@ where
 {
     let (mut keypairs, extra) = generate_keypairs(&Keypair::new(), keypair_count as u64);
     fund_keypairs(client, id, &keypairs, extra, num_lamports_per_account).unwrap();
-
+    
     // 'generate_keypairs' generates extra keys to be able to have size-aligned funding batches for fund_keys.
     keypairs.truncate(keypair_count);
-
+    
     keypairs
 }
 
@@ -235,16 +229,6 @@ fn do_bench_tps_simple(
         let to_balance = client.get_balance(&to.pubkey());
         let nonce_balances: u64 = nonce_pks.iter().map(|nonce| client.get_balance(nonce).unwrap()).sum();
 
-        // let new_blockhashes: Vec<_> = nonce_pks.iter().map(|nonce| {
-        //     let nonce_account = {
-        //         use domichain_sdk::client::SyncClient;
-        //         SyncClient::get_account_with_commitment(&client, nonce, CommitmentConfig::processed()).unwrap().unwrap()
-        //     };
-        //     let nonce_data = nonce_utils::data_from_account(&nonce_account).unwrap();
-        //     let new_blockhash = nonce_data.blockhash();
-        //     new_blockhash
-        // }).collect();
-
         info!("Token balance: From {from_balance:?} To {to_balance:?} Nonce {nonce_balances:?}");
 
         sleep(Duration::from_secs(1));
@@ -256,7 +240,13 @@ fn main() {
     domichain_metrics::set_panic_hook("bench-tps-simple", /*version:*/ None);
 
     let matches = cli::build_args(domichain_version::version!()).get_matches();
-    let cli_config = cli::extract_args(&matches);
+    let cli_config = match cli::parse_args(&matches) {
+        Ok(config) => config,
+        Err(error) => {
+            eprintln!("{error}");
+            exit(1);
+        }
+    };
 
     let cli::Config {
         id,
@@ -280,14 +270,14 @@ fn main() {
 
     let from = get_bench_keypairs(
         client.clone(),
-        id,
+        &id,
         1,
-        *num_lamports_per_account + nonce_rent * n as u64,
+        num_lamports_per_account + nonce_rent * n as u64,
     ).into_iter().nth(0).unwrap();
 
     let to = get_bench_keypairs(
         client.clone(),
-        id,
+        &id,
         1,
         0,
     ).into_iter().nth(0).unwrap();
