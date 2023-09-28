@@ -98,5 +98,6 @@ domichain airdrop 600 --url "$URL" "$PUBKEY"
 # echo "Waiting for sync slots with bootstrap validator"
 wait_for 180 is_root_equal
 
-./multinode-demo/delegate-stake.sh  --label test1  --keypair ~/validator-stake-keypair.json  --url "http://$NODE_IP_ADDR:8899/" 50  --force
+export RUST_LOG=INFO
+./multinode-demo/delegate-stake.sh --label test1 --keypair ~/validator-stake-keypair.json --url "http://$NODE_IP_ADDR:8899/" 50  --force
 echo "completed delegate-stake"
