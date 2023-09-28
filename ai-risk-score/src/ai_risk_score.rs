@@ -32,6 +32,7 @@ struct ParsedResponse {
     timestamp: String,
 }
 
+#[derive(Debug)]
 #[allow(dead_code)]
 pub struct RewardData {
     pub risk_score: f64,
