@@ -1,4 +1,6 @@
 use bs58;
+use chrono::DateTime;
+use chrono::Utc;
 use ed25519_dalek::ed25519::signature::Signature;
 use ed25519_dalek::PublicKey;
 use ed25519_dalek::Verifier;
@@ -29,7 +31,7 @@ struct ParsedResponse {
     public_key: String,
     signature: String,
     timeout: String,
-    timestamp: String,
+    timestamp: DateTime<Utc>,
 }
 
 #[derive(Debug)]
@@ -37,7 +39,7 @@ struct ParsedResponse {
 pub struct RewardData {
     pub risk_score: f64,
     pub timeout: usize,
-    pub timestamp: String,
+    pub timestamp: DateTime<Utc>,
 }
 
 fn from_base58_str(s: &str) -> Vec<u8> {
@@ -92,7 +94,7 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                 let wallet = &entry.wallet;
                 let reward_account: &String = &entry.public_key;
                 let risk_score = entry.risk_score;
-                let timestamp: &String = &entry.timestamp;
+                let timestamp: DateTime<Utc> = entry.timestamp;
                 let timeout_str = &entry.timeout;
                 let timeout = match timeout_str.parse::<usize>() {
                     Ok(parsed_timeout) => parsed_timeout,
@@ -112,10 +114,10 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                     let reward_data = RewardData {
                         risk_score,
                         timeout,
-                        timestamp: timestamp.to_string(),
+                        timestamp: timestamp,
                     };
                     let rewards_entry = wallet_entry.entry(reward_account.to_owned());
-                    rewards_entry.insert(reward_data);
+                    rewards_entry.or_insert(reward_data);
                 } else {
                     warn!("Invalid signature for wallet: {}", wallet);
                 }

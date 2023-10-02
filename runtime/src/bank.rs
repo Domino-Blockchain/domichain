@@ -34,7 +34,6 @@
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
 use chrono::DateTime;
-use chrono::Duration as CDuration;
 use chrono::Utc;
 use core::f64;
 
@@ -4963,7 +4962,7 @@ impl Bank {
         let mut risk_scores: Vec<f64> = Vec::new();
         let mut rewards_accounts: Vec<String> = Vec::new();
         let mut timeouts: Vec<usize> = Vec::new();
-        let mut timestamps: Vec<String> = Vec::new();
+        let mut timestamps: Vec<DateTime<Utc>> = Vec::new();
 
         if let Some(account_entry) = risk_score_map.get(&send_account) {
             for (key, reward_data) in account_entry.iter() {
@@ -5022,12 +5021,9 @@ impl Bank {
             .into_iter()
             .zip(timeouts.iter())
             .zip(timestamps.iter())
-            .filter_map(|((risk_score, timeout), timestamp_str)| {
-                if let Ok(timestamp) = DateTime::parse_from_rfc3339(timestamp_str) {
-                    let timestamp = timestamp.with_timezone(&Utc);
-                    if current_time <= timestamp + CDuration::seconds(*timeout as i64) {
-                        return Some(risk_score);
-                    }
+            .filter_map(|((risk_score, timeout), timestamp)| {
+                if current_time <= *timestamp + chrono::Duration::seconds(*timeout as i64) {
+                    return Some(risk_score);
                 }
                 None
             })
@@ -5085,7 +5081,7 @@ impl Bank {
         let mut risk_scores: Vec<f64> = Vec::new();
         let mut rewards_accounts: Vec<String> = Vec::new();
         let mut timeouts: Vec<usize> = Vec::new();
-        let mut timestamps: Vec<String> = Vec::new();
+        let mut timestamps: Vec<DateTime<Utc>> = Vec::new();
 
         if let Some(account_entry) = risk_score_map.get(&send_account) {
             for (key, reward_data) in account_entry.iter() {
@@ -5144,12 +5140,9 @@ impl Bank {
             .into_iter()
             .zip(timeouts.iter())
             .zip(timestamps.iter())
-            .filter_map(|((risk_score, timeout), timestamp_str)| {
-                if let Ok(timestamp) = DateTime::parse_from_rfc3339(timestamp_str) {
-                    let timestamp = timestamp.with_timezone(&Utc);
-                    if current_time <= timestamp + CDuration::seconds(*timeout as i64) {
-                        return Some(risk_score);
-                    }
+            .filter_map(|((risk_score, timeout), timestamp)| {
+                if current_time <= *timestamp + chrono::Duration::seconds(*timeout as i64) {
+                    return Some(risk_score);
                 }
                 None
             })
