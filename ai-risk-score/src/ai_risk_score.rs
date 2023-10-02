@@ -111,13 +111,23 @@ pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
                     let wallet_entry = risk_score_map
                         .entry(wallet.to_owned())
                         .or_insert_with(HashMap::new);
-                    let reward_data = RewardData {
+
+                    let new_reward_data = RewardData {
                         risk_score,
                         timeout,
                         timestamp: timestamp,
                     };
-                    let rewards_entry = wallet_entry.entry(reward_account.to_owned());
-                    rewards_entry.or_insert(reward_data);
+
+                    match wallet_entry.get(reward_account) {
+                        Some(existing_reward_data) => {
+                            if new_reward_data.timestamp > existing_reward_data.timestamp {
+                                wallet_entry.insert(reward_account.to_owned(), new_reward_data);
+                            }
+                        }
+                        None => {
+                            wallet_entry.insert(reward_account.to_owned(), new_reward_data);
+                        }
+                    }
                 } else {
                     warn!("Invalid signature for wallet: {}", wallet);
                 }

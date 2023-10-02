@@ -5142,6 +5142,12 @@ impl Bank {
             .zip(timestamps.iter())
             .filter_map(|((risk_score, timeout), timestamp)| {
                 if current_time <= *timestamp + chrono::Duration::seconds(*timeout as i64) {
+                    println!(
+                        "Recieved Timestamp: {}, Current Timestamp: {}, Timeout Time Stamp: {} ",
+                        timestamp,
+                        current_time,
+                        *timestamp + chrono::Duration::seconds(*timeout as i64)
+                    );
                     return Some(risk_score);
                 }
                 None
