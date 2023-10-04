@@ -3,7 +3,7 @@ name = "domichain-sdk"
 description = "Domichain SDK"
 documentation = "https://docs.rs/domichain-sdk"
 readme = "README.md"
-version = "1.16.1"
+version = "1.0.0"
 edition = "2021"
 # version = { workspace = true }
 # authors = { workspace = true }

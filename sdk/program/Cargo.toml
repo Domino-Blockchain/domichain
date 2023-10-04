@@ -3,7 +3,7 @@ name = "domichain-program"
 description = "Domichain Program"
 documentation = "https://docs.rs/domichain-program"
 readme = "README.md"
-version = "1.16.1"
+version = "1.0.0"
 edition = "2021"
 # version = { workspace = true }
 # authors = { workspace = true }
@@ -36,11 +36,11 @@ sha3 = { workspace = true }
 # spl-token = { workspace = true, features = ["no-entrypoint"] }
 
 # domichain-frozen-abi = { workspace = true }
-domichain-frozen-abi = { path = "../../frozen-abi", version = "=1.16.1" }
+domichain-frozen-abi = { path = "../../frozen-abi", version = "=1.0.0" }
 # domichain-frozen-abi-macro = { workspace = true }
-domichain-frozen-abi-macro = { path = "../../frozen-abi/macro", version = "=1.16.1" }
+domichain-frozen-abi-macro = { path = "../../frozen-abi/macro", version = "=1.0.0" }
 # domichain-sdk-macro = { workspace = true }
-domichain-sdk-macro = { path = "../../sdk/macro", version = "=1.16.1" }
+domichain-sdk-macro = { path = "../../sdk/macro", version = "=1.0.0" }
 thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]

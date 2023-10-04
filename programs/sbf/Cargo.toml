@@ -1,5 +1,5 @@
 [workspace.package]
-version = "1.16.1"
+version = "1.0.0"
 description = "Domichain SBF test program written in Rust"
 authors = ["Domichain Labs Maintainers <maintainers@domichainlabs.com>"]
 repository = "https://github.com/domichain-labs/domichain"
@@ -25,29 +25,29 @@ rand = "0.7"
 serde = "1.0.112"
 serde_json = "1.0.56"
 solana_rbpf = "=0.5.0"
-domichain-account-decoder = { path = "../../account-decoder", version = "=1.16.1" }
-domichain-address-lookup-table-program = { path = "../../programs/address-lookup-table", version = "=1.16.1" }
-domichain-bpf-loader-program = { path = "../bpf_loader", version = "=1.16.1" }
-domichain-cli-output = { path = "../../cli-output", version = "=1.16.1" }
-domichain-ledger = { path = "../../ledger", version = "=1.16.1" }
-domichain-logger = { path = "../../logger", version = "=1.16.1" }
-domichain-measure = { path = "../../measure", version = "=1.16.1" }
-domichain-program = { path = "../../sdk/program", version = "=1.16.1" }
-domichain-program-runtime = { path = "../../program-runtime", version = "=1.16.1" }
-domichain-program-test = { path = "../../program-test", version = "=1.16.1" }
-domichain-runtime = { path = "../../runtime", version = "=1.16.1" }
-domichain-sbf-rust-128bit-dep = { path = "rust/128bit_dep", version = "=1.16.1" }
-domichain-sbf-rust-invoke = { path = "rust/invoke", version = "=1.16.1" }
-domichain-sbf-rust-invoked = { path = "rust/invoked", version = "=1.16.1", default-features = false }
-domichain-sbf-rust-many-args-dep = { path = "rust/many_args_dep", version = "=1.16.1" }
-domichain-sbf-rust-mem = { path = "rust/mem", version = "=1.16.1" }
-domichain-sbf-rust-param-passing-dep = { path = "rust/param_passing_dep", version = "=1.16.1" }
-domichain-sbf-rust-realloc = { path = "rust/realloc", version = "=1.16.1", default-features = false }
-domichain-sbf-rust-realloc-invoke = { path = "rust/realloc_invoke", version = "=1.16.1" }
-domichain-sdk = { path = "../../sdk", version = "=1.16.1" }
-domichain-transaction-status = { path = "../../transaction-status", version = "=1.16.1" }
-domichain-validator = { path = "../../validator", version = "=1.16.1" }
-domichain-zk-token-sdk = { path = "../../zk-token-sdk", version = "=1.16.1" }
+domichain-account-decoder = { path = "../../account-decoder", version = "=1.0.0" }
+domichain-address-lookup-table-program = { path = "../../programs/address-lookup-table", version = "=1.0.0" }
+domichain-bpf-loader-program = { path = "../bpf_loader", version = "=1.0.0" }
+domichain-cli-output = { path = "../../cli-output", version = "=1.0.0" }
+domichain-ledger = { path = "../../ledger", version = "=1.0.0" }
+domichain-logger = { path = "../../logger", version = "=1.0.0" }
+domichain-measure = { path = "../../measure", version = "=1.0.0" }
+domichain-program = { path = "../../sdk/program", version = "=1.0.0" }
+domichain-program-runtime = { path = "../../program-runtime", version = "=1.0.0" }
+domichain-program-test = { path = "../../program-test", version = "=1.0.0" }
+domichain-runtime = { path = "../../runtime", version = "=1.0.0" }
+domichain-sbf-rust-128bit-dep = { path = "rust/128bit_dep", version = "=1.0.0" }
+domichain-sbf-rust-invoke = { path = "rust/invoke", version = "=1.0.0" }
+domichain-sbf-rust-invoked = { path = "rust/invoked", version = "=1.0.0", default-features = false }
+domichain-sbf-rust-many-args-dep = { path = "rust/many_args_dep", version = "=1.0.0" }
+domichain-sbf-rust-mem = { path = "rust/mem", version = "=1.0.0" }
+domichain-sbf-rust-param-passing-dep = { path = "rust/param_passing_dep", version = "=1.0.0" }
+domichain-sbf-rust-realloc = { path = "rust/realloc", version = "=1.0.0", default-features = false }
+domichain-sbf-rust-realloc-invoke = { path = "rust/realloc_invoke", version = "=1.0.0" }
+domichain-sdk = { path = "../../sdk", version = "=1.0.0" }
+domichain-transaction-status = { path = "../../transaction-status", version = "=1.0.0" }
+domichain-validator = { path = "../../validator", version = "=1.0.0" }
+domichain-zk-token-sdk = { path = "../../zk-token-sdk", version = "=1.0.0" }
 static_assertions = "1.1.0"
 thiserror = "1.0"
 

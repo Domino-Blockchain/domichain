@@ -61,8 +61,8 @@ domichain-tpu-client = { workspace = true }
 domichain-transaction-status = { workspace = true }
 domichain-version = { workspace = true }
 domichain-vote-program = { workspace = true }
-libvrf = { path = "../libvrf", version = "=0.1.0" }
-sortition = { path = "../sortition", version = "=0.1.0" }
+libvrf = { path = "../libvrf", version = "=1.0.0" }
+sortition = { path = "../sortition", version = "=1.0.0" }
 strum = { workspace = true, features = ["derive"] }
 strum_macros = { workspace = true }
 sys-info = { workspace = true }

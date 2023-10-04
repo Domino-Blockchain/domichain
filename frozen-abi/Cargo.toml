@@ -2,7 +2,7 @@
 name = "domichain-frozen-abi"
 description = "Domichain Frozen ABI"
 documentation = "https://docs.rs/domichain-frozen-abi"
-version = "1.16.1"
+version = "1.0.0"
 edition = "2021"
 # version = { workspace = true }
 # authors = { workspace = true }
