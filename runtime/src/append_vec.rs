@@ -547,7 +547,7 @@ impl AppendVec {
         if account_meta.lamports == 0 {
             Err(MatchAccountOwnerError::NoMatch)
         } else {
-            dbg!(&account_meta);
+            // dbg!(&account_meta);
             owners
                 .iter()
                 .position(|entry| &&account_meta.owner == entry)
