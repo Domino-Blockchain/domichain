@@ -1,6 +1,6 @@
 [package]
 name = "libvrf-sys"
-version = "0.1.0"
+version = "1.16.1"
 links = "vrf"
 build = "build.rs"
 edition = "2021"
