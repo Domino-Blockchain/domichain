@@ -74,6 +74,11 @@ minor)
   MINOR=$((MINOR+ 1))
   PATCH=0
   ;;
+reset)
+  MAJOR=1
+  MINOR=0
+  PATCH=0
+  ;;
 dropspecial)
   ;;
 check)
