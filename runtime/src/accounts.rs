@@ -352,13 +352,13 @@ impl Accounts {
             .iter()
             .enumerate()
             .map(|(i, key)| {
-                if key.to_string().contains("BPF") {
-                    dbg!(key);
-                    dbg!(&loaded_programs);
-                    dbg!(account_keys.iter().collect::<Vec<_>>());
-                    dbg!(&tx);
-                    dbg!(domichain_sdk::sysvar::instructions::check_id(key));
-                }
+                // if key.to_string().contains("BPF") {
+                //     dbg!(key);
+                //     dbg!(&loaded_programs);
+                //     dbg!(account_keys.iter().collect::<Vec<_>>());
+                //     dbg!(&tx);
+                //     dbg!(domichain_sdk::sysvar::instructions::check_id(key));
+                // }
 
                 let mut account_found = true;
                 #[allow(clippy::collapsible_else_if)]
@@ -378,12 +378,12 @@ impl Accounts {
                         && !message.is_writable(i))
                     .then_some(())
                     .and_then(|_| {
-                        if key.to_string().contains("BPF") {
-                            dbg!(key);
-                            dbg!(&loaded_programs);
-                            dbg!(account_keys.iter().collect::<Vec<_>>());
-                            dbg!(&tx);
-                        }
+                        // if key.to_string().contains("BPF") {
+                        //     dbg!(key);
+                        //     dbg!(&loaded_programs);
+                        //     dbg!(account_keys.iter().collect::<Vec<_>>());
+                        //     dbg!(&tx);
+                        // }
                         loaded_programs.find(key)
                     })
                     {
@@ -655,10 +655,10 @@ impl Accounts {
         hash_queue: &BlockhashQueue,
     ) -> HashMap<Pubkey, (&'a Pubkey, u64)> {
         // dbg!(&self);
-            // dbg!(&ancestors);
+        // dbg!(&ancestors);
         // dbg!(&txs);
-            // dbg!(&lock_results);
-            // dbg!(&program_owners);
+        // dbg!(&lock_results);
+        // dbg!(&program_owners);
         // dbg!(&hash_queue);
         let mut result: HashMap<Pubkey, (&'a Pubkey, u64)> = HashMap::new();
         lock_results.iter_mut().zip(txs).for_each(|etx| {

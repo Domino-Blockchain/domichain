@@ -4267,9 +4267,9 @@ impl Bank {
         programs_loaded_for_tx_batch: &LoadedProgramsForTxBatch,
     ) -> TransactionExecutionResult {
         let prev_accounts_data_len = self.load_accounts_data_size();
-        if loaded_transaction.accounts.iter().find(|(pk, _)| pk.to_string().contains("BPF")).is_some() {
-            dbg!(&loaded_transaction);
-        }
+        // if loaded_transaction.accounts.iter().find(|(pk, _)| pk.to_string().contains("BPF")).is_some() {
+        //     dbg!(&loaded_transaction);
+        // }
         let transaction_accounts = std::mem::take(&mut loaded_transaction.accounts);
         let mut transaction_context = TransactionContext::new(
             transaction_accounts,
