@@ -5074,25 +5074,37 @@ impl Bank {
             BASE_CONGESTION / current_congestion
         };
 
-        let send_account = format!("{}", message.account_keys()[0]);
+        // Fetch risk scores once and filter/map in a single iteration
         let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
-        println!("Risk Score Map: {:?}", risk_score_map);
+        let send_account = format!("{}", message.account_keys()[0]);
+        let current_time = Utc::now();
+        let mut valid_risk_scores: Vec<f64> =
+            if let Some(account_entry) = risk_score_map.get(&send_account) {
+                account_entry
+                    .values()
+                    .filter_map(|reward_data| {
+                        if current_time
+                            <= reward_data.timestamp
+                                + chrono::Duration::seconds(reward_data.timeout as i64)
+                        {
+                            Some(reward_data.risk_score)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
-        let mut risk_scores: Vec<f64> = Vec::new();
-        let mut rewards_accounts: Vec<String> = Vec::new();
-        let mut timeouts: Vec<usize> = Vec::new();
-        let mut timestamps: Vec<DateTime<Utc>> = Vec::new();
+        valid_risk_scores
+            .sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        if let Some(account_entry) = risk_score_map.get(&send_account) {
-            for (key, reward_data) in account_entry.iter() {
-                risk_scores.push(reward_data.risk_score);
-                timeouts.push(reward_data.timeout);
-                timestamps.push(reward_data.timestamp.clone());
-                rewards_accounts.push(key.clone());
-            }
-        }
-
-        drop(risk_score_map);
+        let median_risk_score = match valid_risk_scores.len() {
+            0 => 0.0,
+            len if len % 2 == 1 => valid_risk_scores[len / 2],
+            len => (valid_risk_scores[len / 2 - 1] + valid_risk_scores[len / 2]) / 2.0,
+        };
 
         //println!("---AI Test calculate fee account: {:?}, risk-score: {:?}", &format!("{}", message.account_keys()[0]), risk_score);
         let mut compute_budget = ComputeBudget::default();
@@ -5132,43 +5144,6 @@ impl Bank {
                     .map(|bin| bin.fee)
                     .unwrap_or_default()
             });
-
-        let current_time = Utc::now();
-
-        // Filter risk scores based on their timestamp and timeout
-        let mut valid_risk_scores: Vec<f64> = risk_scores
-            .into_iter()
-            .zip(timeouts.iter())
-            .zip(timestamps.iter())
-            .filter_map(|((risk_score, timeout), timestamp)| {
-                if current_time <= *timestamp + chrono::Duration::seconds(*timeout as i64) {
-                    println!(
-                        "Recieved Timestamp: {}, Current Timestamp: {}, Timeout Time Stamp: {} ",
-                        timestamp,
-                        current_time,
-                        *timestamp + chrono::Duration::seconds(*timeout as i64)
-                    );
-                    return Some(risk_score);
-                }
-                None
-            })
-            .collect();
-
-        println!("Valid Risk Scores(1): {:?}", valid_risk_scores);
-
-        valid_risk_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-
-        println!("Valid Risk Scores(2): {:?}", valid_risk_scores);
-        let median_risk_score = if valid_risk_scores.is_empty() {
-            0.0
-        } else if valid_risk_scores.len() % 2 == 1 {
-            valid_risk_scores[valid_risk_scores.len() / 2]
-        } else {
-            let mid = valid_risk_scores.len() / 2;
-            (valid_risk_scores[mid - 1] + valid_risk_scores[mid]) / 2.0
-        };
-
-        println!("Median Risk Score: {}", median_risk_score);
 
         let fee = ((prioritization_fee
             .saturating_add(signature_fee)
