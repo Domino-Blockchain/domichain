@@ -268,7 +268,6 @@ where
 }
 
 fn generate_chunked_transfers<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
-    client: &Arc<T>,
     recent_blockhash: Arc<RwLock<Hash>>,
     shared_txs: &SharedTransactions,
     shared_tx_active_thread_count: Arc<AtomicIsize>,
@@ -293,12 +292,6 @@ where
             threads,
             use_durable_nonce,
         );
-
-        let balances: u64 = chunk_generator.account_chunks.source.iter()
-            .flatten()
-            .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
-            .sum();
-        info!("generate_chunked_transfers is_zero={} balances={balances}", balances == 0);
 
         datapoint_info!(
             "blockhash_stats",
@@ -461,7 +454,6 @@ where
     let start = Instant::now();
 
     generate_chunked_transfers(
-        &client,
         blockhash,
         &shared_txs,
         shared_tx_active_thread_count,
