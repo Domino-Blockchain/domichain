@@ -5153,10 +5153,10 @@ impl Bank {
             * (10.0).powf(median_risk_score))
         .round() as u64;
 
-        println!("Prioritization fee: {}", prioritization_fee);
-        println!("Signature fee: {}", signature_fee);
-        println!("Write lock fee: {}", write_lock_fee);
-        println!("Compute fee: {}", compute_fee);
+        //println!("Prioritization fee: {}", prioritization_fee);
+        //println!("Signature fee: {}", signature_fee);
+        //println!("Write lock fee: {}", write_lock_fee);
+        //println!("Compute fee: {}", compute_fee);
 
         let mut ai_fee = 0;
         if *message.fee_payer()
