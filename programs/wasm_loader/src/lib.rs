@@ -2146,7 +2146,7 @@ fn execute<'a, 'b: 'a>(
             linker.define(
                 "env",
                 "sol_memset_",
-                Func::wrap(&mut store, |caller: Caller<'_, HostState>, s: u32, c: u64, n: u64| {
+                Func::wrap(&mut store, |caller: Caller<'_, HostState>, s: u32, c: u32, n: u64| {
                     dbg!("sol_memset_");
                     map_wasmi_to_bpf_syscalls(SyscallMemset::call, caller, s as _, c as _, n as _, 0, 0)?;
                     Ok(())
