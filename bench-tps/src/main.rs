@@ -15,7 +15,7 @@ use {
         tpu_client::{TpuClient, TpuClientConfig},
     },
     domichain_genesis::Base64Account,
-    domichain_gossip::gossip_service::{discover_cluster, get_client, get_multi_client},
+    domichain_gossip::gossip_service::{discover_cluster, get_client, try_get_multi_client},
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig,
@@ -151,7 +151,7 @@ fn create_client(
                         });
                 if multi_client {
                     let (client, num_clients) =
-                        get_multi_client(&nodes, &SocketAddrSpace::Unspecified, connection_cache);
+                        try_get_multi_client(&nodes, &SocketAddrSpace::Unspecified, connection_cache).unwrap();
                     if nodes.len() < num_clients {
                         eprintln!(
                             "Error: Insufficient nodes discovered.  Expecting {num_nodes} or more"
