@@ -156,14 +156,14 @@ fn create_client(
                     let mut attempt = 0;
                     let (client, num_clients) = loop {
                         attempt += 1;
-                        if attempt > 10 {
-                            break;
-                        }
                         info!("Trying to get RPC client: attempt {attempt}");
                         nodes = get_nodes();
-                        match try_get_multi_client(&nodes, &SocketAddrSpace::Unspecified, connection_cache) {
+                        match try_get_multi_client(&nodes, &SocketAddrSpace::Unspecified, Arc::clone(&connection_cache)) {
                             Ok((client, num_clients)) => break (client, num_clients),
-                            Err(()) => {
+                            err @ Err(()) => {
+                                if attempt > 10 {
+                                    err.unwrap();
+                                }
                                 info!("Trying to get RPC client: sleeping for 1 second");
                                 sleep(Duration::from_secs(1));
                                 continue;
