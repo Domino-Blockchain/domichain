@@ -74,12 +74,12 @@ Follow the wallet's instructions for selecting a validator.  You can get
 information about potentially performant validators from the links below.
 The Domichain Foundation does not recommend any particular validator.
 
-The site domichainbeach.io is built and maintained by one of our validators,
+The site domistaking.io is built and maintained by one of our validators,
 Staking Facilities. It provides a some high-level graphical information about
 the network as a whole, as well as a list of each validator and some recent
 performance statistics about each one.
 
-- https://domichainbeach.io
+- https://domistaking.io
 
 To view block production statistics, use the Domichain command-line tools:
 

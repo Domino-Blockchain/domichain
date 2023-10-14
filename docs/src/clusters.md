@@ -10,7 +10,7 @@ Before you begin make sure you have first
 Explorers:
 
 - [http://explorer.domichain.com/](https://explorer.domichain.com/).
-- [http://domichainbeach.io/](http://domichainbeach.io/).
+- [http://domistaking.io/](http://domistaking.io/).
 
 ## Devnet
 
