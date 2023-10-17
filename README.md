@@ -36,6 +36,8 @@ On Linux systems you may need to install libssl-dev, pkg-config, zlib1g-dev, pro
 ```bash
 $ sudo apt-get update
 $ sudo apt-get install libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang cmake make libprotobuf-dev protobuf-compiler
+$ sudo apt install build-essential
+$ sudo apt install libsodium-dev
 ```
 
 ## **2. Download the source code.**
