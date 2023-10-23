@@ -171,8 +171,6 @@ fn create_client(
                         }
                     };
 
-                    // let (client, num_clients) =
-                    //     try_get_multi_client(&nodes, &SocketAddrSpace::Unspecified, connection_cache).unwrap();
                     if nodes.len() < num_clients {
                         eprintln!(
                             "Error: Insufficient nodes discovered.  Expecting {num_nodes} or more"
