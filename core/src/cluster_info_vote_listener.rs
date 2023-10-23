@@ -744,9 +744,10 @@ impl ClusterInfoVoteListener {
                 let verify_result = epoch_stakes
                     .epoch_authorized_voters()
                     .get(&vote_pubkey)
-                    .map(|authorized_voter| {
+                    .zip(parent_block_seed)
+                    .map(|(authorized_voter, parent_block_seed)| {
                         let verify_result = vrf_verify(
-                            &parent_block_seed.unwrap_or_default().to_string(),
+                            &parent_block_seed.to_string(),
                             authorized_voter,
                             vrf_proof.as_slice().try_into().unwrap(),
                         );
@@ -776,7 +777,7 @@ impl ClusterInfoVoteListener {
                         0
                     }
                     None => {
-                        warn!("TPU: Error. No authorized_voter");
+                        warn!("TPU: Error. No authorized_voter or parent_block_seed");
                         0
                     }
                 };
