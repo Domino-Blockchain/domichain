@@ -15,7 +15,7 @@ use {
         tpu_client::{TpuClient, TpuClientConfig},
     },
     domichain_genesis::Base64Account,
-    domichain_gossip::gossip_service::{discover_cluster, get_client, get_multi_client},
+    domichain_gossip::gossip_service::{discover_cluster, get_client, try_get_multi_client},
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig,
@@ -33,6 +33,8 @@ use {
         path::Path,
         process::exit,
         sync::{Arc, RwLock},
+        time::Duration,
+        thread::sleep,
     },
 };
 
@@ -143,15 +145,32 @@ fn create_client(
             if let Some((rpc, tpu)) = rpc_tpu_sockets {
                 Arc::new(ThinClient::new(rpc, tpu, connection_cache))
             } else {
-                let nodes =
+                let get_nodes = ||
                     discover_cluster(entrypoint_addr, num_nodes, SocketAddrSpace::Unspecified)
                         .unwrap_or_else(|err| {
                             eprintln!("Failed to discover {num_nodes} nodes: {err:?}");
                             exit(1);
                         });
                 if multi_client {
-                    let (client, num_clients) =
-                        get_multi_client(&nodes, &SocketAddrSpace::Unspecified, connection_cache);
+                    let mut nodes;
+                    let mut attempt = 0;
+                    let (client, num_clients) = loop {
+                        attempt += 1;
+                        info!("Trying to get RPC client: attempt {attempt}");
+                        nodes = get_nodes();
+                        match try_get_multi_client(&nodes, &SocketAddrSpace::Unspecified, Arc::clone(&connection_cache)) {
+                            Ok((client, num_clients)) => break (client, num_clients),
+                            err @ Err(()) => {
+                                if attempt > 10 {
+                                    err.unwrap();
+                                }
+                                info!("Trying to get RPC client: sleeping for 1 second");
+                                sleep(Duration::from_secs(1));
+                                continue;
+                            },
+                        }
+                    };
+
                     if nodes.len() < num_clients {
                         eprintln!(
                             "Error: Insufficient nodes discovered.  Expecting {num_nodes} or more"
@@ -160,6 +179,7 @@ fn create_client(
                     }
                     Arc::new(client)
                 } else if let Some(target_node) = target_node {
+                    let nodes = get_nodes();
                     info!("Searching for target_node: {:?}", target_node);
                     let mut target_client = None;
                     for node in nodes {
@@ -177,6 +197,7 @@ fn create_client(
                         exit(1);
                     }))
                 } else {
+                    let nodes = get_nodes();
                     Arc::new(get_client(
                         &nodes,
                         &SocketAddrSpace::Unspecified,
