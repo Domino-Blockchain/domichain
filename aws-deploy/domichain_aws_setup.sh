@@ -51,8 +51,8 @@ make -j$(nproc)
 export DOMICHAIN_ROOT=/home/ubuntu/domichain
 make DESTDIR=${DOMICHAIN_ROOT:?}/target/perf-libs install
 
-echo "ubuntu soft nofile 500000" | sudo tee -a /etc/security/limits.conf
-echo "ubuntu hard nofile 500000" | sudo tee -a /etc/security/limits.conf
-echo "fs.file-max = 500000" | sudo tee -a /etc/sysctl.conf
+echo "ubuntu soft nofile 1000000" | sudo tee -a /etc/security/limits.conf
+echo "ubuntu hard nofile 1000000" | sudo tee -a /etc/security/limits.conf
+echo "fs.file-max = 1000000" | sudo tee -a /etc/sysctl.conf
 # Apply settings
 sudo reboot
