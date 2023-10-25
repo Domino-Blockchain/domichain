@@ -73,7 +73,6 @@ pub const FOUNDATION_STAKER_INFOS: &[StakerInfo] = &[
     },
 ];
 
-
 fn add_stakes(
     genesis_config: &mut GenesisConfig,
     staker_infos: &[StakerInfo],
