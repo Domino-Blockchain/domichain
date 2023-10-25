@@ -6,21 +6,21 @@ use {
     domichain_sdk::{genesis_config::GenesisConfig, native_token::LAMPORTS_PER_DOMI},
 };
 
-// 3 years schedule, then monthly for 20 months (5%)
+// 3 years schedule, then monthly for 20 months (by 5%)
 const UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS: UnlockInfo = UnlockInfo {
-    cliff_fraction: 0.0,
+    cliff_fraction: 0.05, // 1.0 / 20.0
     cliff_years: 3.0,
-    unlocks: 20,
-    unlock_years: 1.6666666666666665, // 1.0 / 12.0 * 20.0
+    unlocks: 19,
+    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
     custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
 };
 
-// 1 years schedule, then monthly for 20 months (5%)
+// 1 years schedule, then monthly for 20 months (by 5%)
 const UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR: UnlockInfo = UnlockInfo {
-    cliff_fraction: 0.0,
+    cliff_fraction: 0.05, // 1.0 / 20.0
     cliff_years: 1.0,
-    unlocks: 20,
-    unlock_years: 1.6666666666666665, // 1.0 / 12.0 * 20.0
+    unlocks: 19,
+    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
     custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
 };
 
@@ -36,39 +36,40 @@ const UNLOCKS_ALL_DAY_ZERO: UnlockInfo = UnlockInfo {
 pub const INVESTORS_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "shrill charity",
-        staker: "Eo1iDtrZZiAkQFA8u431hedChaSUnPbU8MWg849MFvEZ",
+        staker: "3Y8Gfv4bpqVh15Y71Zy6a1ezvKfLkoDHYJZ8CKac74gy",
         lamports: 50_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("8CUUMKYNGxdgYio5CLHRHyzMEhhVRMcqefgE6dLqnVRK"),
+        withdrawer: Some("ACkRSLK6xsHXbXT2Zr5DnyhmCLEjg1aXwKjc6GMExy77"),
     },
     StakerInfo {
         name: "legal gate",
-        staker: "7KCzZCbZz6V1U1YXUpBNaqQzQCg2DKo8JsNhKASKtYxe",
+        staker: "FDSASFuLNtjxk5cEpNvcDnKa8VijjpFYppGsK4GDQoaZ",
         lamports: 50_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("92viKFftk1dJjqJwreFqT2qHXxjSUuEE9VyHvTdY1mpY"),
+        withdrawer: Some("EMJjT9WuT2mzEuVGQhamzZskF7P12BV8a2Qghssa3byc"),
     },
     StakerInfo {
         name: "cluttered complaint",
-        staker: "2J8mJU6tWg78DdQVEqMfpN3rMeNbcRT9qGL3yLbmSXYL",
+        staker: "A4bpL66yo47EXs5civo1o2Kn5ohQfVCM4oK1FdzA77L5",
         lamports: 50_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("7kgfDmgbEfypBujqn4tyApjf8H7ZWuaL3F6Ah9vQHzgR"),
+        withdrawer: Some("9i11wBcKUNui9bq188s7NedF4dc9bNmheT8X7GyoPEkV"),
     },
 ];
 
+// ./target/release/domichain-keygen new --silent --no-bip39-passphrase --outfile - | ./target/release/domichain-keygen pubkey -
 pub const MAINTANACE_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "shrill charity",
-        staker: "Eo1iDtrZZiAkQFA8u431hedChaSUnPbU8MWg849MFvEZ",
-        lamports: 50_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("8CUUMKYNGxdgYio5CLHRHyzMEhhVRMcqefgE6dLqnVRK"),
+        name: "unbecoming silver",
+        staker: "4jyUPfUU4nA59E7pkran1vkcLkN6dRAJTNmSPbEuD6GL",
+        lamports: 40_000_000 * LAMPORTS_PER_DOMI,
+        withdrawer: Some("2Mk89SdDymFcxEDFZVwU2zMgz1wP2vri8iuFeAieN3ET"),
     },
 ];
 
 pub const FOUNDATION_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "shrill charity",
-        staker: "Eo1iDtrZZiAkQFA8u431hedChaSUnPbU8MWg849MFvEZ",
+        staker: "JBPTHdeVwbZsx4yZ9RMcPkojjAnd318HvmW2WVriehkW",
         lamports: 50_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("8CUUMKYNGxdgYio5CLHRHyzMEhhVRMcqefgE6dLqnVRK"),
+        withdrawer: Some("CUpX8BoNMoHfTJGsPaFjiGExMhShwD8ALtefVFfC3tPr"),
     },
 ];
 
@@ -102,14 +103,14 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lampo
             &UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR,
         );
 
-    // "one thanks" (community pool) gets 250_000_000DOMI (total) - above distributions
+    // "one thanks" (maintanance pool) gets 10_000_000 DOMI (total) - above distributions
     create_and_add_stakes(
         genesis_config,
         &StakerInfo {
             name: "one thanks",
-            staker: "7vEAL3nS9CWmy1q6njUUyHE7Cf5RmyQpND6CsoHjzPiR",
+            staker: "Ay9XxmEc3YZy5PMxWTuNqRCyu9HiJ6QKqp2rAfqBrtiH",
             lamports: (250_000_000 * LAMPORTS_PER_DOMI).saturating_sub(issued_lamports),
-            withdrawer: Some("3FFaheyqtyAXZSYxDzsr5CVKvJuvZD1WE1VEsBtDbRqB"),
+            withdrawer: Some("9He2rQZWGobpx65LdaUuU2u6Dkb5y4EoC5oV16P5B3Go"),
         },
         &UNLOCKS_ALL_DAY_ZERO,
         None,
