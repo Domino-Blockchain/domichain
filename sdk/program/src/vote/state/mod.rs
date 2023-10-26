@@ -1250,6 +1250,7 @@ mod tests {
             root,
             hash,
             timestamp,
+            vrf_proof: None,
         };
         #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
         enum VoteInstruction {

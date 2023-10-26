@@ -160,7 +160,6 @@ fn create_account(
         let mut to = instruction_context
             .try_borrow_instruction_account(transaction_context, to_account_index)?;
         if to.get_lamports() > 0 {
-            panic!("{to_address:?}");
             ic_msg!(
                 invoke_context,
                 "Create Account: account {:?} already in use",
