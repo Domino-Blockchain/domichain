@@ -22,6 +22,7 @@ use {
         bpf_loader_upgradeable::UpgradeableLoaderState,
         clock,
         epoch_schedule::EpochSchedule,
+        feature_set::remove_congestion_multiplier_from_fee_calculation,
         fee_calculator::FeeRateGovernor,
         genesis_config::{ClusterType, GenesisConfig},
         inflation::Inflation,
@@ -581,6 +582,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     domichain_stake_program::add_genesis_accounts(&mut genesis_config);
     if genesis_config.cluster_type == ClusterType::Development {
         domichain_runtime::genesis_utils::activate_all_features(&mut genesis_config);
+    } else {
+        // Activate feature for correct DOMI TX fee increase
+        domichain_runtime::genesis_utils::activate_feature(
+            &mut genesis_config,
+            remove_congestion_multiplier_from_fee_calculation::id(),
+        );
     }
 
     if let Some(files) = matches.values_of("primordial_accounts_file") {

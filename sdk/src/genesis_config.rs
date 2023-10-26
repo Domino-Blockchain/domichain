@@ -237,6 +237,11 @@ impl GenesisConfig {
 
 impl fmt::Display for GenesisConfig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut genesis_accounts: Vec<_> = self.accounts.iter().map(|(pubkey, account)| {
+            assert!(account.lamports > 0, "{:?}", (pubkey, account));
+            (pubkey, account.lamports)
+        }).collect();
+        genesis_accounts.sort_by_key(|(_, lamports)| std::cmp::Reverse(*lamports));
         write!(
             f,
             "\
@@ -256,6 +261,7 @@ impl fmt::Display for GenesisConfig {
              Capitalization: {} DOMI in {} accounts\n\
              Native instruction processors: {:#?}\n\
              Rewards pool: {:#?}\n\
+             Accounts: {genesis_accounts:#?}\n\
              ",
             Utc.timestamp_opt(self.creation_time, 0)
                 .unwrap()
