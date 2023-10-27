@@ -13,7 +13,7 @@ pub fn get_keypairs<T>(
     client: Arc<T>,
     id: &Keypair,
     keypair_count: usize,
-    num_lamports_per_account: u64,
+    num_satomis_per_account: u64,
     client_ids_and_stake_file: &str,
     read_from_client_file: bool,
 ) -> Vec<Keypair>
@@ -63,7 +63,7 @@ where
         });
         keypairs
     } else {
-        generate_and_fund_keypairs(client, id, keypair_count, num_lamports_per_account)
+        generate_and_fund_keypairs(client, id, keypair_count, num_satomis_per_account)
             .unwrap_or_else(|e| {
                 eprintln!("Error could not fund keys: {e:?}");
                 exit(1);

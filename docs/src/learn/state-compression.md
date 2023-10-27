@@ -258,7 +258,7 @@ on chain.
 
 Once the required space (in bytes) has been calculated, and using the
 [`getMinimumBalanceForRentExemption`](/api/http#getminimumbalanceforrentexemption)
-RPC method, request the cost (in lamports) to allocate this amount of bytes
+RPC method, request the cost (in satomis) to allocate this amount of bytes
 on-chain.
 
 ### Calculate tree cost in JavaScript
@@ -271,10 +271,10 @@ function to calculate the required space for a given tree size parameters.
 
 Then using the
 [`getMinimumBalanceForRentExemption`](https://solana-labs.github.io/solana-web3.js/classes/Connection.html#getMinimumBalanceForRentExemption)
-function to get the final cost (in lamports) to allocate the required space for
+function to get the final cost (in satomis) to allocate the required space for
 the tree on-chain.
 
-Then determine the cost in lamports to make an account of this size rent exempt,
+Then determine the cost in satomis to make an account of this size rent exempt,
 similar to any other account creation.
 
 ```ts
@@ -285,7 +285,7 @@ const requiredSpace = getConcurrentMerkleTreeAccountSize(
   canopyDepth,
 );
 
-// get the cost (in lamports) to store the tree on-chain
+// get the cost (in satomis) to store the tree on-chain
 const storageCost = await connection.getMinimumBalanceForRentExemption(
   requiredSpace,
 );

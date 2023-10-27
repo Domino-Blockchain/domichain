@@ -108,7 +108,7 @@
 //! #
 //! fn print_sysvar_rent(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(rent::ID, Account {
-//! #       lamports: 1009200,
+//! #       satomis: 1009200,
 //! #       data: vec![152, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 100],
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

@@ -148,7 +148,7 @@ fn create_account(
     from_account_index: usize,
     to_account_index: usize,
     to_address: &Address,
-    lamports: u64,
+    satomis: u64,
     space: u64,
     owner: &Pubkey,
     signers: &HashSet<Pubkey>,
@@ -160,7 +160,7 @@ fn create_account(
     {
         let mut to = instruction_context
             .try_borrow_instruction_account(transaction_context, to_account_index)?;
-        if to.get_lamports() > 0 {
+        if to.get_satomis() > 0 {
             panic!();
             ic_msg!(
                 invoke_context,
@@ -175,7 +175,7 @@ fn create_account(
     transfer(
         from_account_index,
         to_account_index,
-        lamports,
+        satomis,
         invoke_context,
         transaction_context,
         instruction_context,
@@ -185,7 +185,7 @@ fn create_account(
 fn transfer_verified(
     from_account_index: usize,
     to_account_index: usize,
-    lamports: u64,
+    satomis: u64,
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
@@ -196,28 +196,28 @@ fn transfer_verified(
         ic_msg!(invoke_context, "Transfer: `from` must not carry data");
         return Err(InstructionError::InvalidArgument);
     }
-    if lamports > from.get_lamports() {
+    if satomis > from.get_satomis() {
         ic_msg!(
             invoke_context,
-            "Transfer: insufficient lamports {}, need {}",
-            from.get_lamports(),
-            lamports
+            "Transfer: insufficient satomis {}, need {}",
+            from.get_satomis(),
+            satomis
         );
-        return Err(SystemError::ResultWithNegativeLamports.into());
+        return Err(SystemError::ResultWithNegativeSatomis.into());
     }
 
-    from.checked_sub_lamports(lamports)?;
+    from.checked_sub_satomis(satomis)?;
     drop(from);
     let mut to = instruction_context
         .try_borrow_instruction_account(transaction_context, to_account_index)?;
-    to.checked_add_lamports(lamports)?;
+    to.checked_add_satomis(satomis)?;
     Ok(())
 }
 
 fn transfer(
     from_account_index: usize,
     to_account_index: usize,
-    lamports: u64,
+    satomis: u64,
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
@@ -225,7 +225,7 @@ fn transfer(
     if !invoke_context
         .feature_set
         .is_active(&feature_set::system_transfer_zero_check::id())
-        && lamports == 0
+        && satomis == 0
     {
         return Ok(());
     }
@@ -245,7 +245,7 @@ fn transfer(
     transfer_verified(
         from_account_index,
         to_account_index,
-        lamports,
+        satomis,
         invoke_context,
         transaction_context,
         instruction_context,
@@ -258,7 +258,7 @@ fn transfer_with_seed(
     from_seed: &str,
     from_owner: &Pubkey,
     to_account_index: usize,
-    lamports: u64,
+    satomis: u64,
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
@@ -266,7 +266,7 @@ fn transfer_with_seed(
     if !invoke_context
         .feature_set
         .is_active(&feature_set::system_transfer_zero_check::id())
-        && lamports == 0
+        && satomis == 0
     {
         return Ok(());
     }
@@ -307,7 +307,7 @@ fn transfer_with_seed(
     transfer_verified(
         from_account_index,
         to_account_index,
-        lamports,
+        satomis,
         invoke_context,
         transaction_context,
         instruction_context,
@@ -328,7 +328,7 @@ pub fn process_instruction(
     let signers = instruction_context.get_signers(transaction_context);
     match instruction {
         SystemInstruction::CreateAccount {
-            lamports,
+            satomis,
             space,
             owner,
         } => {
@@ -344,7 +344,7 @@ pub fn process_instruction(
                 0,
                 1,
                 &to_address,
-                lamports,
+                satomis,
                 space,
                 &owner,
                 &signers,
@@ -356,7 +356,7 @@ pub fn process_instruction(
         SystemInstruction::CreateAccountWithSeed {
             base,
             seed,
-            lamports,
+            satomis,
             space,
             owner,
         } => {
@@ -372,7 +372,7 @@ pub fn process_instruction(
                 0,
                 1,
                 &to_address,
-                lamports,
+                satomis,
                 space,
                 &owner,
                 &signers,
@@ -394,19 +394,19 @@ pub fn process_instruction(
             )?;
             assign(&mut account, &address, &owner, &signers, invoke_context)
         }
-        SystemInstruction::Transfer { lamports } => {
+        SystemInstruction::Transfer { satomis } => {
             instruction_context.check_number_of_instruction_accounts(2)?;
             transfer(
                 0,
                 1,
-                lamports,
+                satomis,
                 invoke_context,
                 transaction_context,
                 instruction_context,
             )
         }
         SystemInstruction::TransferWithSeed {
-            lamports,
+            satomis,
             from_seed,
             from_owner,
         } => {
@@ -417,7 +417,7 @@ pub fn process_instruction(
                 &from_seed,
                 &from_owner,
                 2,
-                lamports,
+                satomis,
                 invoke_context,
                 transaction_context,
                 instruction_context,
@@ -442,7 +442,7 @@ pub fn process_instruction(
             }
             advance_nonce_account(&mut me, &signers, invoke_context)
         }
-        SystemInstruction::WithdrawNonceAccount(lamports) => {
+        SystemInstruction::WithdrawNonceAccount(satomis) => {
             instruction_context.check_number_of_instruction_accounts(2)?;
             #[allow(deprecated)]
             let _recent_blockhashes = get_sysvar_with_account_check::recent_blockhashes(
@@ -453,7 +453,7 @@ pub fn process_instruction(
             let rent = get_sysvar_with_account_check::rent(invoke_context, instruction_context, 3)?;
             withdraw_nonce_account(
                 0,
-                lamports,
+                satomis,
                 1,
                 &rent,
                 &signers,
@@ -600,7 +600,7 @@ mod tests {
         hash::{hash, Hash},
         instruction::{AccountMeta, Instruction, InstructionError},
         message::Message,
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         nonce::{
             self,
             state::{
@@ -677,7 +677,7 @@ mod tests {
 
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -698,8 +698,8 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 50);
-        assert_eq!(accounts[1].lamports(), 50);
+        assert_eq!(accounts[0].satomis(), 50);
+        assert_eq!(accounts[1].satomis(), 50);
         assert_eq!(accounts[1].owner(), &new_owner);
         assert_eq!(accounts[1].data(), &[0, 0]);
     }
@@ -717,7 +717,7 @@ mod tests {
             &bincode::serialize(&SystemInstruction::CreateAccountWithSeed {
                 base: from,
                 seed: seed.to_string(),
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -738,8 +738,8 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 50);
-        assert_eq!(accounts[1].lamports(), 50);
+        assert_eq!(accounts[0].satomis(), 50);
+        assert_eq!(accounts[1].satomis(), 50);
         assert_eq!(accounts[1].owner(), &new_owner);
         assert_eq!(accounts[1].data(), &[0, 0]);
     }
@@ -759,7 +759,7 @@ mod tests {
             &bincode::serialize(&SystemInstruction::CreateAccountWithSeed {
                 base,
                 seed: seed.to_string(),
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -785,8 +785,8 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 50);
-        assert_eq!(accounts[1].lamports(), 50);
+        assert_eq!(accounts[0].satomis(), 50);
+        assert_eq!(accounts[1].satomis(), 50);
         assert_eq!(accounts[1].owner(), &new_owner);
         assert_eq!(accounts[1].data(), &[0, 0]);
     }
@@ -817,7 +817,7 @@ mod tests {
 
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -838,13 +838,13 @@ mod tests {
             Err(InstructionError::MissingRequiredSignature),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
+        assert_eq!(accounts[0].satomis(), 100);
         assert_eq!(accounts[1], AccountSharedData::default());
     }
 
     #[test]
-    fn test_create_with_zero_lamports() {
-        // create account with zero lamports transferred
+    fn test_create_with_zero_satomis() {
+        // create account with zero satomis transferred
         let new_owner = Pubkey::new(&[9; 32]);
         let from = Pubkey::new_unique();
         let from_account = AccountSharedData::new(100, 0, &Pubkey::new_unique()); // not from system account
@@ -853,7 +853,7 @@ mod tests {
 
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 0,
+                satomis: 0,
                 space: 2,
                 owner: new_owner,
             })
@@ -874,15 +874,15 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[1].lamports(), 0);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[1].satomis(), 0);
         assert_eq!(*accounts[1].owner(), new_owner);
         assert_eq!(accounts[1].data(), &[0, 0]);
     }
 
     #[test]
-    fn test_create_negative_lamports() {
-        // Attempt to create account with more lamports than from_account has
+    fn test_create_negative_satomis() {
+        // Attempt to create account with more satomis than from_account has
         let new_owner = Pubkey::new(&[9; 32]);
         let from = Pubkey::new_unique();
         let from_account = AccountSharedData::new(100, 0, &Pubkey::new_unique());
@@ -891,7 +891,7 @@ mod tests {
 
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 150,
+                satomis: 150,
                 space: 2,
                 owner: new_owner,
             })
@@ -909,7 +909,7 @@ mod tests {
                     is_writable: false,
                 },
             ],
-            Err(SystemError::ResultWithNegativeLamports.into()),
+            Err(SystemError::ResultWithNegativeSatomis.into()),
             super::process_instruction,
         );
     }
@@ -936,7 +936,7 @@ mod tests {
         // Trying to request more data length than permitted will result in failure
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: MAX_PERMITTED_DATA_LENGTH + 1,
                 owner: system_program::id(),
             })
@@ -950,7 +950,7 @@ mod tests {
         // Trying to request equal or less data length than permitted will be successful
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: MAX_PERMITTED_DATA_LENGTH,
                 owner: system_program::id(),
             })
@@ -960,7 +960,7 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[1].lamports(), 50);
+        assert_eq!(accounts[1].satomis(), 50);
         assert_eq!(accounts[1].data().len() as u64, MAX_PERMITTED_DATA_LENGTH);
     }
 
@@ -977,7 +977,7 @@ mod tests {
         let unchanged_account = owned_account.clone();
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -998,7 +998,7 @@ mod tests {
             Err(SystemError::AccountAlreadyInUse.into()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
+        assert_eq!(accounts[0].satomis(), 100);
         assert_eq!(accounts[1], unchanged_account);
 
         // Attempt to create system account in account that already has data
@@ -1006,7 +1006,7 @@ mod tests {
         let unchanged_account = owned_account.clone();
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1027,15 +1027,15 @@ mod tests {
             Err(SystemError::AccountAlreadyInUse.into()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
+        assert_eq!(accounts[0].satomis(), 100);
         assert_eq!(accounts[1], unchanged_account);
 
-        // Attempt to create an account that already has lamports
+        // Attempt to create an account that already has satomis
         let owned_account = AccountSharedData::new(1, 0, &Pubkey::default());
         let unchanged_account = owned_account.clone();
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1056,7 +1056,7 @@ mod tests {
             Err(SystemError::AccountAlreadyInUse.into()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
+        assert_eq!(accounts[0].satomis(), 100);
         assert_eq!(accounts[1], unchanged_account);
     }
 
@@ -1072,7 +1072,7 @@ mod tests {
         // Haven't signed from account
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1100,7 +1100,7 @@ mod tests {
         // Haven't signed to account
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1122,11 +1122,11 @@ mod tests {
             super::process_instruction,
         );
 
-        // Don't support unsigned creation with zero lamports (ephemeral account)
+        // Don't support unsigned creation with zero satomis (ephemeral account)
         let owned_account = AccountSharedData::new(0, 0, &Pubkey::default());
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1160,7 +1160,7 @@ mod tests {
         // fail to create a sysvar::id() owned account
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: sysvar::id(),
             })
@@ -1197,7 +1197,7 @@ mod tests {
 
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 50,
+                satomis: 50,
                 space: 2,
                 owner: new_owner,
             })
@@ -1237,7 +1237,7 @@ mod tests {
 
         process_instruction(
             &bincode::serialize(&SystemInstruction::CreateAccount {
-                lamports: 42,
+                satomis: 42,
                 space: 0,
                 owner: Pubkey::new_unique(),
             })
@@ -1342,7 +1342,7 @@ mod tests {
         // Attempt to transfer with no destination
         let from = Pubkey::new_unique();
         let from_account = AccountSharedData::new(100, 0, &system_program::id());
-        let instruction = SystemInstruction::Transfer { lamports: 0 };
+        let instruction = SystemInstruction::Transfer { satomis: 0 };
         let data = serialize(&instruction).unwrap();
         process_instruction(
             &data,
@@ -1358,7 +1358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_transfer_lamports() {
+    fn test_transfer_satomis() {
         let from = Pubkey::new_unique();
         let from_account = AccountSharedData::new(100, 0, &Pubkey::new(&[2; 32])); // account owner should not matter
         let to = Pubkey::new(&[3; 32]);
@@ -1379,40 +1379,40 @@ mod tests {
 
         // Success case
         let accounts = process_instruction(
-            &bincode::serialize(&SystemInstruction::Transfer { lamports: 50 }).unwrap(),
+            &bincode::serialize(&SystemInstruction::Transfer { satomis: 50 }).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 50);
-        assert_eq!(accounts[1].lamports(), 51);
+        assert_eq!(accounts[0].satomis(), 50);
+        assert_eq!(accounts[1].satomis(), 51);
 
-        // Attempt to move more lamports than from_account has
+        // Attempt to move more satomis than from_account has
         let accounts = process_instruction(
-            &bincode::serialize(&SystemInstruction::Transfer { lamports: 101 }).unwrap(),
+            &bincode::serialize(&SystemInstruction::Transfer { satomis: 101 }).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
-            Err(SystemError::ResultWithNegativeLamports.into()),
+            Err(SystemError::ResultWithNegativeSatomis.into()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[1].lamports(), 1);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[1].satomis(), 1);
 
         // test signed transfer of zero
         let accounts = process_instruction(
-            &bincode::serialize(&SystemInstruction::Transfer { lamports: 0 }).unwrap(),
+            &bincode::serialize(&SystemInstruction::Transfer { satomis: 0 }).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts,
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[1].lamports(), 1);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[1].satomis(), 1);
 
         // test unsigned transfer of zero
         let accounts = process_instruction(
-            &bincode::serialize(&SystemInstruction::Transfer { lamports: 0 }).unwrap(),
+            &bincode::serialize(&SystemInstruction::Transfer { satomis: 0 }).unwrap(),
             transaction_accounts,
             vec![
                 AccountMeta {
@@ -1429,8 +1429,8 @@ mod tests {
             Err(InstructionError::MissingRequiredSignature),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[1].lamports(), 1);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[1].satomis(), 1);
     }
 
     #[test]
@@ -1466,7 +1466,7 @@ mod tests {
         // Success case
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::TransferWithSeed {
-                lamports: 50,
+                satomis: 50,
                 from_seed: from_seed.clone(),
                 from_owner,
             })
@@ -1476,29 +1476,29 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 50);
-        assert_eq!(accounts[2].lamports(), 51);
+        assert_eq!(accounts[0].satomis(), 50);
+        assert_eq!(accounts[2].satomis(), 51);
 
-        // Attempt to move more lamports than from_account has
+        // Attempt to move more satomis than from_account has
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::TransferWithSeed {
-                lamports: 101,
+                satomis: 101,
                 from_seed: from_seed.clone(),
                 from_owner,
             })
             .unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
-            Err(SystemError::ResultWithNegativeLamports.into()),
+            Err(SystemError::ResultWithNegativeSatomis.into()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[2].lamports(), 1);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[2].satomis(), 1);
 
         // Test unsigned transfer of zero
         let accounts = process_instruction(
             &bincode::serialize(&SystemInstruction::TransferWithSeed {
-                lamports: 0,
+                satomis: 0,
                 from_seed,
                 from_owner,
             })
@@ -1508,12 +1508,12 @@ mod tests {
             Ok(()),
             super::process_instruction,
         );
-        assert_eq!(accounts[0].lamports(), 100);
-        assert_eq!(accounts[2].lamports(), 1);
+        assert_eq!(accounts[0].satomis(), 100);
+        assert_eq!(accounts[2].satomis(), 1);
     }
 
     #[test]
-    fn test_transfer_lamports_from_nonce_account_fail() {
+    fn test_transfer_satomis_from_nonce_account_fail() {
         let from = Pubkey::new_unique();
         let from_account = AccountSharedData::new_data(
             100,
@@ -1535,7 +1535,7 @@ mod tests {
         let to_account = AccountSharedData::new(1, 0, &to); // account owner should not matter
 
         process_instruction(
-            &bincode::serialize(&SystemInstruction::Transfer { lamports: 50 }).unwrap(),
+            &bincode::serialize(&SystemInstruction::Transfer { satomis: 50 }).unwrap(),
             vec![(from, from_account), (to, to_account)],
             vec![
                 AccountMeta {
@@ -1556,7 +1556,7 @@ mod tests {
 
     #[test]
     fn test_allocate() {
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1.0));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_client = BankClient::new(bank);
         let data_len = 2;
@@ -1594,7 +1594,7 @@ mod tests {
             .is_ok());
     }
 
-    fn with_create_zero_lamport<F>(callback: F)
+    fn with_create_zero_satomi<F>(callback: F)
     where
         F: Fn(&Bank),
     {
@@ -1609,19 +1609,19 @@ mod tests {
         let program = Pubkey::new_unique();
         let collector = Pubkey::new_unique();
 
-        let mint_lamports = domi_to_lamports(1.0);
+        let mint_satomis = domi_to_satomis(1.0);
         let len1 = 123;
         let len2 = 456;
 
         // create initial bank and fund the alice account
-        let (genesis_config, mint_keypair) = create_genesis_config(mint_lamports);
+        let (genesis_config, mint_keypair) = create_genesis_config(mint_satomis);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
         let bank_client = BankClient::new_shared(&bank);
         bank_client
-            .transfer_and_confirm(mint_lamports, &mint_keypair, &alice_pubkey)
+            .transfer_and_confirm(mint_satomis, &mint_keypair, &alice_pubkey)
             .unwrap();
 
-        // create zero-lamports account to be cleaned
+        // create zero-satomis account to be cleaned
         let account = AccountSharedData::new(0, len1, &program);
         let bank = Arc::new(Bank::new_from_parent(&bank, &collector, bank.slot() + 1));
         bank.store_account(&bob_pubkey, &account);
@@ -1640,14 +1640,14 @@ mod tests {
         // super fun time; callback chooses to .clean_accounts(None) or not
         callback(&*bank);
 
-        // create a normal account at the same pubkey as the zero-lamports account
-        let lamports = genesis_config.rent.minimum_balance(len2);
+        // create a normal account at the same pubkey as the zero-satomis account
+        let satomis = genesis_config.rent.minimum_balance(len2);
         let bank = Arc::new(Bank::new_from_parent(&bank, &collector, bank.slot() + 1));
         let bank_client = BankClient::new_shared(&bank);
         let ix = system_instruction::create_account(
             &alice_pubkey,
             &bob_pubkey,
-            lamports,
+            satomis,
             len2 as u64,
             &program,
         );
@@ -1657,8 +1657,8 @@ mod tests {
     }
 
     #[test]
-    fn test_create_zero_lamport_with_clean() {
-        with_create_zero_lamport(|bank| {
+    fn test_create_zero_satomi_with_clean() {
+        with_create_zero_satomi(|bank| {
             bank.freeze();
             bank.squash();
             bank.force_flush_accounts_cache();
@@ -1670,15 +1670,15 @@ mod tests {
     }
 
     #[test]
-    fn test_create_zero_lamport_without_clean() {
-        with_create_zero_lamport(|_| {
-            // just do nothing; this should behave identically with test_create_zero_lamport_with_clean
+    fn test_create_zero_satomi_without_clean() {
+        with_create_zero_satomi(|_| {
+            // just do nothing; this should behave identically with test_create_zero_satomi_with_clean
         });
     }
 
     #[test]
     fn test_assign_with_seed() {
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1.0));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_client = BankClient::new(bank);
 
@@ -1713,7 +1713,7 @@ mod tests {
 
     #[test]
     fn test_system_unsigned_transaction() {
-        let (genesis_config, alice_keypair) = create_genesis_config(domi_to_lamports(1.0));
+        let (genesis_config, alice_keypair) = create_genesis_config(domi_to_satomis(1.0));
         let alice_pubkey = alice_keypair.pubkey();
         let mallory_keypair = Keypair::new();
         let mallory_pubkey = mallory_keypair.pubkey();
@@ -1734,7 +1734,7 @@ mod tests {
         ];
         let malicious_instruction = Instruction::new_with_bincode(
             system_program::id(),
-            &SystemInstruction::Transfer { lamports: amount },
+            &SystemInstruction::Transfer { satomis: amount },
             account_metas,
         );
         assert_eq!(
@@ -1746,7 +1746,7 @@ mod tests {
         );
         assert_eq!(
             bank_client.get_balance(&alice_pubkey).unwrap(),
-            domi_to_lamports(1.0) - amount
+            domi_to_satomis(1.0) - amount
         );
         assert_eq!(bank_client.get_balance(&mallory_pubkey).unwrap(), amount);
     }
@@ -2261,7 +2261,7 @@ mod tests {
         let nonce_address = Pubkey::new_unique();
         let versions = NonceVersions::Legacy(Box::new(NonceState::Uninitialized));
         let nonce_account = AccountSharedData::new_data(
-            1_000_000,             // lamports
+            1_000_000,             // satomis
             &versions,             // state
             &Pubkey::new_unique(), // owner
         )
@@ -2283,7 +2283,7 @@ mod tests {
 
     fn new_nonce_account(versions: NonceVersions) -> AccountSharedData {
         let nonce_account = AccountSharedData::new_data(
-            1_000_000,             // lamports
+            1_000_000,             // satomis
             &versions,             // state
             &system_program::id(), // owner
         )
@@ -2335,7 +2335,7 @@ mod tests {
             authority: Pubkey::new_unique(),
             durable_nonce,
             fee_calculator: FeeCalculator {
-                lamports_per_signature: 2718,
+                satomis_per_signature: 2718,
             },
         };
         let versions = NonceVersions::Legacy(Box::new(NonceState::Initialized(data.clone())));

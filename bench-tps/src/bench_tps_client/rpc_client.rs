@@ -74,10 +74,10 @@ impl BenchTpsClient for RpcClient {
     fn request_airdrop_with_blockhash(
         &self,
         pubkey: &Pubkey,
-        lamports: u64,
+        satomis: u64,
         recent_blockhash: &Hash,
     ) -> Result<Signature> {
-        RpcClient::request_airdrop_with_blockhash(self, pubkey, lamports, recent_blockhash)
+        RpcClient::request_airdrop_with_blockhash(self, pubkey, satomis, recent_blockhash)
             .map_err(|err| err.into())
     }
 

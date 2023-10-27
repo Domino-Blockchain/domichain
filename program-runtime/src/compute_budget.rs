@@ -217,12 +217,12 @@ impl ComputeBudget {
                         }
                         updated_compute_unit_limit = Some(compute_unit_limit);
                     }
-                    Ok(ComputeBudgetInstruction::SetComputeUnitPrice(micro_lamports)) => {
+                    Ok(ComputeBudgetInstruction::SetComputeUnitPrice(micro_satomis)) => {
                         if prioritization_fee.is_some() {
                             return Err(duplicate_instruction_error);
                         }
                         prioritization_fee =
-                            Some(PrioritizationFeeType::ComputeUnitPrice(micro_lamports));
+                            Some(PrioritizationFeeType::ComputeUnitPrice(micro_satomis));
                     }
                     Ok(ComputeBudgetInstruction::SetLoadedAccountsDataSizeLimit(bytes))
                         if support_set_loaded_accounts_data_size_limit_ix =>

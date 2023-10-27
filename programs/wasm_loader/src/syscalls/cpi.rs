@@ -23,7 +23,7 @@ use {
 /// corresponding BorrowedAccount, and needs to be synched.
 // #[derive(Debug)]
 struct CallerAccount<'a> {
-    lamports: &'a mut u64,
+    satomis: &'a mut u64,
     owner: &'a mut Pubkey,
     // The original data length of the account at the start of the current
     // instruction. We use this to determine wether an account was shrunk or
@@ -57,7 +57,7 @@ impl<'a> Debug for CallerAccount<'a> {
             &mut []
         };
         f.debug_struct("CallerAccount")
-            .field("lamports", &self.lamports)
+            .field("satomis", &self.satomis)
             .field("owner", &self.owner)
             .field("original_data_len", &self.original_data_len)
             .field("serialized_data", &format_args!("{:?}", serialized_data))
@@ -83,11 +83,11 @@ impl<'a> CallerAccount<'a> {
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
-        let lamports = {
-            // Double translate lamports out of RefCell
+        let satomis = {
+            // Double translate satomis out of RefCell
             let ptr = translate_type::<u64>(
                 memory_mapping,
-                account_info.lamports.as_ptr() as u64,
+                account_info.satomis.as_ptr() as u64,
                 invoke_context.get_check_aligned(),
             )?;
             translate_type_mut::<u64>(memory_mapping, *ptr, invoke_context.get_check_aligned())?
@@ -172,7 +172,7 @@ impl<'a> CallerAccount<'a> {
         let ref_to_len_in_vm = &mut 0;
 
         Ok(CallerAccount {
-            lamports,
+            satomis,
             owner,
             original_data_len,
             serialized_data,
@@ -197,17 +197,17 @@ impl<'a> CallerAccount<'a> {
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
-        let lamports = {
-            // Double translate lamports out of RefCell
+        let satomis = {
+            // Double translate satomis out of RefCell
             // let (strong, weak, value) = dbg!(translate_type::<(u32, u32, [u8; size_of::<RefCell<u32>>()])>(
             //     memory_mapping,
-            //     account_info.lamports as u64,
+            //     account_info.satomis as u64,
             //     invoke_context.get_check_aligned(),
             // )?);
 
             // // let ptr = dbg!(translate_type::<u32>(
             // //     memory_mapping,
-            // //     dbg!(account_info.lamports().as_ptr()) as u64,
+            // //     dbg!(account_info.satomis().as_ptr()) as u64,
             // //     invoke_context.get_check_aligned(),
             // // )?);
 
@@ -216,7 +216,7 @@ impl<'a> CallerAccount<'a> {
             // let t = value.borrow();
             // let t = *t;
             // dbg!(t);
-            translate_type_mut::<u64>(memory_mapping, account_info.lamports as u64, invoke_context.get_check_aligned())?
+            translate_type_mut::<u64>(memory_mapping, account_info.satomis as u64, invoke_context.get_check_aligned())?
         };
         let owner = translate_type_mut::<Pubkey>(
             memory_mapping,
@@ -323,7 +323,7 @@ impl<'a> CallerAccount<'a> {
         };
 
         Ok(CallerAccount {
-            lamports,
+            satomis,
             owner,
             original_data_len,
             serialized_data,
@@ -347,9 +347,9 @@ impl<'a> CallerAccount<'a> {
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
-        let lamports = translate_type_mut::<u64>(
+        let satomis = translate_type_mut::<u64>(
             memory_mapping,
-            account_info.lamports_addr,
+            account_info.satomis_addr,
             invoke_context.get_check_aligned(),
         )?;
         let owner = translate_type_mut::<Pubkey>(
@@ -423,7 +423,7 @@ impl<'a> CallerAccount<'a> {
         let ref_to_len_in_vm = &mut 0;
 
         Ok(CallerAccount {
-            lamports,
+            satomis,
             owner,
             original_data_len,
             serialized_data,
@@ -701,7 +701,7 @@ struct SolAccountMeta {
 #[repr(C)]
 struct SolAccountInfo {
     key_addr: u64,
-    lamports_addr: u64,
+    satomis_addr: u64,
     data_len: u64,
     data_addr: u64,
     owner_addr: u64,
@@ -1280,8 +1280,8 @@ fn update_callee_account(
     let is_disable_cpi_setting_executable_and_rent_epoch_active = invoke_context
         .feature_set
         .is_active(&disable_cpi_setting_executable_and_rent_epoch::id());
-    if callee_account.get_lamports() != *caller_account.lamports {
-        callee_account.set_lamports(*caller_account.lamports)?;
+    if callee_account.get_satomis() != *caller_account.satomis {
+        callee_account.set_satomis(*caller_account.satomis)?;
     }
 
     if direct_mapping {
@@ -1332,7 +1332,7 @@ fn update_callee_account(
         callee_account.set_executable(caller_account.executable)?;
     }
 
-    // Change the owner at the end so that we are allowed to change the lamports and data before
+    // Change the owner at the end so that we are allowed to change the satomis and data before
     if callee_account.get_owner() != caller_account.owner {
         callee_account.set_owner(caller_account.owner.as_ref())?;
     }
@@ -1378,7 +1378,7 @@ fn update_caller_account(
     callee_account: &mut BorrowedAccount<'_>,
     direct_mapping: bool,
 ) -> Result<(), Error> {
-    *caller_account.lamports = callee_account.get_lamports();
+    *caller_account.satomis = callee_account.get_satomis();
     *caller_account.owner = *callee_account.get_owner();
 
     if direct_mapping && caller_account.original_data_len > 0 {
@@ -1708,7 +1708,7 @@ mod tests {
             account.data().len(),
         )
         .unwrap();
-        assert_eq!(*caller_account.lamports, account.lamports());
+        assert_eq!(*caller_account.satomis, account.satomis());
         assert_eq!(caller_account.owner, account.owner());
         assert_eq!(caller_account.original_data_len, account.data().len());
         assert_eq!(
@@ -1721,7 +1721,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_caller_account_lamports_owner() {
+    fn test_update_caller_account_satomis_owner() {
         let transaction_accounts = transaction_with_one_writable_instruction_account(vec![]);
         let account = transaction_accounts[1].1.clone();
         mock_invoke_context!(
@@ -1752,7 +1752,7 @@ mod tests {
 
         let mut callee_account = borrow_instruction_account!(invoke_context, 0);
 
-        callee_account.set_lamports(42).unwrap();
+        callee_account.set_satomis(42).unwrap();
         callee_account
             .set_owner(Pubkey::new_unique().as_ref())
             .unwrap();
@@ -1767,7 +1767,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(*caller_account.lamports, 42);
+        assert_eq!(*caller_account.satomis, 42);
         assert_eq!(caller_account.owner, callee_account.get_owner());
     }
 
@@ -1788,7 +1788,7 @@ mod tests {
         );
 
         let mut mock_caller_account = MockCallerAccount::new(
-            account.lamports(),
+            account.satomis(),
             *account.owner(),
             0xFFFFFFFF00000000,
             account.data(),
@@ -1909,7 +1909,7 @@ mod tests {
         );
 
         let mut mock_caller_account = MockCallerAccount::new(
-            account.lamports(),
+            account.satomis(),
             *account.owner(),
             0xFFFFFFFF00000000,
             account.data(),
@@ -2076,7 +2076,7 @@ mod tests {
         );
 
         let mut mock_caller_account = MockCallerAccount::new(
-            account.lamports(),
+            account.satomis(),
             *account.owner(),
             0xFFFFFFFF00000000,
             account.data(),
@@ -2129,7 +2129,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_callee_account_lamports_owner() {
+    fn test_update_callee_account_satomis_owner() {
         let transaction_accounts = transaction_with_one_writable_instruction_account(vec![]);
         let account = transaction_accounts[1].1.clone();
 
@@ -2154,7 +2154,7 @@ mod tests {
 
         let callee_account = borrow_instruction_account!(invoke_context, 0);
 
-        *caller_account.lamports = 42;
+        *caller_account.satomis = 42;
         *caller_account.owner = Pubkey::new_unique();
 
         update_callee_account(
@@ -2167,7 +2167,7 @@ mod tests {
         .unwrap();
 
         let callee_account = borrow_instruction_account!(invoke_context, 0);
-        assert_eq!(callee_account.get_lamports(), 42);
+        assert_eq!(callee_account.get_satomis(), 42);
         assert_eq!(caller_account.owner, callee_account.get_owner());
     }
 
@@ -2442,7 +2442,7 @@ mod tests {
 
     pub type TestTransactionAccount = (Pubkey, AccountSharedData, bool);
     struct MockCallerAccount {
-        lamports: u64,
+        satomis: u64,
         owner: Pubkey,
         vm_addr: u64,
         data: Vec<u8>,
@@ -2452,7 +2452,7 @@ mod tests {
 
     impl MockCallerAccount {
         fn new(
-            lamports: u64,
+            satomis: u64,
             owner: Pubkey,
             vm_addr: u64,
             data: &[u8],
@@ -2501,7 +2501,7 @@ mod tests {
             }
 
             MockCallerAccount {
-                lamports,
+                satomis,
                 owner,
                 vm_addr,
                 data: d,
@@ -2523,7 +2523,7 @@ mod tests {
         fn caller_account(&mut self) -> CallerAccount<'_> {
             let data = &mut self.data[mem::size_of::<u64>()..];
             CallerAccount {
-                lamports: &mut self.lamports,
+                satomis: &mut self.satomis,
                 owner: &mut self.owner,
                 original_data_len: self.len as usize,
                 serialized_data: data,
@@ -2541,7 +2541,7 @@ mod tests {
     ) -> Vec<TestTransactionAccount> {
         let program_id = Pubkey::new_unique();
         let account = AccountSharedData::from(Account {
-            lamports: 1,
+            satomis: 1,
             data,
             owner: program_id,
             executable: false,
@@ -2551,7 +2551,7 @@ mod tests {
             (
                 program_id,
                 AccountSharedData::from(Account {
-                    lamports: 0,
+                    satomis: 0,
                     data: vec![],
                     owner: wasm_loader::id(),
                     executable: true,
@@ -2569,7 +2569,7 @@ mod tests {
         let program_id = Pubkey::new_unique();
         let account_owner = Pubkey::new_unique();
         let account = AccountSharedData::from(Account {
-            lamports: 1,
+            satomis: 1,
             data,
             owner: account_owner,
             executable: false,
@@ -2579,7 +2579,7 @@ mod tests {
             (
                 program_id,
                 AccountSharedData::from(Account {
-                    lamports: 0,
+                    satomis: 0,
                     data: vec![],
                     owner: wasm_loader::id(),
                     executable: true,
@@ -2682,7 +2682,7 @@ mod tests {
         key: Pubkey,
         is_signer: bool,
         is_writable: bool,
-        lamports: u64,
+        satomis: u64,
         data: &'a [u8],
         owner: Pubkey,
         executable: bool,
@@ -2695,7 +2695,7 @@ mod tests {
                 key,
                 is_signer: false,
                 is_writable: false,
-                lamports: account.lamports(),
+                satomis: account.satomis(),
                 data: account.data(),
                 owner: *account.owner(),
                 executable: account.executable(),
@@ -2714,9 +2714,9 @@ mod tests {
 
             let vm_addr = vm_addr as usize;
             let key_addr = vm_addr + mem::size_of::<AccountInfo>();
-            let lamports_cell_addr = key_addr + mem::size_of::<Pubkey>();
-            let lamports_addr = lamports_cell_addr + mem::size_of::<RcBox<RefCell<&mut u64>>>();
-            let owner_addr = lamports_addr + mem::size_of::<u64>();
+            let satomis_cell_addr = key_addr + mem::size_of::<Pubkey>();
+            let satomis_addr = satomis_cell_addr + mem::size_of::<RcBox<RefCell<&mut u64>>>();
+            let owner_addr = satomis_addr + mem::size_of::<u64>();
             let data_cell_addr = owner_addr + mem::size_of::<Pubkey>();
             let data_addr = data_cell_addr + mem::size_of::<RcBox<RefCell<&mut [u8]>>>();
 
@@ -2724,8 +2724,8 @@ mod tests {
                 key: unsafe { (key_addr as *const Pubkey).as_ref() }.unwrap(),
                 is_signer: self.is_signer,
                 is_writable: self.is_writable,
-                lamports: unsafe {
-                    Rc::from_raw((lamports_cell_addr + RcBox::<&mut u64>::VALUE_OFFSET) as *const _)
+                satomis: unsafe {
+                    Rc::from_raw((satomis_cell_addr + RcBox::<&mut u64>::VALUE_OFFSET) as *const _)
                 },
                 data: unsafe {
                     Rc::from_raw((data_cell_addr + RcBox::<&mut [u8]>::VALUE_OFFSET) as *const _)
@@ -2742,12 +2742,12 @@ mod tests {
                     self.key,
                 );
                 ptr::write_unaligned(
-                    (data.as_mut_ptr() as usize + lamports_cell_addr - vm_addr) as *mut _,
-                    RcBox::new(RefCell::new((lamports_addr as *mut u64).as_mut().unwrap())),
+                    (data.as_mut_ptr() as usize + satomis_cell_addr - vm_addr) as *mut _,
+                    RcBox::new(RefCell::new((satomis_addr as *mut u64).as_mut().unwrap())),
                 );
                 ptr::write_unaligned(
-                    (data.as_mut_ptr() as usize + lamports_addr - vm_addr) as *mut _,
-                    self.lamports,
+                    (data.as_mut_ptr() as usize + satomis_addr - vm_addr) as *mut _,
+                    self.satomis,
                 );
                 ptr::write_unaligned(
                     (data.as_mut_ptr() as usize + owner_addr - vm_addr) as *mut _,

@@ -335,14 +335,14 @@ mod tests {
         .unwrap();
 
         let key = id();
-        let mut lamports = 0;
+        let mut satomis = 0;
         let mut data = construct_instructions_data(&sanitized_message.decompile_instructions());
         let owner = crate::sysvar::id();
         let mut account_info = AccountInfo::new(
             &key,
             false,
             false,
-            &mut lamports,
+            &mut satomis,
             &mut data,
             &owner,
             false,
@@ -389,7 +389,7 @@ mod tests {
         .unwrap();
 
         let key = id();
-        let mut lamports = 0;
+        let mut satomis = 0;
         let mut data = construct_instructions_data(&sanitized_message.decompile_instructions());
         store_current_index(&mut data, 1);
         let owner = crate::sysvar::id();
@@ -397,7 +397,7 @@ mod tests {
             &key,
             false,
             false,
-            &mut lamports,
+            &mut satomis,
             &mut data,
             &owner,
             false,
@@ -447,7 +447,7 @@ mod tests {
         .unwrap();
 
         let key = id();
-        let mut lamports = 0;
+        let mut satomis = 0;
         let mut data = construct_instructions_data(&sanitized_message.decompile_instructions());
         store_current_index(&mut data, 1);
         let owner = crate::sysvar::id();
@@ -455,7 +455,7 @@ mod tests {
             &key,
             false,
             false,
-            &mut lamports,
+            &mut satomis,
             &mut data,
             &owner,
             false,

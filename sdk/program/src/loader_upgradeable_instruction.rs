@@ -86,8 +86,8 @@ pub enum UpgradeableLoaderInstruction {
     /// A program can be updated as long as the program's authority has not been
     /// set to `None`.
     ///
-    /// The Buffer account must contain sufficient lamports to fund the
-    /// ProgramData account to be rent-exempt, any additional lamports left over
+    /// The Buffer account must contain sufficient satomis to fund the
+    /// ProgramData account to be rent-exempt, any additional satomis left over
     /// will be transferred to the spill account, leaving the Buffer account
     /// balance at zero.
     ///
@@ -115,13 +115,13 @@ pub enum UpgradeableLoaderInstruction {
     ///      not be upgradeable.
     SetAuthority,
 
-    /// Closes an account owned by the upgradeable loader of all lamports and
-    /// withdraws all the lamports
+    /// Closes an account owned by the upgradeable loader of all satomis and
+    /// withdraws all the satomis
     ///
     /// # Account references
     ///   0. `[writable]` The account to close, if closing a program must be the
     ///      ProgramData account.
-    ///   1. `[writable]` The account to deposit the closed account's lamports.
+    ///   1. `[writable]` The account to deposit the closed account's satomis.
     ///   2. `[signer]` The account's authority, Optional, required for
     ///      initialized accounts.
     ///   3. `[writable]` The associated Program account if the account to close
@@ -131,7 +131,7 @@ pub enum UpgradeableLoaderInstruction {
     /// Extend a program's ProgramData account by the specified number of bytes.
     /// Only upgradeable program's can be extended.
     ///
-    /// The payer account must contain sufficient lamports to fund the
+    /// The payer account must contain sufficient satomis to fund the
     /// ProgramData account to be rent-exempt. If the ProgramData account
     /// balance is already sufficient to cover the rent exemption cost
     /// for the extended bytes, the payer account is not required.
@@ -140,7 +140,7 @@ pub enum UpgradeableLoaderInstruction {
     ///   0. `[writable]` The ProgramData account.
     ///   1. `[writable]` The ProgramData account's associated Program account.
     ///   2. `[]` System program (`domichain_sdk::system_program::id()`), optional, used to transfer
-    ///      lamports from the payer to the ProgramData account.
+    ///      satomis from the payer to the ProgramData account.
     ///   3. `[signer]` The payer account, optional, that will pay necessary rent exemption costs
     ///      for the increased storage size.
     ExtendProgram {

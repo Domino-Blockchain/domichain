@@ -16,7 +16,7 @@ fn process_instruction(
 ) -> ProgramResult {
     let minimum_delegation = stake::tools::get_minimum_delegation()?;
     msg!(
-        "The minimum stake delegation is {} lamports",
+        "The minimum stake delegation is {} satomis",
         minimum_delegation
     );
     Ok(())

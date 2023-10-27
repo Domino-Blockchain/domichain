@@ -87,14 +87,14 @@ impl SnapshotTestConfig {
         let bank_snapshots_dir = TempDir::new().unwrap();
         let full_snapshot_archives_dir = TempDir::new().unwrap();
         let incremental_snapshot_archives_dir = TempDir::new().unwrap();
-        // validator_stake_lamports should be non-zero otherwise stake
+        // validator_stake_satomis should be non-zero otherwise stake
         // account will not be stored in accounts-db but still cached in
         // bank stakes which results in mismatch when banks are loaded from
         // snapshots.
         let mut genesis_config_info = create_genesis_config_with_leader(
-            10_000,                          // mint_lamports
+            10_000,                          // mint_satomis
             &domichain_sdk::pubkey::new_rand(), // validator_pubkey
-            1,                               // validator_stake_lamports
+            1,                               // validator_stake_satomis
         );
         genesis_config_info.genesis_config.cluster_type = cluster_type;
         let bank0 = Bank::new_with_paths_for_tests(
@@ -652,7 +652,7 @@ fn test_bank_forks_status_cache_snapshot(
     snapshot_version: SnapshotVersion,
     cluster_type: ClusterType,
 ) {
-    // create banks up to slot (MAX_CACHE_ENTRIES * 2) + 1 while transferring 1 lamport into 2 different accounts each time
+    // create banks up to slot (MAX_CACHE_ENTRIES * 2) + 1 while transferring 1 satomi into 2 different accounts each time
     // this is done to ensure the AccountStorageEntries keep getting cleaned up as the root moves
     // ahead. Also tests the status_cache purge and status cache snapshotting.
     // Makes sure that the last bank is restored correctly

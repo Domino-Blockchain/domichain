@@ -26,10 +26,10 @@ fn build_sanitized_transaction(
     signer_account: &Pubkey,
     write_account: &Pubkey,
 ) -> SanitizedTransaction {
-    let transfer_lamports = 1;
+    let transfer_satomis = 1;
     let transaction = Transaction::new_unsigned(Message::new(
         &[
-            system_instruction::transfer(signer_account, write_account, transfer_lamports),
+            system_instruction::transfer(signer_account, write_account, transfer_satomis),
             ComputeBudgetInstruction::set_compute_unit_limit(TRANSFER_TRANSACTION_COMPUTE_UNIT),
             ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price),
         ],

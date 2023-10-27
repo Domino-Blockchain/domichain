@@ -755,7 +755,7 @@ mod tests {
         system_transaction::transfer(
             &Keypair::new(),       // from
             &Pubkey::new_unique(), // to
-            rng.gen(),             // lamports
+            rng.gen(),             // satomis
             recent_blockhash,
         )
     }

@@ -58,14 +58,14 @@ domichain delegate-stake ~/validator-stake-keypair.json ~/some-other-vote-accoun
 Assuming the node is voting, now you're up and running and generating validator
 rewards. Rewards are paid automatically on epoch boundaries.
 
-The rewards lamports earned are split between your stake account and the vote
+The rewards satomis earned are split between your stake account and the vote
 account according to the commission rate set in the vote account. Rewards can
 only be earned while the validator is up and running. Further, once staked, the
 validator becomes an important part of the network. In order to safely remove a
 validator from the network, first deactivate its stake.
 
 At the end of each slot, a validator is expected to send a vote transaction.
-These vote transactions are paid for by lamports from a validator's identity
+These vote transactions are paid for by satomis from a validator's identity
 account.
 
 This is a normal transaction so the standard transaction fee will apply. The
@@ -129,4 +129,4 @@ withdraw it from the network. Cooldown may take several epochs to complete,
 depending on active stake and the size of your stake.
 
 Note that a stake account may only be used once, so after deactivation, use the
-cli's `withdraw-stake` command to recover the previously staked lamports.
+cli's `withdraw-stake` command to recover the previously staked satomis.

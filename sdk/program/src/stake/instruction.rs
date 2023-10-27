@@ -120,7 +120,7 @@ pub enum StakeInstruction {
     ///   2. `[SIGNER]` Stake authority
     Split(u64),
 
-    /// Withdraw unstaked lamports from the stake account
+    /// Withdraw unstaked satomis from the stake account
     ///
     /// # Account references
     ///   0. `[WRITE]` Stake account from which to withdraw
@@ -131,7 +131,7 @@ pub enum StakeInstruction {
     ///   5. Optional: `[SIGNER]` Lockup authority, if before lockup expiration
     ///
     /// The u64 is the portion of the stake account balance to be withdrawn,
-    ///    must be `<= StakeAccount.lamports - staked_lamports`.
+    ///    must be `<= StakeAccount.satomis - staked_satomis`.
     Withdraw(u64),
 
     /// Deactivates the stake in the account
@@ -243,7 +243,7 @@ pub enum StakeInstruction {
     ///   2. Optional: `[SIGNER]` New lockup authority
     SetLockupChecked(LockupCheckedArgs),
 
-    /// Get the minimum stake delegation, in lamports
+    /// Get the minimum stake delegation, in satomis
     ///
     /// # Account references
     ///   None
@@ -272,11 +272,11 @@ pub enum StakeInstruction {
     ///
     /// Upon success:
     ///   * the balance of the delegated stake account will be reduced to the undelegated amount in
-    ///     the account (rent exempt minimum and any additional lamports not part of the delegation),
+    ///     the account (rent exempt minimum and any additional satomis not part of the delegation),
     ///     and scheduled for deactivation.
     ///   * the provided uninitialized stake account will receive the original balance of the
     ///     delegated stake account, minus the rent exempt minimum, and scheduled for activation to
-    ///     the provided vote account. Any existing lamports in the uninitialized stake account
+    ///     the provided vote account. Any existing satomis in the uninitialized stake account
     ///     will also be included in the re-delegation.
     ///
     /// # Account references
@@ -350,7 +350,7 @@ pub fn create_account_with_seed(
     seed: &str,
     authorized: &Authorized,
     lockup: &Lockup,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         system_instruction::create_account_with_seed(
@@ -358,7 +358,7 @@ pub fn create_account_with_seed(
             stake_pubkey,
             base,
             seed,
-            lamports,
+            satomis,
             StakeState::size_of() as u64,
             &id(),
         ),
@@ -371,13 +371,13 @@ pub fn create_account(
     stake_pubkey: &Pubkey,
     authorized: &Authorized,
     lockup: &Lockup,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         system_instruction::create_account(
             from_pubkey,
             stake_pubkey,
-            lamports,
+            satomis,
             StakeState::size_of() as u64,
             &id(),
         ),
@@ -391,7 +391,7 @@ pub fn create_account_with_seed_checked(
     base: &Pubkey,
     seed: &str,
     authorized: &Authorized,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         system_instruction::create_account_with_seed(
@@ -399,7 +399,7 @@ pub fn create_account_with_seed_checked(
             stake_pubkey,
             base,
             seed,
-            lamports,
+            satomis,
             StakeState::size_of() as u64,
             &id(),
         ),
@@ -411,13 +411,13 @@ pub fn create_account_checked(
     from_pubkey: &Pubkey,
     stake_pubkey: &Pubkey,
     authorized: &Authorized,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         system_instruction::create_account(
             from_pubkey,
             stake_pubkey,
-            lamports,
+            satomis,
             StakeState::size_of() as u64,
             &id(),
         ),
@@ -428,7 +428,7 @@ pub fn create_account_checked(
 fn _split(
     stake_pubkey: &Pubkey,
     authorized_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     split_stake_pubkey: &Pubkey,
 ) -> Instruction {
     let account_metas = vec![
@@ -437,13 +437,13 @@ fn _split(
         AccountMeta::new_readonly(*authorized_pubkey, true),
     ];
 
-    Instruction::new_with_bincode(id(), &StakeInstruction::Split(lamports), account_metas)
+    Instruction::new_with_bincode(id(), &StakeInstruction::Split(satomis), account_metas)
 }
 
 pub fn split(
     stake_pubkey: &Pubkey,
     authorized_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     split_stake_pubkey: &Pubkey,
 ) -> Vec<Instruction> {
     vec![
@@ -452,7 +452,7 @@ pub fn split(
         _split(
             stake_pubkey,
             authorized_pubkey,
-            lamports,
+            satomis,
             split_stake_pubkey,
         ),
     ]
@@ -461,7 +461,7 @@ pub fn split(
 pub fn split_with_seed(
     stake_pubkey: &Pubkey,
     authorized_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     split_stake_pubkey: &Pubkey, // derived using create_with_seed()
     base: &Pubkey,               // base
     seed: &str,                  // seed
@@ -477,7 +477,7 @@ pub fn split_with_seed(
         _split(
             stake_pubkey,
             authorized_pubkey,
-            lamports,
+            satomis,
             split_stake_pubkey,
         ),
     ]
@@ -509,9 +509,9 @@ pub fn create_account_and_delegate_stake(
     vote_pubkey: &Pubkey,
     authorized: &Authorized,
     lockup: &Lockup,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
-    let mut instructions = create_account(from_pubkey, stake_pubkey, authorized, lockup, lamports);
+    let mut instructions = create_account(from_pubkey, stake_pubkey, authorized, lockup, satomis);
     instructions.push(delegate_stake(
         stake_pubkey,
         &authorized.staker,
@@ -528,7 +528,7 @@ pub fn create_account_with_seed_and_delegate_stake(
     vote_pubkey: &Pubkey,
     authorized: &Authorized,
     lockup: &Lockup,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     let mut instructions = create_account_with_seed(
         from_pubkey,
@@ -537,7 +537,7 @@ pub fn create_account_with_seed_and_delegate_stake(
         seed,
         authorized,
         lockup,
-        lamports,
+        satomis,
     );
     instructions.push(delegate_stake(
         stake_pubkey,
@@ -682,7 +682,7 @@ pub fn withdraw(
     stake_pubkey: &Pubkey,
     withdrawer_pubkey: &Pubkey,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     custodian_pubkey: Option<&Pubkey>,
 ) -> Instruction {
     let mut account_metas = vec![
@@ -697,7 +697,7 @@ pub fn withdraw(
         account_metas.push(AccountMeta::new_readonly(*custodian_pubkey, true));
     }
 
-    Instruction::new_with_bincode(id(), &StakeInstruction::Withdraw(lamports), account_metas)
+    Instruction::new_with_bincode(id(), &StakeInstruction::Withdraw(satomis), account_metas)
 }
 
 pub fn deactivate_stake(stake_pubkey: &Pubkey, authorized_pubkey: &Pubkey) -> Instruction {

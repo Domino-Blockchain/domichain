@@ -225,9 +225,9 @@ function SysvarAccountFeesCard({
         <AccountBalanceRow account={account} />
 
         <tr>
-          <td>Lamports Per Signature</td>
+          <td>Satomis Per Signature</td>
           <td className="text-lg-end">
-            {sysvarAccount.info.feeCalculator.lamportsPerSignature}
+            {sysvarAccount.info.feeCalculator.satomisPerSignature}
           </td>
         </tr>
       </TableCardBody>
@@ -374,9 +374,9 @@ function SysvarAccountRentCard({
         </tr>
 
         <tr>
-          <td>Lamports Per Byte Year</td>
+          <td>Satomis Per Byte Year</td>
           <td className="text-lg-end">
-            {sysvarAccount.info.lamportsPerByteYear}
+            {sysvarAccount.info.satomisPerByteYear}
           </td>
         </tr>
       </TableCardBody>
@@ -411,7 +411,7 @@ function SysvarAccountRewardsCard({
         <tr>
           <td>Validator Point Value</td>
           <td className="text-lg-end font-monospace">
-            {validatorPointValueFormatted} lamports
+            {validatorPointValueFormatted} satomis
           </td>
         </tr>
       </TableCardBody>

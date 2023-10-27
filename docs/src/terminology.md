@@ -15,7 +15,7 @@ The following terms are used throughout the Domichain documentation and developm
 
 A record in the Domichain ledger that either holds data or is an executable program.
 
-Like an account at a traditional bank, a Domichain account may hold funds called [lamports](#lamport). Like a file in Linux, it is addressable by a key, often referred to as a [public key](#public-key-pubkey) or pubkey.
+Like an account at a traditional bank, a Domichain account may hold funds called [satomis](#satomi). Like a file in Linux, it is addressable by a key, often referred to as a [public key](#public-key-pubkey) or pubkey.
 
 The key may be one of:
 
@@ -165,12 +165,12 @@ The smallest contiguous unit of execution logic in a [program](#program). An ins
 
 A [public key](#public-key-pubkey) and corresponding [private key](#private-key) for accessing an account.
 
-## lamport
+## satomi
 
 A fractional [native token](#native-token) with the value of 0.000000001 [domi](#domi).
 
 :::info
-Within the compute budget, a quantity of _[micro-lamports](https://github.com/solana-labs/solana/blob/ced8f6a512c61e0dd5308095ae8457add4a39e94/program-runtime/src/prioritization_fee.rs#L1-L2)_ is used in the calculation of [prioritization fees](#prioritization-fee).
+Within the compute budget, a quantity of _[micro-satomis](https://github.com/solana-labs/solana/blob/ced8f6a512c61e0dd5308095ae8457add4a39e94/program-runtime/src/prioritization_fee.rs#L1-L2)_ is used in the calculation of [prioritization fees](#prioritization-fee).
 :::
 
 ## leader
@@ -226,7 +226,7 @@ See [Proof of History](#proof-of-history-poh).
 
 ## point
 
-A weighted [credit](#credit) in a rewards regime. In the [validator](#validator) [rewards regime](cluster/stake-delegation-and-rewards.md), the number of points owed to a [stake](#stake) during redemption is the product of the [vote credits](#vote-credit) earned and the number of lamports staked.
+A weighted [credit](#credit) in a rewards regime. In the [validator](#validator) [rewards regime](cluster/stake-delegation-and-rewards.md), the number of points owed to a [stake](#stake) during redemption is the product of the [vote credits](#vote-credit) earned and the number of satomis staked.
 
 ## private key
 
@@ -252,7 +252,7 @@ A stack of proofs, each of which proves that some data existed before the proof 
 
 An additional fee user can specify in the compute budget [instruction](#instruction) to prioritize their [transactions](#transaction).
 
-The prioritization fee is calculated by multiplying the requested maximum compute units by the compute-unit price (specified in increments of 0.000001 lamports per compute unit) rounded up to the nearest lamport.
+The prioritization fee is calculated by multiplying the requested maximum compute units by the compute-unit price (specified in increments of 0.000001 satomis per compute unit) rounded up to the nearest satomi.
 
 Transactions should request the minimum amount of compute units required for execution to minimize fees.
 

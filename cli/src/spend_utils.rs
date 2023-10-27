@@ -4,11 +4,11 @@ use {
         cli::CliError,
     },
     clap::ArgMatches,
-    domichain_clap_utils::{input_parsers::lamports_of_sol, offline::SIGN_ONLY_ARG},
+    domichain_clap_utils::{input_parsers::satomis_of_sol, offline::SIGN_ONLY_ARG},
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_sdk::{
         commitment_config::CommitmentConfig, hash::Hash, message::Message,
-        native_token::lamports_to_domi, pubkey::Pubkey,
+        native_token::satomis_to_domi, pubkey::Pubkey,
     },
 };
 
@@ -28,14 +28,14 @@ impl Default for SpendAmount {
 impl SpendAmount {
     pub fn new(amount: Option<u64>, sign_only: bool) -> Self {
         match amount {
-            Some(lamports) => Self::Some(lamports),
+            Some(satomis) => Self::Some(satomis),
             None if !sign_only => Self::All,
             _ => panic!("ALL amount not supported for sign-only operations"),
         }
     }
 
     pub fn new_from_matches(matches: &ArgMatches<'_>, name: &str) -> Self {
-        let amount = lamports_of_sol(matches, name);
+        let amount = satomis_of_sol(matches, name);
         let sign_only = matches.is_present(SIGN_ONLY_ARG.name);
         SpendAmount::new(amount, sign_only)
     }
@@ -118,22 +118,22 @@ where
         if from_pubkey == fee_pubkey {
             if from_balance == 0 || from_balance < spend + fee {
                 return Err(CliError::InsufficientFundsForSpendAndFee(
-                    lamports_to_domi(spend),
-                    lamports_to_domi(fee),
+                    satomis_to_domi(spend),
+                    satomis_to_domi(fee),
                     *from_pubkey,
                 ));
             }
         } else {
             if from_balance < spend {
                 return Err(CliError::InsufficientFundsForSpend(
-                    lamports_to_domi(spend),
+                    satomis_to_domi(spend),
                     *from_pubkey,
                 ));
             }
             if !check_account_for_balance_with_commitment(rpc_client, fee_pubkey, fee, commitment)?
             {
                 return Err(CliError::InsufficientFundsForFee(
-                    lamports_to_domi(fee),
+                    satomis_to_domi(fee),
                     *fee_pubkey,
                 ));
             }
@@ -165,38 +165,38 @@ where
     };
 
     match amount {
-        SpendAmount::Some(lamports) => Ok((
-            build_message(lamports),
+        SpendAmount::Some(satomis) => Ok((
+            build_message(satomis),
             SpendAndFee {
-                spend: lamports,
+                spend: satomis,
                 fee,
             },
         )),
         SpendAmount::All => {
-            let lamports = if from_pubkey == fee_pubkey {
+            let satomis = if from_pubkey == fee_pubkey {
                 from_balance.saturating_sub(fee)
             } else {
                 from_balance
             };
             Ok((
-                build_message(lamports),
+                build_message(satomis),
                 SpendAndFee {
-                    spend: lamports,
+                    spend: satomis,
                     fee,
                 },
             ))
         }
         SpendAmount::RentExempt => {
-            let mut lamports = if from_pubkey == fee_pubkey {
+            let mut satomis = if from_pubkey == fee_pubkey {
                 from_balance.saturating_sub(fee)
             } else {
                 from_balance
             };
-            lamports = lamports.saturating_sub(from_rent_exempt_minimum);
+            satomis = satomis.saturating_sub(from_rent_exempt_minimum);
             Ok((
-                build_message(lamports),
+                build_message(satomis),
                 SpendAndFee {
-                    spend: lamports,
+                    spend: satomis,
                     fee,
                 },
             ))

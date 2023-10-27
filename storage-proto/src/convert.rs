@@ -86,7 +86,7 @@ impl From<Reward> for generated::Reward {
     fn from(reward: Reward) -> Self {
         Self {
             pubkey: reward.pubkey,
-            lamports: reward.lamports,
+            satomis: reward.satomis,
             post_balance: reward.post_balance,
             reward_type: match reward.reward_type {
                 None => generated::RewardType::Unspecified,
@@ -104,7 +104,7 @@ impl From<generated::Reward> for Reward {
     fn from(reward: generated::Reward) -> Self {
         Self {
             pubkey: reward.pubkey,
-            lamports: reward.lamports,
+            satomis: reward.satomis,
             post_balance: reward.post_balance,
             reward_type: match reward.reward_type {
                 0 => None,
@@ -709,9 +709,9 @@ impl TryFrom<tx_by_addr::TransactionError> for TransactionError {
                     9 => InstructionError::UninitializedAccount,
                     10 => InstructionError::UnbalancedInstruction,
                     11 => InstructionError::ModifiedProgramId,
-                    12 => InstructionError::ExternalAccountLamportSpend,
+                    12 => InstructionError::ExternalAccountSatomiSpend,
                     13 => InstructionError::ExternalAccountDataModified,
-                    14 => InstructionError::ReadonlyLamportChange,
+                    14 => InstructionError::ReadonlySatomiChange,
                     15 => InstructionError::ReadonlyDataModified,
                     16 => InstructionError::DuplicateAccountIndex,
                     17 => InstructionError::ExecutableModified,
@@ -724,7 +724,7 @@ impl TryFrom<tx_by_addr::TransactionError> for TransactionError {
                     24 => InstructionError::DuplicateAccountOutOfSync,
                     26 => InstructionError::InvalidError,
                     27 => InstructionError::ExecutableDataModified,
-                    28 => InstructionError::ExecutableLamportChange,
+                    28 => InstructionError::ExecutableSatomiChange,
                     29 => InstructionError::ExecutableAccountNotRentExempt,
                     30 => InstructionError::UnsupportedProgramId,
                     31 => InstructionError::CallDepth,
@@ -963,14 +963,14 @@ impl From<TransactionError> for tx_by_addr::TransactionError {
                             InstructionError::ModifiedProgramId => {
                                 tx_by_addr::InstructionErrorType::ModifiedProgramId
                             }
-                            InstructionError::ExternalAccountLamportSpend => {
-                                tx_by_addr::InstructionErrorType::ExternalAccountLamportSpend
+                            InstructionError::ExternalAccountSatomiSpend => {
+                                tx_by_addr::InstructionErrorType::ExternalAccountSatomiSpend
                             }
                             InstructionError::ExternalAccountDataModified => {
                                 tx_by_addr::InstructionErrorType::ExternalAccountDataModified
                             }
-                            InstructionError::ReadonlyLamportChange => {
-                                tx_by_addr::InstructionErrorType::ReadonlyLamportChange
+                            InstructionError::ReadonlySatomiChange => {
+                                tx_by_addr::InstructionErrorType::ReadonlySatomiChange
                             }
                             InstructionError::ReadonlyDataModified => {
                                 tx_by_addr::InstructionErrorType::ReadonlyDataModified
@@ -1009,8 +1009,8 @@ impl From<TransactionError> for tx_by_addr::TransactionError {
                             InstructionError::ExecutableDataModified => {
                                 tx_by_addr::InstructionErrorType::ExecutableDataModified
                             }
-                            InstructionError::ExecutableLamportChange => {
-                                tx_by_addr::InstructionErrorType::ExecutableLamportChange
+                            InstructionError::ExecutableSatomiChange => {
+                                tx_by_addr::InstructionErrorType::ExecutableSatomiChange
                             }
                             InstructionError::ExecutableAccountNotRentExempt => {
                                 tx_by_addr::InstructionErrorType::ExecutableAccountNotRentExempt
@@ -1180,7 +1180,7 @@ mod test {
     fn test_reward_type_encode() {
         let mut reward = Reward {
             pubkey: "invalid".to_string(),
-            lamports: 123,
+            satomis: 123,
             post_balance: 321,
             reward_type: None,
             commission: None,
@@ -1491,7 +1491,7 @@ mod test {
         );
 
         let transaction_error =
-            TransactionError::InstructionError(10, InstructionError::ExecutableLamportChange);
+            TransactionError::InstructionError(10, InstructionError::ExecutableSatomiChange);
         let tx_by_addr_transaction_error: tx_by_addr::TransactionError =
             transaction_error.clone().into();
         assert_eq!(
@@ -1518,7 +1518,7 @@ mod test {
         );
 
         let transaction_error =
-            TransactionError::InstructionError(10, InstructionError::ExternalAccountLamportSpend);
+            TransactionError::InstructionError(10, InstructionError::ExternalAccountSatomiSpend);
         let tx_by_addr_transaction_error: tx_by_addr::TransactionError =
             transaction_error.clone().into();
         assert_eq!(
@@ -1717,7 +1717,7 @@ mod test {
         );
 
         let transaction_error =
-            TransactionError::InstructionError(10, InstructionError::ReadonlyLamportChange);
+            TransactionError::InstructionError(10, InstructionError::ReadonlySatomiChange);
         let tx_by_addr_transaction_error: tx_by_addr::TransactionError =
             transaction_error.clone().into();
         assert_eq!(

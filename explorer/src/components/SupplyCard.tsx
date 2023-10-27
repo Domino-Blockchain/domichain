@@ -33,7 +33,7 @@ export function SupplyCard() {
         <tr>
           <td className="w-100">Total Supply (DOMI)</td>
           <td className="text-lg-end">
-            <SolBalance lamports={supply.total} maximumFractionDigits={0} />
+            <SolBalance satomis={supply.total} maximumFractionDigits={0} />
           </td>
         </tr>
 
@@ -41,7 +41,7 @@ export function SupplyCard() {
           <td className="w-100">Circulating Supply (DOMI)</td>
           <td className="text-lg-end">
             <SolBalance
-              lamports={supply.circulating}
+              satomis={supply.circulating}
               maximumFractionDigits={0}
             />
           </td>
@@ -51,7 +51,7 @@ export function SupplyCard() {
           <td className="w-100">Non-Circulating Supply (DOMI)</td>
           <td className="text-lg-end">
             <SolBalance
-              lamports={supply.nonCirculating}
+              satomis={supply.nonCirculating}
               maximumFractionDigits={0}
             />
           </td>

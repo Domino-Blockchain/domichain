@@ -28,7 +28,7 @@
 //! #   let slot_history = SlotHistory::default();
 //! #   let data: Vec<u8> = bincode::serialize(&slot_history)?;
 //! #   client.set_get_account_response(slot_history::ID, Account {
-//! #       lamports: 913326000,
+//! #       satomis: 913326000,
 //! #       data,
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

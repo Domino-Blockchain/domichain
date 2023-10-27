@@ -9436,7 +9436,7 @@ pub mod tests {
         let rewards: Rewards = (0..100)
             .map(|i| Reward {
                 pubkey: domichain_sdk::pubkey::new_rand().to_string(),
-                lamports: 42 + i,
+                satomis: 42 + i,
                 post_balance: std::u64::MAX,
                 reward_type: Some(RewardType::Fee),
                 commission: None,
@@ -9505,7 +9505,7 @@ pub mod tests {
             }]),
             rewards: Some(vec![Reward {
                 pubkey: "My11111111111111111111111111111111111111111".to_string(),
-                lamports: -42,
+                satomis: -42,
                 post_balance: 42,
                 reward_type: Some(RewardType::Rent),
                 commission: None,

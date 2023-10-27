@@ -396,7 +396,7 @@ impl AccountsHashVerifier {
             include_slot_in_hash: accounts_package.include_slot_in_hash,
         };
 
-        let ((accounts_hash, lamports), measure_hash_us) = measure_us!(accounts_package
+        let ((accounts_hash, satomis), measure_hash_us) = measure_us!(accounts_package
             .accounts
             .accounts_db
             .calculate_accounts_hash_from_storages(
@@ -410,12 +410,12 @@ impl AccountsHashVerifier {
         let old_accounts_hash = accounts_package
             .accounts
             .accounts_db
-            .set_accounts_hash(slot, (accounts_hash, lamports));
+            .set_accounts_hash(slot, (accounts_hash, satomis));
         if let Some(old_accounts_hash) = old_accounts_hash {
             warn!("Accounts hash was already set for slot {slot}! old: {old_accounts_hash:?}, new: {accounts_hash:?}");
         }
 
-        if accounts_package.expected_capitalization != lamports {
+        if accounts_package.expected_capitalization != satomis {
             // before we assert, run the hash calc again. This helps track down whether it could have been a failure in a race condition possibly with shrink.
             // We could add diagnostics to the hash calc here to produce a per bin cap or something to help narrow down how many pubkeys are different.
             let calculate_accounts_hash_config = CalcAccountsHashConfig {
@@ -444,7 +444,7 @@ impl AccountsHashVerifier {
         }
 
         assert_eq!(
-            accounts_package.expected_capitalization, lamports,
+            accounts_package.expected_capitalization, satomis,
             "accounts hash capitalization mismatch"
         );
         if let Some(expected_hash) = accounts_package.accounts_hash_for_testing {
@@ -456,7 +456,7 @@ impl AccountsHashVerifier {
             ("calculate_hash", measure_hash_us, i64),
         );
 
-        (accounts_hash, lamports)
+        (accounts_hash, satomis)
     }
 
     fn _calculate_incremental_accounts_hash(

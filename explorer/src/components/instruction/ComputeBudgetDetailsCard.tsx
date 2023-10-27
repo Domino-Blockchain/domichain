@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from "@domichain/web3.js";
 import { InstructionCard } from "./InstructionCard";
-import { microLamportsToLamportsString, SolBalance } from "utils";
+import { microSatomisToSatomisString, SolBalance } from "utils";
 import { Address } from "components/common/Address";
 import { reportError } from "utils/sentry";
 import { useCluster } from "providers/cluster";
@@ -58,7 +58,7 @@ export function ComputeBudgetDetailsCard({
             <tr>
               <td>Additional Fee (DOMI)</td>
               <td className="text-lg-end">
-                <SolBalance lamports={additionalFee} />
+                <SolBalance satomis={additionalFee} />
               </td>
             </tr>
           </InstructionCard>
@@ -120,7 +120,7 @@ export function ComputeBudgetDetailsCard({
         );
       }
       case "SetComputeUnitPrice": {
-        const { microLamports } =
+        const { microSatomis } =
           ComputeBudgetInstruction.decodeSetComputeUnitPrice(ix);
         return (
           <InstructionCard
@@ -140,9 +140,9 @@ export function ComputeBudgetDetailsCard({
 
             <tr>
               <td>Compute Unit Price</td>
-              <td className="text-lg-end font-monospace">{`${microLamportsToLamportsString(
-                microLamports
-              )} lamports per compute unit`}</td>
+              <td className="text-lg-end font-monospace">{`${microSatomisToSatomisString(
+                microSatomis
+              )} satomis per compute unit`}</td>
             </tr>
           </InstructionCard>
         );

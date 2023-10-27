@@ -10,7 +10,7 @@ use {
         hash::Hash,
         instruction::CompiledInstruction,
         message::v0::MessageAddressTableLookup,
-        native_token::lamports_to_domi,
+        native_token::satomis_to_domi,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
         signature::Signature,
@@ -26,7 +26,7 @@ use {
 
 #[derive(Clone, Debug)]
 pub struct BuildBalanceMessageConfig {
-    pub use_lamports_unit: bool,
+    pub use_satomis_unit: bool,
     pub show_unit: bool,
     pub trim_trailing_zeros: bool,
 }
@@ -34,7 +34,7 @@ pub struct BuildBalanceMessageConfig {
 impl Default for BuildBalanceMessageConfig {
     fn default() -> Self {
         Self {
-            use_lamports_unit: false,
+            use_satomis_unit: false,
             show_unit: true,
             trim_trailing_zeros: true,
         }
@@ -47,13 +47,13 @@ fn is_memo_program(k: &Pubkey) -> bool {
 }
 
 pub fn build_balance_message_with_config(
-    lamports: u64,
+    satomis: u64,
     config: &BuildBalanceMessageConfig,
 ) -> String {
-    let value = if config.use_lamports_unit {
-        lamports.to_string()
+    let value = if config.use_satomis_unit {
+        satomis.to_string()
     } else {
-        let domi = lamports_to_domi(lamports);
+        let domi = satomis_to_domi(satomis);
         let domi_str = format!("{domi:.9}");
         if config.trim_trailing_zeros {
             domi_str
@@ -65,9 +65,9 @@ pub fn build_balance_message_with_config(
         }
     };
     let unit = if config.show_unit {
-        if config.use_lamports_unit {
-            let ess = if lamports == 1 { "" } else { "s" };
-            format!(" lamport{ess}")
+        if config.use_satomis_unit {
+            let ess = if satomis == 1 { "" } else { "s" };
+            format!(" satomi{ess}")
         } else {
             " DOMI".to_string()
         }
@@ -77,11 +77,11 @@ pub fn build_balance_message_with_config(
     format!("{value}{unit}")
 }
 
-pub fn build_balance_message(lamports: u64, use_lamports_unit: bool, show_unit: bool) -> String {
+pub fn build_balance_message(satomis: u64, use_satomis_unit: bool, show_unit: bool) -> String {
     build_balance_message_with_config(
-        lamports,
+        satomis,
         &BuildBalanceMessageConfig {
-            use_lamports_unit,
+            use_satomis_unit,
             show_unit,
             ..BuildBalanceMessageConfig::default()
         },
@@ -517,7 +517,7 @@ fn write_rewards<W: io::Write>(
                 prefix, "Address", "Type", "Amount", "New Balance"
             )?;
             for reward in rewards {
-                let sign = if reward.lamports < 0 { "-" } else { "" };
+                let sign = if reward.satomis < 0 { "-" } else { "" };
                 writeln!(
                     w,
                     "{}  {:<44}  {:^15}  {}◎{:<14.9}  ◎{:<18.9}",
@@ -529,8 +529,8 @@ fn write_rewards<W: io::Write>(
                         "-".to_string()
                     },
                     sign,
-                    lamports_to_domi(reward.lamports.unsigned_abs()),
-                    lamports_to_domi(reward.post_balance)
+                    satomis_to_domi(reward.satomis.unsigned_abs()),
+                    satomis_to_domi(reward.post_balance)
                 )?;
             }
         }
@@ -555,7 +555,7 @@ fn write_status<W: io::Write>(
 }
 
 fn write_fees<W: io::Write>(w: &mut W, transaction_fee: u64, prefix: &str) -> io::Result<()> {
-    writeln!(w, "{}  Fee: ◎{}", prefix, lamports_to_domi(transaction_fee))
+    writeln!(w, "{}  Fee: ◎{}", prefix, satomis_to_domi(transaction_fee))
 }
 
 fn write_balances<W: io::Write>(
@@ -579,7 +579,7 @@ fn write_balances<W: io::Write>(
                 "{}  Account {} balance: ◎{}",
                 prefix,
                 i,
-                lamports_to_domi(*pre)
+                satomis_to_domi(*pre)
             )?;
         } else {
             writeln!(
@@ -587,8 +587,8 @@ fn write_balances<W: io::Write>(
                 "{}  Account {} balance: ◎{} -> ◎{}",
                 prefix,
                 i,
-                lamports_to_domi(*pre),
-                lamports_to_domi(*post)
+                satomis_to_domi(*pre),
+                satomis_to_domi(*post)
             )?;
         }
     }
@@ -806,7 +806,7 @@ mod test {
             post_token_balances: None,
             rewards: Some(vec![Reward {
                 pubkey: account_key.to_string(),
-                lamports: -100,
+                satomis: -100,
                 post_balance: 9_900,
                 reward_type: Some(RewardType::Rent),
                 commission: None,
@@ -885,7 +885,7 @@ Rewards:
             post_token_balances: None,
             rewards: Some(vec![Reward {
                 pubkey: address_table_entry1.to_string(),
-                lamports: -100,
+                satomis: -100,
                 post_balance: 14_900,
                 reward_type: Some(RewardType::Rent),
                 commission: None,

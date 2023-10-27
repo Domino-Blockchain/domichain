@@ -106,8 +106,8 @@ fn process_close_proof_context(invoke_context: &mut InvokeContext) -> Result<(),
 
     let mut destination_account =
         instruction_context.try_borrow_instruction_account(transaction_context, 1)?;
-    destination_account.checked_add_lamports(proof_context_account.get_lamports())?;
-    proof_context_account.set_lamports(0)?;
+    destination_account.checked_add_satomis(proof_context_account.get_satomis())?;
+    proof_context_account.set_satomis(0)?;
     proof_context_account.set_data_length(0)?;
     proof_context_account.set_owner(system_program::id().as_ref())?;
 

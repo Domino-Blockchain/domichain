@@ -25,7 +25,7 @@ if [[ -z $1 ]]; then # default behavior
     --faucet 127.0.0.1:9900 \
     --duration 30 \
     --tx_count 500 \
-    --num-lamports-per-account 3000000000 \
+    --num-satomis-per-account 3000000000 \
 
 else
   $domichain_bench_tps_simple "$@"

@@ -1,15 +1,15 @@
 //! Instructions and constructors for the system program.
 //!
 //! The system program is responsible for the creation of accounts and [nonce
-//! accounts][na]. It is responsible for transferring lamports from accounts
+//! accounts][na]. It is responsible for transferring satomis from accounts
 //! owned by the system program, including typical user wallet accounts.
 //!
 //! [na]: https://docs.domichain.com/implemented-proposals/durable-tx-nonces
 //!
 //! Account creation typically involves three steps: [`allocate`] space,
-//! [`transfer`] lamports for rent, [`assign`] to its owning program. The
+//! [`transfer`] satomis for rent, [`assign`] to its owning program. The
 //! [`create_account`] function does all three at once. All new accounts must
-//! contain enough lamports to be [rent exempt], or else the creation
+//! contain enough satomis to be [rent exempt], or else the creation
 //! instruction will fail.
 //!
 //! [rent exempt]: https://docs.domichain.com/developing/programming-model/accounts#rent-exemption
@@ -58,7 +58,7 @@ pub enum SystemError {
     #[error("an account with the same address already exists")]
     AccountAlreadyInUse,
     #[error("account does not have enough DOMI to perform the operation")]
-    ResultWithNegativeLamports,
+    ResultWithNegativeSatomis,
     #[error("cannot assign account to this program id")]
     InvalidProgramId,
     #[error("cannot allocate account data of this length")]
@@ -110,8 +110,8 @@ pub enum SystemInstruction {
     ///   0. `[WRITE, SIGNER]` Funding account
     ///   1. `[WRITE, SIGNER]` New account
     CreateAccount {
-        /// Number of lamports to transfer to the new account
-        lamports: u64,
+        /// Number of satomis to transfer to the new account
+        satomis: u64,
 
         /// Number of bytes of memory to allocate
         space: u64,
@@ -129,12 +129,12 @@ pub enum SystemInstruction {
         owner: Pubkey,
     },
 
-    /// Transfer lamports
+    /// Transfer satomis
     ///
     /// # Account references
     ///   0. `[WRITE, SIGNER]` Funding account
     ///   1. `[WRITE]` Recipient account
-    Transfer { lamports: u64 },
+    Transfer { satomis: u64 },
 
     /// Create a new account at an address derived from a base pubkey and a seed
     ///
@@ -151,8 +151,8 @@ pub enum SystemInstruction {
         /// String of ASCII chars, no longer than `Pubkey::MAX_SEED_LEN`
         seed: String,
 
-        /// Number of lamports to transfer to the new account
-        lamports: u64,
+        /// Number of satomis to transfer to the new account
+        satomis: u64,
 
         /// Number of bytes of memory to allocate
         space: u64,
@@ -178,7 +178,7 @@ pub enum SystemInstruction {
     ///   3. `[]` Rent sysvar
     ///   4. `[SIGNER]` Nonce authority
     ///
-    /// The `u64` parameter is the lamports to withdraw, which must leave the
+    /// The `u64` parameter is the satomis to withdraw, which must leave the
     /// account balance above the rent exempt reserve or at zero.
     WithdrawNonceAccount(u64),
 
@@ -250,7 +250,7 @@ pub enum SystemInstruction {
         owner: Pubkey,
     },
 
-    /// Transfer lamports from a derived address
+    /// Transfer satomis from a derived address
     ///
     /// # Account references
     ///   0. `[WRITE]` Funding account
@@ -258,7 +258,7 @@ pub enum SystemInstruction {
     ///   2. `[WRITE]` Recipient account
     TransferWithSeed {
         /// Amount to transfer
-        lamports: u64,
+        satomis: u64,
 
         /// Seed to use to derive the funding account address
         from_seed: String,
@@ -285,7 +285,7 @@ pub enum SystemInstruction {
 /// [invoked]: crate::program::invoke
 ///
 /// Account creation typically involves three steps: [`allocate`] space,
-/// [`transfer`] lamports for rent, [`assign`] to its owning program. The
+/// [`transfer`] satomis for rent, [`assign`] to its owning program. The
 /// [`create_account`] function does all three at once.
 ///
 /// # Required signers
@@ -296,7 +296,7 @@ pub enum SystemInstruction {
 ///
 /// These examples use a single invocation of
 /// [`SystemInstruction::CreateAccount`] to create a new account, allocate some
-/// space, transfer it the minimum lamports for rent exemption, and assign it to
+/// space, transfer it the minimum satomis for rent exemption, and assign it to
 /// the system program,
 ///
 /// ## Example: client-side RPC
@@ -436,7 +436,7 @@ pub enum SystemInstruction {
 pub fn create_account(
     from_pubkey: &Pubkey,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     space: u64,
     owner: &Pubkey,
 ) -> Instruction {
@@ -447,7 +447,7 @@ pub fn create_account(
     Instruction::new_with_bincode(
         system_program::id(),
         &SystemInstruction::CreateAccount {
-            lamports,
+            satomis,
             space,
             owner: *owner,
         },
@@ -462,7 +462,7 @@ pub fn create_account_with_seed(
     to_pubkey: &Pubkey, // must match create_with_seed(base, seed, owner)
     base: &Pubkey,
     seed: &str,
-    lamports: u64,
+    satomis: u64,
     space: u64,
     owner: &Pubkey,
 ) -> Instruction {
@@ -477,7 +477,7 @@ pub fn create_account_with_seed(
         &SystemInstruction::CreateAccountWithSeed {
             base: *base,
             seed: seed.to_string(),
-            lamports,
+            satomis,
             space,
             owner: *owner,
         },
@@ -695,7 +695,7 @@ pub fn assign_with_seed(
     )
 }
 
-/// Transfer lamports from an account owned by the system program.
+/// Transfer satomis from an account owned by the system program.
 ///
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect, containing a serialized
@@ -875,14 +875,14 @@ pub fn assign_with_seed(
 ///
 /// # Ok::<(), anyhow::Error>(())
 /// ```
-pub fn transfer(from_pubkey: &Pubkey, to_pubkey: &Pubkey, lamports: u64) -> Instruction {
+pub fn transfer(from_pubkey: &Pubkey, to_pubkey: &Pubkey, satomis: u64) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(*from_pubkey, true),
         AccountMeta::new(*to_pubkey, false),
     ];
     Instruction::new_with_bincode(
         system_program::id(),
-        &SystemInstruction::Transfer { lamports },
+        &SystemInstruction::Transfer { satomis },
         account_metas,
     )
 }
@@ -893,7 +893,7 @@ pub fn transfer_with_seed(
     from_seed: String,
     from_owner: &Pubkey,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
 ) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(*from_pubkey, false),
@@ -903,7 +903,7 @@ pub fn transfer_with_seed(
     Instruction::new_with_bincode(
         system_program::id(),
         &SystemInstruction::TransferWithSeed {
-            lamports,
+            satomis,
             from_seed,
             from_owner: *from_owner,
         },
@@ -1126,7 +1126,7 @@ pub fn allocate_with_seed(
     )
 }
 
-/// Transfer lamports from an account owned by the system program to multiple accounts.
+/// Transfer satomis from an account owned by the system program to multiple accounts.
 ///
 /// This function produces a vector of [`Instruction`]s which must be submitted
 /// in a [`Transaction`] or [invoked] to take effect, containing serialized
@@ -1156,7 +1156,7 @@ pub fn allocate_with_seed(
 /// };
 /// use anyhow::Result;
 ///
-/// fn transfer_lamports_to_many(
+/// fn transfer_satomis_to_many(
 ///     client: &RpcClient,
 ///     from: &Keypair,
 ///     to_and_amount: &[(Pubkey, u64)],
@@ -1182,7 +1182,7 @@ pub fn allocate_with_seed(
 /// #     (Pubkey::new_unique(), 3_000),
 /// # ];
 /// # let client = RpcClient::new(String::new());
-/// # transfer_lamports_to_many(&client, &from, &to_and_amount);
+/// # transfer_satomis_to_many(&client, &from, &to_and_amount);
 /// #
 /// # Ok::<(), anyhow::Error>(())
 /// ```
@@ -1220,7 +1220,7 @@ pub fn allocate_with_seed(
 /// /// - 1: system_program - executable
 /// /// - *: to - writable
 /// #[derive(BorshSerialize, BorshDeserialize, Debug)]
-/// pub struct TransferLamportsToManyInstruction {
+/// pub struct TransferSatomisToManyInstruction {
 ///     pub bank_pda_bump_seed: u8,
 ///     pub amount_list: Vec<u64>,
 /// }
@@ -1232,7 +1232,7 @@ pub fn allocate_with_seed(
 ///     accounts: &[AccountInfo],
 ///     instruction_data: &[u8],
 /// ) -> ProgramResult {
-///     let instr = TransferLamportsToManyInstruction::deserialize(&mut &instruction_data[..])?;
+///     let instr = TransferSatomisToManyInstruction::deserialize(&mut &instruction_data[..])?;
 ///
 ///     let account_info_iter = &mut accounts.iter();
 ///
@@ -1266,10 +1266,10 @@ pub fn allocate_with_seed(
 ///
 /// # Ok::<(), anyhow::Error>(())
 /// ```
-pub fn transfer_many(from_pubkey: &Pubkey, to_lamports: &[(Pubkey, u64)]) -> Vec<Instruction> {
-    to_lamports
+pub fn transfer_many(from_pubkey: &Pubkey, to_satomis: &[(Pubkey, u64)]) -> Vec<Instruction> {
+    to_satomis
         .iter()
-        .map(|(to_pubkey, lamports)| transfer(from_pubkey, to_pubkey, *lamports))
+        .map(|(to_pubkey, satomis)| transfer(from_pubkey, to_pubkey, *satomis))
         .collect()
 }
 
@@ -1279,7 +1279,7 @@ pub fn create_nonce_account_with_seed(
     base: &Pubkey,
     seed: &str,
     authority: &Pubkey,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         create_account_with_seed(
@@ -1287,7 +1287,7 @@ pub fn create_nonce_account_with_seed(
             nonce_pubkey,
             base,
             seed,
-            lamports,
+            satomis,
             nonce::State::size() as u64,
             &system_program::id(),
         ),
@@ -1349,7 +1349,7 @@ pub fn create_nonce_account_with_seed(
 /// 1) Create the nonce account with the `create_nonce_account` instruction.
 /// 2) Submit specially-formed transactions that include the
 ///    [`advance_nonce_account`] instruction.
-/// 3) Destroy the nonce account by withdrawing its lamports with the
+/// 3) Destroy the nonce account by withdrawing its satomis with the
 ///    [`withdraw_nonce_account`] instruction.
 ///
 /// Nonce accounts have an associated _authority_ account, which is stored in
@@ -1419,13 +1419,13 @@ pub fn create_nonce_account(
     from_pubkey: &Pubkey,
     nonce_pubkey: &Pubkey,
     authority: &Pubkey,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     vec![
         create_account(
             from_pubkey,
             nonce_pubkey,
-            lamports,
+            satomis,
             nonce::State::size() as u64,
             &system_program::id(),
         ),
@@ -1535,7 +1535,7 @@ pub fn create_nonce_account(
 ///     // Sign the tx with nonce_account's `blockhash` instead of the
 ///     // network's latest blockhash.
 ///     # client.set_get_account_response(*nonce_account_pubkey, Account {
-///     #   lamports: 1,
+///     #   satomis: 1,
 ///     #   data: vec![0],
 ///     #   owner: domichain_sdk::system_program::ID,
 ///     #   executable: false,
@@ -1579,7 +1579,7 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
     )
 }
 
-/// Withdraw lamports from a durable transaction nonce account.
+/// Withdraw satomis from a durable transaction nonce account.
 ///
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect, containing a serialized
@@ -1655,7 +1655,7 @@ pub fn withdraw_nonce_account(
     nonce_pubkey: &Pubkey,
     authorized_pubkey: &Pubkey,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
 ) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(*nonce_pubkey, false),
@@ -1667,7 +1667,7 @@ pub fn withdraw_nonce_account(
     ];
     Instruction::new_with_bincode(
         system_program::id(),
-        &SystemInstruction::WithdrawNonceAccount(lamports),
+        &SystemInstruction::WithdrawNonceAccount(satomis),
         account_metas,
     )
 }
@@ -1773,9 +1773,9 @@ mod tests {
         let alice_pubkey = Pubkey::new_unique();
         let bob_pubkey = Pubkey::new_unique();
         let carol_pubkey = Pubkey::new_unique();
-        let to_lamports = vec![(bob_pubkey, 1), (carol_pubkey, 2)];
+        let to_satomis = vec![(bob_pubkey, 1), (carol_pubkey, 2)];
 
-        let instructions = transfer_many(&alice_pubkey, &to_lamports);
+        let instructions = transfer_many(&alice_pubkey, &to_satomis);
         assert_eq!(instructions.len(), 2);
         assert_eq!(get_keys(&instructions[0]), vec![alice_pubkey, bob_pubkey]);
         assert_eq!(get_keys(&instructions[1]), vec![alice_pubkey, carol_pubkey]);

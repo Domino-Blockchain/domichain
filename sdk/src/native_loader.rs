@@ -14,16 +14,16 @@ crate::declare_id!("NativeLoader1111111111111111111111111111111");
     since = "1.5.17",
     note = "Please use `create_loadable_account_for_test` instead"
 )]
-pub fn create_loadable_account(name: &str, lamports: u64) -> AccountSharedData {
-    create_loadable_account_with_fields(name, (lamports, INITIAL_RENT_EPOCH))
+pub fn create_loadable_account(name: &str, satomis: u64) -> AccountSharedData {
+    create_loadable_account_with_fields(name, (satomis, INITIAL_RENT_EPOCH))
 }
 
 pub fn create_loadable_account_with_fields(
     name: &str,
-    (lamports, rent_epoch): InheritableAccountFields,
+    (satomis, rent_epoch): InheritableAccountFields,
 ) -> AccountSharedData {
     AccountSharedData::from(Account {
-        lamports,
+        satomis,
         owner: id(),
         data: name.as_bytes().to_vec(),
         executable: true,

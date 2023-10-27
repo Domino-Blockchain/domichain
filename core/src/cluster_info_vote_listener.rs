@@ -1773,7 +1773,7 @@ mod tests {
             .collect();
         let GenesisConfigInfo { genesis_config, .. } =
             genesis_utils::create_genesis_config_with_vote_accounts(
-                10_000, // mint_lamports
+                10_000, // mint_satomis
                 &voting_keypairs,
                 vec![100; voting_keypairs.len()], // stakes
             );
@@ -1798,7 +1798,7 @@ mod tests {
             .collect();
         let GenesisConfigInfo { genesis_config, .. } =
             genesis_utils::create_genesis_config_with_vote_accounts(
-                10_000, // mint_lamports
+                10_000, // mint_satomis
                 &voting_keypairs,
                 vec![100; voting_keypairs.len()], // stakes
             );

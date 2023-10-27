@@ -54,7 +54,7 @@ const renderAccountRow = (entry: RecentBlockhashesEntry, index: number) => {
       <td className="w-1">{index + 1}</td>
       <td className="w-1 font-monospace">{entry.blockhash}</td>
       <td className="">
-        {entry.feeCalculator.lamportsPerSignature} lamports per signature
+        {entry.feeCalculator.satomisPerSignature} satomis per signature
       </td>
     </tr>
   );

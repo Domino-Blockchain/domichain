@@ -26,8 +26,8 @@ use {
 pub struct AccountInfo<'a> {
     /// Public key of the account
     pub key: &'a Pubkey,
-    /// The lamports in the account.  Modifiable by programs.
-    pub lamports: Rc<RefCell<&'a mut u64>>,
+    /// The satomis in the account.  Modifiable by programs.
+    pub satomis: Rc<RefCell<&'a mut u64>>,
     /// The data held in this account.  Modifiable by programs.
     pub data: Rc<RefCell<&'a mut [u8]>>,
     /// Program that owns this account
@@ -44,15 +44,15 @@ pub struct AccountInfo<'a> {
 
 impl<'a> AccountInfo<'a> {
     pub fn into_raw(&self) -> AccountInfoRaw<'a> {
-        let lamports = self.lamports.as_ptr() as *const _;
-        let lamports = unsafe { *transmute::<_, *const &u64>(lamports) };
+        let satomis = self.satomis.as_ptr() as *const _;
+        let satomis = unsafe { *transmute::<_, *const &u64>(satomis) };
 
         let ptr_to_slice = self.data.as_ptr() as *const &mut [u8];
         let slice = unsafe { *transmute::<_, *const &[u8]>(ptr_to_slice) };
 
         AccountInfoRaw {
             key: (self.key as *const _ as u64).try_into().unwrap(),
-            lamports: (lamports as *const _ as u64).try_into().unwrap(),
+            satomis: (satomis as *const _ as u64).try_into().unwrap(),
             ptr_to_slice: (ptr_to_slice as usize as u64).try_into().unwrap(),
             data: (slice as *const [u8] as *const () as usize as u64).try_into().unwrap(),
             data_len: slice.len().try_into().unwrap(),
@@ -73,8 +73,8 @@ impl<'a> AccountInfo<'a> {
 pub struct AccountInfoRaw<'a> {
     /// Public key of the account
     pub key: u32, // &'a Pubkey,
-    /// The lamports in the account.  Modifiable by programs.
-    pub lamports: u32, // *mut u64,
+    /// The satomis in the account.  Modifiable by programs.
+    pub satomis: u32, // *mut u64,
     /// The data held in this account.  Modifiable by programs.
     pub ptr_to_slice: u32, // *const *mut [u8],
     pub data: u32, // *mut [u8],
@@ -103,7 +103,7 @@ impl<'a> fmt::Debug for AccountInfoRaw<'a> {
             .field("is_writable", &self.is_writable)
             .field("executable", &self.executable)
             .field("rent_epoch", &self.rent_epoch)
-            .field("lamports", &format_args!("{:p}", self.lamports as *const ()))
+            .field("satomis", &format_args!("{:p}", self.satomis as *const ()))
             .field("data.len", &self.data_len)
             .field("data", &format_args!("{:p}", self.data as *const ()))
             .field("ptr_to_slice", &format_args!("{:p}", self.ptr_to_slice as *const ()));
@@ -131,8 +131,8 @@ impl<'a> fmt::Debug for AccountInfoRaw<'a> {
 pub struct AccountInfoFromWasm<'a> {
     /// Public key of the account
     pub key: u32, // &'a Pubkey
-    /// The lamports in the account.  Modifiable by programs.
-    pub lamports: u32, // Rc<RefCell<&'a mut u64>>
+    /// The satomis in the account.  Modifiable by programs.
+    pub satomis: u32, // Rc<RefCell<&'a mut u64>>
     /// The data held in this account.  Modifiable by programs.
     pub data: u32, // Rc<RefCell<&'a mut [u8]>>
     /// Program that owns this account
@@ -153,9 +153,9 @@ impl<'a> AccountInfoFromWasm<'a> {
     pub fn key(&self) -> &'a Pubkey {
         unsafe { transmute(self.key as u64 as *mut Pubkey) }
     }
-    pub fn lamports(&self) -> &Rc<RefCell<&'a mut u64>> {
-        dbg!(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>);
-        unsafe { transmute(self.lamports as u64 as *mut Rc<RefCell<&'a mut u64>>) }
+    pub fn satomis(&self) -> &Rc<RefCell<&'a mut u64>> {
+        dbg!(self.satomis as u64 as *mut Rc<RefCell<&'a mut u64>>);
+        unsafe { transmute(self.satomis as u64 as *mut Rc<RefCell<&'a mut u64>>) }
     }
     pub fn data(&self) -> &Rc<RefCell<&'a mut [u8]>> {
         unsafe { transmute(self.data as u64 as *mut Rc<RefCell<&'a mut [u8]>>) }
@@ -175,7 +175,7 @@ impl<'a> fmt::Debug for AccountInfo<'a> {
             .field("is_writable", &self.is_writable)
             .field("executable", &self.executable)
             .field("rent_epoch", &self.rent_epoch)
-            .field("lamports", &self.lamports())
+            .field("satomis", &self.satomis())
             .field("data.len", &self.data_len());
         debug_account_data(&self.data.borrow(), &mut f);
 
@@ -196,12 +196,12 @@ impl<'a> AccountInfo<'a> {
         self.key
     }
 
-    pub fn lamports(&self) -> u64 {
-        **self.lamports.borrow()
+    pub fn satomis(&self) -> u64 {
+        **self.satomis.borrow()
     }
 
-    pub fn try_lamports(&self) -> Result<u64, ProgramError> {
-        Ok(**self.try_borrow_lamports()?)
+    pub fn try_satomis(&self) -> Result<u64, ProgramError> {
+        Ok(**self.try_borrow_satomis()?)
     }
 
     /// Return the account's original data length when it was serialized for the
@@ -233,14 +233,14 @@ impl<'a> AccountInfo<'a> {
         Ok(self.try_borrow_data()?.is_empty())
     }
 
-    pub fn try_borrow_lamports(&self) -> Result<Ref<&mut u64>, ProgramError> {
-        self.lamports
+    pub fn try_borrow_satomis(&self) -> Result<Ref<&mut u64>, ProgramError> {
+        self.satomis
             .try_borrow()
             .map_err(|_| ProgramError::AccountBorrowFailed)
     }
 
-    pub fn try_borrow_mut_lamports(&self) -> Result<RefMut<&'a mut u64>, ProgramError> {
-        self.lamports
+    pub fn try_borrow_mut_satomis(&self) -> Result<RefMut<&'a mut u64>, ProgramError> {
+        self.satomis
             .try_borrow_mut()
             .map_err(|_| ProgramError::AccountBorrowFailed)
     }
@@ -326,7 +326,7 @@ impl<'a> AccountInfo<'a> {
         key: &'a Pubkey,
         is_signer: bool,
         is_writable: bool,
-        lamports: &'a mut u64,
+        satomis: &'a mut u64,
         data: &'a mut [u8],
         owner: &'a Pubkey,
         executable: bool,
@@ -336,7 +336,7 @@ impl<'a> AccountInfo<'a> {
             key,
             is_signer,
             is_writable,
-            lamports: Rc::new(RefCell::new(lamports)),
+            satomis: Rc::new(RefCell::new(satomis)),
             data: Rc::new(RefCell::new(data)),
             owner,
             executable,
@@ -376,9 +376,9 @@ pub trait Account {
 impl<'a, T: Account> IntoAccountInfo<'a> for (&'a Pubkey, &'a mut T) {
     fn into_account_info(self) -> AccountInfo<'a> {
         let (key, account) = self;
-        let (lamports, data, owner, executable, rent_epoch) = account.get();
+        let (satomis, data, owner, executable, rent_epoch) = account.get();
         AccountInfo::new(
-            key, false, false, lamports, data, owner, executable, rent_epoch,
+            key, false, false, satomis, data, owner, executable, rent_epoch,
         )
     }
 }
@@ -388,9 +388,9 @@ impl<'a, T: Account> IntoAccountInfo<'a> for (&'a Pubkey, &'a mut T) {
 impl<'a, T: Account> IntoAccountInfo<'a> for (&'a Pubkey, bool, &'a mut T) {
     fn into_account_info(self) -> AccountInfo<'a> {
         let (key, is_signer, account) = self;
-        let (lamports, data, owner, executable, rent_epoch) = account.get();
+        let (satomis, data, owner, executable, rent_epoch) = account.get();
         AccountInfo::new(
-            key, is_signer, false, lamports, data, owner, executable, rent_epoch,
+            key, is_signer, false, satomis, data, owner, executable, rent_epoch,
         )
     }
 }
@@ -399,9 +399,9 @@ impl<'a, T: Account> IntoAccountInfo<'a> for (&'a Pubkey, bool, &'a mut T) {
 impl<'a, T: Account> IntoAccountInfo<'a> for &'a mut (Pubkey, T) {
     fn into_account_info(self) -> AccountInfo<'a> {
         let (ref key, account) = self;
-        let (lamports, data, owner, executable, rent_epoch) = account.get();
+        let (satomis, data, owner, executable, rent_epoch) = account.get();
         AccountInfo::new(
-            key, false, false, lamports, data, owner, executable, rent_epoch,
+            key, false, false, satomis, data, owner, executable, rent_epoch,
         )
     }
 }
@@ -576,10 +576,10 @@ mod tests {
     #[test]
     fn test_account_info_debug_data() {
         let key = Pubkey::new_unique();
-        let mut lamports = 42;
+        let mut satomis = 42;
         let mut data = vec![5; 80];
         let data_str = format!("{:?}", Hex(&data[..MAX_DEBUG_ACCOUNT_DATA]));
-        let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
+        let info = AccountInfo::new(&key, false, false, &mut satomis, &mut data, &key, false, 0);
         assert_eq!(
             format!("{info:?}"),
             format!(
@@ -590,7 +590,7 @@ mod tests {
                 is_writable: {}, \
                 executable: {}, \
                 rent_epoch: {}, \
-                lamports: {}, \
+                satomis: {}, \
                 data.len: {}, \
                 data: {}, .. }}",
                 key,
@@ -599,7 +599,7 @@ mod tests {
                 false,
                 false,
                 0,
-                lamports,
+                satomis,
                 data.len(),
                 data_str,
             )
@@ -607,7 +607,7 @@ mod tests {
 
         let mut data = vec![5; 40];
         let data_str = format!("{:?}", Hex(&data));
-        let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
+        let info = AccountInfo::new(&key, false, false, &mut satomis, &mut data, &key, false, 0);
         assert_eq!(
             format!("{info:?}"),
             format!(
@@ -618,7 +618,7 @@ mod tests {
                 is_writable: {}, \
                 executable: {}, \
                 rent_epoch: {}, \
-                lamports: {}, \
+                satomis: {}, \
                 data.len: {}, \
                 data: {}, .. }}",
                 key,
@@ -627,14 +627,14 @@ mod tests {
                 false,
                 false,
                 0,
-                lamports,
+                satomis,
                 data.len(),
                 data_str,
             )
         );
 
         let mut data = vec![];
-        let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
+        let info = AccountInfo::new(&key, false, false, &mut satomis, &mut data, &key, false, 0);
         assert_eq!(
             format!("{info:?}"),
             format!(
@@ -645,7 +645,7 @@ mod tests {
                 is_writable: {}, \
                 executable: {}, \
                 rent_epoch: {}, \
-                lamports: {}, \
+                satomis: {}, \
                 data.len: {}, .. }}",
                 key,
                 key,
@@ -653,7 +653,7 @@ mod tests {
                 false,
                 false,
                 0,
-                lamports,
+                satomis,
                 data.len(),
             )
         );

@@ -90,7 +90,7 @@ impl Versions {
         let data = Data::new(
             authority,
             data.durable_nonce,
-            data.get_lamports_per_signature(),
+            data.get_satomis_per_signature(),
         );
         let state = Box::new(State::Initialized(data));
         // Preserve Version variant since cannot
@@ -133,7 +133,7 @@ mod tests {
             authority: Pubkey::new_unique(),
             durable_nonce,
             fee_calculator: FeeCalculator {
-                lamports_per_signature: 2718,
+                satomis_per_signature: 2718,
             },
         };
         let versions = Versions::Legacy(Box::new(State::Initialized(data.clone())));
@@ -175,7 +175,7 @@ mod tests {
             authority: Pubkey::new_unique(),
             durable_nonce,
             fee_calculator: FeeCalculator {
-                lamports_per_signature: 2718,
+                satomis_per_signature: 2718,
             },
         };
         let versions = Versions::Legacy(Box::new(State::Initialized(data.clone())));
@@ -214,7 +214,7 @@ mod tests {
             authority: Pubkey::new_unique(),
             durable_nonce,
             fee_calculator: FeeCalculator {
-                lamports_per_signature: 2718,
+                satomis_per_signature: 2718,
             },
         };
         let account_authority = data.authority;

@@ -63,8 +63,8 @@ static void sol_log_params(const DomiParameters *params) {
     sol_log_64(0, 0, 0, 0, params->ka[i].is_writable);
     sol_log("  - Key");
     sol_log_pubkey(params->ka[i].key);
-    sol_log("  - Lamports");
-    sol_log_64(0, 0, 0, 0, *params->ka[i].lamports);
+    sol_log("  - Satomis");
+    sol_log_64(0, 0, 0, 0, *params->ka[i].satomis);
     sol_log("  - data");
     sol_log_array(params->ka[i].data, params->ka[i].data_len);
     sol_log("  - Owner");

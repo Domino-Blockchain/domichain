@@ -186,7 +186,7 @@ impl SyncClient for ThinClient {
 
     dispatch!(fn transfer_and_confirm(
         &self,
-        lamports: u64,
+        satomis: u64,
         keypair: &Keypair,
         pubkey: &Pubkey
     ) -> TransportResult<Signature>);

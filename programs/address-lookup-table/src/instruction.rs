@@ -40,7 +40,7 @@ pub enum ProgramInstruction {
 
     /// Extend an address lookup table with new addresses. Funding account and
     /// system program account references are only required if the lookup table
-    /// account requires additional lamports to cover the rent-exempt balance
+    /// account requires additional satomis to cover the rent-exempt balance
     /// after being extended.
     ///
     /// # Account references
@@ -63,7 +63,7 @@ pub enum ProgramInstruction {
     /// # Account references
     ///   0. `[WRITE]` Address lookup table account to close
     ///   1. `[SIGNER]` Current authority
-    ///   2. `[WRITE]` Recipient of closed account lamports
+    ///   2. `[WRITE]` Recipient of closed account satomis
     CloseLookupTable,
 }
 
@@ -196,7 +196,7 @@ pub fn deactivate_lookup_table(
 }
 
 /// Returns an instruction that closes an address lookup table
-/// account. The account will be deallocated and the lamports
+/// account. The account will be deallocated and the satomis
 /// will be drained to the recipient address.
 pub fn close_lookup_table(
     lookup_table_address: Pubkey,

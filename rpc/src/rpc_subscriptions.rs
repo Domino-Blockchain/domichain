@@ -1283,7 +1283,7 @@ pub(crate) mod tests {
     };
 
     struct AccountResult {
-        lamports: u64,
+        satomis: u64,
         subscription: u64,
         data: &'static str,
         space: usize,
@@ -1302,7 +1302,7 @@ pub(crate) mod tests {
                    "value": {
                        "data": account_result.data,
                        "executable": false,
-                       "lamports": account_result.lamports,
+                       "satomis": account_result.satomis,
                        "owner": "11111111111111111111111111111111",
                        "rentEpoch": if non_default_account {u64::MAX} else {0},
                        "space": account_result.space,
@@ -1354,7 +1354,7 @@ pub(crate) mod tests {
         let expected0 = make_account_result(
             true,
             AccountResult {
-                lamports: 1,
+                satomis: 1,
                 subscription: 0,
                 space: 0,
                 data: "",
@@ -1370,7 +1370,7 @@ pub(crate) mod tests {
         let expected1 = make_account_result(
             false,
             AccountResult {
-                lamports: 0,
+                satomis: 0,
                 subscription: 2,
                 space: 0,
                 data: "",
@@ -1388,7 +1388,7 @@ pub(crate) mod tests {
         let expected2 = make_account_result(
             true,
             AccountResult {
-                lamports: 1,
+                satomis: 1,
                 subscription: 4,
                 space: 1024,
                 data: "error: data too large for bs58 encoding",
@@ -1893,7 +1893,7 @@ pub(crate) mod tests {
                        "account": {
                           "data": "1111111111111111",
                           "executable": false,
-                          "lamports": 1,
+                          "satomis": 1,
                           "owner": "Stake11111111111111111111111111111111111111",
                           "rentEpoch": u64::MAX,
                           "space": 16,
@@ -2053,7 +2053,7 @@ pub(crate) mod tests {
         );
 
         // a closure to reduce code duplications in building expected responses:
-        let build_expected_resp = |slot: Slot, lamports: u64, pubkey: &str, subscription: i32| {
+        let build_expected_resp = |slot: Slot, satomis: u64, pubkey: &str, subscription: i32| {
             json!({
                "jsonrpc": "2.0",
                "method": "programNotification",
@@ -2064,7 +2064,7 @@ pub(crate) mod tests {
                            "account": {
                               "data": "1111111111111111",
                               "executable": false,
-                              "lamports": lamports,
+                              "satomis": satomis,
                               "owner": "Stake11111111111111111111111111111111111111",
                               "rentEpoch": u64::MAX,
                               "space": 16,
@@ -2343,7 +2343,7 @@ pub(crate) mod tests {
         );
 
         // a closure to reduce code duplications in building expected responses:
-        let build_expected_resp = |slot: Slot, lamports: u64, pubkey: &str, subscription: i32| {
+        let build_expected_resp = |slot: Slot, satomis: u64, pubkey: &str, subscription: i32| {
             json!({
                "jsonrpc": "2.0",
                "method": "programNotification",
@@ -2354,7 +2354,7 @@ pub(crate) mod tests {
                            "account": {
                               "data": "1111111111111111",
                               "executable": false,
-                              "lamports": lamports,
+                              "satomis": satomis,
                               "owner": "Stake11111111111111111111111111111111111111",
                               "rentEpoch": u64::MAX,
                               "space": 16,
@@ -2856,7 +2856,7 @@ pub(crate) mod tests {
                    "value": {
                        "data": "1111111111111111",
                        "executable": false,
-                       "lamports": 1,
+                       "satomis": 1,
                        "owner": "Stake11111111111111111111111111111111111111",
                        "rentEpoch": u64::MAX,
                        "space": 16,
@@ -2909,7 +2909,7 @@ pub(crate) mod tests {
                    "value": {
                        "data": "1111111111111111",
                        "executable": false,
-                       "lamports": 1,
+                       "satomis": 1,
                        "owner": "Stake11111111111111111111111111111111111111",
                        "rentEpoch": u64::MAX,
                        "space": 16,

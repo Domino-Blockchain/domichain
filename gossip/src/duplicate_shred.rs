@@ -301,7 +301,7 @@ pub(crate) mod tests {
             let tx = system_transaction::transfer(
                 &Keypair::new(),       // from
                 &Pubkey::new_unique(), // to
-                rng.gen(),             // lamports
+                rng.gen(),             // satomis
                 hash::new_rand(rng),   // recent blockhash
             );
             Entry::new(

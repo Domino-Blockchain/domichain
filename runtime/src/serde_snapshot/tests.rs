@@ -529,7 +529,7 @@ fn test_extra_fields_eof() {
         .set_accounts_hash_for_tests(bank.slot(), AccountsHash(Hash::new_unique()));
 
     // Set extra fields
-    bank.fee_rate_governor.lamports_per_signature = 7000;
+    bank.fee_rate_governor.satomis_per_signature = 7000;
 
     // Serialize
     let snapshot_storages = bank.get_snapshot_storages(None);
@@ -575,8 +575,8 @@ fn test_extra_fields_eof() {
     .unwrap();
 
     assert_eq!(
-        bank.fee_rate_governor.lamports_per_signature,
-        dbank.fee_rate_governor.lamports_per_signature
+        bank.fee_rate_governor.satomis_per_signature,
+        dbank.fee_rate_governor.satomis_per_signature
     );
 }
 
@@ -594,7 +594,7 @@ fn test_extra_fields_full_snapshot_archive() {
     }
 
     // Set extra field
-    bank.fee_rate_governor.lamports_per_signature = 7000;
+    bank.fee_rate_governor.satomis_per_signature = 7000;
 
     let (_tmp_dir, accounts_dir) = create_tmp_accounts_dir_for_tests();
     let bank_snapshots_dir = TempDir::new().unwrap();
@@ -637,8 +637,8 @@ fn test_extra_fields_full_snapshot_archive() {
     .unwrap();
 
     assert_eq!(
-        bank.fee_rate_governor.lamports_per_signature,
-        dbank.fee_rate_governor.lamports_per_signature
+        bank.fee_rate_governor.satomis_per_signature,
+        dbank.fee_rate_governor.satomis_per_signature
     );
 }
 
@@ -664,7 +664,7 @@ fn test_blank_extra_fields() {
         .set_accounts_hash_for_tests(bank.slot(), AccountsHash(Hash::new_unique()));
 
     // Set extra fields
-    bank.fee_rate_governor.lamports_per_signature = 7000;
+    bank.fee_rate_governor.satomis_per_signature = 7000;
 
     // Serialize, but don't serialize the extra fields
     let snapshot_storages = bank.get_snapshot_storages(None);
@@ -710,7 +710,7 @@ fn test_blank_extra_fields() {
     .unwrap();
 
     // Defaults to 0
-    assert_eq!(0, dbank.fee_rate_governor.lamports_per_signature);
+    assert_eq!(0, dbank.fee_rate_governor.satomis_per_signature);
 }
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]

@@ -74,8 +74,8 @@ impl Committer {
         executed_non_vote_transactions_count: usize,
         executed_with_successful_result_count: usize,
     ) -> (u64, Vec<CommitTransactionDetails>) {
-        let (last_blockhash, lamports_per_signature) =
-            bank.last_blockhash_and_lamports_per_signature();
+        let (last_blockhash, satomis_per_signature) =
+            bank.last_blockhash_and_satomis_per_signature();
 
         let executed_transactions = execution_results
             .iter()
@@ -88,7 +88,7 @@ impl Committer {
             loaded_transactions,
             execution_results,
             last_blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             CommitTransactionCounts {
                 committed_transactions_count: executed_transactions_count as u64,
                 committed_non_vote_transactions_count: executed_non_vote_transactions_count as u64,

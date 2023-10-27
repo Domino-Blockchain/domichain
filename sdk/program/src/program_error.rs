@@ -45,7 +45,7 @@ pub enum ProgramError {
     InvalidSeeds,
     #[error("IO Error: {0}")]
     BorshIoError(String),
-    #[error("An account does not have enough lamports to be rent-exempt")]
+    #[error("An account does not have enough satomis to be rent-exempt")]
     AccountNotRentExempt,
     #[error("Unsupported sysvar")]
     UnsupportedSysvar,

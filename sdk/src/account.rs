@@ -3,7 +3,7 @@
 use {
     crate::{
         clock::{Epoch, INITIAL_RENT_EPOCH},
-        lamports::LamportsError,
+        satomis::SatomisError,
         pubkey::Pubkey,
     },
     serde::{
@@ -27,8 +27,8 @@ use {
 #[derive(Deserialize, PartialEq, Eq, Clone, Default, AbiExample)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
-    /// lamports in the account
-    pub lamports: u64,
+    /// satomis in the account
+    pub satomis: u64,
     /// data held in this account
     #[serde(with = "serde_bytes")]
     pub data: Vec<u8>,
@@ -51,7 +51,7 @@ mod account_serialize {
     #[derive(Serialize, AbiExample)]
     #[serde(rename_all = "camelCase")]
     struct Account<'a> {
-        lamports: u64,
+        satomis: u64,
         #[serde(with = "serde_bytes")]
         // a slice so we don't have to make a copy just to serialize this
         data: &'a [u8],
@@ -70,7 +70,7 @@ mod account_serialize {
         S: Serializer,
     {
         let temp = Account {
-            lamports: account.lamports(),
+            satomis: account.satomis(),
             data: account.data(),
             owner: *account.owner(),
             executable: account.executable(),
@@ -104,8 +104,8 @@ impl Serialize for AccountSharedData {
 #[derive(PartialEq, Eq, Clone, Default, AbiExample, Deserialize)]
 #[serde(from = "Account")]
 pub struct AccountSharedData {
-    /// lamports in the account
-    lamports: u64,
+    /// satomis in the account
+    satomis: u64,
     /// data held in this account
     data: Arc<Vec<u8>>,
     /// the program that owns this account. If executable, the program that loads this account.
@@ -120,7 +120,7 @@ pub struct AccountSharedData {
 ///
 /// Returns true if accounts are essentially equivalent as in all fields are equivalent.
 pub fn accounts_equal<T: ReadableAccount, U: ReadableAccount>(me: &T, other: &U) -> bool {
-    me.lamports() == other.lamports()
+    me.satomis() == other.satomis()
         && me.executable() == other.executable()
         && me.rent_epoch() == other.rent_epoch()
         && me.owner() == other.owner()
@@ -131,7 +131,7 @@ impl From<AccountSharedData> for Account {
     fn from(mut other: AccountSharedData) -> Self {
         let account_data = Arc::make_mut(&mut other.data);
         Self {
-            lamports: other.lamports,
+            satomis: other.satomis,
             data: std::mem::take(account_data),
             owner: other.owner,
             executable: other.executable,
@@ -143,7 +143,7 @@ impl From<AccountSharedData> for Account {
 impl From<Account> for AccountSharedData {
     fn from(other: Account) -> Self {
         Self {
-            lamports: other.lamports,
+            satomis: other.satomis,
             data: Arc::new(other.data),
             owner: other.owner,
             executable: other.executable,
@@ -153,28 +153,28 @@ impl From<Account> for AccountSharedData {
 }
 
 pub trait WritableAccount: ReadableAccount {
-    fn set_lamports(&mut self, lamports: u64);
-    fn checked_add_lamports(&mut self, lamports: u64) -> Result<(), LamportsError> {
-        self.set_lamports(
-            self.lamports()
-                .checked_add(lamports)
-                .ok_or(LamportsError::ArithmeticOverflow)?,
+    fn set_satomis(&mut self, satomis: u64);
+    fn checked_add_satomis(&mut self, satomis: u64) -> Result<(), SatomisError> {
+        self.set_satomis(
+            self.satomis()
+                .checked_add(satomis)
+                .ok_or(SatomisError::ArithmeticOverflow)?,
         );
         Ok(())
     }
-    fn checked_sub_lamports(&mut self, lamports: u64) -> Result<(), LamportsError> {
-        self.set_lamports(
-            self.lamports()
-                .checked_sub(lamports)
-                .ok_or(LamportsError::ArithmeticUnderflow)?,
+    fn checked_sub_satomis(&mut self, satomis: u64) -> Result<(), SatomisError> {
+        self.set_satomis(
+            self.satomis()
+                .checked_sub(satomis)
+                .ok_or(SatomisError::ArithmeticUnderflow)?,
         );
         Ok(())
     }
-    fn saturating_add_lamports(&mut self, lamports: u64) {
-        self.set_lamports(self.lamports().saturating_add(lamports))
+    fn saturating_add_satomis(&mut self, satomis: u64) {
+        self.set_satomis(self.satomis().saturating_add(satomis))
     }
-    fn saturating_sub_lamports(&mut self, lamports: u64) {
-        self.set_lamports(self.lamports().saturating_sub(lamports))
+    fn saturating_sub_satomis(&mut self, satomis: u64) {
+        self.set_satomis(self.satomis().saturating_sub(satomis))
     }
     fn data_as_mut_slice(&mut self) -> &mut [u8];
     fn set_owner(&mut self, owner: Pubkey);
@@ -182,7 +182,7 @@ pub trait WritableAccount: ReadableAccount {
     fn set_executable(&mut self, executable: bool);
     fn set_rent_epoch(&mut self, epoch: Epoch);
     fn create(
-        lamports: u64,
+        satomis: u64,
         data: Vec<u8>,
         owner: Pubkey,
         executable: bool,
@@ -191,14 +191,14 @@ pub trait WritableAccount: ReadableAccount {
 }
 
 pub trait ReadableAccount: Sized {
-    fn lamports(&self) -> u64;
+    fn satomis(&self) -> u64;
     fn data(&self) -> &[u8];
     fn owner(&self) -> &Pubkey;
     fn executable(&self) -> bool;
     fn rent_epoch(&self) -> Epoch;
     fn to_account_shared_data(&self) -> AccountSharedData {
         AccountSharedData::create(
-            self.lamports(),
+            self.satomis(),
             self.data().to_vec(),
             *self.owner(),
             self.executable(),
@@ -208,8 +208,8 @@ pub trait ReadableAccount: Sized {
 }
 
 impl ReadableAccount for Account {
-    fn lamports(&self) -> u64 {
-        self.lamports
+    fn satomis(&self) -> u64 {
+        self.satomis
     }
     fn data(&self) -> &[u8] {
         &self.data
@@ -226,8 +226,8 @@ impl ReadableAccount for Account {
 }
 
 impl WritableAccount for Account {
-    fn set_lamports(&mut self, lamports: u64) {
-        self.lamports = lamports;
+    fn set_satomis(&mut self, satomis: u64) {
+        self.satomis = satomis;
     }
     fn data_as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.data
@@ -245,14 +245,14 @@ impl WritableAccount for Account {
         self.rent_epoch = epoch;
     }
     fn create(
-        lamports: u64,
+        satomis: u64,
         data: Vec<u8>,
         owner: Pubkey,
         executable: bool,
         rent_epoch: Epoch,
     ) -> Self {
         Account {
-            lamports,
+            satomis,
             data,
             owner,
             executable,
@@ -262,8 +262,8 @@ impl WritableAccount for Account {
 }
 
 impl WritableAccount for AccountSharedData {
-    fn set_lamports(&mut self, lamports: u64) {
-        self.lamports = lamports;
+    fn set_satomis(&mut self, satomis: u64) {
+        self.satomis = satomis;
     }
     fn data_as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.data_mut()[..]
@@ -281,14 +281,14 @@ impl WritableAccount for AccountSharedData {
         self.rent_epoch = epoch;
     }
     fn create(
-        lamports: u64,
+        satomis: u64,
         data: Vec<u8>,
         owner: Pubkey,
         executable: bool,
         rent_epoch: Epoch,
     ) -> Self {
         AccountSharedData {
-            lamports,
+            satomis,
             data: Arc::new(data),
             owner,
             executable,
@@ -298,8 +298,8 @@ impl WritableAccount for AccountSharedData {
 }
 
 impl ReadableAccount for AccountSharedData {
-    fn lamports(&self) -> u64 {
-        self.lamports
+    fn satomis(&self) -> u64 {
+        self.satomis
     }
     fn data(&self) -> &[u8] {
         &self.data
@@ -320,8 +320,8 @@ impl ReadableAccount for AccountSharedData {
 }
 
 impl ReadableAccount for Ref<'_, AccountSharedData> {
-    fn lamports(&self) -> u64 {
-        self.lamports
+    fn satomis(&self) -> u64 {
+        self.satomis
     }
     fn data(&self) -> &[u8] {
         &self.data
@@ -337,7 +337,7 @@ impl ReadableAccount for Ref<'_, AccountSharedData> {
     }
     fn to_account_shared_data(&self) -> AccountSharedData {
         AccountSharedData {
-            lamports: self.lamports(),
+            satomis: self.satomis(),
             // avoid data copy here
             data: Arc::clone(&self.data),
             owner: *self.owner(),
@@ -348,8 +348,8 @@ impl ReadableAccount for Ref<'_, AccountSharedData> {
 }
 
 impl ReadableAccount for Ref<'_, Account> {
-    fn lamports(&self) -> u64 {
-        self.lamports
+    fn satomis(&self) -> u64 {
+        self.satomis
     }
     fn data(&self) -> &[u8] {
         &self.data
@@ -368,7 +368,7 @@ impl ReadableAccount for Ref<'_, Account> {
 fn debug_fmt<T: ReadableAccount>(item: &T, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     let mut f = f.debug_struct("Account");
 
-    f.field("lamports", &item.lamports())
+    f.field("satomis", &item.satomis())
         .field("data.len", &item.data().len())
         .field("owner", &item.owner())
         .field("executable", &item.executable())
@@ -390,9 +390,9 @@ impl fmt::Debug for AccountSharedData {
     }
 }
 
-fn shared_new<T: WritableAccount>(lamports: u64, space: usize, owner: &Pubkey) -> T {
+fn shared_new<T: WritableAccount>(satomis: u64, space: usize, owner: &Pubkey) -> T {
     T::create(
-        lamports,
+        satomis,
         vec![0u8; space],
         *owner,
         bool::default(),
@@ -401,13 +401,13 @@ fn shared_new<T: WritableAccount>(lamports: u64, space: usize, owner: &Pubkey) -
 }
 
 fn shared_new_rent_epoch<T: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     space: usize,
     owner: &Pubkey,
     rent_epoch: Epoch,
 ) -> T {
     T::create(
-        lamports,
+        satomis,
         vec![0u8; space],
         *owner,
         bool::default(),
@@ -416,21 +416,21 @@ fn shared_new_rent_epoch<T: WritableAccount>(
 }
 
 fn shared_new_ref<T: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     space: usize,
     owner: &Pubkey,
 ) -> Rc<RefCell<T>> {
-    Rc::new(RefCell::new(shared_new::<T>(lamports, space, owner)))
+    Rc::new(RefCell::new(shared_new::<T>(satomis, space, owner)))
 }
 
 fn shared_new_data<T: serde::Serialize, U: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     state: &T,
     owner: &Pubkey,
 ) -> Result<U, bincode::Error> {
     let data = bincode::serialize(state)?;
     Ok(U::create(
-        lamports,
+        satomis,
         data,
         *owner,
         bool::default(),
@@ -438,35 +438,35 @@ fn shared_new_data<T: serde::Serialize, U: WritableAccount>(
     ))
 }
 fn shared_new_ref_data<T: serde::Serialize, U: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     state: &T,
     owner: &Pubkey,
 ) -> Result<RefCell<U>, bincode::Error> {
     Ok(RefCell::new(shared_new_data::<T, U>(
-        lamports, state, owner,
+        satomis, state, owner,
     )?))
 }
 
 fn shared_new_data_with_space<T: serde::Serialize, U: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     state: &T,
     space: usize,
     owner: &Pubkey,
 ) -> Result<U, bincode::Error> {
-    let mut account = shared_new::<U>(lamports, space, owner);
+    let mut account = shared_new::<U>(satomis, space, owner);
 
     shared_serialize_data(&mut account, state)?;
 
     Ok(account)
 }
 fn shared_new_ref_data_with_space<T: serde::Serialize, U: WritableAccount>(
-    lamports: u64,
+    satomis: u64,
     state: &T,
     space: usize,
     owner: &Pubkey,
 ) -> Result<RefCell<U>, bincode::Error> {
     Ok(RefCell::new(shared_new_data_with_space::<T, U>(
-        lamports, state, space, owner,
+        satomis, state, space, owner,
     )?))
 }
 
@@ -487,44 +487,44 @@ fn shared_serialize_data<T: serde::Serialize, U: WritableAccount>(
 }
 
 impl Account {
-    pub fn new(lamports: u64, space: usize, owner: &Pubkey) -> Self {
-        shared_new(lamports, space, owner)
+    pub fn new(satomis: u64, space: usize, owner: &Pubkey) -> Self {
+        shared_new(satomis, space, owner)
     }
-    pub fn new_ref(lamports: u64, space: usize, owner: &Pubkey) -> Rc<RefCell<Self>> {
-        shared_new_ref(lamports, space, owner)
+    pub fn new_ref(satomis: u64, space: usize, owner: &Pubkey) -> Rc<RefCell<Self>> {
+        shared_new_ref(satomis, space, owner)
     }
     pub fn new_data<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         owner: &Pubkey,
     ) -> Result<Self, bincode::Error> {
-        shared_new_data(lamports, state, owner)
+        shared_new_data(satomis, state, owner)
     }
     pub fn new_ref_data<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         owner: &Pubkey,
     ) -> Result<RefCell<Self>, bincode::Error> {
-        shared_new_ref_data(lamports, state, owner)
+        shared_new_ref_data(satomis, state, owner)
     }
     pub fn new_data_with_space<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         space: usize,
         owner: &Pubkey,
     ) -> Result<Self, bincode::Error> {
-        shared_new_data_with_space(lamports, state, space, owner)
+        shared_new_data_with_space(satomis, state, space, owner)
     }
     pub fn new_ref_data_with_space<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         space: usize,
         owner: &Pubkey,
     ) -> Result<RefCell<Self>, bincode::Error> {
-        shared_new_ref_data_with_space(lamports, state, space, owner)
+        shared_new_ref_data_with_space(satomis, state, space, owner)
     }
-    pub fn new_rent_epoch(lamports: u64, space: usize, owner: &Pubkey, rent_epoch: Epoch) -> Self {
-        shared_new_rent_epoch(lamports, space, owner, rent_epoch)
+    pub fn new_rent_epoch(satomis: u64, space: usize, owner: &Pubkey, rent_epoch: Epoch) -> Self {
+        shared_new_rent_epoch(satomis, space, owner, rent_epoch)
     }
     pub fn deserialize_data<T: serde::de::DeserializeOwned>(&self) -> Result<T, bincode::Error> {
         shared_deserialize_data(self)
@@ -607,44 +607,44 @@ impl AccountSharedData {
         self.data_mut().spare_capacity_mut()
     }
 
-    pub fn new(lamports: u64, space: usize, owner: &Pubkey) -> Self {
-        shared_new(lamports, space, owner)
+    pub fn new(satomis: u64, space: usize, owner: &Pubkey) -> Self {
+        shared_new(satomis, space, owner)
     }
-    pub fn new_ref(lamports: u64, space: usize, owner: &Pubkey) -> Rc<RefCell<Self>> {
-        shared_new_ref(lamports, space, owner)
+    pub fn new_ref(satomis: u64, space: usize, owner: &Pubkey) -> Rc<RefCell<Self>> {
+        shared_new_ref(satomis, space, owner)
     }
     pub fn new_data<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         owner: &Pubkey,
     ) -> Result<Self, bincode::Error> {
-        shared_new_data(lamports, state, owner)
+        shared_new_data(satomis, state, owner)
     }
     pub fn new_ref_data<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         owner: &Pubkey,
     ) -> Result<RefCell<Self>, bincode::Error> {
-        shared_new_ref_data(lamports, state, owner)
+        shared_new_ref_data(satomis, state, owner)
     }
     pub fn new_data_with_space<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         space: usize,
         owner: &Pubkey,
     ) -> Result<Self, bincode::Error> {
-        shared_new_data_with_space(lamports, state, space, owner)
+        shared_new_data_with_space(satomis, state, space, owner)
     }
     pub fn new_ref_data_with_space<T: serde::Serialize>(
-        lamports: u64,
+        satomis: u64,
         state: &T,
         space: usize,
         owner: &Pubkey,
     ) -> Result<RefCell<Self>, bincode::Error> {
-        shared_new_ref_data_with_space(lamports, state, space, owner)
+        shared_new_ref_data_with_space(satomis, state, space, owner)
     }
-    pub fn new_rent_epoch(lamports: u64, space: usize, owner: &Pubkey, rent_epoch: Epoch) -> Self {
-        shared_new_rent_epoch(lamports, space, owner, rent_epoch)
+    pub fn new_rent_epoch(satomis: u64, space: usize, owner: &Pubkey, rent_epoch: Epoch) -> Self {
+        shared_new_rent_epoch(satomis, space, owner, rent_epoch)
     }
     pub fn deserialize_data<T: serde::de::DeserializeOwned>(&self) -> Result<T, bincode::Error> {
         shared_deserialize_data(self)
@@ -662,16 +662,16 @@ pub const DUMMY_INHERITABLE_ACCOUNT_FIELDS: InheritableAccountFields = (1, INITI
     since = "1.5.17",
     note = "Please use `create_account_for_test` instead"
 )]
-pub fn create_account<S: Sysvar>(sysvar: &S, lamports: u64) -> Account {
-    create_account_with_fields(sysvar, (lamports, INITIAL_RENT_EPOCH))
+pub fn create_account<S: Sysvar>(sysvar: &S, satomis: u64) -> Account {
+    create_account_with_fields(sysvar, (satomis, INITIAL_RENT_EPOCH))
 }
 
 pub fn create_account_with_fields<S: Sysvar>(
     sysvar: &S,
-    (lamports, rent_epoch): InheritableAccountFields,
+    (satomis, rent_epoch): InheritableAccountFields,
 ) -> Account {
     let data_len = S::size_of().max(bincode::serialized_size(sysvar).unwrap() as usize);
-    let mut account = Account::new(lamports, data_len, &domichain_program::sysvar::id());
+    let mut account = Account::new(satomis, data_len, &domichain_program::sysvar::id());
     to_account::<S, Account>(sysvar, &mut account).unwrap();
     account.rent_epoch = rent_epoch;
     account
@@ -686,10 +686,10 @@ pub fn create_account_for_test<S: Sysvar>(sysvar: &S) -> Account {
     since = "1.5.17",
     note = "Please use `create_account_shared_data_for_test` instead"
 )]
-pub fn create_account_shared_data<S: Sysvar>(sysvar: &S, lamports: u64) -> AccountSharedData {
+pub fn create_account_shared_data<S: Sysvar>(sysvar: &S, satomis: u64) -> AccountSharedData {
     AccountSharedData::from(create_account_with_fields(
         sysvar,
-        (lamports, INITIAL_RENT_EPOCH),
+        (satomis, INITIAL_RENT_EPOCH),
     ))
 }
 
@@ -722,7 +722,7 @@ pub fn to_account<S: Sysvar, T: WritableAccount>(sysvar: &S, account: &mut T) ->
 impl domichain_program::account_info::Account for Account {
     fn get(&mut self) -> (&mut u64, &mut [u8], &Pubkey, bool, Epoch) {
         (
-            &mut self.lamports,
+            &mut self.satomis,
             &mut self.data,
             &self.owner,
             self.executable,
@@ -742,7 +742,7 @@ pub fn create_is_signer_account_infos<'a>(
                 key,
                 *is_signer,
                 false,
-                &mut account.lamports,
+                &mut account.satomis,
                 &mut account.data,
                 &account.owner,
                 account.executable,
@@ -863,8 +863,8 @@ pub mod tests {
         let (account1, account2) = make_two_accounts(&key);
         assert!(accounts_equal(&account1, &account2));
         let account = account1;
-        assert_eq!(account.lamports, 1);
-        assert_eq!(account.lamports(), 1);
+        assert_eq!(account.satomis, 1);
+        assert_eq!(account.satomis(), 1);
         assert_eq!(account.data.len(), 2);
         assert_eq!(account.data().len(), 2);
         assert_eq!(account.owner, key);
@@ -874,8 +874,8 @@ pub mod tests {
         assert_eq!(account.rent_epoch, 4);
         assert_eq!(account.rent_epoch(), 4);
         let account = account2;
-        assert_eq!(account.lamports, 1);
-        assert_eq!(account.lamports(), 1);
+        assert_eq!(account.satomis, 1);
+        assert_eq!(account.satomis(), 1);
         assert_eq!(account.data.len(), 2);
         assert_eq!(account.data().len(), 2);
         assert_eq!(account.owner, key);
@@ -916,72 +916,72 @@ pub mod tests {
     }
 
     #[test]
-    fn test_account_add_sub_lamports() {
+    fn test_account_add_sub_satomis() {
         let key = Pubkey::new_unique();
         let (mut account1, mut account2) = make_two_accounts(&key);
         assert!(accounts_equal(&account1, &account2));
-        account1.checked_add_lamports(1).unwrap();
-        account2.checked_add_lamports(1).unwrap();
+        account1.checked_add_satomis(1).unwrap();
+        account2.checked_add_satomis(1).unwrap();
         assert!(accounts_equal(&account1, &account2));
-        assert_eq!(account1.lamports(), 2);
-        account1.checked_sub_lamports(2).unwrap();
-        account2.checked_sub_lamports(2).unwrap();
+        assert_eq!(account1.satomis(), 2);
+        account1.checked_sub_satomis(2).unwrap();
+        account2.checked_sub_satomis(2).unwrap();
         assert!(accounts_equal(&account1, &account2));
-        assert_eq!(account1.lamports(), 0);
+        assert_eq!(account1.satomis(), 0);
     }
 
     #[test]
     #[should_panic(expected = "Overflow")]
-    fn test_account_checked_add_lamports_overflow() {
+    fn test_account_checked_add_satomis_overflow() {
         let key = Pubkey::new_unique();
         let (mut account1, _account2) = make_two_accounts(&key);
-        account1.checked_add_lamports(u64::MAX).unwrap();
+        account1.checked_add_satomis(u64::MAX).unwrap();
     }
 
     #[test]
     #[should_panic(expected = "Underflow")]
-    fn test_account_checked_sub_lamports_underflow() {
+    fn test_account_checked_sub_satomis_underflow() {
         let key = Pubkey::new_unique();
         let (mut account1, _account2) = make_two_accounts(&key);
-        account1.checked_sub_lamports(u64::MAX).unwrap();
+        account1.checked_sub_satomis(u64::MAX).unwrap();
     }
 
     #[test]
     #[should_panic(expected = "Overflow")]
-    fn test_account_checked_add_lamports_overflow2() {
+    fn test_account_checked_add_satomis_overflow2() {
         let key = Pubkey::new_unique();
         let (_account1, mut account2) = make_two_accounts(&key);
-        account2.checked_add_lamports(u64::MAX).unwrap();
+        account2.checked_add_satomis(u64::MAX).unwrap();
     }
 
     #[test]
     #[should_panic(expected = "Underflow")]
-    fn test_account_checked_sub_lamports_underflow2() {
+    fn test_account_checked_sub_satomis_underflow2() {
         let key = Pubkey::new_unique();
         let (_account1, mut account2) = make_two_accounts(&key);
-        account2.checked_sub_lamports(u64::MAX).unwrap();
+        account2.checked_sub_satomis(u64::MAX).unwrap();
     }
 
     #[test]
-    fn test_account_saturating_add_lamports() {
+    fn test_account_saturating_add_satomis() {
         let key = Pubkey::new_unique();
         let (mut account, _) = make_two_accounts(&key);
 
         let remaining = 22;
-        account.set_lamports(u64::MAX - remaining);
-        account.saturating_add_lamports(remaining * 2);
-        assert_eq!(account.lamports(), u64::MAX);
+        account.set_satomis(u64::MAX - remaining);
+        account.saturating_add_satomis(remaining * 2);
+        assert_eq!(account.satomis(), u64::MAX);
     }
 
     #[test]
-    fn test_account_saturating_sub_lamports() {
+    fn test_account_saturating_sub_satomis() {
         let key = Pubkey::new_unique();
         let (mut account, _) = make_two_accounts(&key);
 
         let remaining = 33;
-        account.set_lamports(remaining);
-        account.saturating_sub_lamports(remaining * 2);
-        assert_eq!(account.lamports(), 0);
+        account.set_satomis(remaining);
+        account.saturating_sub_satomis(remaining * 2);
+        assert_eq!(account.satomis(), 0);
     }
 
     #[test]
@@ -1001,15 +1001,15 @@ pub mod tests {
             for pass in 0..4 {
                 if field_index == 0 {
                     if pass == 0 {
-                        account1.checked_add_lamports(1).unwrap();
+                        account1.checked_add_satomis(1).unwrap();
                     } else if pass == 1 {
-                        account_expected.checked_add_lamports(1).unwrap();
-                        account2.set_lamports(account2.lamports + 1);
+                        account_expected.checked_add_satomis(1).unwrap();
+                        account2.set_satomis(account2.satomis + 1);
                     } else if pass == 2 {
-                        account1.set_lamports(account1.lamports + 1);
+                        account1.set_satomis(account1.satomis + 1);
                     } else if pass == 3 {
-                        account_expected.checked_add_lamports(1).unwrap();
-                        account2.checked_add_lamports(1).unwrap();
+                        account_expected.checked_add_satomis(1).unwrap();
+                        account2.checked_add_satomis(1).unwrap();
                     }
                 } else if field_index == 1 {
                     if pass == 0 {
@@ -1068,13 +1068,13 @@ pub mod tests {
                 if should_be_equal {
                     assert!(accounts_equal(
                         &Account::new_ref(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             account_expected.data().len(),
                             account_expected.owner()
                         )
                         .borrow(),
                         &AccountSharedData::new_ref(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             account_expected.data().len(),
                             account_expected.owner()
                         )
@@ -1084,13 +1084,13 @@ pub mod tests {
                     {
                         // test new_data
                         let account1_with_data = Account::new_data(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             account_expected.owner(),
                         )
                         .unwrap();
                         let account2_with_data = AccountSharedData::new_data(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             account_expected.owner(),
                         )
@@ -1106,14 +1106,14 @@ pub mod tests {
                     // test new_data_with_space
                     assert!(accounts_equal(
                         &Account::new_data_with_space(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             1,
                             account_expected.owner()
                         )
                         .unwrap(),
                         &AccountSharedData::new_data_with_space(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             1,
                             account_expected.owner()
@@ -1124,14 +1124,14 @@ pub mod tests {
                     // test new_ref_data
                     assert!(accounts_equal(
                         &Account::new_ref_data(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             account_expected.owner()
                         )
                         .unwrap()
                         .borrow(),
                         &AccountSharedData::new_ref_data(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             account_expected.owner()
                         )
@@ -1142,7 +1142,7 @@ pub mod tests {
                     //new_ref_data_with_space
                     assert!(accounts_equal(
                         &Account::new_ref_data_with_space(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             1,
                             account_expected.owner()
@@ -1150,7 +1150,7 @@ pub mod tests {
                         .unwrap()
                         .borrow(),
                         &AccountSharedData::new_ref_data_with_space(
-                            account_expected.lamports(),
+                            account_expected.satomis(),
                             &account_expected.data()[0],
                             1,
                             account_expected.owner()

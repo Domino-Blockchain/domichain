@@ -10,7 +10,7 @@ use {
         clock::UnixTimestamp,
         commitment_config::CommitmentConfig,
         genesis_config::ClusterType,
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         pubkey::Pubkey,
         signature::{read_keypair_file, Keypair, Signature, Signer},
     },
@@ -180,8 +180,8 @@ pub fn resolve_signer(
     )
 }
 
-pub fn lamports_of_sol(matches: &ArgMatches<'_>, name: &str) -> Option<u64> {
-    value_of(matches, name).map(domi_to_lamports)
+pub fn satomis_of_sol(matches: &ArgMatches<'_>, name: &str) -> Option<u64> {
+    value_of(matches, name).map(domi_to_satomis)
 }
 
 pub fn cluster_type_of(matches: &ArgMatches<'_>, name: &str) -> Option<ClusterType> {
@@ -330,14 +330,14 @@ mod tests {
     }
 
     #[test]
-    fn test_lamports_of_sol() {
+    fn test_satomis_of_sol() {
         let matches = app().get_matches_from(vec!["test", "--single", "50"]);
-        assert_eq!(lamports_of_sol(&matches, "single"), Some(50_000_000_000));
-        assert_eq!(lamports_of_sol(&matches, "multiple"), None);
+        assert_eq!(satomis_of_sol(&matches, "single"), Some(50_000_000_000));
+        assert_eq!(satomis_of_sol(&matches, "multiple"), None);
         let matches = app().get_matches_from(vec!["test", "--single", "1.5"]);
-        assert_eq!(lamports_of_sol(&matches, "single"), Some(1_500_000_000));
-        assert_eq!(lamports_of_sol(&matches, "multiple"), None);
+        assert_eq!(satomis_of_sol(&matches, "single"), Some(1_500_000_000));
+        assert_eq!(satomis_of_sol(&matches, "multiple"), None);
         let matches = app().get_matches_from(vec!["test", "--single", "0.03"]);
-        assert_eq!(lamports_of_sol(&matches, "single"), Some(30_000_000));
+        assert_eq!(satomis_of_sol(&matches, "single"), Some(30_000_000));
     }
 }

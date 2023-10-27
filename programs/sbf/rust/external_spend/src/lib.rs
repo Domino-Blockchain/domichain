@@ -1,4 +1,4 @@
-//! Example Rust-based SBF program that moves a lamport from one account to another
+//! Example Rust-based SBF program that moves a satomi from one account to another
 
 #![allow(clippy::integer_arithmetic)]
 
@@ -12,10 +12,10 @@ fn process_instruction(
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    // account 0 is the mint and not owned by this program, any debit of its lamports
+    // account 0 is the mint and not owned by this program, any debit of its satomis
     // should result in a failed program execution.  Test to ensure that this debit
     // is seen by the runtime and fails as expected
-    **accounts[0].lamports.borrow_mut() -= 1;
+    **accounts[0].satomis.borrow_mut() -= 1;
 
     Ok(())
 }

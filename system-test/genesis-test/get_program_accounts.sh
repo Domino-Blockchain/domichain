@@ -36,9 +36,9 @@ function write_program_account_data_csv {
     CSV_OUTFILE="${PROGRAM_NAME}_account_data.csv"
   fi
 
-  echo "Account_Pubkey,Lamports" > $CSV_OUTFILE
+  echo "Account_Pubkey,Satomis" > $CSV_OUTFILE
   # shellcheck disable=SC2002
-  cat "$JSON_INFILE" | jq -r '(.result | .[]) | [.pubkey, (.account | .lamports)] | @csv' \
+  cat "$JSON_INFILE" | jq -r '(.result | .[]) | [.pubkey, (.account | .satomis)] | @csv' \
     >> $CSV_OUTFILE
 }
 

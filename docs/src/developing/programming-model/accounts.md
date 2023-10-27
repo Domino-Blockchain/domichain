@@ -12,11 +12,11 @@ tells the runtime who is allowed to access the data and how.
 
 Unlike a file, the account includes metadata for the lifetime of the file. That
 lifetime is expressed by a number of fractional native
-tokens called _lamports_. Accounts are held in validator memory and pay
+tokens called _satomis_. Accounts are held in validator memory and pay
 ["rent"](#rent) to stay there. Each validator periodically scans all accounts
-and collects rent. Any account that drops to zero lamports is purged. Accounts
+and collects rent. Any account that drops to zero satomis is purged. Accounts
 can also be marked [rent-exempt](#rent-exemption) if they contain a sufficient
-number of lamports.
+number of satomis.
 
 In the same way that a Linux user uses a path to look up a file, a Domichain client
 uses an _address_ to look up an account. The address is a 256-bit public key.
@@ -69,7 +69,7 @@ for advanced users to create derived addresses
 
 Accounts that have never been created via the system program can also be passed
 to programs. When an instruction references an account that hasn't been
-previously created, the program will be passed an account with no data and zero lamports
+previously created, the program will be passed an account with no data and zero satomis
 that is owned by the system program.
 
 Such newly created accounts reflect
@@ -86,7 +86,7 @@ A created account is initialized to be _owned_ by a built-in program called the
 System program and is called a _system account_ aptly. An account includes
 "owner" metadata. The owner is a program id. The runtime grants the program
 write access to the account if its id matches the owner. For the case of the
-System program, the runtime allows clients to transfer lamports and importantly
+System program, the runtime allows clients to transfer satomis and importantly
 _assign_ account ownership, meaning changing the owner to a different program id. If
 an account is not owned by a program, the program is only permitted to read its
 data and credit the account.
@@ -156,7 +156,7 @@ illustrative only.
 :::
 
 For example, a program executable with the size of 15,000 bytes requires a
-balance of 105,290,880 lamports (=~ 0.105 DOMI) to be rent-exempt:
+balance of 105,290,880 satomis (=~ 0.105 DOMI) to be rent-exempt:
 
 ```text
 105,290,880 = 19.055441478439427 (fee rate) * (128 + 15_000)(account size including metadata) * ((365.25/2) * 2)(epochs in 2 years)

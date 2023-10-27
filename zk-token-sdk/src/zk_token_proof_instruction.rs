@@ -17,7 +17,7 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///   0. `[writable]` The proof context account to close
-    ///   1. `[writable]` The destination account for lamports
+    ///   1. `[writable]` The destination account for satomis
     ///   2. `[signer]` The context account's owner
     ///
     /// Data expected by this instruction:

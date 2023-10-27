@@ -162,7 +162,7 @@ impl TransactionGenerator {
         }
     }
 
-    /// Create a transaction which transfers some lamports from payer to several destinations
+    /// Create a transaction which transfers some satomis from payer to several destinations
     fn create_multi_transfer_transaction(&self, payer: &Keypair, to: &[&Keypair]) -> Transaction {
         let to_transfer: u64 = 500_000_000; // specify amount which will cause error
         let to: Vec<(Pubkey, u64)> = to.iter().map(|to| (to.pubkey(), to_transfer)).collect();
@@ -196,8 +196,8 @@ impl TransactionGenerator {
         destinations: Option<Vec<&Keypair>>, // provided for valid signatures
     ) -> Transaction {
         // create an arbitrary valid instruction
-        let lamports = 5;
-        let transfer_instruction = SystemInstruction::Transfer { lamports };
+        let satomis = 5;
+        let transfer_instruction = SystemInstruction::Transfer { satomis };
         let program_ids = vec![system_program::id(), stake::program::id()];
         let instructions = vec![CompiledInstruction::new(
             0,
@@ -1075,7 +1075,7 @@ pub mod test {
         let cluster = LocalCluster::new(
             &mut ClusterConfig {
                 node_stakes: vec![999_990; num_nodes],
-                cluster_lamports: 200_000_000,
+                cluster_satomis: 200_000_000,
                 validator_configs: make_identical_validator_configs(
                     &ValidatorConfig {
                         rpc_config: JsonRpcConfig {
@@ -1142,7 +1142,7 @@ pub mod test {
         );
 
         // creates and sends unique transactions of Transfer
-        // which tries to send too much lamports from payer to one recipient
+        // which tries to send too much satomis from payer to one recipient
         // it uses several threads
         run_dos(
             &nodes_slice,
@@ -1170,7 +1170,7 @@ pub mod test {
             },
         );
         // creates and sends unique transactions of type Transfer
-        // which tries to send too much lamports from payer to several recipients
+        // which tries to send too much satomis from payer to several recipients
         // it uses several threads
         run_dos(
             &nodes_slice,

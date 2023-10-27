@@ -27,7 +27,7 @@ pub fn parse_system(
     }
     match system_instruction {
         SystemInstruction::CreateAccount {
-            lamports,
+            satomis,
             space,
             owner,
         } => {
@@ -37,7 +37,7 @@ pub fn parse_system(
                 info: json!({
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "newAccount": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "space": space,
                     "owner": owner.to_string(),
                 }),
@@ -53,21 +53,21 @@ pub fn parse_system(
                 }),
             })
         }
-        SystemInstruction::Transfer { lamports } => {
+        SystemInstruction::Transfer { satomis } => {
             check_num_system_accounts(&instruction.accounts, 2)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "transfer".to_string(),
                 info: json!({
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             })
         }
         SystemInstruction::CreateAccountWithSeed {
             base,
             seed,
-            lamports,
+            satomis,
             space,
             owner,
         } => {
@@ -79,7 +79,7 @@ pub fn parse_system(
                     "newAccount": account_keys[instruction.accounts[1] as usize].to_string(),
                     "base": base.to_string(),
                     "seed": seed,
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "space": space,
                     "owner": owner.to_string(),
                 }),
@@ -96,7 +96,7 @@ pub fn parse_system(
                 }),
             })
         }
-        SystemInstruction::WithdrawNonceAccount(lamports) => {
+        SystemInstruction::WithdrawNonceAccount(satomis) => {
             check_num_system_accounts(&instruction.accounts, 5)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "withdrawFromNonce".to_string(),
@@ -106,7 +106,7 @@ pub fn parse_system(
                     "recentBlockhashesSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
                     "rentSysvar": account_keys[instruction.accounts[3] as usize].to_string(),
                     "nonceAuthority": account_keys[instruction.accounts[4] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             })
         }
@@ -183,7 +183,7 @@ pub fn parse_system(
             })
         }
         SystemInstruction::TransferWithSeed {
-            lamports,
+            satomis,
             from_seed,
             from_owner,
         } => {
@@ -194,7 +194,7 @@ pub fn parse_system(
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "sourceBase": account_keys[instruction.accounts[1] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "sourceSeed": from_seed,
                     "sourceOwner": from_owner.to_string(),
                 }),
@@ -216,7 +216,7 @@ mod test {
 
     #[test]
     fn test_parse_system_create_account_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let space = 128;
         let from_pubkey = Pubkey::new_unique();
         let to_pubkey = Pubkey::new_unique();
@@ -225,7 +225,7 @@ mod test {
         let instruction = system_instruction::create_account(
             &from_pubkey,
             &to_pubkey,
-            lamports,
+            satomis,
             space,
             &owner_pubkey,
         );
@@ -241,7 +241,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "newAccount": to_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "owner": owner_pubkey.to_string(),
                     "space": space,
                 }),
@@ -285,10 +285,10 @@ mod test {
 
     #[test]
     fn test_parse_system_transfer_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let from_pubkey = Pubkey::new_unique();
         let to_pubkey = Pubkey::new_unique();
-        let instruction = system_instruction::transfer(&from_pubkey, &to_pubkey, lamports);
+        let instruction = system_instruction::transfer(&from_pubkey, &to_pubkey, satomis);
         let mut message = Message::new(&[instruction], None);
         assert_eq!(
             parse_system(
@@ -301,7 +301,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "destination": to_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             }
         );
@@ -317,7 +317,7 @@ mod test {
 
     #[test]
     fn test_parse_system_create_account_with_seed_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let space = 128;
         let seed = "test_seed";
         let from_pubkey = Pubkey::new_unique();
@@ -329,7 +329,7 @@ mod test {
             &to_pubkey,
             &base_pubkey,
             seed,
-            lamports,
+            satomis,
             space,
             &owner_pubkey,
         );
@@ -345,7 +345,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "newAccount": to_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "base": base_pubkey.to_string(),
                     "seed": seed,
                     "owner": owner_pubkey.to_string(),
@@ -474,7 +474,7 @@ mod test {
 
     #[test]
     fn test_parse_system_transfer_with_seed_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let seed = "test_seed";
         let from_pubkey = Pubkey::new_unique();
         let from_base_pubkey = Pubkey::new_unique();
@@ -486,7 +486,7 @@ mod test {
             seed.to_string(),
             &from_owner_pubkey,
             &to_pubkey,
-            lamports,
+            satomis,
         );
         let mut message = Message::new(&[instruction], None);
         assert_eq!(
@@ -502,7 +502,7 @@ mod test {
                     "sourceBase": from_base_pubkey.to_string(),
                     "sourceSeed": seed,
                     "sourceOwner": from_owner_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                     "destination": to_pubkey.to_string()
                 }),
             }
@@ -556,12 +556,12 @@ mod test {
         let authorized_pubkey = Pubkey::new_unique();
         let to_pubkey = Pubkey::new_unique();
 
-        let lamports = 55;
+        let satomis = 55;
         let instruction = system_instruction::withdraw_nonce_account(
             &nonce_pubkey,
             &authorized_pubkey,
             &to_pubkey,
-            lamports,
+            satomis,
         );
         let mut message = Message::new(&[instruction], None);
         assert_eq!(
@@ -578,7 +578,7 @@ mod test {
                     "recentBlockhashesSysvar": sysvar::recent_blockhashes::ID.to_string(),
                     "rentSysvar": sysvar::rent::ID.to_string(),
                     "nonceAuthority": authorized_pubkey.to_string(),
-                    "lamports": lamports
+                    "satomis": satomis
                 }),
             }
         );
@@ -594,7 +594,7 @@ mod test {
 
     #[test]
     fn test_parse_system_initialize_nonce_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let from_pubkey = Pubkey::new_unique();
         let nonce_pubkey = Pubkey::new_unique();
         let authorized_pubkey = Pubkey::new_unique();
@@ -603,7 +603,7 @@ mod test {
             &from_pubkey,
             &nonce_pubkey,
             &authorized_pubkey,
-            lamports,
+            satomis,
         );
         let mut message = Message::new(&instructions, None);
         assert_eq!(

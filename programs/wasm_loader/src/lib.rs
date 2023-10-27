@@ -832,7 +832,7 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "Program account too small");
                 return Err(InstructionError::AccountDataTooSmall);
             }
-            if program.get_lamports() < rent.minimum_balance(program.get_data().len()) {
+            if program.get_satomis() < rent.minimum_balance(program.get_data().len()) {
                 ic_logger_msg!(log_collector, "Program account not rent-exempt");
                 return Err(InstructionError::ExecutableAccountNotRentExempt);
             }
@@ -894,8 +894,8 @@ fn process_loader_upgradeable_instruction(
                     instruction_context.try_borrow_instruction_account(transaction_context, 3)?;
                 let mut payer =
                     instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
-                payer.checked_add_lamports(buffer.get_lamports())?;
-                buffer.set_lamports(0)?;
+                payer.checked_add_satomis(buffer.get_satomis())?;
+                buffer.set_satomis(0)?;
             }
 
             let owner_id = *program_id;
@@ -1047,7 +1047,7 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "Invalid Buffer account");
                 return Err(InstructionError::InvalidArgument);
             }
-            let buffer_lamports = buffer.get_lamports();
+            let buffer_satomis = buffer.get_satomis();
             let buffer_data_offset = UpgradeableLoaderState::size_of_buffer_metadata();
             let buffer_data_len = buffer.get_data().len().saturating_sub(buffer_data_offset);
             if buffer.get_data().len() < UpgradeableLoaderState::size_of_buffer_metadata()
@@ -1071,7 +1071,7 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "ProgramData account not large enough");
                 return Err(InstructionError::AccountDataTooSmall);
             }
-            if programdata.get_lamports().saturating_add(buffer_lamports)
+            if programdata.get_satomis().saturating_add(buffer_satomis)
                 < programdata_balance_required
             {
                 ic_logger_msg!(
@@ -1168,14 +1168,14 @@ fn process_loader_upgradeable_instruction(
                 instruction_context.try_borrow_instruction_account(transaction_context, 2)?;
             let mut spill =
                 instruction_context.try_borrow_instruction_account(transaction_context, 3)?;
-            spill.checked_add_lamports(
+            spill.checked_add_satomis(
                 programdata
-                    .get_lamports()
-                    .saturating_add(buffer_lamports)
+                    .get_satomis()
+                    .saturating_add(buffer_satomis)
                     .saturating_sub(programdata_balance_required),
             )?;
-            buffer.set_lamports(0)?;
-            programdata.set_lamports(programdata_balance_required)?;
+            buffer.set_satomis(0)?;
+            programdata.set_satomis(programdata_balance_required)?;
             if invoke_context
                 .feature_set
                 .is_active(&enable_program_redeployment_cooldown::id())
@@ -1348,8 +1348,8 @@ fn process_loader_upgradeable_instruction(
                 UpgradeableLoaderState::Uninitialized => {
                     let mut recipient_account = instruction_context
                         .try_borrow_instruction_account(transaction_context, 1)?;
-                    recipient_account.checked_add_lamports(close_account.get_lamports())?;
-                    close_account.set_lamports(0)?;
+                    recipient_account.checked_add_satomis(close_account.get_satomis())?;
+                    close_account.set_satomis(0)?;
 
                     ic_logger_msg!(log_collector, "Closed Uninitialized {}", close_key);
                 }
@@ -1558,7 +1558,7 @@ fn process_loader_upgradeable_instruction(
             };
 
             let required_payment = {
-                let balance = programdata_account.get_lamports();
+                let balance = programdata_account.get_satomis();
                 let rent = invoke_context.get_sysvar_cache().get_rent()?;
                 let min_balance = rent.minimum_balance(new_len).max(1);
                 min_balance.saturating_sub(balance)
@@ -1651,8 +1651,8 @@ fn common_close_account(
         instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
     let mut recipient_account =
         instruction_context.try_borrow_instruction_account(transaction_context, 1)?;
-    recipient_account.checked_add_lamports(close_account.get_lamports())?;
-    close_account.set_lamports(0)?;
+    recipient_account.checked_add_satomis(close_account.get_satomis())?;
+    close_account.set_satomis(0)?;
     close_account.set_state(&UpgradeableLoaderState::Uninitialized)?;
     Ok(())
 }
@@ -3393,10 +3393,10 @@ mod tests {
         );
         assert_eq!(
             min_programdata_balance,
-            accounts.first().unwrap().lamports()
+            accounts.first().unwrap().satomis()
         );
-        assert_eq!(0, accounts.get(2).unwrap().lamports());
-        assert_eq!(1, accounts.get(3).unwrap().lamports());
+        assert_eq!(0, accounts.get(2).unwrap().satomis());
+        assert_eq!(1, accounts.get(3).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(
             state,
@@ -4610,8 +4610,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(
@@ -4662,8 +4662,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(
@@ -4699,8 +4699,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(

@@ -3,7 +3,7 @@ use {
         stakes::{create_and_add_stakes, StakerInfo},
         unlocks::UnlockInfo,
     },
-    domichain_sdk::{genesis_config::GenesisConfig, native_token::LAMPORTS_PER_DOMI},
+    domichain_sdk::{genesis_config::GenesisConfig, native_token::SATOMIS_PER_DOMI},
 };
 
 // 3 years schedule, then monthly for 20 months (by 5%)
@@ -37,19 +37,19 @@ pub const INVESTORS_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "shrill charity",
         staker: "3Y8Gfv4bpqVh15Y71Zy6a1ezvKfLkoDHYJZ8CKac74gy",
-        lamports: 50_000_000 * LAMPORTS_PER_DOMI,
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
         withdrawer: Some("ACkRSLK6xsHXbXT2Zr5DnyhmCLEjg1aXwKjc6GMExy77"),
     },
     StakerInfo {
         name: "legal gate",
         staker: "FDSASFuLNtjxk5cEpNvcDnKa8VijjpFYppGsK4GDQoaZ",
-        lamports: 50_000_000 * LAMPORTS_PER_DOMI,
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
         withdrawer: Some("EMJjT9WuT2mzEuVGQhamzZskF7P12BV8a2Qghssa3byc"),
     },
     StakerInfo {
         name: "cluttered complaint",
         staker: "A4bpL66yo47EXs5civo1o2Kn5ohQfVCM4oK1FdzA77L5",
-        lamports: 50_000_000 * LAMPORTS_PER_DOMI,
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
         withdrawer: Some("9i11wBcKUNui9bq188s7NedF4dc9bNmheT8X7GyoPEkV"),
     },
 ];
@@ -59,7 +59,7 @@ pub const MAINTANACE_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "unbecoming silver",
         staker: "4jyUPfUU4nA59E7pkran1vkcLkN6dRAJTNmSPbEuD6GL",
-        lamports: 40_000_000 * LAMPORTS_PER_DOMI,
+        satomis: 40_000_000 * SATOMIS_PER_DOMI,
         withdrawer: Some("2Mk89SdDymFcxEDFZVwU2zMgz1wP2vri8iuFeAieN3ET"),
     },
 ];
@@ -68,7 +68,7 @@ pub const FOUNDATION_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "shrill charity",
         staker: "JBPTHdeVwbZsx4yZ9RMcPkojjAnd318HvmW2WVriehkW",
-        lamports: 50_000_000 * LAMPORTS_PER_DOMI,
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
         withdrawer: Some("CUpX8BoNMoHfTJGsPaFjiGExMhShwD8ALtefVFfC3tPr"),
     },
 ];
@@ -84,11 +84,11 @@ fn add_stakes(
         .sum::<u64>()
 }
 
-pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lamports: u64) {
+pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_satomis: u64) {
     // add_stakes() and add_validators() award tokens for rent exemption and
     //  to cover an initial transfer-free period of the network
 
-    issued_lamports += add_stakes(
+    issued_satomis += add_stakes(
             genesis_config,
             INVESTORS_STAKER_INFOS,
             &UNLOCKS_ALL_DAY_ZERO,
@@ -108,7 +108,7 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lampo
         &StakerInfo {
             name: "one thanks",
             staker: "Ay9XxmEc3YZy5PMxWTuNqRCyu9HiJ6QKqp2rAfqBrtiH",
-            lamports: (250_000_000 * LAMPORTS_PER_DOMI).saturating_sub(issued_lamports),
+            satomis: (250_000_000 * SATOMIS_PER_DOMI).saturating_sub(issued_satomis),
             withdrawer: Some("9He2rQZWGobpx65LdaUuU2u6Dkb5y4EoC5oV16P5B3Go"),
         },
         &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
@@ -126,12 +126,12 @@ mod tests {
 
         add_genesis_accounts(&mut genesis_config, 0);
 
-        let lamports = genesis_config
+        let satomis = genesis_config
             .accounts
             .values()
-            .map(|account| account.lamports)
+            .map(|account| account.satomis)
             .sum::<u64>();
 
-        assert_eq!(250_000_000 * LAMPORTS_PER_DOMI, lamports);
+        assert_eq!(250_000_000 * SATOMIS_PER_DOMI, satomis);
     }
 }

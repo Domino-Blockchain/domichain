@@ -73,7 +73,7 @@ pub fn advance_nonce_account(
             let new_data = nonce::state::Data::new(
                 data.authority,
                 next_durable_nonce,
-                invoke_context.lamports_per_signature,
+                invoke_context.satomis_per_signature,
             );
             account.set_state(&Versions::new(
                 State::Initialized(new_data),
@@ -96,7 +96,7 @@ pub fn advance_nonce_account(
 
 pub fn withdraw_nonce_account(
     from_account_index: usize,
-    lamports: u64,
+    satomis: u64,
     to_account_index: usize,
     rent: &Rent,
     signers: &HashSet<Pubkey>,
@@ -126,19 +126,19 @@ pub fn withdraw_nonce_account(
     let state: Versions = from.get_state()?;
     let signer = match state.state() {
         State::Uninitialized => {
-            if lamports > from.get_lamports() {
+            if satomis > from.get_satomis() {
                 ic_msg!(
                     invoke_context,
-                    "Withdraw nonce account: insufficient lamports {}, need {}",
-                    from.get_lamports(),
-                    lamports,
+                    "Withdraw nonce account: insufficient satomis {}, need {}",
+                    from.get_satomis(),
+                    satomis,
                 );
                 return Err(InstructionError::InsufficientFunds);
             }
             *from.get_key()
         }
         State::Initialized(ref data) => {
-            if lamports == from.get_lamports() {
+            if satomis == from.get_satomis() {
                 let (durable_nonce, separate_domains) = get_durable_nonce(invoke_context);
                 if data.durable_nonce == durable_nonce {
                     ic_msg!(
@@ -153,12 +153,12 @@ pub fn withdraw_nonce_account(
                 from.set_state(&Versions::new(State::Uninitialized, separate_domains))?;
             } else {
                 let min_balance = rent.minimum_balance(from.get_data().len());
-                let amount = checked_add(lamports, min_balance)?;
-                if amount > from.get_lamports() {
+                let amount = checked_add(satomis, min_balance)?;
+                if amount > from.get_satomis() {
                     ic_msg!(
                         invoke_context,
-                        "Withdraw nonce account: insufficient lamports {}, need {}",
-                        from.get_lamports(),
+                        "Withdraw nonce account: insufficient satomis {}, need {}",
+                        from.get_satomis(),
                         amount,
                     );
                     return Err(InstructionError::InsufficientFunds);
@@ -177,12 +177,12 @@ pub fn withdraw_nonce_account(
         return Err(InstructionError::MissingRequiredSignature);
     }
 
-    from.checked_sub_lamports(lamports)
+    from.checked_sub_satomis(satomis)
         .map_err(|_| InstructionError::ArithmeticOverflow)?;
     drop(from);
     let mut to = instruction_context
         .try_borrow_instruction_account(transaction_context, to_account_index)?;
-    to.checked_add_lamports(lamports)
+    to.checked_add_satomis(satomis)
         .map_err(|_| InstructionError::ArithmeticOverflow)?;
 
     Ok(())
@@ -214,11 +214,11 @@ pub fn initialize_nonce_account(
     match account.get_state::<Versions>()?.state() {
         State::Uninitialized => {
             let min_balance = rent.minimum_balance(account.get_data().len());
-            if account.get_lamports() < min_balance {
+            if account.get_satomis() < min_balance {
                 ic_msg!(
                     invoke_context,
-                    "Initialize nonce account: insufficient lamports {}, need {}",
-                    account.get_lamports(),
+                    "Initialize nonce account: insufficient satomis {}, need {}",
+                    account.get_satomis(),
                     min_balance
                 );
                 return Err(InstructionError::InsufficientFunds);
@@ -227,7 +227,7 @@ pub fn initialize_nonce_account(
             let data = nonce::state::Data::new(
                 *nonce_authority,
                 durable_nonce,
-                invoke_context.lamports_per_signature,
+                invoke_context.satomis_per_signature,
             );
             let state = State::Initialized(data);
             account.set_state(&Versions::new(state, separate_domains))
@@ -284,7 +284,7 @@ pub fn authorize_nonce_account(
             let new_data = nonce::state::Data::new(
                 *nonce_authority,
                 data.durable_nonce,
-                data.get_lamports_per_signature(),
+                data.get_satomis_per_signature(),
             );
             account.set_state(&Versions::new(
                 State::Initialized(new_data),
@@ -340,14 +340,14 @@ mod test {
     macro_rules! prepare_mockup {
         ($invoke_context:ident, $instruction_accounts:ident, $rent:ident) => {
             let $rent = Rent {
-                lamports_per_byte_year: 42,
+                satomis_per_byte_year: 42,
                 ..Rent::default()
             };
-            let from_lamports = $rent.minimum_balance(State::size()) + 42;
+            let from_satomis = $rent.minimum_balance(State::size()) + 42;
             let accounts = vec![
                 (
                     Pubkey::new_unique(),
-                    create_account(from_lamports, /*separate_domains:*/ true).into_inner(),
+                    create_account(from_satomis, /*separate_domains:*/ true).into_inner(),
                 ),
                 (
                     Pubkey::new_unique(),
@@ -379,7 +379,7 @@ mod test {
     macro_rules! set_invoke_context_blockhash {
         ($invoke_context:expr, $seed:expr) => {
             $invoke_context.blockhash = hash(&bincode::serialize(&$seed).unwrap());
-            $invoke_context.lamports_per_signature = ($seed as u64).saturating_mul(100);
+            $invoke_context.satomis_per_signature = ($seed as u64).saturating_mul(100);
         };
     }
 
@@ -416,7 +416,7 @@ mod test {
         let data = nonce::state::Data::new(
             data.authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         // First nonce instruction drives state from Uninitialized to Initialized
         assert_eq!(versions.state(), &State::Initialized(data.clone()));
@@ -426,7 +426,7 @@ mod test {
         let data = nonce::state::Data::new(
             data.authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         // Second nonce instruction consumes and replaces stored nonce
         assert_eq!(versions.state(), &State::Initialized(data.clone()));
@@ -436,7 +436,7 @@ mod test {
         let data = nonce::state::Data::new(
             data.authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         // Third nonce instruction for fun and profit
         assert_eq!(versions.state(), &State::Initialized(data));
@@ -445,14 +445,14 @@ mod test {
         let to_account = instruction_context
             .try_borrow_instruction_account(transaction_context, WITHDRAW_TO_ACCOUNT_INDEX)
             .unwrap();
-        let withdraw_lamports = nonce_account.get_lamports();
-        let expect_nonce_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let expect_to_lamports = to_account.get_lamports() + withdraw_lamports;
+        let withdraw_satomis = nonce_account.get_satomis();
+        let expect_nonce_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let expect_to_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -468,9 +468,9 @@ mod test {
             .try_borrow_instruction_account(transaction_context, WITHDRAW_TO_ACCOUNT_INDEX)
             .unwrap();
         // Empties Account balance
-        assert_eq!(nonce_account.get_lamports(), expect_nonce_lamports);
+        assert_eq!(nonce_account.get_satomis(), expect_nonce_satomis);
         // Account balance goes to `to`
-        assert_eq!(to_account.get_lamports(), expect_to_lamports);
+        assert_eq!(to_account.get_satomis(), expect_to_satomis);
         let versions = nonce_account.get_state::<Versions>().unwrap();
         // Empty balance deinitializes data
         assert_eq!(versions.state(), &State::Uninitialized);
@@ -495,7 +495,7 @@ mod test {
         let data = nonce::state::Data::new(
             authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         assert_eq!(versions.state(), &State::Initialized(data));
         // Nonce account did not sign
@@ -616,14 +616,14 @@ mod test {
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
         set_invoke_context_blockhash!(invoke_context, 0);
-        let withdraw_lamports = nonce_account.get_lamports();
-        let expect_from_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let expect_to_lamports = to_account.get_lamports() + withdraw_lamports;
+        let withdraw_satomis = nonce_account.get_satomis();
+        let expect_from_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let expect_to_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -640,8 +640,8 @@ mod test {
             .unwrap();
         let versions = nonce_account.get_state::<Versions>().unwrap();
         assert_eq!(versions.state(), &State::Uninitialized);
-        assert_eq!(nonce_account.get_lamports(), expect_from_lamports);
-        assert_eq!(to_account.get_lamports(), expect_to_lamports);
+        assert_eq!(nonce_account.get_satomis(), expect_from_satomis);
+        assert_eq!(to_account.get_satomis(), expect_to_satomis);
     }
 
     #[test]
@@ -663,12 +663,12 @@ mod test {
         assert_eq!(versions.state(), &State::Uninitialized);
         let signers = HashSet::new();
         set_invoke_context_blockhash!(invoke_context, 0);
-        let withdraw_lamports = nonce_account.get_lamports();
+        let withdraw_satomis = nonce_account.get_satomis();
         drop(nonce_account);
         drop(to_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -696,11 +696,11 @@ mod test {
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
         set_invoke_context_blockhash!(invoke_context, 0);
-        let withdraw_lamports = nonce_account.get_lamports() + 1;
+        let withdraw_satomis = nonce_account.get_satomis() + 1;
         drop(nonce_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -729,14 +729,14 @@ mod test {
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
         set_invoke_context_blockhash!(invoke_context, 0);
-        let withdraw_lamports = nonce_account.get_lamports() / 2;
-        let from_expect_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let to_expect_lamports = to_account.get_lamports() + withdraw_lamports;
+        let withdraw_satomis = nonce_account.get_satomis() / 2;
+        let from_expect_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let to_expect_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -753,16 +753,16 @@ mod test {
             .unwrap();
         let versions = nonce_account.get_state::<Versions>().unwrap();
         assert_eq!(versions.state(), &State::Uninitialized);
-        assert_eq!(nonce_account.get_lamports(), from_expect_lamports);
-        assert_eq!(to_account.get_lamports(), to_expect_lamports);
-        let withdraw_lamports = nonce_account.get_lamports();
-        let from_expect_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let to_expect_lamports = to_account.get_lamports() + withdraw_lamports;
+        assert_eq!(nonce_account.get_satomis(), from_expect_satomis);
+        assert_eq!(to_account.get_satomis(), to_expect_satomis);
+        let withdraw_satomis = nonce_account.get_satomis();
+        let from_expect_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let to_expect_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -779,8 +779,8 @@ mod test {
             .unwrap();
         let versions = nonce_account.get_state::<Versions>().unwrap();
         assert_eq!(versions.state(), &State::Uninitialized);
-        assert_eq!(nonce_account.get_lamports(), from_expect_lamports);
-        assert_eq!(to_account.get_lamports(), to_expect_lamports);
+        assert_eq!(nonce_account.get_satomis(), from_expect_satomis);
+        assert_eq!(to_account.get_satomis(), to_expect_satomis);
     }
 
     #[test]
@@ -807,17 +807,17 @@ mod test {
         let data = nonce::state::Data::new(
             authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         assert_eq!(versions.state(), &State::Initialized(data.clone()));
-        let withdraw_lamports = 42;
-        let from_expect_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let to_expect_lamports = to_account.get_lamports() + withdraw_lamports;
+        let withdraw_satomis = 42;
+        let from_expect_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let to_expect_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -836,20 +836,20 @@ mod test {
         let data = nonce::state::Data::new(
             data.authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         assert_eq!(versions.state(), &State::Initialized(data));
-        assert_eq!(nonce_account.get_lamports(), from_expect_lamports);
-        assert_eq!(to_account.get_lamports(), to_expect_lamports);
+        assert_eq!(nonce_account.get_satomis(), from_expect_satomis);
+        assert_eq!(to_account.get_satomis(), to_expect_satomis);
         set_invoke_context_blockhash!(invoke_context, 0);
-        let withdraw_lamports = nonce_account.get_lamports();
-        let from_expect_lamports = nonce_account.get_lamports() - withdraw_lamports;
-        let to_expect_lamports = to_account.get_lamports() + withdraw_lamports;
+        let withdraw_satomis = nonce_account.get_satomis();
+        let from_expect_satomis = nonce_account.get_satomis() - withdraw_satomis;
+        let to_expect_satomis = to_account.get_satomis() + withdraw_satomis;
         drop(nonce_account);
         drop(to_account);
         withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -866,8 +866,8 @@ mod test {
             .unwrap();
         let versions = nonce_account.get_state::<Versions>().unwrap();
         assert_eq!(versions.state(), &State::Uninitialized);
-        assert_eq!(nonce_account.get_lamports(), from_expect_lamports);
-        assert_eq!(to_account.get_lamports(), to_expect_lamports);
+        assert_eq!(nonce_account.get_satomis(), from_expect_satomis);
+        assert_eq!(to_account.get_satomis(), to_expect_satomis);
     }
 
     #[test]
@@ -890,12 +890,12 @@ mod test {
         initialize_nonce_account(&mut nonce_account, &authorized, &rent, &invoke_context).unwrap();
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
-        let withdraw_lamports = nonce_account.get_lamports();
+        let withdraw_satomis = nonce_account.get_satomis();
         drop(nonce_account);
         drop(to_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -924,11 +924,11 @@ mod test {
         set_invoke_context_blockhash!(invoke_context, 63);
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
-        let withdraw_lamports = nonce_account.get_lamports() + 1;
+        let withdraw_satomis = nonce_account.get_satomis() + 1;
         drop(nonce_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -957,11 +957,11 @@ mod test {
         set_invoke_context_blockhash!(invoke_context, 63);
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
-        let withdraw_lamports = 42 + 1;
+        let withdraw_satomis = 42 + 1;
         drop(nonce_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -990,11 +990,11 @@ mod test {
         set_invoke_context_blockhash!(invoke_context, 63);
         let mut signers = HashSet::new();
         signers.insert(*nonce_account.get_key());
-        let withdraw_lamports = u64::MAX - 54;
+        let withdraw_satomis = u64::MAX - 54;
         drop(nonce_account);
         let result = withdraw_nonce_account(
             NONCE_ACCOUNT_INDEX,
-            withdraw_lamports,
+            withdraw_satomis,
             WITHDRAW_TO_ACCOUNT_INDEX,
             &rent,
             &signers,
@@ -1028,7 +1028,7 @@ mod test {
         let data = nonce::state::Data::new(
             authorized,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         assert_eq!(result, Ok(()));
         let versions = nonce_account.get_state::<Versions>().unwrap();
@@ -1068,7 +1068,7 @@ mod test {
         let mut nonce_account = instruction_context
             .try_borrow_instruction_account(transaction_context, NONCE_ACCOUNT_INDEX)
             .unwrap();
-        nonce_account.checked_sub_lamports(42 * 2).unwrap();
+        nonce_account.checked_sub_satomis(42 * 2).unwrap();
         set_invoke_context_blockhash!(invoke_context, 63);
         let authorized = *nonce_account.get_key();
         let result =
@@ -1097,7 +1097,7 @@ mod test {
         let data = nonce::state::Data::new(
             authority,
             get_durable_nonce(&invoke_context).0,
-            invoke_context.lamports_per_signature,
+            invoke_context.satomis_per_signature,
         );
         authorize_nonce_account(&mut nonce_account, &authority, &signers, &invoke_context).unwrap();
         let versions = nonce_account.get_state::<Versions>().unwrap();

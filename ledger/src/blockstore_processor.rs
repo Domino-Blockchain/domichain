@@ -1870,7 +1870,7 @@ pub mod tests {
             epoch_schedule::EpochSchedule,
             hash::Hash,
             instruction::{Instruction, InstructionError},
-            native_token::LAMPORTS_PER_DOMI,
+            native_token::SATOMIS_PER_DOMI,
             pubkey::Pubkey,
             signature::{Keypair, Signer},
             system_instruction::SystemError,
@@ -2649,7 +2649,7 @@ pub mod tests {
             entries.push(entry);
 
             // Add a second Transaction that will produce a
-            // InstructionError<0, ResultWithNegativeLamports> error when processed
+            // InstructionError<0, ResultWithNegativeSatomis> error when processed
             let keypair2 = Keypair::new();
             let tx =
                 system_transaction::transfer(&mint_keypair, &keypair2.pubkey(), 101, blockhash);
@@ -2925,7 +2925,7 @@ pub mod tests {
         )
         .is_err());
 
-        // First transaction in first entry succeeded, so keypair1 lost 1 lamport
+        // First transaction in first entry succeeded, so keypair1 lost 1 satomi
         assert_eq!(bank.get_balance(&keypair1.pubkey()), 3);
         assert_eq!(bank.get_balance(&keypair2.pubkey()), 4);
 
@@ -2967,9 +2967,9 @@ pub mod tests {
                 InstructionError::UninitializedAccount,
                 InstructionError::UnbalancedInstruction,
                 InstructionError::ModifiedProgramId,
-                InstructionError::ExternalAccountLamportSpend,
+                InstructionError::ExternalAccountSatomiSpend,
                 InstructionError::ExternalAccountDataModified,
-                InstructionError::ReadonlyLamportChange,
+                InstructionError::ReadonlySatomiChange,
                 InstructionError::ReadonlyDataModified,
                 InstructionError::DuplicateAccountIndex,
                 InstructionError::ExecutableModified,
@@ -2983,7 +2983,7 @@ pub mod tests {
                 InstructionError::Custom(0),
                 InstructionError::InvalidError,
                 InstructionError::ExecutableDataModified,
-                InstructionError::ExecutableLamportChange,
+                InstructionError::ExecutableSatomiChange,
                 InstructionError::ExecutableAccountNotRentExempt,
                 InstructionError::UnsupportedProgramId,
                 InstructionError::CallDepth,
@@ -3248,7 +3248,7 @@ pub mod tests {
 
         let keypairs: Vec<_> = (0..NUM_TRANSFERS * 2).map(|_| Keypair::new()).collect();
 
-        // give everybody one lamport
+        // give everybody one satomi
         for keypair in &keypairs {
             bank.transfer(1, &mint_keypair, &keypair.pubkey())
                 .expect("funding failed");
@@ -3296,7 +3296,7 @@ pub mod tests {
         // entropy multiplier should be big enough to provide sufficient entropy
         // but small enough to not take too much time while executing the test.
         let entropy_multiplier: usize = 25;
-        let initial_lamports = 100;
+        let initial_satomis = 100;
 
         // number of accounts need to be in multiple of 4 for correct
         // execution of the test.
@@ -3305,7 +3305,7 @@ pub mod tests {
             genesis_config,
             mint_keypair,
             ..
-        } = create_genesis_config((num_accounts + 1) as u64 * initial_lamports);
+        } = create_genesis_config((num_accounts + 1) as u64 * initial_satomis);
 
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 
@@ -3321,7 +3321,7 @@ pub mod tests {
             );
             assert_eq!(bank.process_transaction(&create_account_tx), Ok(()));
             assert_matches!(
-                bank.transfer(initial_lamports, &mint_keypair, &keypair.pubkey()),
+                bank.transfer(initial_satomis, &mint_keypair, &keypair.pubkey()),
                 Ok(_)
             );
             keypairs.push(keypair);
@@ -3334,19 +3334,19 @@ pub mod tests {
                 system_transaction::transfer(
                     &keypairs[i + 1],
                     &keypairs[i].pubkey(),
-                    initial_lamports,
+                    initial_satomis,
                     bank.last_blockhash(),
                 ),
                 system_transaction::transfer(
                     &keypairs[i + 3],
                     &keypairs[i + 2].pubkey(),
-                    initial_lamports,
+                    initial_satomis,
                     bank.last_blockhash(),
                 ),
             ]);
         }
 
-        // Transfer lamports to each other
+        // Transfer satomis to each other
         let entry = next_entry(&bank.last_blockhash(), 1, tx_vector);
         assert_eq!(
             process_entries_for_tests(&bank, vec![entry], true, None, None),
@@ -3354,13 +3354,13 @@ pub mod tests {
         );
         bank.squash();
 
-        // Even number keypair should have balance of 2 * initial_lamports and
+        // Even number keypair should have balance of 2 * initial_satomis and
         // odd number keypair should have balance of 0, which proves
         // that even in case of random order of execution, overall state remains
         // consistent.
         for (i, keypair) in keypairs.iter().enumerate() {
             if i % 2 == 0 {
-                assert_eq!(bank.get_balance(&keypair.pubkey()), 2 * initial_lamports);
+                assert_eq!(bank.get_balance(&keypair.pubkey()), 2 * initial_satomis);
             } else {
                 assert_eq!(bank.get_balance(&keypair.pubkey()), 0);
             }
@@ -3448,7 +3448,7 @@ pub mod tests {
             bank.transfer(10_001, &mint_keypair, &pubkey),
             Err(TransactionError::InstructionError(
                 0,
-                SystemError::ResultWithNegativeLamports.into(),
+                SystemError::ResultWithNegativeSatomis.into(),
             ))
         );
         assert_eq!(
@@ -3666,7 +3666,7 @@ pub mod tests {
 
         let keypairs: Vec<_> = (0..NUM_TRANSFERS * 2).map(|_| Keypair::new()).collect();
 
-        // give everybody one lamport
+        // give everybody one satomi
         for keypair in &keypairs {
             bank.transfer(1, &mint_keypair, &keypair.pubkey())
                 .expect("funding failed");
@@ -4345,7 +4345,7 @@ pub mod tests {
             genesis_config,
             mint_keypair,
             ..
-        } = create_genesis_config(100 * LAMPORTS_PER_DOMI);
+        } = create_genesis_config(100 * SATOMIS_PER_DOMI);
         let genesis_hash = genesis_config.hash();
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
         let mut timing = ConfirmationTiming::default();
@@ -4355,9 +4355,9 @@ pub mod tests {
         let keypair2 = Keypair::new();
         let keypair3 = Keypair::new();
         let keypair4 = Keypair::new();
-        bank.transfer(LAMPORTS_PER_DOMI, &mint_keypair, &keypair1.pubkey())
+        bank.transfer(SATOMIS_PER_DOMI, &mint_keypair, &keypair1.pubkey())
             .unwrap();
-        bank.transfer(LAMPORTS_PER_DOMI, &mint_keypair, &keypair2.pubkey())
+        bank.transfer(SATOMIS_PER_DOMI, &mint_keypair, &keypair2.pubkey())
             .unwrap();
 
         let (transaction_status_sender, transaction_status_receiver) =

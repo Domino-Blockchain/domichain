@@ -26,7 +26,7 @@ use {
         fee_calculator::FeeRateGovernor,
         genesis_config::{ClusterType, GenesisConfig},
         inflation::Inflation,
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         poh_config::PohConfig,
         pubkey::Pubkey,
         rent::Rent,
@@ -64,7 +64,7 @@ fn pubkey_from_str(key_str: &str) -> Result<Pubkey, Box<dyn error::Error>> {
 }
 
 pub fn load_genesis_accounts(file: &str, genesis_config: &mut GenesisConfig) -> io::Result<u64> {
-    let mut lamports = 0;
+    let mut satomis = 0;
     let accounts_file = File::open(file)?;
 
     let genesis_accounts: HashMap<String, Base64Account> =
@@ -100,11 +100,11 @@ pub fn load_genesis_accounts(file: &str, genesis_config: &mut GenesisConfig) -> 
             );
         }
         account.set_executable(account_details.executable);
-        lamports += account.lamports();
+        satomis += account.satomis();
         genesis_config.add_account(pubkey, account);
     }
 
-    Ok(lamports)
+    Ok(satomis)
 }
 
 #[allow(clippy::cognitive_complexity)]
@@ -112,12 +112,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let default_faucet_pubkey = domichain_cli_config::Config::default().keypair_path;
     let fee_rate_governor = FeeRateGovernor::default();
     let (
-        default_target_lamports_per_signature,
+        default_target_satomis_per_signature,
         default_target_signatures_per_slot,
         default_fee_burn_percentage,
     ) = {
         (
-            &fee_rate_governor.target_lamports_per_signature.to_string(),
+            &fee_rate_governor.target_satomis_per_signature.to_string(),
             &fee_rate_governor.target_signatures_per_slot.to_string(),
             &fee_rate_governor.burn_percent.to_string(),
         )
@@ -125,23 +125,23 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let rent = Rent::default();
     let (
-        default_lamports_per_byte_year,
+        default_satomis_per_byte_year,
         default_rent_exemption_threshold,
         default_rent_burn_percentage,
     ) = {
         (
-            &rent.lamports_per_byte_year.to_string(),
+            &rent.satomis_per_byte_year.to_string(),
             &rent.exemption_threshold.to_string(),
             &rent.burn_percent.to_string(),
         )
     };
 
     // vote account
-    let default_bootstrap_validator_lamports = &domi_to_lamports(500.0)
+    let default_bootstrap_validator_satomis = &domi_to_satomis(500.0)
         .max(VoteState::get_rent_exempt_reserve(&rent))
         .to_string();
     // stake account
-    let default_bootstrap_validator_stake_lamports = &domi_to_lamports(0.5)
+    let default_bootstrap_validator_stake_satomis = &domi_to_satomis(0.5)
         .max(rent.minimum_balance(StakeState::size_of()))
         .to_string();
 
@@ -184,12 +184,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 .help("Use directory as persistent ledger location"),
         )
         .arg(
-            Arg::with_name("faucet_lamports")
+            Arg::with_name("faucet_satomis")
                 .short("t")
-                .long("faucet-lamports")
-                .value_name("LAMPORTS")
+                .long("faucet-satomis")
+                .value_name("SATOMIS")
                 .takes_value(true)
-                .help("Number of lamports to assign to the faucet"),
+                .help("Number of satomis to assign to the faucet"),
         )
         .arg(
             Arg::with_name("faucet_pubkey")
@@ -198,7 +198,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 .value_name("PUBKEY")
                 .takes_value(true)
                 .validator(is_pubkey_or_keypair)
-                .requires("faucet_lamports")
+                .requires("faucet_satomis")
                 .default_value(&default_faucet_pubkey)
                 .help("Path to file containing the faucet's pubkey"),
         )
@@ -214,40 +214,40 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 ),
         )
         .arg(
-            Arg::with_name("bootstrap_validator_lamports")
-                .long("bootstrap-validator-lamports")
-                .value_name("LAMPORTS")
+            Arg::with_name("bootstrap_validator_satomis")
+                .long("bootstrap-validator-satomis")
+                .value_name("SATOMIS")
                 .takes_value(true)
-                .default_value(default_bootstrap_validator_lamports)
-                .help("Number of lamports to assign to the bootstrap validator"),
+                .default_value(default_bootstrap_validator_satomis)
+                .help("Number of satomis to assign to the bootstrap validator"),
         )
         .arg(
-            Arg::with_name("bootstrap_validator_stake_lamports")
-                .long("bootstrap-validator-stake-lamports")
-                .value_name("LAMPORTS")
+            Arg::with_name("bootstrap_validator_stake_satomis")
+                .long("bootstrap-validator-stake-satomis")
+                .value_name("SATOMIS")
                 .takes_value(true)
-                .default_value(default_bootstrap_validator_stake_lamports)
-                .help("Number of lamports to assign to the bootstrap validator's stake account"),
+                .default_value(default_bootstrap_validator_stake_satomis)
+                .help("Number of satomis to assign to the bootstrap validator's stake account"),
         )
         .arg(
-            Arg::with_name("target_lamports_per_signature")
-                .long("target-lamports-per-signature")
-                .value_name("LAMPORTS")
+            Arg::with_name("target_satomis_per_signature")
+                .long("target-satomis-per-signature")
+                .value_name("SATOMIS")
                 .takes_value(true)
-                .default_value(default_target_lamports_per_signature)
+                .default_value(default_target_satomis_per_signature)
                 .help(
-                    "The cost in lamports that the cluster will charge for signature \
+                    "The cost in satomis that the cluster will charge for signature \
                      verification when the cluster is operating at target-signatures-per-slot",
                 ),
         )
         .arg(
-            Arg::with_name("lamports_per_byte_year")
-                .long("lamports-per-byte-year")
-                .value_name("LAMPORTS")
+            Arg::with_name("satomis_per_byte_year")
+                .long("satomis-per-byte-year")
+                .value_name("SATOMIS")
                 .takes_value(true)
-                .default_value(default_lamports_per_byte_year)
+                .default_value(default_satomis_per_byte_year)
                 .help(
-                    "The cost in lamports that the cluster will charge per byte per year \
+                    "The cost in satomis that the cluster will charge per byte per year \
                      for accounts with data",
                 ),
         )
@@ -298,7 +298,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 .help(
                     "Used to estimate the desired processing capacity of the cluster. \
                     When the latest slot processes fewer/greater signatures than this \
-                    value, the lamports-per-signature fee will decrease/increase for \
+                    value, the satomis-per-signature fee will decrease/increase for \
                     the next slot. A value of 0 disables signature-based fee adjustments",
                 ),
         )
@@ -405,23 +405,23 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let ledger_path = PathBuf::from(matches.value_of("ledger_path").unwrap());
 
     let rent = Rent {
-        lamports_per_byte_year: value_t_or_exit!(matches, "lamports_per_byte_year", u64),
+        satomis_per_byte_year: value_t_or_exit!(matches, "satomis_per_byte_year", u64),
         exemption_threshold: value_t_or_exit!(matches, "rent_exemption_threshold", f64),
         burn_percent: value_t_or_exit!(matches, "rent_burn_percentage", u8),
     };
 
     fn rent_exempt_check(matches: &ArgMatches<'_>, name: &str, exempt: u64) -> io::Result<u64> {
-        let lamports = value_t_or_exit!(matches, name, u64);
+        let satomis = value_t_or_exit!(matches, name, u64);
 
-        if lamports < exempt {
+        if satomis < exempt {
             Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!(
-                    "error: insufficient {name}: {lamports} for rent exemption, requires {exempt}"
+                    "error: insufficient {name}: {satomis} for rent exemption, requires {exempt}"
                 ),
             ))
         } else {
-            Ok(lamports)
+            Ok(satomis)
         }
     }
 
@@ -439,24 +439,24 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
     }
 
-    let bootstrap_validator_lamports =
-        value_t_or_exit!(matches, "bootstrap_validator_lamports", u64);
+    let bootstrap_validator_satomis =
+        value_t_or_exit!(matches, "bootstrap_validator_satomis", u64);
 
-    let bootstrap_validator_stake_lamports = rent_exempt_check(
+    let bootstrap_validator_stake_satomis = rent_exempt_check(
         &matches,
-        "bootstrap_validator_stake_lamports",
+        "bootstrap_validator_stake_satomis",
         rent.minimum_balance(StakeState::size_of()),
     )?;
 
     let bootstrap_stake_authorized_pubkey =
         pubkey_of(&matches, "bootstrap_stake_authorized_pubkey");
-    let faucet_lamports = value_t!(matches, "faucet_lamports", u64).unwrap_or(0);
+    let faucet_satomis = value_t!(matches, "faucet_satomis", u64).unwrap_or(0);
     let faucet_pubkey = pubkey_of(&matches, "faucet_pubkey");
 
     let ticks_per_slot = value_t_or_exit!(matches, "ticks_per_slot", u64);
 
     let mut fee_rate_governor = FeeRateGovernor::new(
-        value_t_or_exit!(matches, "target_lamports_per_signature", u64),
+        value_t_or_exit!(matches, "target_satomis_per_signature", u64),
         value_t_or_exit!(matches, "target_signatures_per_slot", u64),
     );
     fee_rate_governor.burn_percent = value_t_or_exit!(matches, "fee_burn_percentage", u8);
@@ -541,7 +541,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         genesis_config.add_account(
             *identity_pubkey,
-            AccountSharedData::new(bootstrap_validator_lamports, 0, &system_program::id()),
+            AccountSharedData::new(bootstrap_validator_satomis, 0, &system_program::id()),
         );
 
         let vote_account = vote_state::create_account_with_authorized(
@@ -561,7 +561,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 vote_pubkey,
                 &vote_account,
                 &rent,
-                bootstrap_validator_stake_lamports,
+                bootstrap_validator_stake_satomis,
             ),
         );
 
@@ -575,7 +575,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     if let Some(faucet_pubkey) = faucet_pubkey {
         genesis_config.add_account(
             faucet_pubkey,
-            AccountSharedData::new(faucet_lamports, 0, &system_program::id()),
+            AccountSharedData::new(faucet_satomis, 0, &system_program::id()),
         );
     }
 
@@ -599,13 +599,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let max_genesis_archive_unpacked_size =
         value_t_or_exit!(matches, "max_genesis_archive_unpacked_size", u64);
 
-    let issued_lamports = genesis_config
+    let issued_satomis = genesis_config
         .accounts
         .values()
-        .map(|account| account.lamports)
+        .map(|account| account.satomis)
         .sum::<u64>();
 
-    add_genesis_accounts(&mut genesis_config, issued_lamports - faucet_lamports);
+    add_genesis_accounts(&mut genesis_config, issued_satomis - faucet_satomis);
 
     let parse_address = |address: &str, input_type: &str| {
         address.parse::<Pubkey>().unwrap_or_else(|err| {
@@ -633,7 +633,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             genesis_config.add_account(
                 address,
                 AccountSharedData::from(Account {
-                    lamports: genesis_config.rent.minimum_balance(program_data.len()),
+                    satomis: genesis_config.rent.minimum_balance(program_data.len()),
                     data: program_data,
                     executable: true,
                     owner: loader,
@@ -674,7 +674,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             genesis_config.add_account(
                 programdata_address,
                 AccountSharedData::from(Account {
-                    lamports: genesis_config.rent.minimum_balance(program_data.len()),
+                    satomis: genesis_config.rent.minimum_balance(program_data.len()),
                     data: program_data,
                     owner: loader,
                     executable: false,
@@ -689,7 +689,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             genesis_config.add_account(
                 address,
                 AccountSharedData::from(Account {
-                    lamports: genesis_config.rent.minimum_balance(program_data.len()),
+                    satomis: genesis_config.rent.minimum_balance(program_data.len()),
                     data: program_data,
                     owner: loader,
                     executable: true,
@@ -784,7 +784,7 @@ mod tests {
 
                 assert_eq!(
                     b64_account.balance,
-                    genesis_config.accounts[&pubkey].lamports
+                    genesis_config.accounts[&pubkey].satomis
                 );
 
                 assert_eq!(
@@ -854,7 +854,7 @@ mod tests {
             let pubkey = &pubkey_str.parse().unwrap();
             assert_eq!(
                 b64_account.balance,
-                genesis_config.accounts[pubkey].lamports,
+                genesis_config.accounts[pubkey].satomis,
             );
         }
 
@@ -868,7 +868,7 @@ mod tests {
 
             assert_eq!(
                 b64_account.balance,
-                genesis_config.accounts[&pubkey].lamports,
+                genesis_config.accounts[&pubkey].satomis,
             );
 
             assert_eq!(
@@ -938,7 +938,7 @@ mod tests {
             let pubkey = pubkey_str.parse().unwrap();
             assert_eq!(
                 b64_account.balance,
-                genesis_config.accounts[&pubkey].lamports,
+                genesis_config.accounts[&pubkey].satomis,
             );
         }
 
@@ -952,7 +952,7 @@ mod tests {
 
             assert_eq!(
                 b64_account.balance,
-                genesis_config.accounts[&pubkey].lamports,
+                genesis_config.accounts[&pubkey].satomis,
             );
 
             assert_eq!(
@@ -977,7 +977,7 @@ mod tests {
 
             assert_eq!(
                 genesis_accounts2[&keypair_str].balance,
-                genesis_config.accounts[&pubkey].lamports,
+                genesis_config.accounts[&pubkey].satomis,
             );
 
             assert_eq!(

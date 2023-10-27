@@ -28,7 +28,7 @@ use {
         account::AccountSharedData,
         clock::{self, Slot, DEFAULT_MS_PER_SLOT, DEFAULT_TICKS_PER_SLOT},
         hash::Hash,
-        native_token::LAMPORTS_PER_DOMI,
+        native_token::SATOMIS_PER_DOMI,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
@@ -51,8 +51,8 @@ use {
 pub const RUST_LOG_FILTER: &str =
     "error,domichain_core::replay_stage=warn,domichain_local_cluster=info,local_cluster=info";
 
-pub const DEFAULT_CLUSTER_LAMPORTS: u64 = 10_000_000 * LAMPORTS_PER_DOMI;
-pub const DEFAULT_NODE_STAKE: u64 = 10 * LAMPORTS_PER_DOMI;
+pub const DEFAULT_CLUSTER_SATOMIS: u64 = 10_000_000 * SATOMIS_PER_DOMI;
+pub const DEFAULT_NODE_STAKE: u64 = 10 * SATOMIS_PER_DOMI;
 
 pub fn last_vote_in_tower(tower_path: &Path, node_pubkey: &Pubkey) -> Option<(Slot, Hash)> {
     restore_tower(tower_path, node_pubkey).map(|tower| tower.last_voted_slot_hash().unwrap())
@@ -281,7 +281,7 @@ pub fn run_cluster_partition<C>(
         .map(|stake_weight| 100 * *stake_weight as u64)
         .collect();
     assert_eq!(node_stakes.len(), num_nodes);
-    let cluster_lamports = node_stakes.iter().sum::<u64>() * 2;
+    let cluster_satomis = node_stakes.iter().sum::<u64>() * 2;
     let turbine_disabled = Arc::new(AtomicBool::new(false));
     let mut validator_config = ValidatorConfig {
         turbine_disabled: turbine_disabled.clone(),
@@ -313,7 +313,7 @@ pub fn run_cluster_partition<C>(
 
     let slots_per_epoch = 2048;
     let mut config = ClusterConfig {
-        cluster_lamports,
+        cluster_satomis,
         node_stakes,
         validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
         validator_keys: Some(
@@ -426,7 +426,7 @@ pub fn test_faulty_node(
     });
 
     let mut cluster_config = ClusterConfig {
-        cluster_lamports: 10_000,
+        cluster_satomis: 10_000,
         node_stakes,
         validator_configs,
         validator_keys: Some(validator_keys.clone()),

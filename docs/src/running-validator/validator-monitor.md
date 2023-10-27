@@ -15,10 +15,10 @@ domichain gossip
 
 Your account balance should decrease by the transaction fee amount as your
 validator submits votes, and increase after serving as the leader. Pass the
-`--lamports` are to observe in finer detail:
+`--satomis` are to observe in finer detail:
 
 ```bash
-domichain balance --lamports
+domichain balance --satomis
 ```
 
 ## Check Vote Activity

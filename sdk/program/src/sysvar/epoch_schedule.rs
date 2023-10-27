@@ -107,7 +107,7 @@
 //! #
 //! fn print_sysvar_epoch_schedule(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(epoch_schedule::ID, Account {
-//! #       lamports: 1120560,
+//! #       satomis: 1120560,
 //! #       data: vec![0, 32, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

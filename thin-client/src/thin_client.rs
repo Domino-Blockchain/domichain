@@ -362,12 +362,12 @@ where
 
     fn transfer_and_confirm(
         &self,
-        lamports: u64,
+        satomis: u64,
         keypair: &Keypair,
         pubkey: &Pubkey,
     ) -> TransportResult<Signature> {
         let transfer_instruction =
-            system_instruction::transfer(&keypair.pubkey(), pubkey, lamports);
+            system_instruction::transfer(&keypair.pubkey(), pubkey, satomis);
         self.send_and_confirm_instruction(keypair, transfer_instruction)
     }
 

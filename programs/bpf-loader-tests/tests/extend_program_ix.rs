@@ -331,7 +331,7 @@ async fn test_extend_program_with_invalid_payer() {
             1024,
         ),
         Some(&payer_with_insufficient_funds),
-        InstructionError::from(SystemError::ResultWithNegativeLamports),
+        InstructionError::from(SystemError::ResultWithNegativeSatomis),
         "should fail because the payer has insufficient funds to cover program data account rent",
     )
     .await;
@@ -344,7 +344,7 @@ async fn test_extend_program_with_invalid_payer() {
             1,
         ),
         Some(&payer_with_invalid_owner),
-        InstructionError::ExternalAccountLamportSpend,
+        InstructionError::ExternalAccountSatomiSpend,
         "should fail because the payer is not a system account",
     )
     .await;

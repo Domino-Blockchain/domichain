@@ -36,8 +36,8 @@ pub enum Error {
 
 impl<T> StakeAccount<T> {
     #[inline]
-    pub(crate) fn lamports(&self) -> u64 {
-        self.account.lamports()
+    pub(crate) fn satomis(&self) -> u64 {
+        self.account.satomis()
     }
 
     #[inline]

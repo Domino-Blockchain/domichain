@@ -12,47 +12,47 @@ use {
     },
 };
 
-fn move_lamports_process_instruction(
+fn move_satomis_process_instruction(
     _program_id: &Pubkey,
     accounts: &[AccountInfo],
     _input: &[u8],
 ) -> ProgramResult {
-    msg!("Processing lamports instruction");
+    msg!("Processing satomis instruction");
     let account_info_iter = &mut accounts.iter();
     let source_info = next_account_info(account_info_iter)?;
     let _other_info = next_account_info(account_info_iter)?;
     let destination_info = next_account_info(account_info_iter)?;
 
-    let destination_lamports = destination_info.lamports();
-    **destination_info.lamports.borrow_mut() = destination_lamports
-        .checked_add(source_info.lamports())
+    let destination_satomis = destination_info.satomis();
+    **destination_info.satomis.borrow_mut() = destination_satomis
+        .checked_add(source_info.satomis())
         .unwrap();
-    **source_info.lamports.borrow_mut() = 0;
+    **source_info.satomis.borrow_mut() = 0;
     Ok(())
 }
 
 #[tokio::test]
-async fn move_lamports() {
-    let move_lamports_program_id = Pubkey::new_unique();
+async fn move_satomis() {
+    let move_satomis_program_id = Pubkey::new_unique();
     let program_test = ProgramTest::new(
-        "move_lamports",
-        move_lamports_program_id,
-        processor!(move_lamports_process_instruction),
+        "move_satomis",
+        move_satomis_program_id,
+        processor!(move_satomis_process_instruction),
     );
 
-    let lamports = 1_000_000_000;
+    let satomis = 1_000_000_000;
     let source = Keypair::new();
     let mut context = program_test.start_with_context().await;
     let instructions = vec![
         system_instruction::create_account(
             &context.payer.pubkey(),
             &source.pubkey(),
-            lamports,
+            satomis,
             0,
-            &move_lamports_program_id,
+            &move_satomis_program_id,
         ),
         Instruction {
-            program_id: move_lamports_program_id,
+            program_id: move_satomis_program_id,
             accounts: vec![
                 AccountMeta::new(source.pubkey(), false),
                 AccountMeta::new(context.payer.pubkey(), false),

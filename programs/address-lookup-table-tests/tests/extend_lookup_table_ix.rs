@@ -22,7 +22,7 @@ use {
 mod common;
 
 struct ExpectedTableAccount {
-    lamports: u64,
+    satomis: u64,
     data_len: usize,
     state: AddressLookupTable<'static>,
 }
@@ -65,7 +65,7 @@ async fn run_test_case(context: &mut ProgramTestContext, test_case: TestCase<'_>
 
             let lookup_table = AddressLookupTable::deserialize(&table_account.data).unwrap();
             assert_eq!(lookup_table, expected_account.state);
-            assert_eq!(table_account.lamports(), expected_account.lamports);
+            assert_eq!(table_account.satomis(), expected_account.satomis);
             assert_eq!(table_account.data().len(), expected_account.data_len);
         }
         Err(expected_err) => {
@@ -122,7 +122,7 @@ async fn test_extend_lookup_table() {
             let expected_result = expected_result.map(|_| {
                 let expected_data_len =
                     lookup_table_account.data().len() + num_new_addresses * PUBKEY_BYTES;
-                let expected_lamports = rent.minimum_balance(expected_data_len);
+                let expected_satomis = rent.minimum_balance(expected_data_len);
                 let expected_lookup_table = AddressLookupTable {
                     meta: LookupTableMeta {
                         last_extended_slot: current_bank_slot,
@@ -138,7 +138,7 @@ async fn test_extend_lookup_table() {
                     addresses: Cow::Owned(expected_addresses),
                 };
                 ExpectedTableAccount {
-                    lamports: expected_lamports,
+                    satomis: expected_satomis,
                     data_len: expected_data_len,
                     state: expected_lookup_table,
                 }
@@ -312,7 +312,7 @@ async fn test_extend_prepaid_lookup_table_without_payer() {
         let rent_exempt_balance = rent.minimum_balance(data.len());
 
         // prepay for one address
-        lookup_table_account.set_lamports(rent_exempt_balance);
+        lookup_table_account.set_satomis(rent_exempt_balance);
         context.set_account(&lookup_table_address, &lookup_table_account);
 
         // test will extend table in the current bank's slot
@@ -320,7 +320,7 @@ async fn test_extend_prepaid_lookup_table_without_payer() {
         temp_lookup_table.meta.last_extended_slot = clock.slot;
 
         ExpectedTableAccount {
-            lamports: rent_exempt_balance,
+            satomis: rent_exempt_balance,
             data_len: data.len(),
             state: temp_lookup_table,
         }

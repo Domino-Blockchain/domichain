@@ -60,13 +60,13 @@ const renderAccountRow = (entry: StakeHistoryEntry, index: number) => {
         <Epoch epoch={entry.epoch} link />
       </td>
       <td className="font-monospace">
-        <SolBalance lamports={entry.stakeHistory.effective} />
+        <SolBalance satomis={entry.stakeHistory.effective} />
       </td>
       <td className="font-monospace">
-        <SolBalance lamports={entry.stakeHistory.activating} />
+        <SolBalance satomis={entry.stakeHistory.activating} />
       </td>
       <td className="font-monospace">
-        <SolBalance lamports={entry.stakeHistory.deactivating} />
+        <SolBalance satomis={entry.stakeHistory.deactivating} />
       </td>
     </tr>
   );

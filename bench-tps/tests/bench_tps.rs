@@ -33,7 +33,7 @@ use {
 
 fn program_account(program_data: &[u8]) -> AccountSharedData {
     AccountSharedData::from(Account {
-        lamports: Rent::default().minimum_balance(program_data.len()).min(1),
+        satomis: Rent::default().minimum_balance(program_data.len()).min(1),
         data: program_data.to_vec(),
         owner: domichain_sdk::bpf_loader::id(),
         executable: true,
@@ -58,7 +58,7 @@ fn test_bench_tps_local_cluster(config: Config) {
     let cluster = LocalCluster::new(
         &mut ClusterConfig {
             node_stakes: vec![999_990; NUM_NODES],
-            cluster_lamports: 200_000_000,
+            cluster_satomis: 200_000_000,
             validator_configs: make_identical_validator_configs(
                 &ValidatorConfig {
                     rpc_config: JsonRpcConfig {
@@ -87,14 +87,14 @@ fn test_bench_tps_local_cluster(config: Config) {
         cluster.connection_cache.clone(),
     ));
 
-    let lamports_per_account = 100;
+    let satomis_per_account = 100;
 
     let keypair_count = config.tx_count * config.keypair_multiplier;
     let keypairs = generate_and_fund_keypairs(
         client.clone(),
         &config.id,
         keypair_count,
-        lamports_per_account,
+        satomis_per_account,
     )
     .unwrap();
 
@@ -115,7 +115,7 @@ fn test_bench_tps_test_validator(config: Config) {
     let test_validator = TestValidatorGenesis::default()
         .fee_rate_governor(FeeRateGovernor::new(0, 0))
         .rent(Rent {
-            lamports_per_byte_year: 1,
+            satomis_per_byte_year: 1,
             exemption_threshold: 1.0,
             ..Rent::default()
         })
@@ -132,14 +132,14 @@ fn test_bench_tps_test_validator(config: Config) {
     let client =
         Arc::new(TpuClient::new(rpc_client, &websocket_url, TpuClientConfig::default()).unwrap());
 
-    let lamports_per_account = 1000;
+    let satomis_per_account = 1000;
 
     let keypair_count = config.tx_count * config.keypair_multiplier;
     let keypairs = generate_and_fund_keypairs(
         client.clone(),
         &config.id,
         keypair_count,
-        lamports_per_account,
+        satomis_per_account,
     )
     .unwrap();
     let nonce_keypairs = if config.use_durable_nonce {

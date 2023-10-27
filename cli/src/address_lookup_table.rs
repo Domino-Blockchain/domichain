@@ -205,7 +205,7 @@ impl AddressLookupTableSubCommands for App<'_, '_> {
                                 .value_name("RECIPIENT_ADDRESS")
                                 .takes_value(true)
                                 .validator(is_pubkey)
-                                .help("Address of the recipient account to deposit the closed account's lamports [default: the default configured keypair]")
+                                .help("Address of the recipient account to deposit the closed account's satomis [default: the default configured keypair]")
                         )
                         .arg(
                             Arg::with_name("authority")

@@ -599,8 +599,8 @@ pub struct ConfirmedTransactionStatusWithSignature {
 #[serde(rename_all = "camelCase")]
 pub struct Reward {
     pub pubkey: String,
-    pub lamports: i64,
-    pub post_balance: u64, // Account balance in lamports after `lamports` was applied
+    pub satomis: i64,
+    pub post_balance: u64, // Account balance in satomis after `satomis` was applied
     pub reward_type: Option<RewardType>,
     pub commission: Option<u8>, // Vote account commission when the reward was credited, only present for voting and staking rewards
 }

@@ -360,7 +360,7 @@ impl PubsubClient {
 
     /// Subscribe to account events.
     ///
-    /// Receives messages of type [`UiAccount`] when an account's lamports or data changes.
+    /// Receives messages of type [`UiAccount`] when an account's satomis or data changes.
     ///
     /// # RPC Reference
     ///

@@ -13,7 +13,7 @@ use {
     },
     domichain_cli_config::CONFIG_FILE,
     domichain_remote_wallet::remote_wallet::maybe_wallet_manager,
-    domichain_sdk::native_token::domi_to_lamports,
+    domichain_sdk::native_token::domi_to_satomis,
     std::{error::Error, ffi::OsString, process::exit},
 };
 
@@ -439,7 +439,7 @@ fn parse_distribute_tokens_args(
         fee_payer,
         stake_args: None,
         spl_token_args: None,
-        transfer_amount: value_of(matches, "transfer_amount").map(domi_to_lamports),
+        transfer_amount: value_of(matches, "transfer_amount").map(domi_to_satomis),
     })
 }
 
@@ -478,7 +478,7 @@ fn parse_create_stake_args(
         .transpose()?;
 
     let stake_args = StakeArgs {
-        unlocked_domi: domi_to_lamports(value_t_or_exit!(matches, "unlocked_domi", f64)),
+        unlocked_domi: domi_to_satomis(value_t_or_exit!(matches, "unlocked_domi", f64)),
         lockup_authority,
         sender_stake_args: None,
     };
@@ -561,7 +561,7 @@ fn parse_distribute_stake_args(
         lockup_authority,
     };
     let stake_args = StakeArgs {
-        unlocked_domi: domi_to_lamports(value_t_or_exit!(matches, "unlocked_domi", f64)),
+        unlocked_domi: domi_to_satomis(value_t_or_exit!(matches, "unlocked_domi", f64)),
         lockup_authority: lockup_authority_address,
         sender_stake_args: Some(sender_stake_args),
     };

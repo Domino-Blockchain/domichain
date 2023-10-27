@@ -209,8 +209,8 @@ pub fn sol_log_params(accounts: &[AccountInfo], data: &[u8]) {
         sol_log_64(0, 0, 0, 0, account.is_signer as u64);
         msg!("- Key");
         account.key.log();
-        msg!("- Lamports");
-        sol_log_64(0, 0, 0, 0, account.lamports());
+        msg!("- Satomis");
+        sol_log_64(0, 0, 0, 0, account.satomis());
         msg!("- Account data length");
         sol_log_64(0, 0, 0, 0, account.data_len() as u64);
         msg!("- Owner");

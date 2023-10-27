@@ -18,12 +18,12 @@ would have to be recomputed from the entire account state of all live accounts i
 
 To verify the snapshot, we do the following:
 
-On account store of non-zero lamport accounts, we hash the following data:
+On account store of non-zero satomi accounts, we hash the following data:
 
 - Account owner
 - Account data
 - Account pubkey
-- Account lamports balance
+- Account satomis balance
 - Fork the account is stored on
 
 Use this resulting hash value as input to an expansion function which expands the hash value into an image value.
@@ -39,7 +39,7 @@ use SPV to display the percentage of the network that voted for the hash value g
 
 The resulting value can be verified by a validator to be the result of xoring all current account states together.
 
-A snapshot must be purged of zero lamport accounts before creation and during verify since the zero lamport accounts do not affect the hash value but may cause
+A snapshot must be purged of zero satomi accounts before creation and during verify since the zero satomi accounts do not affect the hash value but may cause
 a validator bank to read that an account is not present when it really should be.
 
 An attack on the xor state could be made to influence its value:

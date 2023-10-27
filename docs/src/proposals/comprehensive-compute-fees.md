@@ -114,18 +114,18 @@ the nonce's blockhash.
 
 Determinism is achieved in two ways:
 - blockhash queue contains a list of recent (<=~2min) blockhashes and a
-  `lamports_per_signature` value.  The blockhash queue is one of the snapshot's
+  `satomis_per_signature` value.  The blockhash queue is one of the snapshot's
   serialized members and thus bank hash depends on it.
-- Nonce accounts used for offline signing contain a `lamports_per_signature`
+- Nonce accounts used for offline signing contain a `satomis_per_signature`
   value in its account data
 
 In both cases, when a transaction is assessed a fee, the
-`lamports_per_signature` to use is looked up (either in the queue or in the
+`satomis_per_signature` to use is looked up (either in the queue or in the
 nonce account's data) using the transaction's blockhash.
 
 This currently comes with the following challenges:
 - Exposing the `FeeCalculator` object to the clients (holds the
-  `lamports_per_signature`) makes it hard to evolve the fee criteria due to
+  `satomis_per_signature`) makes it hard to evolve the fee criteria due to
   backward-compatibility.  This issue is being solved by deprecating the
   `FeeCalculator` object and instead the new apis take a message and return a
   fee.

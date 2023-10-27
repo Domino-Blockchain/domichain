@@ -16,7 +16,7 @@ The [fee account](../terminology.md#fee_account) pays for the transaction to be 
 
 ## Balance Cache
 
-For the duration of the leaders consecutive blocks, the leader maintains a temporary balance cache for all the processed fee accounts. The cache is a map of pubkeys to lamports.
+For the duration of the leaders consecutive blocks, the leader maintains a temporary balance cache for all the processed fee accounts. The cache is a map of pubkeys to satomis.
 
 At the start of the first block the balance cache is empty. At the end of the last block the cache is destroyed.
 
@@ -27,7 +27,7 @@ The balance cache lookups must reference the same base fork for the entire durat
 Prior to the balance check, the leader validates all the signatures in the transaction.
 
 1. Verify the accounts are not in use and BlockHash is valid.
-2. Check if the fee account is present in the cache, or load the account from accounts_db and store the lamport balance in the cache.
+2. Check if the fee account is present in the cache, or load the account from accounts_db and store the satomi balance in the cache.
 3. If the balance is less than the fee, drop the transaction.
 4. Subtract the fee from the balance.
 5. For all the keys in the transaction that are Credit-Debit and are referenced by an instruction, reduce their balance to 0 in the cache. The account fee is declared as Credit-Debit, but as long as it is not used in any instruction its balance will not be reduced to 0.

@@ -13,13 +13,13 @@ pub struct FeeCalculator {
     ///
     /// This amount may increase/decrease over time based on cluster processing
     /// load.
-    pub lamports_per_signature: u64,
+    pub satomis_per_signature: u64,
 }
 
 impl FeeCalculator {
-    pub fn new(lamports_per_signature: u64) -> Self {
+    pub fn new(satomis_per_signature: u64) -> Self {
         Self {
-            lamports_per_signature,
+            satomis_per_signature,
         }
     }
 
@@ -42,7 +42,7 @@ impl FeeCalculator {
             }
         }
 
-        self.lamports_per_signature
+        self.satomis_per_signature
             * (u64::from(message.header.num_required_signatures) + num_signatures)
     }
 }
@@ -53,25 +53,25 @@ pub struct FeeRateGovernor {
     // The current cost of a signature  This amount may increase/decrease over time based on
     // cluster processing load.
     #[serde(skip)]
-    pub lamports_per_signature: u64,
+    pub satomis_per_signature: u64,
 
     // The target cost of a signature when the cluster is operating around target_signatures_per_slot
     // signatures
-    pub target_lamports_per_signature: u64,
+    pub target_satomis_per_signature: u64,
 
     // Used to estimate the desired processing capacity of the cluster.  As the signatures for
-    // recent slots are fewer/greater than this value, lamports_per_signature will decrease/increase
-    // for the next slot.  A value of 0 disables lamports_per_signature fee adjustments
+    // recent slots are fewer/greater than this value, satomis_per_signature will decrease/increase
+    // for the next slot.  A value of 0 disables satomis_per_signature fee adjustments
     pub target_signatures_per_slot: u64,
 
-    pub min_lamports_per_signature: u64,
-    pub max_lamports_per_signature: u64,
+    pub min_satomis_per_signature: u64,
+    pub max_satomis_per_signature: u64,
 
     // What portion of collected fees are to be destroyed, as a fraction of std::u8::MAX
     pub burn_percent: u8,
 }
 
-pub const DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE: u64 = 2_000_000;
+pub const DEFAULT_TARGET_SATOMIS_PER_SIGNATURE: u64 = 2_000_000;
 pub const DEFAULT_TARGET_SIGNATURES_PER_SLOT: u64 = 50 * DEFAULT_MS_PER_SLOT;
 
 // Percentage of tx fees to burn
@@ -80,21 +80,21 @@ pub const DEFAULT_BURN_PERCENT: u8 = 50;
 impl Default for FeeRateGovernor {
     fn default() -> Self {
         Self {
-            lamports_per_signature: 0,
-            target_lamports_per_signature: DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE,
+            satomis_per_signature: 0,
+            target_satomis_per_signature: DEFAULT_TARGET_SATOMIS_PER_SIGNATURE,
             target_signatures_per_slot: DEFAULT_TARGET_SIGNATURES_PER_SLOT,
-            min_lamports_per_signature: 0,
-            max_lamports_per_signature: 0,
+            min_satomis_per_signature: 0,
+            max_satomis_per_signature: 0,
             burn_percent: DEFAULT_BURN_PERCENT,
         }
     }
 }
 
 impl FeeRateGovernor {
-    pub fn new(target_lamports_per_signature: u64, target_signatures_per_slot: u64) -> Self {
+    pub fn new(target_satomis_per_signature: u64, target_signatures_per_slot: u64) -> Self {
         let base_fee_rate_governor = Self {
-            target_lamports_per_signature,
-            lamports_per_signature: target_lamports_per_signature,
+            target_satomis_per_signature,
+            satomis_per_signature: target_satomis_per_signature,
             target_signatures_per_slot,
             ..FeeRateGovernor::default()
         };
@@ -109,64 +109,64 @@ impl FeeRateGovernor {
         let mut me = base_fee_rate_governor.clone();
 
         if me.target_signatures_per_slot > 0 {
-            // lamports_per_signature can range from 50% to 1000% of
-            // target_lamports_per_signature
-            me.min_lamports_per_signature = std::cmp::max(1, me.target_lamports_per_signature / 2);
-            me.max_lamports_per_signature = me.target_lamports_per_signature * 10;
+            // satomis_per_signature can range from 50% to 1000% of
+            // target_satomis_per_signature
+            me.min_satomis_per_signature = std::cmp::max(1, me.target_satomis_per_signature / 2);
+            me.max_satomis_per_signature = me.target_satomis_per_signature * 10;
 
             // What the cluster should charge at `latest_signatures_per_slot`
-            let desired_lamports_per_signature =
-                me.max_lamports_per_signature
-                    .min(me.min_lamports_per_signature.max(
-                        me.target_lamports_per_signature
+            let desired_satomis_per_signature =
+                me.max_satomis_per_signature
+                    .min(me.min_satomis_per_signature.max(
+                        me.target_satomis_per_signature
                             * std::cmp::min(latest_signatures_per_slot, std::u32::MAX as u64)
                             / me.target_signatures_per_slot,
                     ));
 
             trace!(
-                "desired_lamports_per_signature: {}",
-                desired_lamports_per_signature
+                "desired_satomis_per_signature: {}",
+                desired_satomis_per_signature
             );
 
-            let gap = desired_lamports_per_signature as i64
-                - base_fee_rate_governor.lamports_per_signature as i64;
+            let gap = desired_satomis_per_signature as i64
+                - base_fee_rate_governor.satomis_per_signature as i64;
 
             if gap == 0 {
-                me.lamports_per_signature = desired_lamports_per_signature;
+                me.satomis_per_signature = desired_satomis_per_signature;
             } else {
-                // Adjust fee by 5% of target_lamports_per_signature to produce a smooth
+                // Adjust fee by 5% of target_satomis_per_signature to produce a smooth
                 // increase/decrease in fees over time.
                 let gap_adjust =
-                    std::cmp::max(1, me.target_lamports_per_signature / 20) as i64 * gap.signum();
+                    std::cmp::max(1, me.target_satomis_per_signature / 20) as i64 * gap.signum();
 
                 trace!(
-                    "lamports_per_signature gap is {}, adjusting by {}",
+                    "satomis_per_signature gap is {}, adjusting by {}",
                     gap,
                     gap_adjust
                 );
 
-                me.lamports_per_signature =
-                    me.max_lamports_per_signature
-                        .min(me.min_lamports_per_signature.max(
-                            (base_fee_rate_governor.lamports_per_signature as i64 + gap_adjust)
+                me.satomis_per_signature =
+                    me.max_satomis_per_signature
+                        .min(me.min_satomis_per_signature.max(
+                            (base_fee_rate_governor.satomis_per_signature as i64 + gap_adjust)
                                 as u64,
                         ));
             }
         } else {
-            me.lamports_per_signature = base_fee_rate_governor.target_lamports_per_signature;
-            me.min_lamports_per_signature = me.target_lamports_per_signature;
-            me.max_lamports_per_signature = me.target_lamports_per_signature;
+            me.satomis_per_signature = base_fee_rate_governor.target_satomis_per_signature;
+            me.min_satomis_per_signature = me.target_satomis_per_signature;
+            me.max_satomis_per_signature = me.target_satomis_per_signature;
         }
         debug!(
-            "new_derived(): lamports_per_signature: {}",
-            me.lamports_per_signature
+            "new_derived(): satomis_per_signature: {}",
+            me.satomis_per_signature
         );
         me
     }
 
-    pub fn clone_with_lamports_per_signature(&self, lamports_per_signature: u64) -> Self {
+    pub fn clone_with_satomis_per_signature(&self, satomis_per_signature: u64) -> Self {
         Self {
-            lamports_per_signature,
+            satomis_per_signature,
             ..*self
         }
     }
@@ -179,7 +179,7 @@ impl FeeRateGovernor {
 
     /// create a FeeCalculator based on current cluster signature throughput
     pub fn create_fee_calculator(&self) -> FeeCalculator {
-        FeeCalculator::new(self.lamports_per_signature)
+        FeeCalculator::new(self.satomis_per_signature)
     }
 }
 
@@ -270,10 +270,10 @@ mod tests {
             DEFAULT_TARGET_SIGNATURES_PER_SLOT
         );
         assert_eq!(
-            f0.target_lamports_per_signature,
-            DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE
+            f0.target_satomis_per_signature,
+            DEFAULT_TARGET_SATOMIS_PER_SIGNATURE
         );
-        assert_eq!(f0.lamports_per_signature, 0);
+        assert_eq!(f0.satomis_per_signature, 0);
 
         let f1 = FeeRateGovernor::new_derived(&f0, DEFAULT_TARGET_SIGNATURES_PER_SLOT);
         assert_eq!(
@@ -281,12 +281,12 @@ mod tests {
             DEFAULT_TARGET_SIGNATURES_PER_SLOT
         );
         assert_eq!(
-            f1.target_lamports_per_signature,
-            DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE
+            f1.target_satomis_per_signature,
+            DEFAULT_TARGET_SATOMIS_PER_SIGNATURE
         );
         assert_eq!(
-            f1.lamports_per_signature,
-            DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE / 2
+            f1.satomis_per_signature,
+            DEFAULT_TARGET_SATOMIS_PER_SIGNATURE / 2
         ); // min
     }
 
@@ -295,7 +295,7 @@ mod tests {
         domichain_logger::setup();
 
         let mut f = FeeRateGovernor {
-            target_lamports_per_signature: 100,
+            target_satomis_per_signature: 100,
             target_signatures_per_slot: 100,
             ..FeeRateGovernor::default()
         };
@@ -304,13 +304,13 @@ mod tests {
         // Ramp fees up
         let mut count = 0;
         loop {
-            let last_lamports_per_signature = f.lamports_per_signature;
+            let last_satomis_per_signature = f.satomis_per_signature;
 
             f = FeeRateGovernor::new_derived(&f, std::u64::MAX);
-            info!("[up] f.lamports_per_signature={}", f.lamports_per_signature);
+            info!("[up] f.satomis_per_signature={}", f.satomis_per_signature);
 
             // some maximum target reached
-            if f.lamports_per_signature == last_lamports_per_signature {
+            if f.satomis_per_signature == last_satomis_per_signature {
                 break;
             }
             // shouldn't take more than 1000 steps to get to minimum
@@ -321,16 +321,16 @@ mod tests {
         // Ramp fees down
         let mut count = 0;
         loop {
-            let last_lamports_per_signature = f.lamports_per_signature;
+            let last_satomis_per_signature = f.satomis_per_signature;
             f = FeeRateGovernor::new_derived(&f, 0);
 
             info!(
-                "[down] f.lamports_per_signature={}",
-                f.lamports_per_signature
+                "[down] f.satomis_per_signature={}",
+                f.satomis_per_signature
             );
 
             // some minimum target reached
-            if f.lamports_per_signature == last_lamports_per_signature {
+            if f.satomis_per_signature == last_satomis_per_signature {
                 break;
             }
 
@@ -341,11 +341,11 @@ mod tests {
 
         // Arrive at target rate
         let mut count = 0;
-        while f.lamports_per_signature != f.target_lamports_per_signature {
+        while f.satomis_per_signature != f.target_satomis_per_signature {
             f = FeeRateGovernor::new_derived(&f, f.target_signatures_per_slot);
             info!(
-                "[target] f.lamports_per_signature={}",
-                f.lamports_per_signature
+                "[target] f.satomis_per_signature={}",
+                f.satomis_per_signature
             );
             // shouldn't take more than 100 steps to get to target
             assert!(count < 100);

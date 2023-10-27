@@ -34,13 +34,13 @@ use {
         accounts_hash::{
             AccountsDeltaHash, AccountsHash, AccountsHashEnum, AccountsHasher,
             CalcAccountsHashConfig, CalculateHashIntermediate, HashStats, IncrementalAccountsHash,
-            ZeroLamportAccounts,
+            ZeroSatomiAccounts,
         },
         accounts_index::{
             AccountIndexGetResult, AccountMapEntry, AccountSecondaryIndexes, AccountsIndex,
             AccountsIndexConfig, AccountsIndexRootsStats, AccountsIndexScanResult, DiskIndexValue,
             IndexKey, IndexValue, IsCached, RefCount, ScanConfig, ScanResult, SlotList,
-            UpsertReclaim, ZeroLamport, ACCOUNTS_INDEX_CONFIG_FOR_BENCHMARKS,
+            UpsertReclaim, ZeroSatomi, ACCOUNTS_INDEX_CONFIG_FOR_BENCHMARKS,
             ACCOUNTS_INDEX_CONFIG_FOR_TESTING,
         },
         accounts_index_storage::Startup,
@@ -198,9 +198,9 @@ pub(crate) struct ShrinkCollectAliveSeparatedByRefs<'a> {
     pub(crate) many_refs: AliveAccounts<'a>,
 }
 
-/// Configuration Parameters for running accounts hash and total lamports verification
+/// Configuration Parameters for running accounts hash and total satomis verification
 #[derive(Debug, Clone)]
-pub struct VerifyAccountsHashAndLamportsConfig<'a> {
+pub struct VerifyAccountsHashAndSatomisConfig<'a> {
     /// bank ancestors
     pub ancestors: &'a Ancestors,
     /// true to verify hash calculation
@@ -385,18 +385,18 @@ impl CurrentAncientAppendVec {
     }
 }
 
-/// specifies how to return zero lamport accounts from a load
+/// specifies how to return zero satomi accounts from a load
 #[derive(Clone, Copy)]
-enum LoadZeroLamports {
-    /// return None if loaded account has zero lamports
+enum LoadZeroSatomis {
+    /// return None if loaded account has zero satomis
     None,
-    /// return Some(account with zero lamports) if loaded account has zero lamports
+    /// return Some(account with zero satomis) if loaded account has zero satomis
     /// This used to be the only behavior.
     /// Note that this is non-deterministic if clean is running asynchronously.
-    /// If a zero lamport account exists in the index, then Some is returned.
+    /// If a zero satomi account exists in the index, then Some is returned.
     /// Once it is cleaned from the index, None is returned.
     #[cfg(test)]
-    SomeWithZeroLamportAccountForTests,
+    SomeWithZeroSatomiAccountForTests,
 }
 
 #[derive(Debug)]
@@ -461,8 +461,8 @@ pub(crate) struct ShrinkCollect<'a, T: ShrinkCollectRefs<'a>> {
     /// total size in storage of all alive accounts
     pub(crate) alive_total_bytes: usize,
     pub(crate) total_starting_accounts: usize,
-    /// true if all alive accounts are zero lamports
-    pub(crate) all_are_zero_lamports: bool,
+    /// true if all alive accounts are zero satomis
+    pub(crate) all_are_zero_satomis: bool,
     /// index entries that need to be held in memory while shrink is in progress
     /// These aren't read - they are just held so that entries cannot be flushed.
     pub(crate) _index_entries_being_shrunk: Vec<AccountMapEntry<AccountInfo>>,
@@ -500,8 +500,8 @@ struct LoadAccountsIndexForShrink<'a, T: ShrinkCollectRefs<'a>> {
     alive_accounts: T,
     /// pubkeys that were unref'd in the accounts index because they were dead
     unrefed_pubkeys: Vec<&'a Pubkey>,
-    /// true if all alive accounts are zero lamport accounts
-    all_are_zero_lamports: bool,
+    /// true if all alive accounts are zero satomi accounts
+    all_are_zero_satomis: bool,
     /// index entries we need to hold onto to keep them from getting flushed
     index_entries_being_shrunk: Vec<AccountMapEntry<AccountInfo>>,
 }
@@ -697,15 +697,15 @@ impl GenerateIndexTimings {
 impl IndexValue for AccountInfo {}
 impl DiskIndexValue for AccountInfo {}
 
-impl ZeroLamport for AccountSharedData {
-    fn is_zero_lamport(&self) -> bool {
-        self.lamports() == 0
+impl ZeroSatomi for AccountSharedData {
+    fn is_zero_satomi(&self) -> bool {
+        self.satomis() == 0
     }
 }
 
-impl ZeroLamport for Account {
-    fn is_zero_lamport(&self) -> bool {
-        self.lamports() == 0
+impl ZeroSatomi for Account {
+    fn is_zero_satomi(&self) -> bool {
+        self.satomis() == 0
     }
 }
 
@@ -866,7 +866,7 @@ impl<'a> LoadedAccountAccessor<'a> {
             LoadedAccountAccessor::Cached(cached_account) => cached_account
                 .as_ref()
                 .and_then(|cached_account| {
-                    if cached_account.account.is_zero_lamport() {
+                    if cached_account.account.is_zero_satomi() {
                         None
                     } else {
                         owners
@@ -950,10 +950,10 @@ impl<'a> LoadedAccount<'a> {
 }
 
 impl<'a> ReadableAccount for LoadedAccount<'a> {
-    fn lamports(&self) -> u64 {
+    fn satomis(&self) -> u64 {
         match self {
-            LoadedAccount::Stored(stored_account_meta) => stored_account_meta.lamports(),
-            LoadedAccount::Cached(cached_account) => cached_account.account.lamports(),
+            LoadedAccount::Stored(stored_account_meta) => stored_account_meta.satomis(),
+            LoadedAccount::Cached(cached_account) => cached_account.account.satomis(),
         }
     }
 
@@ -984,7 +984,7 @@ impl<'a> ReadableAccount for LoadedAccount<'a> {
     fn to_account_shared_data(&self) -> AccountSharedData {
         match self {
             LoadedAccount::Stored(_stored_account_meta) => AccountSharedData::create(
-                self.lamports(),
+                self.satomis(),
                 self.data().to_vec(),
                 *self.owner(),
                 self.executable(),
@@ -1000,7 +1000,7 @@ impl<'a> ReadableAccount for LoadedAccount<'a> {
 pub enum AccountsHashVerificationError {
     MissingAccountsHash,
     MismatchedAccountsHash,
-    MismatchedTotalLamports(u64, u64),
+    MismatchedTotalSatomis(u64, u64),
 }
 
 #[derive(Default)]
@@ -1232,14 +1232,14 @@ pub fn get_temp_accounts_paths(count: u32) -> IoResult<(Vec<TempDir>, Vec<PathBu
 pub struct BankHashStats {
     pub num_updated_accounts: u64,
     pub num_removed_accounts: u64,
-    pub num_lamports_stored: u64,
+    pub num_satomis_stored: u64,
     pub total_data_len: u64,
     pub num_executable_accounts: u64,
 }
 
 impl BankHashStats {
-    pub fn update<T: ReadableAccount + ZeroLamport>(&mut self, account: &T) {
-        if account.is_zero_lamport() {
+    pub fn update<T: ReadableAccount + ZeroSatomi>(&mut self, account: &T) {
+        if account.is_zero_satomi() {
             self.num_removed_accounts += 1;
         } else {
             self.num_updated_accounts += 1;
@@ -1250,16 +1250,16 @@ impl BankHashStats {
         if account.executable() {
             self.num_executable_accounts += 1;
         }
-        self.num_lamports_stored = self.num_lamports_stored.wrapping_add(account.lamports());
+        self.num_satomis_stored = self.num_satomis_stored.wrapping_add(account.satomis());
     }
 
     pub fn accumulate(&mut self, other: &BankHashStats) {
         self.num_updated_accounts += other.num_updated_accounts;
         self.num_removed_accounts += other.num_removed_accounts;
         self.total_data_len = self.total_data_len.wrapping_add(other.total_data_len);
-        self.num_lamports_stored = self
-            .num_lamports_stored
-            .wrapping_add(other.num_lamports_stored);
+        self.num_satomis_stored = self
+            .num_satomis_stored
+            .wrapping_add(other.num_satomis_stored);
         self.num_executable_accounts += other.num_executable_accounts;
     }
 }
@@ -1469,13 +1469,13 @@ pub struct AccountsDb {
     shrink_ratio: AccountShrinkThreshold,
 
     /// Set of stores which are recently rooted or had accounts removed
-    /// such that potentially a 0-lamport account update could be present which
+    /// such that potentially a 0-satomi account update could be present which
     /// means we can remove the account from the index entirely.
     dirty_stores: DashMap<Slot, Arc<AccountStorageEntry>>,
 
-    /// Zero-lamport accounts that are *not* purged during clean because they need to stay alive
+    /// Zero-satomi accounts that are *not* purged during clean because they need to stay alive
     /// for incremental snapshot support.
-    zero_lamport_accounts_to_purge_after_full_snapshot: DashSet<(Slot, Pubkey)>,
+    zero_satomi_accounts_to_purge_after_full_snapshot: DashSet<(Slot, Pubkey)>,
 
     /// GeyserPlugin accounts update notifier
     accounts_update_notifier: Option<AccountsUpdateNotifier>,
@@ -2254,9 +2254,9 @@ impl domichain_frozen_abi::abi_example::AbiExample for AccountsDb {
     }
 }
 
-impl<'a> ZeroLamport for StoredAccountMeta<'a> {
-    fn is_zero_lamport(&self) -> bool {
-        self.lamports() == 0
+impl<'a> ZeroSatomi for StoredAccountMeta<'a> {
+    fn is_zero_satomi(&self) -> bool {
+        self.satomis() == 0
     }
 }
 
@@ -2318,7 +2318,7 @@ impl<'a> AppendVecScan for ScanState<'a> {
         // when we are scanning with bin ranges, we don't need to use exact bin numbers. Subtract to make first bin we care about at index 0.
         self.pubkey_to_bin_index -= self.bin_range.start;
 
-        let balance = loaded_account.lamports();
+        let balance = loaded_account.satomis();
         let mut loaded_hash = loaded_account.loaded_hash();
 
         let hash_is_missing = loaded_hash == Hash::default();
@@ -2443,7 +2443,7 @@ impl AccountsDb {
             remove_unrooted_slots_synchronization: RemoveUnrootedSlotsSynchronization::default(),
             shrink_ratio: AccountShrinkThreshold::default(),
             dirty_stores: DashMap::default(),
-            zero_lamport_accounts_to_purge_after_full_snapshot: DashSet::default(),
+            zero_satomi_accounts_to_purge_after_full_snapshot: DashSet::default(),
             accounts_update_notifier: None,
             filler_accounts_config: FillerAccountsConfig::default(),
             filler_account_suffix: None,
@@ -3053,14 +3053,14 @@ impl AccountsDb {
         hashset_to_vec.stop();
         timings.hashset_to_vec_us += hashset_to_vec.as_us();
 
-        // Check if we should purge any of the zero_lamport_accounts_to_purge_later, based on the
+        // Check if we should purge any of the zero_satomi_accounts_to_purge_later, based on the
         // last_full_snapshot_slot.
         assert!(
-            last_full_snapshot_slot.is_some() || self.zero_lamport_accounts_to_purge_after_full_snapshot.is_empty(),
-            "if snapshots are disabled, then zero_lamport_accounts_to_purge_later should always be empty"
+            last_full_snapshot_slot.is_some() || self.zero_satomi_accounts_to_purge_after_full_snapshot.is_empty(),
+            "if snapshots are disabled, then zero_satomi_accounts_to_purge_later should always be empty"
         );
         if let Some(last_full_snapshot_slot) = last_full_snapshot_slot {
-            self.zero_lamport_accounts_to_purge_after_full_snapshot
+            self.zero_satomi_accounts_to_purge_after_full_snapshot
                 .retain(|(slot, pubkey)| {
                     let is_candidate_for_clean =
                         max_slot_inclusive >= *slot && last_full_snapshot_slot >= *slot;
@@ -3141,7 +3141,7 @@ impl AccountsDb {
         }
     }
 
-    // Purge zero lamport accounts and older rooted account states as garbage
+    // Purge zero satomi accounts and older rooted account states as garbage
     // collection
     // Only remove those accounts where the entire rooted history of the account
     // can be purged because there are no live append vecs in the ancestors
@@ -3192,12 +3192,12 @@ impl AccountsDb {
         let useful_accum = AtomicU64::new(0);
 
         // parallel scan the index.
-        let (mut purges_zero_lamports, purges_old_accounts) = {
+        let (mut purges_zero_satomis, purges_old_accounts) = {
             let do_clean_scan = || {
                 pubkeys
                     .par_chunks(4096)
                     .map(|pubkeys: &[Pubkey]| {
-                        let mut purges_zero_lamports = HashMap::new();
+                        let mut purges_zero_satomis = HashMap::new();
                         let mut purges_old_accounts = Vec::new();
                         let mut found_not_zero = 0;
                         let mut not_found_on_fork = 0;
@@ -3219,9 +3219,9 @@ impl AccountsDb {
                                             // found info relative to max_clean_root
                                             let (slot, account_info) =
                                                 &slot_list[index_in_slot_list];
-                                            if account_info.is_zero_lamport() {
+                                            if account_info.is_zero_satomi() {
                                                 useless = false;
-                                                purges_zero_lamports.insert(
+                                                purges_zero_satomis.insert(
                                                     *pubkey,
                                                     (
                                                         self.accounts_index.get_rooted_entries(
@@ -3277,7 +3277,7 @@ impl AccountsDb {
                         not_found_on_fork_accum.fetch_add(not_found_on_fork, Ordering::Relaxed);
                         missing_accum.fetch_add(missing, Ordering::Relaxed);
                         useful_accum.fetch_add(useful, Ordering::Relaxed);
-                        (purges_zero_lamports, purges_old_accounts)
+                        (purges_zero_satomis, purges_old_accounts)
                     })
                     .reduce(
                         || (HashMap::new(), Vec::new()),
@@ -3314,7 +3314,7 @@ impl AccountsDb {
         // Calculate store counts as if everything was purged
         // Then purge if we can
         let mut store_counts: HashMap<Slot, (usize, HashSet<Pubkey>)> = HashMap::new();
-        for (key, (account_infos, ref_count)) in purges_zero_lamports.iter_mut() {
+        for (key, (account_infos, ref_count)) in purges_zero_satomis.iter_mut() {
             if purged_account_slots.contains_key(key) {
                 *ref_count = self.accounts_index.ref_count_from_storage(key);
             }
@@ -3367,21 +3367,21 @@ impl AccountsDb {
         store_counts_time.stop();
 
         let mut calc_deps_time = Measure::start("calc_deps");
-        Self::calc_delete_dependencies(&purges_zero_lamports, &mut store_counts, min_dirty_slot);
+        Self::calc_delete_dependencies(&purges_zero_satomis, &mut store_counts, min_dirty_slot);
         calc_deps_time.stop();
 
         let mut purge_filter = Measure::start("purge_filter");
-        self.filter_zero_lamport_clean_for_incremental_snapshots(
+        self.filter_zero_satomi_clean_for_incremental_snapshots(
             max_clean_root_inclusive,
             last_full_snapshot_slot,
             &store_counts,
-            &mut purges_zero_lamports,
+            &mut purges_zero_satomis,
         );
         purge_filter.stop();
 
         let mut reclaims_time = Measure::start("reclaims");
         // Recalculate reclaims with new purge set
-        let pubkey_to_slot_set: Vec<_> = purges_zero_lamports
+        let pubkey_to_slot_set: Vec<_> = purges_zero_satomis
             .into_iter()
             .map(|(key, (slots_list, _ref_count))| {
                 (
@@ -3621,33 +3621,33 @@ impl AccountsDb {
         }
     }
 
-    /// During clean, some zero-lamport accounts that are marked for purge should *not* actually
-    /// get purged.  Filter out those accounts here by removing them from 'purges_zero_lamports'
+    /// During clean, some zero-satomi accounts that are marked for purge should *not* actually
+    /// get purged.  Filter out those accounts here by removing them from 'purges_zero_satomis'
     ///
-    /// When using incremental snapshots, do not purge zero-lamport accounts if the slot is higher
+    /// When using incremental snapshots, do not purge zero-satomi accounts if the slot is higher
     /// than the last full snapshot slot.  This is to protect against the following scenario:
     ///
     ///   ```text
     ///   A full snapshot is taken, including account 'alpha' with a non-zero balance.  In a later slot,
-    ///   alpha's lamports go to zero.  Eventually, cleaning runs.  Without this change,
+    ///   alpha's satomis go to zero.  Eventually, cleaning runs.  Without this change,
     ///   alpha would be cleaned up and removed completely. Finally, an incremental snapshot is taken.
     ///
     ///   Later, the incremental and full snapshots are used to rebuild the bank and accounts
     ///   database (e.x. if the node restarts).  The full snapshot _does_ contain alpha
     ///   and its balance is non-zero.  However, since alpha was cleaned up in a slot after the full
-    ///   snapshot slot (due to having zero lamports), the incremental snapshot would not contain alpha.
+    ///   snapshot slot (due to having zero satomis), the incremental snapshot would not contain alpha.
     ///   Thus, the accounts database will contain the old, incorrect info for alpha with a non-zero
     ///   balance.  Very bad!
     ///   ```
     ///
     /// This filtering step can be skipped if there is no `last_full_snapshot_slot`, or if the
     /// `max_clean_root_inclusive` is less-than-or-equal-to the `last_full_snapshot_slot`.
-    fn filter_zero_lamport_clean_for_incremental_snapshots(
+    fn filter_zero_satomi_clean_for_incremental_snapshots(
         &self,
         max_clean_root_inclusive: Option<Slot>,
         last_full_snapshot_slot: Option<Slot>,
         store_counts: &HashMap<Slot, (usize, HashSet<Pubkey>)>,
-        purges_zero_lamports: &mut HashMap<Pubkey, (SlotList<AccountInfo>, RefCount)>,
+        purges_zero_satomis: &mut HashMap<Pubkey, (SlotList<AccountInfo>, RefCount)>,
     ) {
         let should_filter_for_incremental_snapshots = max_clean_root_inclusive.unwrap_or(Slot::MAX)
             > last_full_snapshot_slot.unwrap_or(Slot::MAX);
@@ -3656,8 +3656,8 @@ impl AccountsDb {
             "if filtering for incremental snapshots, then snapshots should be enabled",
         );
 
-        purges_zero_lamports.retain(|pubkey, (slot_account_infos, _ref_count)| {
-            // Only keep purges_zero_lamports where the entire history of the account in the root set
+        purges_zero_satomis.retain(|pubkey, (slot_account_infos, _ref_count)| {
+            // Only keep purges_zero_satomis where the entire history of the account in the root set
             // can be purged. All AppendVecs for those updates are dead.
             for (slot, _account_info) in slot_account_infos.iter() {
                 if let Some(store_count) = store_counts.get(slot) {
@@ -3681,15 +3681,15 @@ impl AccountsDb {
                 .max_by_key(|(slot, _account_info)| slot);
 
             slot_account_info_at_highest_slot.map_or(true, |(slot, account_info)| {
-                // Do *not* purge zero-lamport accounts if the slot is greater than the last full
+                // Do *not* purge zero-satomi accounts if the slot is greater than the last full
                 // snapshot slot.  Since we're `retain`ing the accounts-to-purge, I felt creating
                 // the `cannot_purge` variable made this easier to understand.  Accounts that do
                 // not get purged here are added to a list so they be considered for purging later
                 // (i.e. after the next full snapshot).
-                assert!(account_info.is_zero_lamport());
+                assert!(account_info.is_zero_satomi());
                 let cannot_purge = *slot > last_full_snapshot_slot.unwrap();
                 if cannot_purge {
-                    self.zero_lamport_accounts_to_purge_after_full_snapshot
+                    self.zero_satomi_accounts_to_purge_after_full_snapshot
                         .insert((*slot, *pubkey));
                 }
                 !cannot_purge
@@ -3758,7 +3758,7 @@ impl AccountsDb {
         let mut alive = 0;
         let mut dead = 0;
         let mut index = 0;
-        let mut all_are_zero_lamports = true;
+        let mut all_are_zero_satomis = true;
         let mut index_entries_being_shrunk = Vec::with_capacity(accounts.len());
         self.accounts_index.scan(
             accounts.iter().map(|account| account.pubkey()),
@@ -3782,7 +3782,7 @@ impl AccountsDb {
                         // Hold onto the index entry arc so that it cannot be flushed.
                         // Since we are shrinking these entries, we need to disambiguate append_vec_ids during this period and those only exist in the in-memory accounts index.
                         index_entries_being_shrunk.push(Arc::clone(entry.unwrap()));
-                        all_are_zero_lamports &= stored_account.lamports() == 0;
+                        all_are_zero_satomis &= stored_account.satomis() == 0;
                         alive_accounts.add(ref_count, stored_account);
                         alive += 1;
                     }
@@ -3800,7 +3800,7 @@ impl AccountsDb {
         LoadAccountsIndexForShrink {
             alive_accounts,
             unrefed_pubkeys,
-            all_are_zero_lamports,
+            all_are_zero_satomis,
             index_entries_being_shrunk,
         }
     }
@@ -3863,7 +3863,7 @@ impl AccountsDb {
         stats
             .accounts_loaded
             .fetch_add(len as u64, Ordering::Relaxed);
-        let all_are_zero_lamports_collect = Mutex::new(true);
+        let all_are_zero_satomis_collect = Mutex::new(true);
         let index_entries_being_shrunk_outer = Mutex::new(Vec::default());
         self.thread_pool_clean.install(|| {
             stored_accounts
@@ -3872,7 +3872,7 @@ impl AccountsDb {
                     let LoadAccountsIndexForShrink {
                         alive_accounts,
                         mut unrefed_pubkeys,
-                        all_are_zero_lamports,
+                        all_are_zero_satomis,
                         mut index_entries_being_shrunk,
                     } = self.load_accounts_index_for_shrink(stored_accounts, stats, slot);
 
@@ -3889,8 +3889,8 @@ impl AccountsDb {
                         .lock()
                         .unwrap()
                         .append(&mut index_entries_being_shrunk);
-                    if !all_are_zero_lamports {
-                        *all_are_zero_lamports_collect.lock().unwrap() = false;
+                    if !all_are_zero_satomis {
+                        *all_are_zero_satomis_collect.lock().unwrap() = false;
                     }
                 });
         });
@@ -3926,7 +3926,7 @@ impl AccountsDb {
             alive_accounts,
             alive_total_bytes,
             total_starting_accounts: len,
-            all_are_zero_lamports: all_are_zero_lamports_collect.into_inner().unwrap(),
+            all_are_zero_satomis: all_are_zero_satomis_collect.into_inner().unwrap(),
             _index_entries_being_shrunk: index_entries_being_shrunk_outer.into_inner().unwrap(),
         }
     }
@@ -3944,14 +3944,14 @@ impl AccountsDb {
         // Purge old, overwritten storage entries
         let dead_storages = self.mark_dirty_dead_stores(
             shrink_collect.slot,
-            // If all accounts are zero lamports, then we want to mark the entire OLD append vec as dirty.
+            // If all accounts are zero satomis, then we want to mark the entire OLD append vec as dirty.
             // otherwise, we'll call 'add_uncleaned_pubkeys_after_shrink' just on the unref'd keys below.
-            shrink_collect.all_are_zero_lamports,
+            shrink_collect.all_are_zero_satomis,
             shrink_in_progress,
             shrink_can_be_active,
         );
 
-        if !shrink_collect.all_are_zero_lamports {
+        if !shrink_collect.all_are_zero_satomis {
             self.add_uncleaned_pubkeys_after_shrink(
                 shrink_collect.slot,
                 shrink_collect.unrefed_pubkeys.iter().cloned().cloned(),
@@ -4646,12 +4646,12 @@ impl AccountsDb {
         If dead, nobody will care if this version of this account is not written into the newly shrunk append vec for this slot.
         For all dead accounts, they were already unrefed and are now absent in the new append vec.
         This means that another version of this pubkey could possibly now be cleaned since this one is now gone.
-        For example, a zero lamport account in a later slot can be removed if we just removed the only non-zero lamport account for that pubkey in this slot.
+        For example, a zero satomi account in a later slot can be removed if we just removed the only non-zero satomi account for that pubkey in this slot.
         So, for all unrefed accounts, send them to clean to be revisited next time clean runs.
         If an account is alive, then its status has not changed. It was previously alive in this slot. It is still alive in this slot.
         Clean doesn't care about alive accounts that remain alive.
-        Except... A slightly different case is if ALL the alive accounts in this slot are zero lamport accounts, then it is possible that
-        this slot can be marked dead. So, if all alive accounts are zero lamports, we send the entire OLD/pre-shrunk append vec
+        Except... A slightly different case is if ALL the alive accounts in this slot are zero satomi accounts, then it is possible that
+        this slot can be marked dead. So, if all alive accounts are zero satomis, we send the entire OLD/pre-shrunk append vec
         to clean so that all the pubkeys are visited.
         It is a performance optimization to not send the ENTIRE old/pre-shrunk append vec to clean in the normal case.
         */
@@ -4964,11 +4964,11 @@ impl AccountsDb {
         pubkey: &Pubkey,
         load_hint: LoadHint,
     ) -> Option<(AccountSharedData, Slot)> {
-        self.do_load(ancestors, pubkey, None, load_hint, LoadZeroLamports::None)
+        self.do_load(ancestors, pubkey, None, load_hint, LoadZeroSatomis::None)
     }
 
     /// Return Ok(index_of_matching_owner) if the account owner at `offset` is one of the pubkeys in `owners`.
-    /// Return Err(MatchAccountOwnerError::NoMatch) if the account has 0 lamports or the owner is not one of
+    /// Return Err(MatchAccountOwnerError::NoMatch) if the account has 0 satomis or the owner is not one of
     /// the pubkeys in `owners`.
     /// Return Err(MatchAccountOwnerError::UnableToLoad) if the account could not be accessed.
     pub fn account_matches_owners(
@@ -4986,7 +4986,7 @@ impl AccountsDb {
             // dbg!(&result);
             if let Some(account) = result {
                 // dbg!(account.owner());
-                return if account.is_zero_lamport() {
+                return if account.is_zero_satomi() {
                     Err(MatchAccountOwnerError::NoMatch)
                 } else {
                     owners
@@ -5019,11 +5019,11 @@ impl AccountsDb {
             LoadHint::Unspecified,
             true,
             // no return from this function, so irrelevant
-            LoadZeroLamports::None,
+            LoadZeroSatomis::None,
         );
     }
 
-    /// note this returns None for accounts with zero lamports
+    /// note this returns None for accounts with zero satomis
     pub fn load_with_fixed_root(
         &self,
         ancestors: &Ancestors,
@@ -5233,8 +5233,8 @@ impl AccountsDb {
                             // after reading the index:
                             // 1) Shrink has removed the old storage entry and rewritten to
                             // a newer storage entry
-                            // 2) The `pubkey` asked for in this function is a zero-lamport account,
-                            // and the storage entry holding this account qualified for zero-lamport clean.
+                            // 2) The `pubkey` asked for in this function is a zero-satomi account,
+                            // and the storage entry holding this account qualified for zero-satomi clean.
                             //
                             // In both these cases, it should be safe to retry and recheck the accounts
                             // index indefinitely, without incrementing num_acceptable_failed_iterations.
@@ -5357,7 +5357,7 @@ impl AccountsDb {
         pubkey: &Pubkey,
         max_root: Option<Slot>,
         load_hint: LoadHint,
-        load_zero_lamports: LoadZeroLamports,
+        load_zero_satomis: LoadZeroSatomis,
     ) -> Option<(AccountSharedData, Slot)> {
         self.do_load_with_populate_read_cache(
             ancestors,
@@ -5365,7 +5365,7 @@ impl AccountsDb {
             max_root,
             load_hint,
             false,
-            load_zero_lamports,
+            load_zero_satomis,
         )
     }
 
@@ -5384,7 +5384,7 @@ impl AccountsDb {
         max_root: Option<Slot>,
         load_hint: LoadHint,
         load_into_read_cache_only: bool,
-        load_zero_lamports: LoadZeroLamports,
+        load_zero_satomis: LoadZeroSatomis,
     ) -> Option<(AccountSharedData, Slot)> {
         #[cfg(not(test))]
         assert!(max_root.is_none());
@@ -5398,8 +5398,8 @@ impl AccountsDb {
             if !in_write_cache {
                 let result = self.read_only_accounts_cache.load(*pubkey, slot);
                 if let Some(account) = result {
-                    if matches!(load_zero_lamports, LoadZeroLamports::None)
-                        && account.is_zero_lamport()
+                    if matches!(load_zero_satomis, LoadZeroSatomis::None)
+                        && account.is_zero_satomi()
                     {
                         return None;
                     }
@@ -5429,7 +5429,7 @@ impl AccountsDb {
         let loaded_account = account_accessor.check_and_get_loaded_account();
         let is_cached = loaded_account.is_cached();
         let account = loaded_account.take_account();
-        if matches!(load_zero_lamports, LoadZeroLamports::None) && account.is_zero_lamport() {
+        if matches!(load_zero_satomis, LoadZeroSatomis::None) && account.is_zero_satomi() {
             return None;
         }
 
@@ -6083,7 +6083,7 @@ impl AccountsDb {
     ) -> Hash {
         Self::hash_account_data(
             slot,
-            account.lamports(),
+            account.satomis(),
             account.owner(),
             account.executable(),
             account.rent_epoch(),
@@ -6095,7 +6095,7 @@ impl AccountsDb {
 
     fn hash_account_data(
         slot: Slot,
-        lamports: u64,
+        satomis: u64,
         owner: &Pubkey,
         executable: bool,
         rent_epoch: Epoch,
@@ -6103,12 +6103,12 @@ impl AccountsDb {
         pubkey: &Pubkey,
         include_slot: IncludeSlotInHash,
     ) -> Hash {
-        if lamports == 0 {
+        if satomis == 0 {
             return Hash::default();
         }
         let mut hasher = blake3::Hasher::new();
 
-        hasher.update(&lamports.to_le_bytes());
+        hasher.update(&satomis.to_le_bytes());
 
         match include_slot {
             IncludeSlotInHash::IncludeSlot => {
@@ -6192,7 +6192,7 @@ impl AccountsDb {
                     StorageLocation::AppendVec(store_id, stored_account_info.offset),
                     accounts_and_meta_to_store
                         .account(i)
-                        .map(|account| account.lamports())
+                        .map(|account| account.satomis())
                         .unwrap_or_default(),
                 ));
             }
@@ -6664,10 +6664,10 @@ impl AccountsDb {
             .enumerate()
             .map(|(i, txn)| {
                 let account = accounts_and_meta_to_store
-                    .account_default_if_zero_lamport(i)
+                    .account_default_if_zero_satomi(i)
                     .map(|account| account.to_account_shared_data())
                     .unwrap_or_default();
-                let account_info = AccountInfo::new(StorageLocation::Cached, account.lamports());
+                let account_info = AccountInfo::new(StorageLocation::Cached, account.satomis());
 
                 self.notify_account_at_accounts_update(
                     slot,
@@ -6701,7 +6701,7 @@ impl AccountsDb {
         'b,
         'c,
         P: Iterator<Item = u64>,
-        T: ReadableAccount + Sync + ZeroLamport + 'b,
+        T: ReadableAccount + Sync + ZeroSatomi + 'b,
     >(
         &self,
         accounts: &'c impl StorableAccounts<'b, T>,
@@ -6887,9 +6887,9 @@ impl AccountsDb {
         let mut scan = Measure::start("scan");
         let mismatch_found = AtomicU64::new(0);
         // Pick a chunk size big enough to allow us to produce output vectors that are smaller than the overall size.
-        // We'll also accumulate the lamports within each chunk and fewer chunks results in less contention to accumulate the sum.
+        // We'll also accumulate the satomis within each chunk and fewer chunks results in less contention to accumulate the sum.
         let chunks = crate::accounts_hash::MERKLE_FANOUT.pow(4);
-        let total_lamports = Mutex::<u64>::new(0);
+        let total_satomis = Mutex::<u64>::new(0);
 
         let get_hashes = || {
             keys.par_chunks(chunks)
@@ -6905,7 +6905,7 @@ impl AccountsDb {
                                 self.accounts_index.get(pubkey, config.ancestors, Some(max_slot))
                             {
                                 let (slot, account_info) = &lock.slot_list()[index];
-                                if !account_info.is_zero_lamport() {
+                                if !account_info.is_zero_satomi() {
                                     // Because we're keeping the `lock' here, there is no need
                                     // to use retry_to_get_account_accessor()
                                     // In other words, flusher/shrinker/cleaner is blocked to
@@ -6924,7 +6924,7 @@ impl AccountsDb {
                                     .and_then(
                                         |loaded_account| {
                                             let mut loaded_hash = loaded_account.loaded_hash();
-                                            let balance = loaded_account.lamports();
+                                            let balance = loaded_account.satomis();
                                             let hash_is_missing = loaded_hash == Hash::default();
                                             if (config.check_hash || hash_is_missing) && !self.is_filler_account(pubkey) {
                                                 let computed_hash =
@@ -6952,7 +6952,7 @@ impl AccountsDb {
                             }
                         })
                         .collect();
-                    let mut total = total_lamports.lock().unwrap();
+                    let mut total = total_satomis.lock().unwrap();
                     *total =
                         AccountsHasher::checked_cast_for_capitalization(*total as u128 + sum);
                     result
@@ -6973,7 +6973,7 @@ impl AccountsDb {
         }
 
         scan.stop();
-        let total_lamports = *total_lamports.lock().unwrap();
+        let total_satomis = *total_satomis.lock().unwrap();
 
         let mut hash_time = Measure::start("hash");
         let (accumulated_hash, hash_total) = AccountsHasher::calculate_hash(hashes);
@@ -6987,7 +6987,7 @@ impl AccountsDb {
         );
 
         let accounts_hash = AccountsHash(accumulated_hash);
-        Ok((accounts_hash, total_lamports))
+        Ok((accounts_hash, total_satomis))
     }
 
     pub fn update_accounts_hash_for_tests(
@@ -7295,7 +7295,7 @@ impl AccountsDb {
         config: CalcAccountsHashConfig<'_>,
         expected_capitalization: Option<u64>,
     ) -> Result<(AccountsHash, u64), AccountsHashVerificationError> {
-        let (accounts_hash, total_lamports) =
+        let (accounts_hash, total_satomis) =
             self.calculate_accounts_hash(data_source, slot, &config)?;
         if debug_verify {
             // calculate the other way (store or non-store) and verify results match.
@@ -7303,15 +7303,15 @@ impl AccountsDb {
                 CalcAccountsHashDataSource::IndexForTests => CalcAccountsHashDataSource::Storages,
                 CalcAccountsHashDataSource::Storages => CalcAccountsHashDataSource::IndexForTests,
             };
-            let (accounts_hash_other, total_lamports_other) =
+            let (accounts_hash_other, total_satomis_other) =
                 self.calculate_accounts_hash(data_source_other, slot, &config)?;
 
             let success = accounts_hash == accounts_hash_other
-                && total_lamports == total_lamports_other
-                && total_lamports == expected_capitalization.unwrap_or(total_lamports);
-            assert!(success, "calculate_accounts_hash_with_verify mismatch. hashes: {}, {}; lamports: {}, {}; expected lamports: {:?}, data source: {:?}, slot: {}", accounts_hash.0, accounts_hash_other.0, total_lamports, total_lamports_other, expected_capitalization, data_source, slot);
+                && total_satomis == total_satomis_other
+                && total_satomis == expected_capitalization.unwrap_or(total_satomis);
+            assert!(success, "calculate_accounts_hash_with_verify mismatch. hashes: {}, {}; satomis: {}, {}; expected satomis: {:?}, data source: {:?}, slot: {}", accounts_hash.0, accounts_hash_other.0, total_satomis, total_satomis_other, expected_capitalization, data_source, slot);
         }
-        Ok((accounts_hash, total_lamports))
+        Ok((accounts_hash, total_satomis))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -7328,7 +7328,7 @@ impl AccountsDb {
         include_slot_in_hash: IncludeSlotInHash,
     ) -> (AccountsHash, u64) {
         let check_hash = false;
-        let (accounts_hash, total_lamports) = self
+        let (accounts_hash, total_satomis) = self
             .calculate_accounts_hash_with_verify(
                 data_source,
                 debug_verify,
@@ -7345,8 +7345,8 @@ impl AccountsDb {
                 expected_capitalization,
             )
             .unwrap(); // unwrap here will never fail since check_hash = false
-        self.set_accounts_hash(slot, (accounts_hash, total_lamports));
-        (accounts_hash, total_lamports)
+        self.set_accounts_hash(slot, (accounts_hash, total_satomis));
+        (accounts_hash, total_satomis)
     }
 
     /// Calculate the incremental accounts hash for `storages` and save the results at `slot`
@@ -7570,7 +7570,7 @@ impl AccountsDb {
     ///
     /// This calculation is intended to be used by incremental snapshots, and thus differs from a
     /// "full" accounts hash in a few ways:
-    /// - Zero-lamport accounts are *included* in the hash because zero-lamport accounts are also
+    /// - Zero-satomi accounts are *included* in the hash because zero-satomi accounts are also
     ///   included in the incremental snapshot.  This ensures reconstructing the AccountsDb is
     ///   still correct when using this incremental accounts hash.
     /// - `storages` must be the same as the ones going into the incremental snapshot.
@@ -7625,7 +7625,7 @@ impl AccountsDb {
                 } else {
                     None
                 },
-                zero_lamport_accounts: flavor.zero_lamport_accounts(),
+                zero_satomi_accounts: flavor.zero_satomi_accounts(),
                 dir_for_temp_cache_files: self.transient_accounts_hash_cache_path.clone(),
             };
 
@@ -7653,7 +7653,7 @@ impl AccountsDb {
                 &bounds,
             );
 
-            // turn raw data into merkle tree hashes and sum of lamports
+            // turn raw data into merkle tree hashes and sum of satomis
             let (accounts_hash, capitalization) =
                 accounts_hasher.rest_of_hash_calculation(result, &mut stats);
             let accounts_hash = match flavor {
@@ -7681,12 +7681,12 @@ impl AccountsDb {
     /// If `base` is `None`, only calculates the full accounts hash for `[0, slot]`.
     /// If `base` is `Some`, calculate the full accounts hash for `[0, base slot]`
     /// and then calculate the incremental accounts hash for `(base slot, slot]`.
-    pub fn verify_accounts_hash_and_lamports(
+    pub fn verify_accounts_hash_and_satomis(
         &self,
         slot: Slot,
-        total_lamports: u64,
+        total_satomis: u64,
         base: Option<(Slot, /*capitalization*/ u64)>,
-        config: VerifyAccountsHashAndLamportsConfig,
+        config: VerifyAccountsHashAndSatomisConfig,
     ) -> Result<(), AccountsHashVerificationError> {
         use AccountsHashVerificationError::*;
         let calc_config = CalcAccountsHashConfig {
@@ -7701,7 +7701,7 @@ impl AccountsDb {
         let hash_mismatch_is_error = !config.ignore_mismatch;
 
         if let Some((base_slot, base_capitalization)) = base {
-            self.verify_accounts_hash_and_lamports(base_slot, base_capitalization, None, config)?;
+            self.verify_accounts_hash_and_satomis(base_slot, base_capitalization, None, config)?;
             let (storages, slots) =
                 self.get_snapshot_storages(base_slot.checked_add(1).unwrap()..=slot);
             let sorted_storages =
@@ -7724,7 +7724,7 @@ impl AccountsDb {
                 }
             }
         } else {
-            let (calculated_accounts_hash, calculated_lamports) = self
+            let (calculated_accounts_hash, calculated_satomis) = self
                 .calculate_accounts_hash_with_verify(
                     CalcAccountsHashDataSource::Storages,
                     config.test_hash_calculation,
@@ -7733,12 +7733,12 @@ impl AccountsDb {
                     None,
                 )?;
 
-            if calculated_lamports != total_lamports {
+            if calculated_satomis != total_satomis {
                 warn!(
-                    "Mismatched total lamports: {} calculated: {}",
-                    total_lamports, calculated_lamports
+                    "Mismatched total satomis: {} calculated: {}",
+                    total_satomis, calculated_satomis
                 );
-                return Err(MismatchedTotalLamports(calculated_lamports, total_lamports));
+                return Err(MismatchedTotalSatomis(calculated_satomis, total_satomis));
             }
 
             let (found_accounts_hash, _) =
@@ -8288,7 +8288,7 @@ impl AccountsDb {
             .fetch_add(measure.as_us(), Ordering::Relaxed);
     }
 
-    pub fn store_cached<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    pub fn store_cached<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
         transactions: Option<&'a [Option<&'a SanitizedTransaction>]>,
@@ -8304,7 +8304,7 @@ impl AccountsDb {
 
     pub(crate) fn store_cached_inline_update_index<
         'a,
-        T: ReadableAccount + Sync + ZeroLamport + 'a,
+        T: ReadableAccount + Sync + ZeroSatomi + 'a,
     >(
         &self,
         accounts: impl StorableAccounts<'a, T>,
@@ -8332,7 +8332,7 @@ impl AccountsDb {
         );
     }
 
-    fn store<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    fn store<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
         store_to: &StoreTo,
@@ -8498,7 +8498,7 @@ impl AccountsDb {
         }
     }
 
-    fn store_accounts_unfrozen<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    fn store_accounts_unfrozen<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
         hashes: Option<Vec<impl Borrow<Hash>>>,
@@ -8527,7 +8527,7 @@ impl AccountsDb {
         );
     }
 
-    pub(crate) fn store_accounts_frozen<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    pub(crate) fn store_accounts_frozen<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
         hashes: Option<Vec<impl Borrow<Hash>>>,
@@ -8551,7 +8551,7 @@ impl AccountsDb {
         )
     }
 
-    fn store_accounts_custom<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    fn store_accounts_custom<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
         hashes: Option<Vec<impl Borrow<Hash>>>,
@@ -8751,21 +8751,21 @@ impl AccountsDb {
         accounts_map
     }
 
-    /// return Some(lamports_to_top_off) if 'account' would collect rent
+    /// return Some(satomis_to_top_off) if 'account' would collect rent
     fn stats_for_rent_payers<T: ReadableAccount>(
         pubkey: &Pubkey,
         account: &T,
         rent_collector: &RentCollector,
     ) -> Option<u64> {
-        if account.lamports() == 0 {
+        if account.satomis() == 0 {
             return None;
         }
         (rent_collector.should_collect_rent(pubkey, account)
             && !rent_collector.get_rent_due(account).is_exempt())
         .then(|| {
             let min_balance = rent_collector.rent.minimum_balance(account.data().len());
-            // return lamports required to top off this account to make it rent exempt
-            min_balance.saturating_sub(account.lamports())
+            // return satomis required to top off this account to make it rent exempt
+            min_balance.saturating_sub(account.satomis())
         })
     }
 
@@ -8795,7 +8795,7 @@ impl AccountsDb {
                     &self.account_indexes,
                 );
             }
-            if !stored_account.is_zero_lamport() {
+            if !stored_account.is_zero_satomi() {
                 accounts_data_len += stored_account.data().len() as u64;
             }
 
@@ -8812,7 +8812,7 @@ impl AccountsDb {
                 pubkey,
                 AccountInfo::new(
                     StorageLocation::AppendVec(store_id, stored_account.offset()), // will never be cached
-                    stored_account.lamports(),
+                    stored_account.satomis(),
                 ),
             )
         });
@@ -8879,8 +8879,8 @@ impl AccountsDb {
         let owner = Pubkey::from_str(string).unwrap();
         let space = self.filler_accounts_config.size;
         let rent_exempt_reserve = rent.minimum_balance(space);
-        let lamports = rent_exempt_reserve;
-        let mut account = AccountSharedData::new(lamports, space, &owner);
+        let satomis = rent_exempt_reserve;
+        let mut account = AccountSharedData::new(satomis, space, &owner);
         // just non-zero rent epoch. filler accounts are rent-exempt
         let dummy_rent_epoch = 2;
         account.set_rent_epoch(dummy_rent_epoch);
@@ -9053,7 +9053,7 @@ impl AccountsDb {
                                                 store_id,
                                                 account_info.offset(),
                                             ), // will never be cached
-                                            account_info.lamports(),
+                                            account_info.satomis(),
                                         );
                                         assert_eq!(&ai, account_info2);
                                     }
@@ -9262,11 +9262,11 @@ impl AccountsDb {
                     );
                     let loaded_account = accessor.check_and_get_loaded_account();
                     accounts_data_len_from_duplicates += loaded_account.data().len();
-                    if let Some(lamports_to_top_off) =
+                    if let Some(satomis_to_top_off) =
                         Self::stats_for_rent_payers(pubkey, &loaded_account, rent_collector)
                     {
                         removed_rent_paying += 1;
-                        removed_top_off += lamports_to_top_off;
+                        removed_top_off += satomis_to_top_off;
                     }
                 });
             }
@@ -9416,11 +9416,11 @@ pub enum CalcAccountsHashFlavor {
 }
 
 impl CalcAccountsHashFlavor {
-    /// How should zero-lamport accounts be handled by this accounts hash calculation?
-    fn zero_lamport_accounts(&self) -> ZeroLamportAccounts {
+    /// How should zero-satomi accounts be handled by this accounts hash calculation?
+    fn zero_satomi_accounts(&self) -> ZeroSatomiAccounts {
         match self {
-            CalcAccountsHashFlavor::Full => ZeroLamportAccounts::Excluded,
-            CalcAccountsHashFlavor::Incremental => ZeroLamportAccounts::Included,
+            CalcAccountsHashFlavor::Full => ZeroSatomiAccounts::Excluded,
+            CalcAccountsHashFlavor::Incremental => ZeroSatomiAccounts::Included,
         }
     }
 }
@@ -9634,8 +9634,8 @@ pub mod tests {
                 pubkey,
                 None,
                 LoadHint::Unspecified,
-                // callers of this expect zero lamport accounts that exist in the index to be returned as Some(empty)
-                LoadZeroLamports::SomeWithZeroLamportAccountForTests,
+                // callers of this expect zero satomi accounts that exist in the index to be returned as Some(empty)
+                LoadZeroSatomis::SomeWithZeroSatomiAccountForTests,
             )
         }
 
@@ -9726,7 +9726,7 @@ pub mod tests {
         }
     }
 
-    impl<'a> VerifyAccountsHashAndLamportsConfig<'a> {
+    impl<'a> VerifyAccountsHashAndSatomisConfig<'a> {
         fn new_for_test(
             ancestors: &'a Ancestors,
             epoch_schedule: &'a EpochSchedule,
@@ -9760,7 +9760,7 @@ pub mod tests {
         let account = AccountSharedData::default();
 
         let account_meta = AccountMeta {
-            lamports: 1,
+            satomis: 1,
             owner: Pubkey::from([2; 32]),
             executable: false,
             rent_epoch: 0,
@@ -9831,7 +9831,7 @@ pub mod tests {
     #[test]
     fn test_get_keys_to_unref_ancient() {
         let rent_epoch = 0;
-        let lamports = 0;
+        let satomis = 0;
         let executable = false;
         let owner = Pubkey::default();
         let data = Vec::new();
@@ -9862,7 +9862,7 @@ pub mod tests {
             data_len: 7,
         };
         let account_meta = AccountMeta {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
@@ -10067,7 +10067,7 @@ pub mod tests {
 
         for i in 0..raw_expected.len() {
             raw_accounts.push(AccountSharedData::new(
-                raw_expected[i].lamports,
+                raw_expected[i].satomis,
                 1,
                 AccountSharedData::default().owner(),
             ));
@@ -10610,7 +10610,7 @@ pub mod tests {
             AccountsHasher::compute_merkle_root_loop(raw_expected.clone(), MERKLE_FANOUT, |item| {
                 &item.hash
             });
-        let sum = raw_expected.iter().map(|item| item.lamports).sum();
+        let sum = raw_expected.iter().map(|item| item.satomis).sum();
         let result = db
             .calculate_accounts_hash_from_storages(
                 &CalcAccountsHashConfig::default(),
@@ -10641,7 +10641,7 @@ pub mod tests {
         slot_expected: Slot,
         accum: BinnedHashData,
         current_slot: Slot,
-        value_to_use_for_lamports: u64,
+        value_to_use_for_satomis: u64,
     }
 
     impl AppendVecScan for TestScan {
@@ -10664,7 +10664,7 @@ pub mod tests {
             assert_eq!(self.slot_expected, self.current_slot);
             self.accum.push(vec![CalculateHashIntermediate::new(
                 Hash::default(),
-                self.value_to_use_for_lamports,
+                self.value_to_use_for_satomis,
                 self.pubkey,
             )]);
         }
@@ -10705,7 +10705,7 @@ pub mod tests {
             slot_expected,
             accum: Vec::default(),
             current_slot: 0,
-            value_to_use_for_lamports: expected,
+            value_to_use_for_satomis: expected,
         };
 
         let result = accounts_db.scan_account_storage_no_bank(
@@ -10770,7 +10770,7 @@ pub mod tests {
         if let Some(index) = add_to_index {
             let account_info = AccountInfo::new(
                 StorageLocation::AppendVec(storage.append_vec_id(), stored_accounts_info[0].offset),
-                account.lamports(),
+                account.satomis(),
             );
             index.upsert(
                 slot,
@@ -10814,7 +10814,7 @@ pub mod tests {
             slot_expected,
             accum: Vec::default(),
             current_slot: 0,
-            value_to_use_for_lamports: expected,
+            value_to_use_for_satomis: expected,
         };
 
         AccountsDb::scan_single_account_storage(&storage, &mut test_scan);
@@ -10824,7 +10824,7 @@ pub mod tests {
             accum
                 .iter()
                 .flatten()
-                .map(|a| a.lamports)
+                .map(|a| a.satomis)
                 .collect::<Vec<_>>(),
             vec![expected]
         );
@@ -10896,7 +10896,7 @@ pub mod tests {
         let mark_alive = false;
         let storage =
             sample_storage_with_entries(&tf, write_version1, slot_expected, &pubkey1, mark_alive);
-        let lamports = storage.accounts.account_iter().next().unwrap().lamports();
+        let satomis = storage.accounts.account_iter().next().unwrap().satomis();
         let calls = Arc::new(AtomicU64::new(0));
         let mut scanner = TestScanSimple {
             current_slot: 0,
@@ -10913,9 +10913,9 @@ pub mod tests {
             accum
                 .iter()
                 .flatten()
-                .map(|a| a.lamports)
+                .map(|a| a.satomis)
                 .collect::<Vec<_>>(),
-            vec![lamports]
+            vec![satomis]
         );
     }
 
@@ -10949,7 +10949,7 @@ pub mod tests {
             }
             self.accum.push(vec![CalculateHashIntermediate {
                 hash: Hash::default(),
-                lamports: loaded_account.lamports(),
+                satomis: loaded_account.satomis(),
                 pubkey: Pubkey::default(),
             }]);
         }
@@ -11055,11 +11055,11 @@ pub mod tests {
 
         // now we have:
         //
-        //                       root0 -> key.lamports==1
+        //                       root0 -> key.satomis==1
         //                        / \
         //                       /   \
-        //  key.lamports==0 <- slot1    \
-        //                             slot2 -> key.lamports==1
+        //  key.satomis==0 <- slot1    \
+        //                             slot2 -> key.satomis==1
         //                                       (via root0)
 
         // store value 0 in one child
@@ -11109,7 +11109,7 @@ pub mod tests {
                 .load_without_fixed_root(&ancestors, &pubkeys[idx])
                 .unwrap();
             let default_account = AccountSharedData::from(Account {
-                lamports: (idx + 1) as u64,
+                satomis: (idx + 1) as u64,
                 ..Account::default()
             });
             assert_eq!((default_account, 0), account);
@@ -11129,7 +11129,7 @@ pub mod tests {
                 .load_without_fixed_root(&ancestors, &pubkeys[idx])
                 .unwrap();
             let default_account = AccountSharedData::from(Account {
-                lamports: (idx + 1) as u64,
+                satomis: (idx + 1) as u64,
                 ..Account::default()
             });
             assert_eq!(&default_account, &account0.0);
@@ -11187,7 +11187,7 @@ pub mod tests {
         let account0 = AccountSharedData::new(1, 0, &key);
         db0.store_for_tests(0, &[(&key, &account0)]);
 
-        // 0 lamports in the child
+        // 0 satomis in the child
         let account1 = AccountSharedData::new(0, 0, &key);
         db0.store_for_tests(1, &[(&key, &account1)]);
 
@@ -11326,16 +11326,16 @@ pub mod tests {
             if let Some((mut account, _)) =
                 accounts.load_without_fixed_root(&ancestors, &pubkeys[idx])
             {
-                account.checked_add_lamports(1).unwrap();
+                account.checked_add_satomis(1).unwrap();
                 accounts.store_for_tests(slot, &[(&pubkeys[idx], &account)]);
-                if account.is_zero_lamport() {
+                if account.is_zero_satomi() {
                     let ancestors = vec![(slot, 0)].into_iter().collect();
                     assert!(accounts
                         .load_without_fixed_root(&ancestors, &pubkeys[idx])
                         .is_none());
                 } else {
                     let default_account = AccountSharedData::from(Account {
-                        lamports: account.lamports(),
+                        satomis: account.satomis(),
                         ..Account::default()
                     });
                     assert_eq!(default_account, account);
@@ -11405,7 +11405,7 @@ pub mod tests {
         let ancestors = vec![(0, 0)].into_iter().collect();
         let account = db.load_without_fixed_root(&ancestors, &pubkeys[0]).unwrap();
         let default_account = AccountSharedData::from(Account {
-            lamports: 1,
+            satomis: 1,
             ..Account::default()
         });
         assert_eq!((default_account, 0), account);
@@ -11449,7 +11449,7 @@ pub mod tests {
                     .load_without_fixed_root(&ancestors, key)
                     .unwrap()
                     .0
-                    .lamports(),
+                    .satomis(),
                 (i as u64) + 1
             );
         }
@@ -11617,14 +11617,14 @@ pub mod tests {
     }
 
     #[test]
-    fn test_clean_zero_lamport_and_dead_slot() {
+    fn test_clean_zero_satomi_and_dead_slot() {
         domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let pubkey1 = domichain_sdk::pubkey::new_rand();
         let pubkey2 = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
         // Store two accounts
@@ -11633,7 +11633,7 @@ pub mod tests {
 
         // Make sure both accounts are in the same AppendVec in slot 0, which
         // will prevent pubkey1 from being cleaned up later even when it's a
-        // zero-lamport account
+        // zero-satomi account
         let ancestors = vec![(0, 1)].into_iter().collect();
         let (slot1, account_info1) = accounts
             .accounts_index
@@ -11656,8 +11656,8 @@ pub mod tests {
         // Update account 1 in slot 1
         accounts.store_for_tests(1, &[(&pubkey1, &account)]);
 
-        // Update account 1 as  zero lamports account
-        accounts.store_for_tests(2, &[(&pubkey1, &zero_lamport_account)]);
+        // Update account 1 as  zero satomis account
+        accounts.store_for_tests(2, &[(&pubkey1, &zero_satomi_account)]);
 
         // Pubkey 1 was the only account in slot 1, and it was updated in slot 2, so
         // slot 1 should be purged
@@ -11675,26 +11675,26 @@ pub mod tests {
         assert!(accounts.storage.get_slot_storage_entry(1).is_none());
 
         // Slot 1 should be cleaned because all it's accounts are
-        // zero lamports, and are not present in any other slot's
+        // zero satomis, and are not present in any other slot's
         // storage entries
         assert_eq!(accounts.alive_account_count_in_slot(1), 0);
     }
 
     #[test]
-    fn test_clean_multiple_zero_lamport_decrements_index_ref_count() {
+    fn test_clean_multiple_zero_satomi_decrements_index_ref_count() {
         domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let pubkey1 = domichain_sdk::pubkey::new_rand();
         let pubkey2 = domichain_sdk::pubkey::new_rand();
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
         // Store 2 accounts in slot 0, then update account 1 in two more slots
-        accounts.store_for_tests(0, &[(&pubkey1, &zero_lamport_account)]);
-        accounts.store_for_tests(0, &[(&pubkey2, &zero_lamport_account)]);
-        accounts.store_for_tests(1, &[(&pubkey1, &zero_lamport_account)]);
-        accounts.store_for_tests(2, &[(&pubkey1, &zero_lamport_account)]);
+        accounts.store_for_tests(0, &[(&pubkey1, &zero_satomi_account)]);
+        accounts.store_for_tests(0, &[(&pubkey2, &zero_satomi_account)]);
+        accounts.store_for_tests(1, &[(&pubkey1, &zero_satomi_account)]);
+        accounts.store_for_tests(2, &[(&pubkey1, &zero_satomi_account)]);
         // Root all slots
         accounts.calculate_accounts_delta_hash(0);
         accounts.add_root_and_flush_write_cache(0);
@@ -11710,10 +11710,10 @@ pub mod tests {
 
         accounts.clean_accounts_for_tests();
         // Slots 0 and 1 should each have been cleaned because all of their
-        // accounts are zero lamports
+        // accounts are zero satomis
         assert!(accounts.storage.get_slot_storage_entry(0).is_none());
         assert!(accounts.storage.get_slot_storage_entry(1).is_none());
-        // Slot 2 only has a zero lamport account as well. But, calc_delete_dependencies()
+        // Slot 2 only has a zero satomi account as well. But, calc_delete_dependencies()
         // should exclude slot 2 from the clean due to changes in other slots
         assert!(accounts.storage.get_slot_storage_entry(2).is_some());
         // Index ref counts should be consistent with the slot stores. Account 1 ref count
@@ -11729,20 +11729,20 @@ pub mod tests {
     }
 
     #[test]
-    fn test_clean_zero_lamport_and_old_roots() {
+    fn test_clean_zero_satomi_and_old_roots() {
         domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let pubkey = domichain_sdk::pubkey::new_rand();
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
-        // Store a zero-lamport account
+        // Store a zero-satomi account
         accounts.store_for_tests(0, &[(&pubkey, &account)]);
-        accounts.store_for_tests(1, &[(&pubkey, &zero_lamport_account)]);
+        accounts.store_for_tests(1, &[(&pubkey, &zero_satomi_account)]);
 
-        // Simulate rooting the zero-lamport account, should be a
+        // Simulate rooting the zero-satomi account, should be a
         // candidate for cleaning
         accounts.calculate_accounts_delta_hash(0);
         accounts.add_root_and_flush_write_cache(0);
@@ -11750,7 +11750,7 @@ pub mod tests {
         accounts.add_root_and_flush_write_cache(1);
 
         // Slot 0 should be removed, and
-        // zero-lamport account should be cleaned
+        // zero-satomi account should be cleaned
         accounts.clean_accounts_for_tests();
 
         assert!(accounts.storage.get_slot_storage_entry(0).is_none());
@@ -11761,11 +11761,11 @@ pub mod tests {
         assert_eq!(accounts.alive_account_count_in_slot(0), 0);
 
         // Slot 1 should be cleaned because all it's accounts are
-        // zero lamports, and are not present in any other slot's
+        // zero satomis, and are not present in any other slot's
         // storage entries
         assert_eq!(accounts.alive_account_count_in_slot(1), 0);
 
-        // zero lamport account, should no longer exist in accounts index
+        // zero satomi account, should no longer exist in accounts index
         // because it has been removed
         assert!(accounts
             .accounts_index
@@ -11802,7 +11802,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_clean_old_with_zero_lamport_account() {
+    fn test_clean_old_with_zero_satomi_account() {
         domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
@@ -11830,13 +11830,13 @@ pub mod tests {
 
         accounts.clean_accounts_for_tests();
 
-        //Old state behind zero-lamport account is cleaned up
+        //Old state behind zero-satomi account is cleaned up
         assert_eq!(accounts.alive_account_count_in_slot(0), 0);
         assert_eq!(accounts.alive_account_count_in_slot(1), 2);
     }
 
     #[test]
-    fn test_clean_old_with_both_normal_and_zero_lamport_accounts() {
+    fn test_clean_old_with_both_normal_and_zero_satomi_accounts() {
         domichain_logger::setup();
 
         let mut accounts = AccountsDb::new_with_config_for_tests(
@@ -11948,15 +11948,15 @@ pub mod tests {
 
         accounts.clean_accounts_for_tests();
 
-        //both zero lamport and normal accounts are cleaned up
+        //both zero satomi and normal accounts are cleaned up
         assert_eq!(accounts.alive_account_count_in_slot(0), 0);
-        // The only store to slot 1 was a zero lamport account, should
-        // be purged by zero-lamport cleaning logic because slot 1 is
+        // The only store to slot 1 was a zero satomi account, should
+        // be purged by zero-satomi cleaning logic because slot 1 is
         // rooted
         assert_eq!(accounts.alive_account_count_in_slot(1), 0);
         assert_eq!(accounts.alive_account_count_in_slot(2), 1);
 
-        // `pubkey1`, a zero lamport account, should no longer exist in accounts index
+        // `pubkey1`, a zero satomi account, should no longer exist in accounts index
         // because it has been removed by the clean
         assert!(accounts
             .accounts_index
@@ -11979,7 +11979,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_clean_max_slot_zero_lamport_account() {
+    fn test_clean_max_slot_zero_satomi_account() {
         domichain_logger::setup();
 
         let accounts = AccountsDb::new(Vec::new(), &ClusterType::Development);
@@ -11987,7 +11987,7 @@ pub mod tests {
         let account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
         let zero_account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
-        // store an account, make it a zero lamport account
+        // store an account, make it a zero satomi account
         // in slot 1
         accounts.store_for_tests(0, &[(&pubkey, &account)]);
         accounts.store_for_tests(1, &[(&pubkey, &zero_account)]);
@@ -12015,7 +12015,7 @@ pub mod tests {
         assert_eq!(accounts.alive_account_count_in_slot(0), 0);
         assert_eq!(accounts.alive_account_count_in_slot(1), 0);
 
-        // The zero lamport account, should no longer exist in accounts index
+        // The zero satomi account, should no longer exist in accounts index
         // because it has been removed
         assert!(accounts
             .accounts_index
@@ -12092,7 +12092,7 @@ pub mod tests {
 
             // Modify the first 10 of the accounts from slot 0 in slot 1
             modify_accounts(&accounts, &pubkeys, latest_slot, 10, 3);
-            // Overwrite account 30 from slot 0 with lamports=0 into slot 1.
+            // Overwrite account 30 from slot 0 with satomis=0 into slot 1.
             // Slot 1 should now have 10 + 1 = 11 accounts
             let account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
             accounts.store_for_tests(latest_slot, &[(&pubkeys[30], &account)]);
@@ -12112,7 +12112,7 @@ pub mod tests {
             // Modify first 20 of the accounts from slot 0 in slot 2
             modify_accounts(&accounts, &pubkeys, latest_slot, 20, 4);
             accounts.clean_accounts_for_tests();
-            // Overwrite account 31 from slot 0 with lamports=0 into slot 2.
+            // Overwrite account 31 from slot 0 with satomis=0 into slot 2.
             // Slot 2 should now have 20 + 1 = 21 accounts
             let account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
             accounts.store_for_tests(latest_slot, &[(&pubkeys[31], &account)]);
@@ -12130,7 +12130,7 @@ pub mod tests {
 
             accounts.clean_accounts_for_tests();
             // The first 20 accounts of slot 0 have been updated in slot 2, as well as
-            // accounts 30 and  31 (overwritten with zero-lamport accounts in slot 1 and
+            // accounts 30 and  31 (overwritten with zero-satomi accounts in slot 1 and
             // slot 2 respectively), so only 78 accounts are left in slot 0's storage entries.
             check_storage(&accounts, 0, 78);
             // 10 of the 21 accounts have been modified in slot 2, so only 11
@@ -12178,13 +12178,13 @@ pub mod tests {
         accounts: &AccountsDb,
         slot: Slot,
         pubkey: Pubkey,
-        expected_lamports: u64,
+        expected_satomis: u64,
     ) {
         let ancestors = vec![(slot, 0)].into_iter().collect();
         let (account, slot) = accounts
             .load_without_fixed_root(&ancestors, &pubkey)
             .unwrap();
-        assert_eq!((account.lamports(), slot), (expected_lamports, slot));
+        assert_eq!((account.satomis(), slot), (expected_satomis, slot));
     }
 
     fn assert_not_load_account(accounts: &AccountsDb, slot: Slot, pubkey: Pubkey) {
@@ -12208,18 +12208,18 @@ pub mod tests {
     #[test]
     fn test_accounts_db_purge_keep_live() {
         domichain_logger::setup();
-        let some_lamport = 223;
-        let zero_lamport = 0;
+        let some_satomi = 223;
+        let zero_satomi = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(some_lamport, no_data, &owner);
+        let account = AccountSharedData::new(some_satomi, no_data, &owner);
         let pubkey = domichain_sdk::pubkey::new_rand();
 
-        let account2 = AccountSharedData::new(some_lamport, no_data, &owner);
+        let account2 = AccountSharedData::new(some_satomi, no_data, &owner);
         let pubkey2 = domichain_sdk::pubkey::new_rand();
 
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
         let accounts = AccountsDb::new_single_for_tests();
         accounts.calculate_accounts_delta_hash(0);
@@ -12249,12 +12249,12 @@ pub mod tests {
 
         // Step B
         current_slot += 1;
-        let zero_lamport_slot = current_slot;
-        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_lamport_account)]);
+        let zero_satomi_slot = current_slot;
+        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_satomi_account)]);
         accounts.calculate_accounts_delta_hash(current_slot);
         accounts.add_root_and_flush_write_cache(current_slot);
 
-        assert_load_account(&accounts, current_slot, pubkey, zero_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, zero_satomi);
 
         current_slot += 1;
         accounts.calculate_accounts_delta_hash(current_slot);
@@ -12276,8 +12276,8 @@ pub mod tests {
             (slot_list.len(), slot_list[0].0)
         };
         assert_eq!(slot_list_len, 1);
-        // Zero lamport entry was not the one purged
-        assert_eq!(index_slot, zero_lamport_slot);
+        // Zero satomi entry was not the one purged
+        assert_eq!(index_slot, zero_satomi_slot);
         // The ref count should still be 2 because no slots were purged
         assert_eq!(accounts.ref_count_for_pubkey(&pubkey), 2);
 
@@ -12291,15 +12291,15 @@ pub mod tests {
     #[test]
     fn test_accounts_db_purge1() {
         domichain_logger::setup();
-        let some_lamport = 223;
-        let zero_lamport = 0;
+        let some_satomi = 223;
+        let zero_satomi = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(some_lamport, no_data, &owner);
+        let account = AccountSharedData::new(some_satomi, no_data, &owner);
         let pubkey = domichain_sdk::pubkey::new_rand();
 
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
         let accounts = AccountsDb::new_single_for_tests();
         accounts.add_root(0);
@@ -12310,11 +12310,11 @@ pub mod tests {
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_satomi_account)]);
         accounts.calculate_accounts_delta_hash(current_slot);
         accounts.add_root_and_flush_write_cache(current_slot);
 
-        assert_load_account(&accounts, current_slot, pubkey, zero_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, zero_satomi);
 
         // Otherwise slot 2 will not be removed
         current_slot += 1;
@@ -12351,19 +12351,19 @@ pub mod tests {
     fn test_accounts_db_serialize_zero_and_free() {
         domichain_logger::setup();
 
-        let some_lamport = 223;
-        let zero_lamport = 0;
+        let some_satomi = 223;
+        let zero_satomi = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(some_lamport, no_data, &owner);
+        let account = AccountSharedData::new(some_satomi, no_data, &owner);
         let pubkey = domichain_sdk::pubkey::new_rand();
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
-        let account2 = AccountSharedData::new(some_lamport + 1, no_data, &owner);
+        let account2 = AccountSharedData::new(some_satomi + 1, no_data, &owner);
         let pubkey2 = domichain_sdk::pubkey::new_rand();
 
-        let filler_account = AccountSharedData::new(some_lamport, no_data, &owner);
+        let filler_account = AccountSharedData::new(some_satomi, no_data, &owner);
         let filler_account_pubkey = domichain_sdk::pubkey::new_rand();
 
         let accounts = AccountsDb::new_single_for_tests();
@@ -12373,7 +12373,7 @@ pub mod tests {
         accounts.add_root(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey, &zero_satomi_account)]);
         accounts.store_for_tests(current_slot, &[(&pubkey2, &account2)]);
 
         // Store the account a few times.
@@ -12384,7 +12384,7 @@ pub mod tests {
         }
         accounts.add_root_and_flush_write_cache(current_slot);
 
-        assert_load_account(&accounts, current_slot, pubkey, zero_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, zero_satomi);
 
         accounts.print_accounts_stats("accounts");
 
@@ -12403,29 +12403,29 @@ pub mod tests {
 
         accounts.print_accounts_stats("reconstructed");
 
-        assert_load_account(&accounts, current_slot, pubkey, zero_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, zero_satomi);
     }
 
-    fn with_chained_zero_lamport_accounts<F>(f: F)
+    fn with_chained_zero_satomi_accounts<F>(f: F)
     where
         F: Fn(AccountsDb, Slot) -> AccountsDb,
     {
-        let some_lamport = 223;
-        let zero_lamport = 0;
-        let dummy_lamport = 999;
+        let some_satomi = 223;
+        let zero_satomi = 0;
+        let dummy_satomi = 999;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(some_lamport, no_data, &owner);
-        let account2 = AccountSharedData::new(some_lamport + 100_001, no_data, &owner);
-        let account3 = AccountSharedData::new(some_lamport + 100_002, no_data, &owner);
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let account = AccountSharedData::new(some_satomi, no_data, &owner);
+        let account2 = AccountSharedData::new(some_satomi + 100_001, no_data, &owner);
+        let account3 = AccountSharedData::new(some_satomi + 100_002, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
         let pubkey = domichain_sdk::pubkey::new_rand();
         let purged_pubkey1 = domichain_sdk::pubkey::new_rand();
         let purged_pubkey2 = domichain_sdk::pubkey::new_rand();
 
-        let dummy_account = AccountSharedData::new(dummy_lamport, no_data, &owner);
+        let dummy_account = AccountSharedData::new(dummy_satomi, no_data, &owner);
         let dummy_pubkey = Pubkey::default();
 
         let accounts = AccountsDb::new_single_for_tests();
@@ -12436,12 +12436,12 @@ pub mod tests {
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&purged_pubkey1, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&purged_pubkey1, &zero_satomi_account)]);
         accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &account3)]);
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &zero_satomi_account)]);
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
@@ -12456,29 +12456,29 @@ pub mod tests {
 
         accounts.print_accounts_stats("post_f");
 
-        assert_load_account(&accounts, current_slot, pubkey, some_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, some_satomi);
         assert_load_account(&accounts, current_slot, purged_pubkey1, 0);
         assert_load_account(&accounts, current_slot, purged_pubkey2, 0);
-        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_lamport);
+        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_satomi);
 
         let ancestors = Ancestors::default();
         let epoch_schedule = EpochSchedule::default();
         let rent_collector = RentCollector::default();
-        let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+        let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
             &ancestors,
             &epoch_schedule,
             &rent_collector,
         );
 
         accounts
-            .verify_accounts_hash_and_lamports(4, 1222, None, config)
+            .verify_accounts_hash_and_satomis(4, 1222, None, config)
             .unwrap();
     }
 
     #[test]
     fn test_accounts_purge_chained_purge_before_snapshot_restore() {
         domichain_logger::setup();
-        with_chained_zero_lamport_accounts(|accounts, current_slot| {
+        with_chained_zero_satomi_accounts(|accounts, current_slot| {
             accounts.clean_accounts_for_tests();
             reconstruct_accounts_db_via_serialization(&accounts, current_slot)
         });
@@ -12487,7 +12487,7 @@ pub mod tests {
     #[test]
     fn test_accounts_purge_chained_purge_after_snapshot_restore() {
         domichain_logger::setup();
-        with_chained_zero_lamport_accounts(|accounts, current_slot| {
+        with_chained_zero_satomi_accounts(|accounts, current_slot| {
             let accounts = reconstruct_accounts_db_via_serialization(&accounts, current_slot);
             accounts.print_accounts_stats("after_reconstruct");
             accounts.clean_accounts_for_tests();
@@ -12517,7 +12517,7 @@ pub mod tests {
                         let mut i = 0;
                         loop {
                             let account_bal = thread_rng().gen_range(1, 99);
-                            account.set_lamports(account_bal);
+                            account.set_satomis(account_bal);
                             db.store_for_tests(slot, &[(&pubkey, &account)]);
 
                             let (account, slot) = db
@@ -12526,7 +12526,7 @@ pub mod tests {
                                     panic!("Could not fetch stored account {pubkey}, iter {i}")
                                 });
                             assert_eq!(slot, slot);
-                            assert_eq!(account.lamports(), account_bal);
+                            assert_eq!(account.satomis(), account_bal);
                             i += 1;
                         }
                     })
@@ -12608,7 +12608,7 @@ pub mod tests {
             db.load_without_fixed_root(&ancestors, &key1)
                 .unwrap()
                 .0
-                .lamports(),
+                .satomis(),
             3
         );
     }
@@ -12631,7 +12631,7 @@ pub mod tests {
 
     #[test]
     fn test_stored_readable_account() {
-        let lamports = 1;
+        let satomis = 1;
         let owner = Pubkey::new_unique();
         let executable = true;
         let rent_epoch = 2;
@@ -12641,14 +12641,14 @@ pub mod tests {
             data_len: 7,
         };
         let account_meta = AccountMeta {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
         };
         let data = Vec::new();
         let account = Account {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
@@ -12752,7 +12752,7 @@ pub mod tests {
 
         db.store_for_tests(some_slot, &[(&key, &account)]);
         let mut account = db.load_without_fixed_root(&ancestors, &key).unwrap().0;
-        account.checked_sub_lamports(1).unwrap();
+        account.checked_sub_satomis(1).unwrap();
         account.set_executable(true);
         db.store_for_tests(some_slot, &[(&key, &account)]);
         db.add_root(some_slot);
@@ -12760,7 +12760,7 @@ pub mod tests {
         let stats = db.get_bank_hash_stats(some_slot).unwrap();
         assert_eq!(stats.num_updated_accounts, 1);
         assert_eq!(stats.num_removed_accounts, 1);
-        assert_eq!(stats.num_lamports_stored, 1);
+        assert_eq!(stats.num_satomis_stored, 1);
         assert_eq!(stats.total_data_len, 2 * some_data_len as u64);
         assert_eq!(stats.num_executable_accounts, 1);
     }
@@ -12891,21 +12891,21 @@ pub mod tests {
         let (_, capitalization) =
             db.update_accounts_hash_for_tests(some_slot, &ancestors, true, true);
 
-        let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+        let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
             &ancestors,
             &epoch_schedule,
             &rent_collector,
         );
 
         assert_matches!(
-            db.verify_accounts_hash_and_lamports(some_slot, 1, None, config.clone()),
+            db.verify_accounts_hash_and_satomis(some_slot, 1, None, config.clone()),
             Ok(_)
         );
 
         db.accounts_hashes.lock().unwrap().remove(&some_slot);
 
         assert_matches!(
-            db.verify_accounts_hash_and_lamports(some_slot, 1, None, config.clone()),
+            db.verify_accounts_hash_and_satomis(some_slot, 1, None, config.clone()),
             Err(MissingAccountsHash)
         );
 
@@ -12915,7 +12915,7 @@ pub mod tests {
         );
 
         assert_matches!(
-            db.verify_accounts_hash_and_lamports(some_slot, 1, None, config),
+            db.verify_accounts_hash_and_satomis(some_slot, 1, None, config),
             Err(MismatchedAccountsHash)
         );
     }
@@ -12934,7 +12934,7 @@ pub mod tests {
             let ancestors = vec![(some_slot, 0)].into_iter().collect();
             let epoch_schedule = EpochSchedule::default();
             let rent_collector = RentCollector::default();
-            let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+            let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
                 &ancestors,
                 &epoch_schedule,
                 &rent_collector,
@@ -12946,7 +12946,7 @@ pub mod tests {
                 db.update_accounts_hash_for_tests(some_slot, &ancestors, true, true);
 
                 assert_matches!(
-                    db.verify_accounts_hash_and_lamports(some_slot, 1, None, config.clone()),
+                    db.verify_accounts_hash_and_satomis(some_slot, 1, None, config.clone()),
                     Ok(_)
                 );
                 continue;
@@ -12964,13 +12964,13 @@ pub mod tests {
             db.update_accounts_hash_for_tests(some_slot, &ancestors, true, true);
 
             assert_matches!(
-                db.verify_accounts_hash_and_lamports(some_slot, 2, None, config.clone()),
+                db.verify_accounts_hash_and_satomis(some_slot, 2, None, config.clone()),
                 Ok(_)
             );
 
             assert_matches!(
-                db.verify_accounts_hash_and_lamports(some_slot, 10, None, config),
-                Err(MismatchedTotalLamports(expected, actual)) if expected == 2 && actual == 10
+                db.verify_accounts_hash_and_satomis(some_slot, 10, None, config),
+                Err(MismatchedTotalSatomis(expected, actual)) if expected == 2 && actual == 10
             );
         }
     }
@@ -12988,14 +12988,14 @@ pub mod tests {
 
         let epoch_schedule = EpochSchedule::default();
         let rent_collector = RentCollector::default();
-        let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+        let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
             &ancestors,
             &epoch_schedule,
             &rent_collector,
         );
 
         assert_matches!(
-            db.verify_accounts_hash_and_lamports(some_slot, 0, None, config),
+            db.verify_accounts_hash_and_satomis(some_slot, 0, None, config),
             Ok(_)
         );
     }
@@ -13029,14 +13029,14 @@ pub mod tests {
 
         let epoch_schedule = EpochSchedule::default();
         let rent_collector = RentCollector::default();
-        let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+        let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
             &ancestors,
             &epoch_schedule,
             &rent_collector,
         );
 
         assert_matches!(
-            db.verify_accounts_hash_and_lamports(some_slot, 1, None, config),
+            db.verify_accounts_hash_and_satomis(some_slot, 1, None, config),
             Err(MismatchedAccountsHash)
         );
     }
@@ -13046,9 +13046,9 @@ pub mod tests {
         domichain_logger::setup();
         let db = AccountsDb::new_sized(Vec::new(), 16 * 1024);
         let key = domichain_sdk::pubkey::new_rand();
-        let lamports = 100;
+        let satomis = 100;
         let data_len = 8190;
-        let account = AccountSharedData::new(lamports, data_len, &domichain_sdk::pubkey::new_rand());
+        let account = AccountSharedData::new(satomis, data_len, &domichain_sdk::pubkey::new_rand());
         // pre-populate with a smaller empty store
         db.create_and_insert_store(1, 8192, "test_storage_finder");
         db.store_for_tests(1, &[(&key, &account)]);
@@ -13168,16 +13168,16 @@ pub mod tests {
     #[test]
     fn test_accounts_purge_long_chained_after_snapshot_restore() {
         domichain_logger::setup();
-        let old_lamport = 223;
-        let zero_lamport = 0;
+        let old_satomi = 223;
+        let zero_satomi = 0;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(old_lamport, no_data, &owner);
-        let account2 = AccountSharedData::new(old_lamport + 100_001, no_data, &owner);
-        let account3 = AccountSharedData::new(old_lamport + 100_002, no_data, &owner);
+        let account = AccountSharedData::new(old_satomi, no_data, &owner);
+        let account2 = AccountSharedData::new(old_satomi + 100_001, no_data, &owner);
+        let account3 = AccountSharedData::new(old_satomi + 100_002, no_data, &owner);
         let dummy_account = AccountSharedData::new(99_999_999, no_data, &owner);
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
         let pubkey = domichain_sdk::pubkey::new_rand();
         let dummy_pubkey = domichain_sdk::pubkey::new_rand();
@@ -13203,12 +13203,12 @@ pub mod tests {
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&purged_pubkey1, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&purged_pubkey1, &zero_satomi_account)]);
         accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &account3)]);
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
-        accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&purged_pubkey2, &zero_satomi_account)]);
         accounts.add_root_and_flush_write_cache(current_slot);
 
         current_slot += 1;
@@ -13228,7 +13228,7 @@ pub mod tests {
         accounts.clean_accounts_for_tests();
         accounts.print_count_and_status("after purge zero");
 
-        assert_load_account(&accounts, current_slot, pubkey, old_lamport);
+        assert_load_account(&accounts, current_slot, pubkey, old_satomi);
         assert_load_account(&accounts, current_slot, purged_pubkey1, 0);
         assert_load_account(&accounts, current_slot, purged_pubkey2, 0);
     }
@@ -13238,20 +13238,20 @@ pub mod tests {
         let pubkey2 = Pubkey::from_str("My22211111111111111111111111111111111111111").unwrap();
         let pubkey3 = Pubkey::from_str("My33311111111111111111111111111111111111111").unwrap();
 
-        let old_lamport = 223;
-        let zero_lamport = 0;
-        let dummy_lamport = 999_999;
+        let old_satomi = 223;
+        let zero_satomi = 0;
+        let dummy_satomi = 999_999;
 
         // size data so only 1 fits in a 4k store
         let data_size = 2200;
 
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(old_lamport, data_size, &owner);
-        let account2 = AccountSharedData::new(old_lamport + 100_001, data_size, &owner);
-        let account3 = AccountSharedData::new(old_lamport + 100_002, data_size, &owner);
-        let account4 = AccountSharedData::new(dummy_lamport, data_size, &owner);
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, data_size, &owner);
+        let account = AccountSharedData::new(old_satomi, data_size, &owner);
+        let account2 = AccountSharedData::new(old_satomi + 100_001, data_size, &owner);
+        let account3 = AccountSharedData::new(old_satomi + 100_002, data_size, &owner);
+        let account4 = AccountSharedData::new(dummy_satomi, data_size, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, data_size, &owner);
 
         let mut current_slot = 0;
         let accounts = AccountsDb::new_sized_no_extra_stores(Vec::new(), store_size);
@@ -13306,12 +13306,12 @@ pub mod tests {
 
         accounts.print_accounts_stats("Post-C");
 
-        // D: Make all keys 0-lamport, cleans all keys
+        // D: Make all keys 0-satomi, cleans all keys
         current_slot += 1;
         assert_eq!(3, accounts.ref_count_for_pubkey(&pubkey1));
-        accounts.store_for_tests(current_slot, &[(&pubkey1, &zero_lamport_account)]);
-        accounts.store_for_tests(current_slot, &[(&pubkey2, &zero_lamport_account)]);
-        accounts.store_for_tests(current_slot, &[(&pubkey3, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey1, &zero_satomi_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey2, &zero_satomi_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey3, &zero_satomi_account)]);
 
         let snapshot_stores = accounts.get_snapshot_storages(..=current_slot).0;
         let total_accounts: usize = snapshot_stores.iter().map(|s| s.all_accounts().len()).sum();
@@ -13359,17 +13359,17 @@ pub mod tests {
     #[test]
     fn test_accounts_clean_after_snapshot_restore_then_old_revives() {
         domichain_logger::setup();
-        let old_lamport = 223;
-        let zero_lamport = 0;
+        let old_satomi = 223;
+        let zero_satomi = 0;
         let no_data = 0;
-        let dummy_lamport = 999_999;
+        let dummy_satomi = 999_999;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(old_lamport, no_data, &owner);
-        let account2 = AccountSharedData::new(old_lamport + 100_001, no_data, &owner);
-        let account3 = AccountSharedData::new(old_lamport + 100_002, no_data, &owner);
-        let dummy_account = AccountSharedData::new(dummy_lamport, no_data, &owner);
-        let zero_lamport_account = AccountSharedData::new(zero_lamport, no_data, &owner);
+        let account = AccountSharedData::new(old_satomi, no_data, &owner);
+        let account2 = AccountSharedData::new(old_satomi + 100_001, no_data, &owner);
+        let account3 = AccountSharedData::new(old_satomi + 100_002, no_data, &owner);
+        let dummy_account = AccountSharedData::new(dummy_satomi, no_data, &owner);
+        let zero_satomi_account = AccountSharedData::new(zero_satomi, no_data, &owner);
 
         let pubkey1 = domichain_sdk::pubkey::new_rand();
         let pubkey2 = domichain_sdk::pubkey::new_rand();
@@ -13408,10 +13408,10 @@ pub mod tests {
         accounts.calculate_accounts_delta_hash(current_slot);
         accounts.add_root_and_flush_write_cache(current_slot);
 
-        // D: Make pubkey1 0-lamport; also triggers clean of step B
+        // D: Make pubkey1 0-satomi; also triggers clean of step B
         current_slot += 1;
         assert_eq!(3, accounts.ref_count_for_pubkey(&pubkey1));
-        accounts.store_for_tests(current_slot, &[(&pubkey1, &zero_lamport_account)]);
+        accounts.store_for_tests(current_slot, &[(&pubkey1, &zero_satomi_account)]);
         accounts.add_root_and_flush_write_cache(current_slot);
         // had to be a root to flush, but clean won't work as this test expects if it is a root
         // so, remove the root from alive_roots, then restore it after clean
@@ -13446,9 +13446,9 @@ pub mod tests {
         accounts.calculate_accounts_delta_hash(current_slot);
         accounts.add_root(current_slot);
 
-        assert_load_account(&accounts, current_slot, pubkey1, zero_lamport);
-        assert_load_account(&accounts, current_slot, pubkey2, old_lamport);
-        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_lamport);
+        assert_load_account(&accounts, current_slot, pubkey1, zero_satomi);
+        assert_load_account(&accounts, current_slot, pubkey2, old_satomi);
+        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_satomi);
 
         // At this point, there is no index entries for A and B
         // If step C and step D should be purged, snapshot restore would cause
@@ -13467,9 +13467,9 @@ pub mod tests {
 
         info!("pubkey: {}", pubkey1);
         accounts.print_accounts_stats("pre_clean");
-        assert_load_account(&accounts, current_slot, pubkey1, zero_lamport);
-        assert_load_account(&accounts, current_slot, pubkey2, old_lamport);
-        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_lamport);
+        assert_load_account(&accounts, current_slot, pubkey1, zero_satomi);
+        assert_load_account(&accounts, current_slot, pubkey2, old_satomi);
+        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_satomi);
 
         // F: Finally, make Step A cleanable
         current_slot += 1;
@@ -13486,8 +13486,8 @@ pub mod tests {
 
         // Ensure pubkey2 is cleaned from the index finally
         assert_not_load_account(&accounts, current_slot, pubkey1);
-        assert_load_account(&accounts, current_slot, pubkey2, old_lamport);
-        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_lamport);
+        assert_load_account(&accounts, current_slot, pubkey2, old_satomi);
+        assert_load_account(&accounts, current_slot, dummy_pubkey, dummy_satomi);
     }
 
     #[test]
@@ -13524,11 +13524,11 @@ pub mod tests {
                 .map(|_| domichain_sdk::pubkey::new_rand())
                 .collect();
 
-            let some_lamport = 223;
+            let some_satomi = 223;
             let no_data = 0;
             let owner = *AccountSharedData::default().owner();
 
-            let account = AccountSharedData::new(some_lamport, no_data, &owner);
+            let account = AccountSharedData::new(some_satomi, no_data, &owner);
 
             let mut current_slot = 0;
 
@@ -13566,7 +13566,7 @@ pub mod tests {
 
             let epoch_schedule = EpochSchedule::default();
             let rent_collector = RentCollector::default();
-            let config = VerifyAccountsHashAndLamportsConfig::new_for_test(
+            let config = VerifyAccountsHashAndSatomisConfig::new_for_test(
                 &no_ancestors,
                 &epoch_schedule,
                 &rent_collector,
@@ -13574,12 +13574,12 @@ pub mod tests {
 
             accounts.update_accounts_hash_for_tests(current_slot, &no_ancestors, false, false);
             accounts
-                .verify_accounts_hash_and_lamports(current_slot, 22300, None, config.clone())
+                .verify_accounts_hash_and_satomis(current_slot, 22300, None, config.clone())
                 .unwrap();
 
             let accounts = reconstruct_accounts_db_via_serialization(&accounts, current_slot);
             accounts
-                .verify_accounts_hash_and_lamports(current_slot, 22300, None, config)
+                .verify_accounts_hash_and_satomis(current_slot, 22300, None, config)
                 .unwrap();
 
             // repeating should be no-op
@@ -13602,11 +13602,11 @@ pub mod tests {
             .map(|_| domichain_sdk::pubkey::new_rand())
             .collect();
 
-        let some_lamport = 223;
+        let some_satomi = 223;
         let no_data = 0;
         let owner = *AccountSharedData::default().owner();
 
-        let account = AccountSharedData::new(some_lamport, no_data, &owner);
+        let account = AccountSharedData::new(some_satomi, no_data, &owner);
 
         let mut current_slot = 0;
 
@@ -14039,14 +14039,14 @@ pub mod tests {
         let normal_sysvar = domichain_sdk::account::create_account_for_test(
             &domichain_sdk::slot_history::SlotHistory::default(),
         );
-        assert_eq!(normal_sysvar.lamports(), 1);
+        assert_eq!(normal_sysvar.satomis(), 1);
     }
 
     #[test]
     fn test_account_balance_for_capitalization_native_program() {
         let normal_native_program =
             domichain_sdk::native_loader::create_loadable_account_for_test("foo");
-        assert_eq!(normal_native_program.lamports(), 1);
+        assert_eq!(normal_native_program.satomis(), 1);
     }
 
     #[test]
@@ -14200,7 +14200,7 @@ pub mod tests {
     fn test_wrapping_append_vec_id() {
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
         // set 'next' id to the max possible value
@@ -14210,7 +14210,7 @@ pub mod tests {
         // write unique keys to successive slots
         keys.iter().enumerate().for_each(|(slot, key)| {
             let slot = slot as Slot;
-            db.store_for_tests(slot, &[(key, &zero_lamport_account)]);
+            db.store_for_tests(slot, &[(key, &zero_satomi_account)]);
             db.calculate_accounts_delta_hash(slot);
             db.add_root_and_flush_write_cache(slot);
         });
@@ -14227,7 +14227,7 @@ pub mod tests {
         domichain_logger::setup();
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
 
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
         // set 'next' id to the max possible value
@@ -14237,7 +14237,7 @@ pub mod tests {
         // write unique keys to successive slots
         keys.iter().enumerate().for_each(|(slot, key)| {
             let slot = slot as Slot;
-            db.store_for_tests(slot, &[(key, &zero_lamport_account)]);
+            db.store_for_tests(slot, &[(key, &zero_satomi_account)]);
             db.calculate_accounts_delta_hash(slot);
             db.add_root_and_flush_write_cache(slot);
             // reset next_id to what it was previously to cause us to re-use the same id
@@ -14250,27 +14250,27 @@ pub mod tests {
     }
 
     #[test]
-    fn test_zero_lamport_new_root_not_cleaned() {
+    fn test_zero_satomi_new_root_not_cleaned() {
         let db = AccountsDb::new(Vec::new(), &ClusterType::Development);
         let account_key = Pubkey::new_unique();
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
-        // Store zero lamport account into slots 0 and 1, root both slots
-        db.store_for_tests(0, &[(&account_key, &zero_lamport_account)]);
-        db.store_for_tests(1, &[(&account_key, &zero_lamport_account)]);
+        // Store zero satomi account into slots 0 and 1, root both slots
+        db.store_for_tests(0, &[(&account_key, &zero_satomi_account)]);
+        db.store_for_tests(1, &[(&account_key, &zero_satomi_account)]);
         db.calculate_accounts_delta_hash(0);
         db.add_root_and_flush_write_cache(0);
         db.calculate_accounts_delta_hash(1);
         db.add_root_and_flush_write_cache(1);
 
-        // Only clean zero lamport accounts up to slot 0
+        // Only clean zero satomi accounts up to slot 0
         db.clean_accounts(Some(0), false, None, &EpochSchedule::default());
 
-        // Should still be able to find zero lamport account in slot 1
+        // Should still be able to find zero satomi account in slot 1
         assert_eq!(
             db.load_without_fixed_root(&Ancestors::default(), &account_key),
-            Some((zero_lamport_account, 1))
+            Some((zero_satomi_account, 1))
         );
     }
 
@@ -14463,10 +14463,10 @@ pub mod tests {
         ));
 
         let account_key = Pubkey::new_unique();
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         let slot1_account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
-        db.store_cached((0, &[(&account_key, &zero_lamport_account)][..]), None);
+        db.store_cached((0, &[(&account_key, &zero_satomi_account)][..]), None);
         db.store_cached((1, &[(&account_key, &slot1_account)][..]), None);
 
         db.add_root(0);
@@ -14481,15 +14481,15 @@ pub mod tests {
             .load_with_fixed_root(&Ancestors::default(), &account_key)
             .map(|(account, _)| account)
             .unwrap();
-        assert_eq!(account.lamports(), 1);
+        assert_eq!(account.satomis(), 1);
         assert_eq!(db.read_only_accounts_cache.cache_len(), 1);
         let account = db
             .load_with_fixed_root(&Ancestors::default(), &account_key)
             .map(|(account, _)| account)
             .unwrap();
-        assert_eq!(account.lamports(), 1);
+        assert_eq!(account.satomis(), 1);
         assert_eq!(db.read_only_accounts_cache.cache_len(), 1);
-        db.store_cached((2, &[(&account_key, &zero_lamport_account)][..]), None);
+        db.store_cached((2, &[(&account_key, &zero_satomi_account)][..]), None);
         assert_eq!(db.read_only_accounts_cache.cache_len(), 1);
         let account = db
             .load_with_fixed_root(&Ancestors::default(), &account_key)
@@ -14519,7 +14519,7 @@ pub mod tests {
         let account3_key = Pubkey::new_unique();
         let account3 = AccountSharedData::new(1, 1, &Pubkey::new_unique());
 
-        // Account with 0 lamports
+        // Account with 0 satomis
         let account4_key = Pubkey::new_unique();
         let account4 = AccountSharedData::new(0, 1, &owners[1]);
 
@@ -14567,7 +14567,7 @@ pub mod tests {
                 &account1_key,
                 Some(0),
                 LoadHint::Unspecified,
-                LoadZeroLamports::SomeWithZeroLamportAccountForTests,
+                LoadZeroSatomis::SomeWithZeroSatomiAccountForTests,
             )
             .unwrap();
 
@@ -14594,7 +14594,7 @@ pub mod tests {
     }
 
     /// a test that will accept either answer
-    const LOAD_ZERO_LAMPORTS_ANY_TESTS: LoadZeroLamports = LoadZeroLamports::None;
+    const LOAD_ZERO_SATOMIS_ANY_TESTS: LoadZeroSatomis = LoadZeroSatomis::None;
 
     #[test]
     fn test_flush_cache_clean() {
@@ -14606,10 +14606,10 @@ pub mod tests {
         ));
 
         let account_key = Pubkey::new_unique();
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         let slot1_account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
-        db.store_cached((0, &[(&account_key, &zero_lamport_account)][..]), None);
+        db.store_cached((0, &[(&account_key, &zero_satomi_account)][..]), None);
         db.store_cached((1, &[(&account_key, &slot1_account)][..]), None);
 
         db.add_root(0);
@@ -14623,10 +14623,10 @@ pub mod tests {
                 &account_key,
                 Some(0),
                 LoadHint::Unspecified,
-                LoadZeroLamports::SomeWithZeroLamportAccountForTests,
+                LoadZeroSatomis::SomeWithZeroSatomiAccountForTests,
             )
             .unwrap();
-        assert_eq!(account.0.lamports(), 0);
+        assert_eq!(account.0.satomis(), 0);
         // since this item is in the cache, it should not be in the read only cache
         assert_eq!(db.read_only_accounts_cache.cache_len(), 0);
 
@@ -14640,13 +14640,13 @@ pub mod tests {
                 &account_key,
                 Some(0),
                 LoadHint::Unspecified,
-                LOAD_ZERO_LAMPORTS_ANY_TESTS
+                LOAD_ZERO_SATOMIS_ANY_TESTS
             )
             .is_none());
     }
 
     #[test]
-    fn test_flush_cache_dont_clean_zero_lamport_account() {
+    fn test_flush_cache_dont_clean_zero_satomi_account() {
         let db = Arc::new(AccountsDb::new_with_config_for_tests(
             Vec::new(),
             &ClusterType::Development,
@@ -14654,22 +14654,22 @@ pub mod tests {
             AccountShrinkThreshold::default(),
         ));
 
-        let zero_lamport_account_key = Pubkey::new_unique();
+        let zero_satomi_account_key = Pubkey::new_unique();
         let other_account_key = Pubkey::new_unique();
 
-        let original_lamports = 1;
+        let original_satomis = 1;
         let slot0_account =
-            AccountSharedData::new(original_lamports, 1, AccountSharedData::default().owner());
-        let zero_lamport_account =
+            AccountSharedData::new(original_satomis, 1, AccountSharedData::default().owner());
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
 
         // Store into slot 0, and then flush the slot to storage
         db.store_cached(
-            (0, &[(&zero_lamport_account_key, &slot0_account)][..]),
+            (0, &[(&zero_satomi_account_key, &slot0_account)][..]),
             None,
         );
-        // Second key keeps other lamport account entry for slot 0 alive,
-        // preventing clean of the zero_lamport_account in slot 1.
+        // Second key keeps other satomi account entry for slot 0 alive,
+        // preventing clean of the zero_satomi_account in slot 1.
         db.store_cached((0, &[(&other_account_key, &slot0_account)][..]), None);
         db.add_root(0);
         db.flush_accounts_cache(true, None);
@@ -14677,18 +14677,18 @@ pub mod tests {
 
         // Store into slot 1, a dummy slot that will be dead and purged before flush
         db.store_cached(
-            (1, &[(&zero_lamport_account_key, &zero_lamport_account)][..]),
+            (1, &[(&zero_satomi_account_key, &zero_satomi_account)][..]),
             None,
         );
 
         // Store into slot 2, which makes all updates from slot 1 outdated.
         // This means slot 1 is a dead slot. Later, slot 1 will be cleaned/purged
         // before it even reaches storage, but this purge of slot 1should not affect
-        // the refcount of `zero_lamport_account_key` because cached keys do not bump
+        // the refcount of `zero_satomi_account_key` because cached keys do not bump
         // the refcount in the index. This means clean should *not* remove
-        // `zero_lamport_account_key` from slot 2
+        // `zero_satomi_account_key` from slot 2
         db.store_cached(
-            (2, &[(&zero_lamport_account_key, &zero_lamport_account)][..]),
+            (2, &[(&zero_satomi_account_key, &zero_satomi_account)][..]),
             None,
         );
         db.add_root(1);
@@ -14699,11 +14699,11 @@ pub mod tests {
         db.flush_accounts_cache(true, None);
         db.clean_accounts_for_tests();
 
-        // The `zero_lamport_account_key` is still alive in slot 1, so refcount for the
+        // The `zero_satomi_account_key` is still alive in slot 1, so refcount for the
         // pubkey should be 2
         assert_eq!(
             db.accounts_index
-                .ref_count_from_storage(&zero_lamport_account_key),
+                .ref_count_from_storage(&zero_satomi_account_key),
             2
         );
         assert_eq!(
@@ -14711,8 +14711,8 @@ pub mod tests {
             1
         );
 
-        // The zero-lamport account in slot 2 should not be purged yet, because the
-        // entry in slot 1 is blocking cleanup of the zero-lamport account.
+        // The zero-satomi account in slot 2 should not be purged yet, because the
+        // entry in slot 1 is blocking cleanup of the zero-satomi account.
         let max_root = None;
         // Fine to simulate a transaction load since we are not doing any out of band
         // removals, only using clean_accounts
@@ -14720,14 +14720,14 @@ pub mod tests {
         assert_eq!(
             db.do_load(
                 &Ancestors::default(),
-                &zero_lamport_account_key,
+                &zero_satomi_account_key,
                 max_root,
                 load_hint,
-                LoadZeroLamports::SomeWithZeroLamportAccountForTests,
+                LoadZeroSatomis::SomeWithZeroSatomiAccountForTests,
             )
             .unwrap()
             .0
-            .lamports(),
+            .satomis(),
             0
         );
     }
@@ -14799,19 +14799,19 @@ pub mod tests {
         ));
         let account_key = Pubkey::new_unique();
         let account_key2 = Pubkey::new_unique();
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         let slot1_account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
         let slot2_account = AccountSharedData::new(2, 1, AccountSharedData::default().owner());
 
         /*
-            Store zero lamport account into slots 0, 1, 2 where
+            Store zero satomi account into slots 0, 1, 2 where
             root slots are 0, 2, and slot 1 is unrooted.
                                     0 (root)
                                 /        \
                               1            2 (root)
         */
-        db.store_cached((0, &[(&account_key, &zero_lamport_account)][..]), None);
+        db.store_cached((0, &[(&account_key, &zero_satomi_account)][..]), None);
         db.store_cached((1, &[(&account_key, &slot1_account)][..]), None);
         // Fodder for the scan so that the lock on `account_key` is not held
         db.store_cached((1, &[(&account_key2, &slot1_account)][..]), None);
@@ -14850,10 +14850,10 @@ pub mod tests {
                 &account_key,
                 Some(0),
                 LoadHint::Unspecified,
-                LoadZeroLamports::SomeWithZeroLamportAccountForTests,
+                LoadZeroSatomis::SomeWithZeroSatomiAccountForTests,
             )
             .unwrap();
-        assert_eq!(account.0.lamports(), zero_lamport_account.lamports());
+        assert_eq!(account.0.satomis(), zero_satomi_account.satomis());
 
         // Run clean, unrooted slot 1 should not be purged, and still readable from the cache,
         // because we're still doing a scan on it.
@@ -14864,10 +14864,10 @@ pub mod tests {
                 &account_key,
                 Some(max_scan_root),
                 LoadHint::Unspecified,
-                LOAD_ZERO_LAMPORTS_ANY_TESTS,
+                LOAD_ZERO_SATOMIS_ANY_TESTS,
             )
             .unwrap();
-        assert_eq!(account.0.lamports(), slot1_account.lamports());
+        assert_eq!(account.0.satomis(), slot1_account.satomis());
 
         // When the scan is over, clean should not panic and should not purge something
         // still in the cache.
@@ -14879,10 +14879,10 @@ pub mod tests {
                 &account_key,
                 Some(max_scan_root),
                 LoadHint::Unspecified,
-                LOAD_ZERO_LAMPORTS_ANY_TESTS,
+                LOAD_ZERO_SATOMIS_ANY_TESTS,
             )
             .unwrap();
-        assert_eq!(account.0.lamports(), slot1_account.lamports());
+        assert_eq!(account.0.satomis(), slot1_account.satomis());
 
         // Simulate dropping the bank, which finally removes the slot from the cache
         let bank_id = 1;
@@ -14893,7 +14893,7 @@ pub mod tests {
                 &account_key,
                 Some(max_scan_root),
                 LoadHint::Unspecified,
-                LOAD_ZERO_LAMPORTS_ANY_TESTS
+                LOAD_ZERO_SATOMIS_ANY_TESTS
             )
             .is_none());
     }
@@ -15050,7 +15050,7 @@ pub mod tests {
                     key,
                     Some(last_dead_slot),
                     LoadHint::Unspecified,
-                    LOAD_ZERO_LAMPORTS_ANY_TESTS
+                    LOAD_ZERO_SATOMIS_ANY_TESTS
                 )
                 .is_some());
         }
@@ -15079,7 +15079,7 @@ pub mod tests {
                     key,
                     Some(last_dead_slot),
                     LoadHint::Unspecified,
-                    LOAD_ZERO_LAMPORTS_ANY_TESTS
+                    LOAD_ZERO_SATOMIS_ANY_TESTS
                 )
                 .is_none());
         }
@@ -15577,7 +15577,7 @@ pub mod tests {
         db: Arc<AccountsDb>,
         exit: Arc<AtomicBool>,
         pubkey: Arc<Pubkey>,
-        expected_lamports: impl Fn(&(AccountSharedData, Slot)) -> u64 + Send + 'static,
+        expected_satomis: impl Fn(&(AccountSharedData, Slot)) -> u64 + Send + 'static,
     ) -> JoinHandle<()> {
         let load_hint = if with_retry {
             LoadHint::FixedMaxRoot
@@ -15607,13 +15607,13 @@ pub mod tests {
                             &pubkey,
                             None,
                             load_hint,
-                            LOAD_ZERO_LAMPORTS_ANY_TESTS,
+                            LOAD_ZERO_SATOMIS_ANY_TESTS,
                         )
                         .unwrap();
-                    // slot + 1 == account.lamports because of the account-cache-flush thread
+                    // slot + 1 == account.satomis because of the account-cache-flush thread
                     assert_eq!(
-                        loaded_account.0.lamports(),
-                        expected_lamports(&loaded_account)
+                        loaded_account.0.satomis(),
+                        expected_satomis(&loaded_account)
                     );
                 }
             })
@@ -15659,7 +15659,7 @@ pub mod tests {
                         if exit.load(Ordering::Relaxed) {
                             return;
                         }
-                        account.set_lamports(slot + 1);
+                        account.set_satomis(slot + 1);
                         db.store_cached((slot, &[(pubkey.as_ref(), &account)][..]), None);
                         db.add_root(slot);
                         sleep(Duration::from_millis(RACY_SLEEP_MS));
@@ -15710,9 +15710,9 @@ pub mod tests {
         let slot = 1;
 
         // Store an account
-        let lamports = 42;
+        let satomis = 42;
         let mut account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
-        account.set_lamports(lamports);
+        account.set_satomis(satomis);
         db.store_uncached(slot, &[(&pubkey, &account)]);
 
         // Set the slot as a root so account loads will see the contents of this slot
@@ -15745,7 +15745,7 @@ pub mod tests {
             db,
             exit.clone(),
             pubkey,
-            move |_| lamports,
+            move |_| satomis,
         );
 
         sleep(Duration::from_secs(RACE_TIME));
@@ -15777,9 +15777,9 @@ pub mod tests {
         let slot = 10;
         let bank_id = 10;
 
-        let lamports = 42;
+        let satomis = 42;
         let mut account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
-        account.set_lamports(lamports);
+        account.set_satomis(satomis);
 
         // Start up a thread to flush the accounts cache
         let (flush_trial_start_sender, flush_trial_start_receiver) = unbounded();
@@ -15889,9 +15889,9 @@ pub mod tests {
         // dumped them in previous trials.
         for _ in 0..num_trials {
             // Store an account
-            let lamports = 42;
+            let satomis = 42;
             let mut account = AccountSharedData::new(1, 0, AccountSharedData::default().owner());
-            account.set_lamports(lamports);
+            account.set_satomis(satomis);
 
             // Pick random 50% of the slots to pass to `remove_unrooted_slots()`
             let mut all_slots: Vec<(Slot, BankId)> = (0..num_cached_slots)
@@ -16281,7 +16281,7 @@ pub mod tests {
         let slot0 = 0;
         let slot1 = 1;
 
-        // Store accounts with greater than 0 lamports
+        // Store accounts with greater than 0 satomis
         let account = AccountSharedData::new(1, 1, AccountSharedData::default().owner());
         accounts.store_for_tests(slot0, &[(&shared_key, &account)]);
         accounts.store_for_tests(slot0, &[(&unrooted_key, &account)]);
@@ -16290,16 +16290,16 @@ pub mod tests {
         // not a rooted slot
         accounts.calculate_accounts_delta_hash(slot0);
 
-        // On the next *rooted* slot, update the `shared_key` account to zero lamports
-        let zero_lamport_account =
+        // On the next *rooted* slot, update the `shared_key` account to zero satomis
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
-        accounts.store_for_tests(slot1, &[(&shared_key, &zero_lamport_account)]);
+        accounts.store_for_tests(slot1, &[(&shared_key, &zero_satomi_account)]);
 
         // Simulate adding dirty pubkeys on bank freeze, set root
         accounts.calculate_accounts_delta_hash(slot1);
         accounts.add_root_and_flush_write_cache(slot1);
 
-        // The later rooted zero-lamport update to `shared_key` cannot be cleaned
+        // The later rooted zero-satomi update to `shared_key` cannot be cleaned
         // because it is kept alive by the unrooted slot.
         accounts.clean_accounts_for_tests();
         assert!(accounts
@@ -16376,7 +16376,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_filter_zero_lamport_clean_for_incremental_snapshots() {
+    fn test_filter_zero_satomi_clean_for_incremental_snapshots() {
         domichain_logger::setup();
         let slot = 10;
 
@@ -16394,19 +16394,19 @@ pub mod tests {
             let store_count = 0;
             let mut store_counts = HashMap::default();
             store_counts.insert(slot, (store_count, key_set));
-            let mut purges_zero_lamports = HashMap::default();
-            purges_zero_lamports.insert(pubkey, (vec![(slot, account_info)], 1));
+            let mut purges_zero_satomis = HashMap::default();
+            purges_zero_satomis.insert(pubkey, (vec![(slot, account_info)], 1));
 
             let accounts_db = AccountsDb::new_single_for_tests();
-            accounts_db.filter_zero_lamport_clean_for_incremental_snapshots(
+            accounts_db.filter_zero_satomi_clean_for_incremental_snapshots(
                 test_params.max_clean_root,
                 test_params.last_full_snapshot_slot,
                 &store_counts,
-                &mut purges_zero_lamports,
+                &mut purges_zero_satomis,
             );
 
             assert_eq!(
-                purges_zero_lamports.contains_key(&pubkey),
+                purges_zero_satomis.contains_key(&pubkey),
                 test_params.should_contain
             );
         };
@@ -16429,7 +16429,7 @@ pub mod tests {
             });
         }
 
-        // Scenario 2: last full snapshot is GREATER THAN zero lamport account slot
+        // Scenario 2: last full snapshot is GREATER THAN zero satomi account slot
         // In this scenario always purge, and just test the various permutations of
         // `should_filter_for_incremental_snapshots` based on `max_clean_root`.
         {
@@ -16454,7 +16454,7 @@ pub mod tests {
             });
         }
 
-        // Scenario 3: last full snapshot is EQUAL TO zero lamport account slot
+        // Scenario 3: last full snapshot is EQUAL TO zero satomi account slot
         // In this scenario always purge, as it's the same as Scenario 2.
         {
             let last_full_snapshot_slot = Some(slot);
@@ -16478,7 +16478,7 @@ pub mod tests {
             });
         }
 
-        // Scenario 4: last full snapshot is LESS THAN zero lamport account slot
+        // Scenario 4: last full snapshot is LESS THAN zero satomi account slot
         // In this scenario do *not* purge, except when `should_filter_for_incremental_snapshots`
         // is false
         {
@@ -17500,7 +17500,7 @@ pub mod tests {
             SHRINK_COLLECT_CHUNK_SIZE + 1,
             SHRINK_COLLECT_CHUNK_SIZE * 2,
         ];
-        // 2 = append_opposite_alive_account + append_opposite_zero_lamport_account
+        // 2 = append_opposite_alive_account + append_opposite_zero_satomi_account
         let max_appended_accounts = 2;
         let max_num_accounts = *account_counts.iter().max().unwrap();
         let pubkeys = (0..(max_num_accounts + max_appended_accounts))
@@ -17508,47 +17508,47 @@ pub mod tests {
             .collect::<Vec<_>>();
         // write accounts, maybe remove from index
         // check shrink_collect results
-        for lamports in [0, 1] {
+        for satomis in [0, 1] {
             for space in [0, 8] {
-                if lamports == 0 && space != 0 {
-                    // illegal - zero lamport accounts are written with 0 space
+                if satomis == 0 && space != 0 {
+                    // illegal - zero satomi accounts are written with 0 space
                     continue;
                 }
                 for alive in [false, true] {
                     for append_opposite_alive_account in [false, true] {
-                        for append_opposite_zero_lamport_account in [true, false] {
+                        for append_opposite_zero_satomi_account in [true, false] {
                             for mut account_count in account_counts {
                                 let mut normal_account_count = account_count;
-                                let mut pubkey_opposite_zero_lamports = None;
-                                if append_opposite_zero_lamport_account {
-                                    pubkey_opposite_zero_lamports = Some(&pubkeys[account_count]);
+                                let mut pubkey_opposite_zero_satomis = None;
+                                if append_opposite_zero_satomi_account {
+                                    pubkey_opposite_zero_satomis = Some(&pubkeys[account_count]);
                                     normal_account_count += 1;
                                     account_count += 1;
                                 }
                                 let mut pubkey_opposite_alive = None;
                                 if append_opposite_alive_account {
-                                    // this needs to happen AFTER append_opposite_zero_lamport_account
+                                    // this needs to happen AFTER append_opposite_zero_satomi_account
                                     pubkey_opposite_alive = Some(&pubkeys[account_count]);
                                     account_count += 1;
                                 }
-                                debug!("space: {space}, lamports: {lamports}, alive: {alive}, account_count: {account_count}, append_opposite_alive_account: {append_opposite_alive_account}, append_opposite_zero_lamport_account: {append_opposite_zero_lamport_account}, normal_account_count: {normal_account_count}");
+                                debug!("space: {space}, satomis: {satomis}, alive: {alive}, account_count: {account_count}, append_opposite_alive_account: {append_opposite_alive_account}, append_opposite_zero_satomi_account: {append_opposite_zero_satomi_account}, normal_account_count: {normal_account_count}");
                                 let db = AccountsDb::new_single_for_tests();
                                 let slot5 = 5;
                                 let mut account = AccountSharedData::new(
-                                    lamports,
+                                    satomis,
                                     space,
                                     AccountSharedData::default().owner(),
                                 );
                                 let mut to_purge = Vec::default();
                                 for pubkey in pubkeys.iter().take(account_count) {
                                     // store in append vec and index
-                                    let old_lamports = account.lamports();
-                                    if Some(pubkey) == pubkey_opposite_zero_lamports {
-                                        account.set_lamports(u64::from(old_lamports == 0));
+                                    let old_satomis = account.satomis();
+                                    if Some(pubkey) == pubkey_opposite_zero_satomis {
+                                        account.set_satomis(u64::from(old_satomis == 0));
                                     }
 
                                     db.store_for_tests(slot5, &[(pubkey, &account)]);
-                                    account.set_lamports(old_lamports);
+                                    account.set_satomis(old_satomis);
                                     let mut alive = alive;
                                     if append_opposite_alive_account
                                         && Some(pubkey) == pubkey_opposite_alive
@@ -17648,8 +17648,8 @@ pub mod tests {
                                     );
                                     let mut expected_alive_total_bytes =
                                         alive_total_one_account * normal_account_count;
-                                    if append_opposite_zero_lamport_account {
-                                        // zero lamport accounts store size=0 data
+                                    if append_opposite_zero_satomi_account {
+                                        // zero satomi accounts store size=0 data
                                         expected_alive_total_bytes -= space;
                                     }
                                     assert_eq!(
@@ -17679,17 +17679,17 @@ pub mod tests {
                                 };
                                 assert_eq!(shrink_collect.capacity, expected_capacity);
                                 assert_eq!(shrink_collect.total_starting_accounts, account_count);
-                                let mut expected_all_are_zero_lamports = lamports == 0;
+                                let mut expected_all_are_zero_satomis = satomis == 0;
                                 if !append_opposite_alive_account {
-                                    expected_all_are_zero_lamports |= !alive;
+                                    expected_all_are_zero_satomis |= !alive;
                                 }
-                                if append_opposite_zero_lamport_account && lamports == 0 && alive {
-                                    expected_all_are_zero_lamports =
-                                        !expected_all_are_zero_lamports;
+                                if append_opposite_zero_satomi_account && satomis == 0 && alive {
+                                    expected_all_are_zero_satomis =
+                                        !expected_all_are_zero_satomis;
                                 }
                                 assert_eq!(
-                                    shrink_collect.all_are_zero_lamports,
-                                    expected_all_are_zero_lamports
+                                    shrink_collect.all_are_zero_satomis,
+                                    expected_all_are_zero_satomis
                                 );
                             }
                         }
@@ -17766,7 +17766,7 @@ pub mod tests {
         let clean = |accounts: &[(Pubkey, AccountSharedData)]| {
             accounts
                 .iter()
-                .map(|(_pubkey, account)| account.lamports())
+                .map(|(_pubkey, account)| account.satomis())
                 .collect::<Vec<_>>()
         };
         assert_eq!(
@@ -18040,7 +18040,7 @@ pub mod tests {
                 storage.accounts.account_iter().for_each(|account| {
                     let info = AccountInfo::new(
                         StorageLocation::AppendVec(storage.append_vec_id(), account.offset()),
-                        account.lamports(),
+                        account.satomis(),
                     );
                     db.accounts_index.upsert(
                         slot,
@@ -18385,11 +18385,11 @@ pub mod tests {
         // store some accounts into slot 0
         let slot = 0;
         {
-            accounts[0].1.set_lamports(0);
-            accounts[1].1.set_lamports(1);
-            accounts[2].1.set_lamports(10);
-            accounts[3].1.set_lamports(100);
-            //accounts[4].1.set_lamports(1_000); <-- will be added next slot
+            accounts[0].1.set_satomis(0);
+            accounts[1].1.set_satomis(1);
+            accounts[2].1.set_satomis(10);
+            accounts[3].1.set_satomis(100);
+            //accounts[4].1.set_satomis(1_000); <-- will be added next slot
 
             let accounts = vec![
                 (&accounts[0].0, &accounts[0].1),
@@ -18404,11 +18404,11 @@ pub mod tests {
         // store some accounts into slot 1
         let slot = slot + 1;
         {
-            //accounts[0].1.set_lamports(0);      <-- unchanged
-            accounts[1].1.set_lamports(0); /*     <-- drain account */
-            //accounts[2].1.set_lamports(10);     <-- unchanged
-            //accounts[3].1.set_lamports(100);    <-- unchanged
-            accounts[4].1.set_lamports(1_000); /* <-- add account */
+            //accounts[0].1.set_satomis(0);      <-- unchanged
+            accounts[1].1.set_satomis(0); /*     <-- drain account */
+            //accounts[2].1.set_satomis(10);     <-- unchanged
+            //accounts[3].1.set_satomis(100);    <-- unchanged
+            accounts[4].1.set_satomis(1_000); /* <-- add account */
 
             let accounts = vec![
                 (&accounts[1].0, &accounts[1].1),
@@ -18435,7 +18435,7 @@ pub mod tests {
         let full_accounts_hash_slot = slot;
 
         // Calculate the expected full accounts hash here and ensure it matches.
-        // Ensure the zero-lamport accounts are NOT included in the full accounts hash.
+        // Ensure the zero-satomi accounts are NOT included in the full accounts hash.
         let full_account_hashes = [(2, 0), (3, 0), (4, 1)].into_iter().map(|(index, slot)| {
             let (pubkey, account) = &accounts[index];
             AccountsDb::hash_account(slot, account, pubkey, INCLUDE_SLOT_IN_HASH_TESTS)
@@ -18446,14 +18446,14 @@ pub mod tests {
         // store accounts into slot 2
         let slot = slot + 1;
         {
-            //accounts[0].1.set_lamports(0);         <-- unchanged
-            //accounts[1].1.set_lamports(0);         <-- unchanged
-            accounts[2].1.set_lamports(0); /*        <-- drain account */
-            //accounts[3].1.set_lamports(100);       <-- unchanged
-            //accounts[4].1.set_lamports(1_000);     <-- unchanged
-            accounts[5].1.set_lamports(10_000); /*   <-- add account */
-            accounts[6].1.set_lamports(100_000); /*  <-- add account */
-            //accounts[7].1.set_lamports(1_000_000); <-- will be added next slot
+            //accounts[0].1.set_satomis(0);         <-- unchanged
+            //accounts[1].1.set_satomis(0);         <-- unchanged
+            accounts[2].1.set_satomis(0); /*        <-- drain account */
+            //accounts[3].1.set_satomis(100);       <-- unchanged
+            //accounts[4].1.set_satomis(1_000);     <-- unchanged
+            accounts[5].1.set_satomis(10_000); /*   <-- add account */
+            accounts[6].1.set_satomis(100_000); /*  <-- add account */
+            //accounts[7].1.set_satomis(1_000_000); <-- will be added next slot
 
             let accounts = vec![
                 (&accounts[2].0, &accounts[2].1),
@@ -18467,14 +18467,14 @@ pub mod tests {
         // store accounts into slot 3
         let slot = slot + 1;
         {
-            //accounts[0].1.set_lamports(0);          <-- unchanged
-            //accounts[1].1.set_lamports(0);          <-- unchanged
-            //accounts[2].1.set_lamports(0);          <-- unchanged
-            accounts[3].1.set_lamports(0); /*         <-- drain account */
-            //accounts[4].1.set_lamports(1_000);      <-- unchanged
-            accounts[5].1.set_lamports(0); /*         <-- drain account */
-            //accounts[6].1.set_lamports(100_000);    <-- unchanged
-            accounts[7].1.set_lamports(1_000_000); /* <-- add account */
+            //accounts[0].1.set_satomis(0);          <-- unchanged
+            //accounts[1].1.set_satomis(0);          <-- unchanged
+            //accounts[2].1.set_satomis(0);          <-- unchanged
+            accounts[3].1.set_satomis(0); /*         <-- drain account */
+            //accounts[4].1.set_satomis(1_000);      <-- unchanged
+            accounts[5].1.set_satomis(0); /*         <-- drain account */
+            //accounts[6].1.set_satomis(100_000);    <-- unchanged
+            accounts[7].1.set_satomis(1_000_000); /* <-- add account */
 
             let accounts = vec![
                 (&accounts[3].0, &accounts[3].1),
@@ -18506,15 +18506,15 @@ pub mod tests {
         };
         assert_eq!(incremental_accounts_hash.1, 1_100_000);
 
-        // Ensure the zero-lamport accounts are included in the IAH.
-        // Accounts 2, 3, and 5 are all zero-lamports.
+        // Ensure the zero-satomi accounts are included in the IAH.
+        // Accounts 2, 3, and 5 are all zero-satomis.
         let incremental_account_hashes =
             [(2, 2), (3, 3), (5, 3), (6, 2), (7, 3)]
                 .into_iter()
                 .map(|(index, slot)| {
                     let (pubkey, account) = &accounts[index];
-                    if account.is_zero_lamport() {
-                        // For incremental accounts hash, the hash of a zero lamport account is the hash of its pubkey.
+                    if account.is_zero_satomi() {
+                        // For incremental accounts hash, the hash of a zero satomi account is the hash of its pubkey.
                         // Ensure this implementation detail remains in sync with AccountsHasher::de_dup_in_parallel().
                         let hash = blake3::hash(bytemuck::bytes_of(pubkey));
                         Hash::new_from_array(hash.into())
@@ -18564,7 +18564,7 @@ pub mod tests {
             let pubkey = Pubkey::new_unique();
             dummy_account_pubkeys.push(pubkey);
             let account = AccountSharedData::from(Account {
-                lamports: 11111111,
+                satomis: 11111111,
                 owner: system_program::id(),
                 ..Account::default()
             });
@@ -18589,7 +18589,7 @@ pub mod tests {
             for j in 0..num_children.unwrap_or(0) {
                 let child_pubkey = Pubkey::new_unique();
                 let child_account = AccountSharedData::from(Account {
-                    lamports: ((j as u64) + 1) * 1000,
+                    satomis: ((j as u64) + 1) * 1000,
                     owner: *dummy_account,
                     ..Account::default()
                 });
@@ -18668,7 +18668,7 @@ pub mod tests {
         let mut smallest_key_size: usize;
         let mut smallest_key_inner_keys: Vec<Pubkey>;
         let mut try_again = 0;
-        let zero_lamport_account =
+        let zero_satomi_account =
             AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         loop {
             smallest_key = largest_program_id_keys[largest_program_id_keys.len() - 1 - try_again].1;
@@ -18682,7 +18682,7 @@ pub mod tests {
                     |some_account_tuple| {
                         if let Some(mapped_account_tuple) = some_account_tuple
                             .filter(|(_, account, _)| {
-                                Accounts::is_loadable(account.lamports())
+                                Accounts::is_loadable(account.satomis())
                                     && account.owner() == &smallest_key
                             })
                             .map(|(pubkey, account, _slot)| (*pubkey, account))
@@ -18695,8 +18695,8 @@ pub mod tests {
                 .ok();
             smallest_key_inner_keys = collector.into_iter().map(|(k, _)| k).collect_vec();
             let single_inner_key = smallest_key_inner_keys.pop().unwrap();
-            // Overwrite the account as a 0 lamport account and clean.
-            accounts_db.store_for_tests(slot, &[(&single_inner_key, &zero_lamport_account)]);
+            // Overwrite the account as a 0 satomi account and clean.
+            accounts_db.store_for_tests(slot, &[(&single_inner_key, &zero_satomi_account)]);
             accounts_db.calculate_accounts_delta_hash(slot);
             accounts_db.add_root_and_flush_write_cache(slot);
             slot += 1;
@@ -18726,7 +18726,7 @@ pub mod tests {
 
         // Test removal of multiple keys
         for key in smallest_key_inner_keys {
-            accounts_db.store_for_tests(slot, &[(&key, &zero_lamport_account)]);
+            accounts_db.store_for_tests(slot, &[(&key, &zero_satomi_account)]);
         }
         accounts_db.calculate_accounts_delta_hash(slot);
         accounts_db.add_root_and_flush_write_cache(slot);

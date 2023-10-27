@@ -79,8 +79,8 @@ pub struct ClusterConfig {
     pub node_stakes: Vec<u64>,
     /// Optional vote keypairs to use for each node
     pub node_vote_keys: Option<Vec<Arc<Keypair>>>,
-    /// The total lamports available to the cluster
-    pub cluster_lamports: u64,
+    /// The total satomis available to the cluster
+    pub cluster_satomis: u64,
     pub ticks_per_slot: u64,
     pub slots_per_epoch: u64,
     pub stakers_slot_offset: u64,
@@ -101,7 +101,7 @@ impl Default for ClusterConfig {
             validator_keys: None,
             node_stakes: vec![],
             node_vote_keys: None,
-            cluster_lamports: 0,
+            cluster_satomis: 0,
             ticks_per_slot: DEFAULT_TICKS_PER_SLOT,
             slots_per_epoch: DEFAULT_DEV_SLOTS_PER_EPOCH,
             stakers_slot_offset: DEFAULT_DEV_SLOTS_PER_EPOCH,
@@ -129,14 +129,14 @@ pub struct LocalCluster {
 impl LocalCluster {
     pub fn new_with_equal_stakes(
         num_nodes: usize,
-        cluster_lamports: u64,
-        lamports_per_node: u64,
+        cluster_satomis: u64,
+        satomis_per_node: u64,
         socket_addr_space: SocketAddrSpace,
     ) -> Self {
-        let stakes: Vec<_> = (0..num_nodes).map(|_| lamports_per_node).collect();
+        let stakes: Vec<_> = (0..num_nodes).map(|_| satomis_per_node).collect();
         let mut config = ClusterConfig {
             node_stakes: stakes,
-            cluster_lamports,
+            cluster_satomis,
             validator_configs: make_identical_validator_configs(
                 &ValidatorConfig::default_for_test(),
                 num_nodes,
@@ -230,7 +230,7 @@ impl LocalCluster {
             mint_keypair,
             ..
         } = create_genesis_config_with_vote_accounts_and_cluster_type(
-            config.cluster_lamports,
+            config.cluster_satomis,
             &keys_in_genesis,
             stakes_in_genesis,
             config.cluster_type,
@@ -459,7 +459,7 @@ impl LocalCluster {
         let contact_info = validator_node.info.clone();
         let (ledger_path, _blockhash) = create_new_tmp_ledger!(&self.genesis_config);
 
-        // Give the validator some lamports to setup vote accounts
+        // Give the validator some satomis to setup vote accounts
         if is_listener {
             // setup as a listener
             info!("listener {} ", validator_pubkey,);
@@ -538,14 +538,14 @@ impl LocalCluster {
         self.close_preserve_ledgers();
     }
 
-    pub fn transfer(&self, source_keypair: &Keypair, dest_pubkey: &Pubkey, lamports: u64) -> u64 {
+    pub fn transfer(&self, source_keypair: &Keypair, dest_pubkey: &Pubkey, satomis: u64) -> u64 {
         let (rpc, tpu) = LegacyContactInfo::try_from(&self.entry_point_info)
             .map(|node| {
                 cluster_tests::get_client_facing_addr(self.connection_cache.protocol(), node)
             })
             .unwrap();
         let client = ThinClient::new(rpc, tpu, self.connection_cache.clone());
-        Self::transfer_with_client(&client, source_keypair, dest_pubkey, lamports)
+        Self::transfer_with_client(&client, source_keypair, dest_pubkey, satomis)
     }
 
     pub fn check_for_new_roots(
@@ -616,16 +616,16 @@ impl LocalCluster {
         client: &ThinClient,
         source_keypair: &Keypair,
         dest_pubkey: &Pubkey,
-        lamports: u64,
+        satomis: u64,
     ) -> u64 {
         trace!("getting leader blockhash");
         let (blockhash, _) = client
             .get_latest_blockhash_with_commitment(CommitmentConfig::processed())
             .unwrap();
-        let mut tx = system_transaction::transfer(source_keypair, dest_pubkey, lamports, blockhash);
+        let mut tx = system_transaction::transfer(source_keypair, dest_pubkey, satomis, blockhash);
         info!(
             "executing transfer of {} from {} to {}",
-            lamports,
+            satomis,
             source_keypair.pubkey(),
             *dest_pubkey
         );
@@ -635,7 +635,7 @@ impl LocalCluster {
         client
             .wait_for_balance_with_commitment(
                 dest_pubkey,
-                Some(lamports),
+                Some(satomis),
                 CommitmentConfig::processed(),
             )
             .expect("get balance")

@@ -87,7 +87,7 @@ The result will be an RpcResponse JSON object with `value` equal to an array of 
 
 - `pubkey: <string>` - the account Pubkey as base-58 encoded string
 - `account: <object>` - a JSON object, with the following sub fields:
-  - `lamports: <u64>` - number of lamports assigned to this account, as a u64
+  - `satomis: <u64>` - number of satomis assigned to this account, as a u64
   - `owner: <string>` - base-58 encoded Pubkey of the program this account has been assigned to
   - `data: <object>` - Token state data associated with the account, either as encoded binary data or in JSON format `{<program>: <state>}`
   - `executable: <bool>` - boolean indicating if the account contains a program (and is strictly read-only\)
@@ -162,7 +162,7 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
             "space": 165
           },
           "executable": false,
-          "lamports": 1726080,
+          "satomis": 1726080,
           "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
           "rentEpoch": 4,
           "space": 165

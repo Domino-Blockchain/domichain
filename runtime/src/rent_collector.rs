@@ -44,7 +44,7 @@ enum RentResult {
     /// collect rent
     CollectRent {
         new_rent_epoch: Epoch,
-        rent_due: u64, // lamports, could be 0
+        rent_due: u64, // satomis, could be 0
     },
 }
 
@@ -85,7 +85,7 @@ impl RentCollector {
     pub(crate) fn get_rent_due(&self, account: &impl ReadableAccount) -> RentDue {
         if self
             .rent
-            .is_exempt(account.lamports(), account.data().len())
+            .is_exempt(account.satomis(), account.data().len())
         {
             RentDue::Exempt
         } else {
@@ -107,7 +107,7 @@ impl RentCollector {
         }
     }
 
-    // Updates the account's lamports and status, and returns the amount of rent collected, if any.
+    // Updates the account's satomis and status, and returns the amount of rent collected, if any.
     // This is NOT thread safe at some level. If we try to collect from the same account in
     // parallel, we may collect twice.
     #[must_use = "add to Bank::collected_rent"]
@@ -129,16 +129,16 @@ impl RentCollector {
             RentResult::CollectRent {
                 new_rent_epoch,
                 rent_due,
-            } => match account.lamports().checked_sub(rent_due) {
+            } => match account.satomis().checked_sub(rent_due) {
                 None | Some(0) => {
                     let account = std::mem::take(account);
                     CollectedInfo {
-                        rent_amount: account.lamports(),
+                        rent_amount: account.satomis(),
                         account_data_len_reclaimed: account.data().len() as u64,
                     }
                 }
-                Some(lamports) => {
-                    account.set_lamports(lamports);
+                Some(satomis) => {
+                    account.set_satomis(satomis);
                     account.set_rent_epoch(new_rent_epoch);
                     CollectedInfo {
                         rent_amount: rent_due,
@@ -191,7 +191,7 @@ impl RentCollector {
 pub(crate) struct CollectedInfo {
     /// Amount of rent collected from account
     pub(crate) rent_amount: u64,
-    /// Size of data reclaimed from account (happens when account's lamports go to zero)
+    /// Size of data reclaimed from account (happens when account's satomis go to zero)
     pub(crate) account_data_len_reclaimed: u64,
 }
 
@@ -318,7 +318,7 @@ mod tests {
             for filler_accounts in [None, Some(&filler_account)] {
                 for (rent_epoch, rent_due_expected) in [(2, 2), (3, 5)] {
                     rent_collector.epoch = rent_epoch;
-                    account.set_lamports(10);
+                    account.set_satomis(10);
                     account.set_rent_epoch(1);
                     let new_rent_epoch_expected = rent_collector.epoch + 1;
                     assert!(
@@ -345,15 +345,15 @@ mod tests {
                             }
                         );
                         let mut account_expected = account.clone();
-                        account_expected.set_lamports(account.lamports() - rent_due_expected);
+                        account_expected.set_satomis(account.satomis() - rent_due_expected);
                         account_expected.set_rent_epoch(new_rent_epoch_expected);
                         assert_eq!(account_clone, account_expected);
                     }
                 }
             }
 
-            // enough lamports to make us exempt
-            account.set_lamports(1_000_000);
+            // enough satomis to make us exempt
+            account.set_satomis(1_000_000);
             let result = rent_collector.calculate_rent_result(&Pubkey::default(), &account, None);
             assert!(
                 matches!(result, RentResult::Exempt),
@@ -377,7 +377,7 @@ mod tests {
                 assert_eq!(account_clone, account_expected);
             }
 
-            // enough lamports to make us exempt
+            // enough satomis to make us exempt
             // but, our rent_epoch is set in the future, so we can't know if we are exempt yet or not.
             // We don't calculate rent amount vs data if the rent_epoch is already in the future.
             account.set_rent_epoch(1_000_000);
@@ -401,7 +401,7 @@ mod tests {
 
             // filler accounts are exempt
             account.set_rent_epoch(1);
-            account.set_lamports(10);
+            account.set_satomis(10);
             assert!(matches!(
                 rent_collector.calculate_rent_result(
                     &filler_account,
@@ -433,13 +433,13 @@ mod tests {
     #[test]
     fn test_collect_from_account_created_and_existing() {
         for set_exempt_rent_epoch_max in [false, true] {
-            let old_lamports = 1000;
+            let old_satomis = 1000;
             let old_epoch = 1;
             let new_epoch = 2;
 
             let (mut created_account, mut existing_account) = {
                 let account = AccountSharedData::from(Account {
-                    lamports: old_lamports,
+                    satomis: old_satomis,
                     rent_epoch: old_epoch,
                     ..Account::default()
                 });
@@ -455,10 +455,10 @@ mod tests {
                 &mut created_account,
                 set_exempt_rent_epoch_max,
             );
-            assert!(created_account.lamports() < old_lamports);
+            assert!(created_account.satomis() < old_satomis);
             assert_eq!(
-                created_account.lamports() + collected.rent_amount,
-                old_lamports
+                created_account.satomis() + collected.rent_amount,
+                old_satomis
             );
             assert_ne!(created_account.rent_epoch(), old_epoch);
             assert_eq!(collected.account_data_len_reclaimed, 0);
@@ -470,16 +470,16 @@ mod tests {
                 None, // filler_account_suffix
                 set_exempt_rent_epoch_max,
             );
-            assert!(existing_account.lamports() < old_lamports);
+            assert!(existing_account.satomis() < old_satomis);
             assert_eq!(
-                existing_account.lamports() + collected.rent_amount,
-                old_lamports
+                existing_account.satomis() + collected.rent_amount,
+                old_satomis
             );
             assert_ne!(existing_account.rent_epoch(), old_epoch);
             assert_eq!(collected.account_data_len_reclaimed, 0);
 
             // newly created account should be collected for less rent; thus more remaining balance
-            assert!(created_account.lamports() > existing_account.lamports());
+            assert!(created_account.satomis() > existing_account.satomis());
             assert_eq!(created_account.rent_epoch(), existing_account.rent_epoch());
         }
     }
@@ -490,8 +490,8 @@ mod tests {
             for pass in 0..2 {
                 let mut account = AccountSharedData::default();
                 let epoch = 3;
-                let huge_lamports = 123_456_789_012;
-                let tiny_lamports = 789_012;
+                let huge_satomis = 123_456_789_012;
+                let tiny_satomis = 789_012;
                 let pubkey = domichain_sdk::pubkey::new_rand();
 
                 assert_eq!(account.rent_epoch(), 0);
@@ -500,7 +500,7 @@ mod tests {
                 let rent_collector = default_rent_collector_clone_with_epoch(epoch);
 
                 if pass == 0 {
-                    account.set_lamports(huge_lamports);
+                    account.set_satomis(huge_satomis);
                     // first mark account as being collected while being rent-exempt
                     let collected = rent_collector.collect_from_existing_account(
                         &pubkey,
@@ -508,15 +508,15 @@ mod tests {
                         None, // filler_account_suffix
                         set_exempt_rent_epoch_max,
                     );
-                    assert_eq!(account.lamports(), huge_lamports);
+                    assert_eq!(account.satomis(), huge_satomis);
                     assert_eq!(collected, CollectedInfo::default());
                     continue;
                 }
 
                 // decrease the balance not to be rent-exempt
-                // In a real validator, it is not legal to reduce an account's lamports such that the account becomes rent paying.
+                // In a real validator, it is not legal to reduce an account's satomis such that the account becomes rent paying.
                 // So, pass == 0 above tests the case of rent that is exempt. pass == 1 tests the case where we are rent paying.
-                account.set_lamports(tiny_lamports);
+                account.set_satomis(tiny_satomis);
 
                 // ... and trigger another rent collection on the same epoch and check that rent is working
                 let collected = rent_collector.collect_from_existing_account(
@@ -525,7 +525,7 @@ mod tests {
                     None, // filler_account_suffix
                     set_exempt_rent_epoch_max,
                 );
-                assert_eq!(account.lamports(), tiny_lamports - collected.rent_amount);
+                assert_eq!(account.satomis(), tiny_satomis - collected.rent_amount);
                 assert_ne!(collected, CollectedInfo::default());
             }
         }
@@ -534,10 +534,10 @@ mod tests {
     #[test]
     fn test_rent_exempt_sysvar() {
         for set_exempt_rent_epoch_max in [false, true] {
-            let tiny_lamports = 1;
+            let tiny_satomis = 1;
             let mut account = AccountSharedData::default();
             account.set_owner(sysvar::id());
-            account.set_lamports(tiny_lamports);
+            account.set_satomis(tiny_satomis);
 
             let pubkey = domichain_sdk::pubkey::new_rand();
 
@@ -552,7 +552,7 @@ mod tests {
                 None, // filler_account_suffix
                 set_exempt_rent_epoch_max,
             );
-            assert_eq!(account.lamports(), 0);
+            assert_eq!(account.satomis(), 0);
             assert_eq!(collected.rent_amount, 1);
         }
     }
@@ -562,11 +562,11 @@ mod tests {
     fn test_collect_cleans_up_account() {
         for set_exempt_rent_epoch_max in [false, true] {
             domichain_logger::setup();
-            let account_lamports = 1; // must be *below* rent amount
+            let account_satomis = 1; // must be *below* rent amount
             let account_data_len = 567;
             let account_rent_epoch = 11;
             let mut account = AccountSharedData::from(Account {
-                lamports: account_lamports, // <-- must be below rent-exempt amount
+                satomis: account_satomis, // <-- must be below rent-exempt amount
                 data: vec![u8::default(); account_data_len],
                 rent_epoch: account_rent_epoch,
                 ..Account::default()
@@ -580,7 +580,7 @@ mod tests {
                 set_exempt_rent_epoch_max,
             );
 
-            assert_eq!(collected.rent_amount, account_lamports);
+            assert_eq!(collected.rent_amount, account_satomis);
             assert_eq!(
                 collected.account_data_len_reclaimed,
                 account_data_len as u64

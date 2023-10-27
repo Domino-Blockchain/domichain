@@ -86,7 +86,7 @@ mod tests {
     use {
         super::*,
         domichain_runtime::genesis_utils::{
-            bootstrap_validator_stake_lamports, create_genesis_config_with_leader,
+            bootstrap_validator_stake_satomis, create_genesis_config_with_leader,
         },
     };
 
@@ -94,7 +94,7 @@ mod tests {
     fn test_leader_schedule_via_bank() {
         let pubkey = domichain_sdk::pubkey::new_rand();
         let genesis_config =
-            create_genesis_config_with_leader(0, &pubkey, bootstrap_validator_stake_lamports())
+            create_genesis_config_with_leader(0, &pubkey, bootstrap_validator_stake_satomis())
                 .genesis_config;
         let bank = Bank::new_for_tests(&genesis_config);
 
@@ -120,7 +120,7 @@ mod tests {
     fn test_leader_scheduler1_basic() {
         let pubkey = domichain_sdk::pubkey::new_rand();
         let genesis_config =
-            create_genesis_config_with_leader(42, &pubkey, bootstrap_validator_stake_lamports())
+            create_genesis_config_with_leader(42, &pubkey, bootstrap_validator_stake_satomis())
                 .genesis_config;
         let bank = Bank::new_for_tests(&genesis_config);
         assert_eq!(slot_leader_at(bank.slot(), &bank).unwrap(), pubkey);

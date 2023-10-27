@@ -1,18 +1,18 @@
-//! Definitions for the native DOMI token and its fractional lamports.
+//! Definitions for the native DOMI token and its fractional satomis.
 
 #![allow(clippy::integer_arithmetic)]
 
-/// There are 10^9 lamports in one DOMI
-pub const LAMPORTS_PER_DOMI: u64 = 1_000_000_000;
+/// There are 10^9 satomis in one DOMI
+pub const SATOMIS_PER_DOMI: u64 = 1_000_000_000;
 
-/// Approximately convert fractional native tokens (lamports) into native tokens (DOMI)
-pub fn lamports_to_domi(lamports: u64) -> f64 {
-    lamports as f64 / LAMPORTS_PER_DOMI as f64
+/// Approximately convert fractional native tokens (satomis) into native tokens (DOMI)
+pub fn satomis_to_domi(satomis: u64) -> f64 {
+    satomis as f64 / SATOMIS_PER_DOMI as f64
 }
 
-/// Approximately convert native tokens (DOMI) into fractional native tokens (lamports)
-pub fn domi_to_lamports(domi: f64) -> u64 {
-    (domi * LAMPORTS_PER_DOMI as f64) as u64
+/// Approximately convert native tokens (DOMI) into fractional native tokens (satomis)
+pub fn domi_to_satomis(domi: f64) -> u64 {
+    (domi * SATOMIS_PER_DOMI as f64) as u64
 }
 
 use std::fmt::{Debug, Display, Formatter, Result};
@@ -23,8 +23,8 @@ impl Domi {
         write!(
             f,
             "◎{}.{:09}",
-            self.0 / LAMPORTS_PER_DOMI,
-            self.0 % LAMPORTS_PER_DOMI
+            self.0 / SATOMIS_PER_DOMI,
+            self.0 % SATOMIS_PER_DOMI
         )
     }
 }

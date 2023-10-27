@@ -55,7 +55,7 @@ fn create_accounts() -> (Slot, SlotHashes, Vec<TransactionAccount>, Vec<AccountM
         VoteState::serialize(&versioned, &mut vote_account_data).unwrap();
 
         Account {
-            lamports: 1,
+            satomis: 1,
             data: vote_account_data,
             owner: domichain_vote_program::id(),
             executable: false,

@@ -44,7 +44,7 @@ fn test_stake_redelegation() {
     let test_validator = TestValidatorGenesis::default()
         .fee_rate_governor(FeeRateGovernor::new(0, 0))
         .rent(Rent {
-            lamports_per_byte_year: 1,
+            satomis_per_byte_year: 1,
             exemption_threshold: 1.0,
             ..Rent::default()
         })
@@ -1502,7 +1502,7 @@ fn test_stake_split() {
         memo: None,
         split_stake_account: 1,
         seed: None,
-        lamports: 2 * stake_balance,
+        satomis: 2 * stake_balance,
         fee_payer: 0,
         compute_unit_price: None,
     };
@@ -1526,7 +1526,7 @@ fn test_stake_split() {
         memo: None,
         split_stake_account: 1,
         seed: None,
-        lamports: 2 * stake_balance,
+        satomis: 2 * stake_balance,
         fee_payer: 0,
         compute_unit_price: None,
     };
@@ -2313,7 +2313,7 @@ fn test_stake_minimum_delegation() {
     config.json_rpc_url = test_validator.rpc_url();
 
     config.command = CliCommand::StakeMinimumDelegation {
-        use_lamports_unit: true,
+        use_satomis_unit: true,
     };
 
     let result = process_command(&config);

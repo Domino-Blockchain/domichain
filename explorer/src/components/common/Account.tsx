@@ -36,12 +36,12 @@ export function AccountAddressRow({ account }: AccountProps) {
 }
 
 export function AccountBalanceRow({ account }: AccountProps) {
-  const { lamports } = account;
+  const { satomis } = account;
   return (
     <tr>
       <td>Balance (DOMI)</td>
       <td className="text-lg-end text-uppercase">
-        <SolBalance lamports={lamports} />
+        <SolBalance satomis={satomis} />
       </td>
     </tr>
   );

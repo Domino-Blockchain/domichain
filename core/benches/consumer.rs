@@ -49,7 +49,7 @@ fn create_funded_accounts(bank: &Bank, num: usize) -> Vec<Keypair> {
         bank.store_account(
             &account.pubkey(),
             &Account {
-                lamports: 5100,
+                satomis: 5100,
                 data: vec![],
                 owner: system_program::id(),
                 executable: false,

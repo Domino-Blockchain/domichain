@@ -66,7 +66,7 @@ pub fn spl_programs(rent: &Rent) -> Vec<(Pubkey, AccountSharedData)> {
                 accounts.push((
                     programdata_address,
                     AccountSharedData::from(Account {
-                        lamports: rent.minimum_balance(program_data.len()).max(1),
+                        satomis: rent.minimum_balance(program_data.len()).max(1),
                         data: program_data,
                         owner: *loader_id,
                         executable: false,
@@ -83,7 +83,7 @@ pub fn spl_programs(rent: &Rent) -> Vec<(Pubkey, AccountSharedData)> {
             accounts.push((
                 *program_id,
                 AccountSharedData::from(Account {
-                    lamports: rent.minimum_balance(data.len()).max(1),
+                    satomis: rent.minimum_balance(data.len()).max(1),
                     data,
                     owner: *loader_id,
                     executable: true,

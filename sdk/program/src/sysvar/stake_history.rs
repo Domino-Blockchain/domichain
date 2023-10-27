@@ -26,7 +26,7 @@
 //! #
 //! fn print_sysvar_stake_history(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(stake_history::ID, Account {
-//! #       lamports: 114979200,
+//! #       satomis: 114979200,
 //! #       data: vec![0, 0, 0, 0, 0, 0, 0, 0],
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

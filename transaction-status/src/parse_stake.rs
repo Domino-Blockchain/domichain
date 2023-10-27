@@ -82,7 +82,7 @@ pub fn parse_stake(
                 }),
             })
         }
-        StakeInstruction::Split(lamports) => {
+        StakeInstruction::Split(satomis) => {
             check_num_stake_accounts(&instruction.accounts, 3)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "split".to_string(),
@@ -90,11 +90,11 @@ pub fn parse_stake(
                     "stakeAccount": account_keys[instruction.accounts[0] as usize].to_string(),
                     "newSplitAccount": account_keys[instruction.accounts[1] as usize].to_string(),
                     "stakeAuthority": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             })
         }
-        StakeInstruction::Withdraw(lamports) => {
+        StakeInstruction::Withdraw(satomis) => {
             check_num_stake_accounts(&instruction.accounts, 5)?;
             let mut value = json!({
                 "stakeAccount": account_keys[instruction.accounts[0] as usize].to_string(),
@@ -102,7 +102,7 @@ pub fn parse_stake(
                 "clockSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
                 "stakeHistorySysvar": account_keys[instruction.accounts[3] as usize].to_string(),
                 "withdrawAuthority": account_keys[instruction.accounts[4] as usize].to_string(),
-                "lamports": lamports,
+                "satomis": satomis,
             });
             let map = value.as_object_mut().unwrap();
             if instruction.accounts.len() >= 6 {
@@ -334,14 +334,14 @@ mod test {
             epoch: 11,
             custodian: Pubkey::new_unique(),
         };
-        let lamports = 55;
+        let satomis = 55;
 
         let instructions = instruction::create_account(
             &from_pubkey,
             &stake_pubkey,
             &authorized,
             &lockup,
-            lamports,
+            satomis,
         );
         let mut message = Message::new(&instructions, None);
         assert_eq!(
@@ -493,14 +493,14 @@ mod test {
 
     #[test]
     fn test_parse_stake_split_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let stake_pubkey = Pubkey::new_unique();
         let authorized_pubkey = Pubkey::new_unique();
         let split_stake_pubkey = Pubkey::new_unique();
         let instructions = instruction::split(
             &stake_pubkey,
             &authorized_pubkey,
-            lamports,
+            satomis,
             &split_stake_pubkey,
         );
         let mut message = Message::new(&instructions, None);
@@ -516,7 +516,7 @@ mod test {
                     "stakeAccount": stake_pubkey.to_string(),
                     "newSplitAccount": split_stake_pubkey.to_string(),
                     "stakeAuthority": authorized_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             }
         );
@@ -532,7 +532,7 @@ mod test {
 
     #[test]
     fn test_parse_stake_withdraw_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let stake_pubkey = Pubkey::new_unique();
         let withdrawer_pubkey = Pubkey::new_unique();
         let to_pubkey = Pubkey::new_unique();
@@ -541,7 +541,7 @@ mod test {
             &stake_pubkey,
             &withdrawer_pubkey,
             &to_pubkey,
-            lamports,
+            satomis,
             None,
         );
         let message = Message::new(&[instruction], None);
@@ -559,7 +559,7 @@ mod test {
                     "clockSysvar": sysvar::clock::ID.to_string(),
                     "stakeHistorySysvar": sysvar::stake_history::ID.to_string(),
                     "withdrawAuthority": withdrawer_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             }
         );
@@ -567,7 +567,7 @@ mod test {
             &stake_pubkey,
             &withdrawer_pubkey,
             &to_pubkey,
-            lamports,
+            satomis,
             Some(&custodian_pubkey),
         );
         let mut message = Message::new(&[instruction], None);
@@ -586,7 +586,7 @@ mod test {
                     "stakeHistorySysvar": sysvar::stake_history::ID.to_string(),
                     "withdrawAuthority": withdrawer_pubkey.to_string(),
                     "custodian": custodian_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             }
         );
@@ -959,10 +959,10 @@ mod test {
             staker: Pubkey::new_unique(),
             withdrawer: Pubkey::new_unique(),
         };
-        let lamports = 55;
+        let satomis = 55;
 
         let instructions =
-            instruction::create_account_checked(&from_pubkey, &stake_pubkey, &authorized, lamports);
+            instruction::create_account_checked(&from_pubkey, &stake_pubkey, &authorized, satomis);
         let mut message = Message::new(&instructions, None);
         assert_eq!(
             parse_stake(

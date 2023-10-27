@@ -19,7 +19,7 @@ use {
         account::AccountSharedData,
         clock::Slot,
         epoch_schedule::EpochSchedule,
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         pubkey::Pubkey,
         rent::Rent,
         signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
@@ -300,7 +300,7 @@ fn main() {
         None
     };
 
-    let faucet_lamports = domi_to_lamports(value_of(&matches, "faucet_domi").unwrap());
+    let faucet_satomis = domi_to_satomis(value_of(&matches, "faucet_domi").unwrap());
     let faucet_keypair_file = ledger_path.join("faucet-keypair.json");
     if !faucet_keypair_file.exists() {
         write_keypair_file(&Keypair::new(), faucet_keypair_file.to_str().unwrap()).unwrap_or_else(
@@ -329,10 +329,10 @@ fn main() {
     let faucet_time_slice_secs = value_t_or_exit!(matches, "faucet_time_slice_secs", u64);
     let faucet_per_time_cap = value_t!(matches, "faucet_per_time_domi_cap", f64)
         .ok()
-        .map(domi_to_lamports);
+        .map(domi_to_satomis);
     let faucet_per_request_cap = value_t!(matches, "faucet_per_request_domi_cap", f64)
         .ok()
-        .map(domi_to_lamports);
+        .map(domi_to_satomis);
 
     let (sender, receiver) = unbounded();
     run_local_faucet_with_port(
@@ -437,7 +437,7 @@ fn main() {
         .tower_storage(tower_storage)
         .add_account(
             faucet_pubkey,
-            AccountSharedData::new(faucet_lamports, 0, &system_program::id()),
+            AccountSharedData::new(faucet_satomis, 0, &system_program::id()),
         )
         .pubsub_config(PubSubConfig {
             enable_vote_subscription,

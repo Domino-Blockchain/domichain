@@ -69,19 +69,19 @@ Operate a configured testnet
                                       - Override the default --hashes-per-tick for the cluster
    --no-airdrop
                                       - If set, disables the faucet keypair.  Nodes must be funded in genesis config
-   --faucet-lamports NUM_LAMPORTS_TO_MINT
-                                      - Override the default 500000000000000000 lamports minted in genesis
+   --faucet-satomis NUM_SATOMIS_TO_MINT
+                                      - Override the default 500000000000000000 satomis minted in genesis
    --extra-primordial-stakes NUM_EXTRA_PRIMORDIAL_STAKES
                                       - Number of nodes to be initially staked in genesis.
                                         Gives extra stake in genesis to NUM_EXTRA_PRIMORDIAL_STAKES many nodes.
                                         Implies --wait-for-supermajority 1 --async-node-init and the supermajority
                                         wait slot may be overridden with the corresponding flag
-   --internal-nodes-stake-lamports NUM_LAMPORTS_PER_NODE
+   --internal-nodes-stake-satomis NUM_SATOMIS_PER_NODE
                                       - Amount to stake internal nodes.
-   --internal-nodes-lamports NUM_LAMPORTS_PER_NODE
+   --internal-nodes-satomis NUM_SATOMIS_PER_NODE
                                       - Amount to fund internal nodes in genesis config.
    --external-accounts-file FILE_PATH
-                                      - A YML file with a list of account pubkeys and corresponding lamport balances
+                                      - A YML file with a list of account pubkeys and corresponding satomi balances
                                         in genesis config for external nodes
    --no-snapshot-fetch
                                       - If set, disables booting validators from a snapshot
@@ -334,8 +334,8 @@ startBootstrapLeader() {
          $failOnValidatorBootupFailure \
          \"$remoteExternalPrimordialAccountsFile\" \
          \"$maybeDisableAirdrops\" \
-         \"$internalNodesStakeLamports\" \
-         \"$internalNodesLamports\" \
+         \"$internalNodesStakeSatomis\" \
+         \"$internalNodesSatomis\" \
          $nodeIndex \
          ${#clientIpList[@]} \"$benchTpsExtraArgs\" \
          \"$genesisOptions\" \
@@ -408,8 +408,8 @@ startNode() {
          $failOnValidatorBootupFailure \
          \"$remoteExternalPrimordialAccountsFile\" \
          \"$maybeDisableAirdrops\" \
-         \"$internalNodesStakeLamports\" \
-         \"$internalNodesLamports\" \
+         \"$internalNodesStakeSatomis\" \
+         \"$internalNodesSatomis\" \
          $nodeIndex \
          ${#clientIpList[@]} \"$benchTpsExtraArgs\" \
          \"$genesisOptions\" \
@@ -806,8 +806,8 @@ genesisOptions=
 numValidatorsRequested=
 externalPrimordialAccountsFile=
 remoteExternalPrimordialAccountsFile=
-internalNodesStakeLamports=
-internalNodesLamports=
+internalNodesStakeSatomis=
+internalNodesSatomis=
 maybeNoSnapshot=""
 maybeLimitLedgerSize=""
 maybeSkipLedgerVerify=""
@@ -846,10 +846,10 @@ while [[ -n $1 ]]; do
     elif [[ $1 = --slots-per-epoch ]]; then
       genesisOptions="$genesisOptions $1 $2"
       shift 2
-    elif [[ $1 = --target-lamports-per-signature ]]; then
+    elif [[ $1 = --target-satomis-per-signature ]]; then
       genesisOptions="$genesisOptions $1 $2"
       shift 2
-    elif [[ $1 = --faucet-lamports ]]; then
+    elif [[ $1 = --faucet-satomis ]]; then
       genesisOptions="$genesisOptions $1 $2"
       shift 2
     elif [[ $1 = --cluster-type ]]; then
@@ -890,11 +890,11 @@ while [[ -n $1 ]]; do
     elif [[ $1 = --platform ]]; then
       updatePlatforms="$updatePlatforms $2"
       shift 2
-    elif [[ $1 = --internal-nodes-stake-lamports ]]; then
-      internalNodesStakeLamports="$2"
+    elif [[ $1 = --internal-nodes-stake-satomis ]]; then
+      internalNodesStakeSatomis="$2"
       shift 2
-    elif [[ $1 = --internal-nodes-lamports ]]; then
-      internalNodesLamports="$2"
+    elif [[ $1 = --internal-nodes-satomis ]]; then
+      internalNodesSatomis="$2"
       shift 2
     elif [[ $1 = --external-accounts-file ]]; then
       externalPrimordialAccountsFile="$2"

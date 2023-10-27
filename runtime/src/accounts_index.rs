@@ -133,7 +133,7 @@ pub trait IsCached {
     fn is_cached(&self) -> bool;
 }
 
-pub trait IndexValue: 'static + IsCached + ZeroLamport + DiskIndexValue {}
+pub trait IndexValue: 'static + IsCached + ZeroSatomi + DiskIndexValue {}
 
 pub trait DiskIndexValue:
     'static + Clone + Debug + PartialEq + Copy + Default + Sync + Send
@@ -379,13 +379,13 @@ pub enum PreAllocatedAccountMapEntry<T: IndexValue> {
     Raw((Slot, T)),
 }
 
-impl<T: IndexValue> ZeroLamport for PreAllocatedAccountMapEntry<T> {
-    fn is_zero_lamport(&self) -> bool {
+impl<T: IndexValue> ZeroSatomi for PreAllocatedAccountMapEntry<T> {
+    fn is_zero_satomi(&self) -> bool {
         match self {
             PreAllocatedAccountMapEntry::Entry(entry) => {
-                entry.slot_list.read().unwrap()[0].1.is_zero_lamport()
+                entry.slot_list.read().unwrap()[0].1.is_zero_satomi()
             }
-            PreAllocatedAccountMapEntry::Raw(raw) => raw.1.is_zero_lamport(),
+            PreAllocatedAccountMapEntry::Raw(raw) => raw.1.is_zero_satomi(),
         }
     }
 }
@@ -634,8 +634,8 @@ impl<'a, T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> Iterator
     }
 }
 
-pub trait ZeroLamport {
-    fn is_zero_lamport(&self) -> bool;
+pub trait ZeroSatomi {
+    fn is_zero_satomi(&self) -> bool;
 }
 
 type MapType<T, U> = AccountMap<T, U>;
@@ -1560,15 +1560,15 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndex<T, U> {
             self.program_id_index.insert(account_owner, pubkey);
         }
         // Note because of the below check below on the account data length, when an
-        // account hits zero lamports and is reset to AccountSharedData::Default, then we skip
+        // account hits zero satomis and is reset to AccountSharedData::Default, then we skip
         // the below updates to the secondary indexes.
         //
         // Skipping means not updating secondary index to mark the account as missing.
         // This doesn't introduce false positives during a scan because the caller to scan
-        // provides the ancestors to check. So even if a zero-lamport account is not yet
+        // provides the ancestors to check. So even if a zero-satomi account is not yet
         // removed from the secondary index, the scan function will:
         // 1) consult the primary index via `get(&pubkey, Some(ancestors), max_root)`
-        // and find the zero-lamport version
+        // and find the zero-satomi version
         // 2) When the fetch from storage occurs, it will return AccountSharedData::Default
         // (as persisted tombstone for snapshots). This will then ultimately be
         // filtered out by post-scan filters, like in `get_filtered_spl_token_accounts_by_owner()`.
@@ -1634,8 +1634,8 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndex<T, U> {
                 let pubkey_bin = self.bin_calculator.bin_from_pubkey(&pubkey);
                 let binned_index = (pubkey_bin + random_offset) % bins;
                 // this value is equivalent to what update() below would have created if we inserted a new item
-                let is_zero_lamport = account_info.is_zero_lamport();
-                let result = if is_zero_lamport { Some(pubkey) } else { None };
+                let is_zero_satomi = account_info.is_zero_satomi();
+                let result = if is_zero_satomi { Some(pubkey) } else { None };
 
                 binned[binned_index].1.push((pubkey, account_info));
                 result
@@ -1662,8 +1662,8 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndex<T, U> {
                     );
                     match r_account_maps.insert_new_entry_if_missing_with_lock(pubkey, new_entry) {
                         InsertNewEntryResults::DidNotExist => {}
-                        InsertNewEntryResults::ExistedNewEntryZeroLamports => {}
-                        InsertNewEntryResults::ExistedNewEntryNonZeroLamports => {
+                        InsertNewEntryResults::ExistedNewEntryZeroSatomis => {}
+                        InsertNewEntryResults::ExistedNewEntryNonZeroSatomis => {
                             dirty_pubkeys.push(pubkey);
                         }
                     }
@@ -2231,8 +2231,8 @@ pub mod tests {
         }
     }
 
-    impl ZeroLamport for AccountInfoTest {
-        fn is_zero_lamport(&self) -> bool {
+    impl ZeroSatomi for AccountInfoTest {
+        fn is_zero_satomi(&self) -> bool {
             true
         }
     }
@@ -2276,7 +2276,7 @@ pub mod tests {
         );
         assert_eq!(num, 1);
 
-        // not zero lamports
+        // not zero satomis
         let index = AccountsIndex::<bool, bool>::default_for_tests();
         let account_info = false;
         let items = vec![(*pubkey, account_info)];
@@ -3752,14 +3752,14 @@ pub mod tests {
             false
         }
     }
-    impl ZeroLamport for bool {
-        fn is_zero_lamport(&self) -> bool {
+    impl ZeroSatomi for bool {
+        fn is_zero_satomi(&self) -> bool {
             false
         }
     }
 
-    impl ZeroLamport for u64 {
-        fn is_zero_lamport(&self) -> bool {
+    impl ZeroSatomi for u64 {
+        fn is_zero_satomi(&self) -> bool {
             false
         }
     }

@@ -59,7 +59,7 @@ export function NonceWithdrawDetailsCard(props: {
       <tr>
         <td>Withdraw Amount (DOMI)</td>
         <td className="text-lg-end">
-          <SolBalance lamports={info.lamports} />
+          <SolBalance satomis={info.satomis} />
         </td>
       </tr>
     </InstructionCard>

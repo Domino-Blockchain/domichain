@@ -13226,7 +13226,7 @@
           "measurement": "cluster_info-vote-count",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT balance FROM  \"$testnet\".\"autogen\".\"bench-tps-lamport_balance\" WHERE $timeFilter fill(null)\n\n\n\n",
+          "query": "SELECT balance FROM  \"$testnet\".\"autogen\".\"bench-tps-satomi_balance\" WHERE $timeFilter fill(null)\n\n\n\n",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",

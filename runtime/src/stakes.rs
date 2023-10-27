@@ -70,9 +70,9 @@ impl StakesCache {
         // the cache. see:
         // https://Domino-Blockchain/domichain/pull/24200#discussion_r849935444
         let owner = account.owner();
-        // Zero lamport accounts are not stored in accounts-db
+        // Zero satomi accounts are not stored in accounts-db
         // and so should be removed from cache as well.
-        if account.lamports() == 0 {
+        if account.satomis() == 0 {
             if domichain_vote_program::check_id(owner) {
                 let mut stakes = self.0.write().unwrap();
                 stakes.remove_vote_account(pubkey);
@@ -82,7 +82,7 @@ impl StakesCache {
             }
             return;
         }
-        debug_assert_ne!(account.lamports(), 0u64);
+        debug_assert_ne!(account.satomis(), 0u64);
         if domichain_vote_program::check_id(owner) {
             if VoteStateVersions::is_correct_size_and_initialized(account.data()) {
                 match VoteAccount::try_from(account.to_account_shared_data()) {
@@ -341,13 +341,13 @@ impl Stakes<StakeAccount> {
             .sum()
     }
 
-    /// Sum the lamports of the vote accounts and the delegated stake
+    /// Sum the satomis of the vote accounts and the delegated stake
     pub(crate) fn vote_balance_and_staked(&self) -> u64 {
         let get_stake = |stake_account: &StakeAccount| stake_account.delegation().stake;
-        let get_lamports = |(_, vote_account): (_, &VoteAccount)| vote_account.lamports();
+        let get_satomis = |(_, vote_account): (_, &VoteAccount)| vote_account.satomis();
 
         self.stake_delegations.values().map(get_stake).sum::<u64>()
-            + self.vote_accounts.iter().map(get_lamports).sum::<u64>()
+            + self.vote_accounts.iter().map(get_satomis).sum::<u64>()
     }
 
     fn remove_vote_account(&mut self, vote_pubkey: &Pubkey) {
@@ -364,7 +364,7 @@ impl Stakes<StakeAccount> {
     }
 
     fn upsert_vote_account(&mut self, vote_pubkey: &Pubkey, vote_account: VoteAccount) {
-        debug_assert_ne!(vote_account.lamports(), 0u64);
+        debug_assert_ne!(vote_account.satomis(), 0u64);
         debug_assert!(vote_account.is_deserialized());
         // unconditionally remove existing at first; there is no dependent calculated state for
         // votes, not like stakes (stake codepath maintains calculated stake value grouped by
@@ -378,7 +378,7 @@ impl Stakes<StakeAccount> {
     }
 
     fn upsert_stake_delegation(&mut self, stake_pubkey: Pubkey, stake_account: StakeAccount) {
-        debug_assert_ne!(stake_account.lamports(), 0u64);
+        debug_assert_ne!(stake_account.satomis(), 0u64);
         let delegation = stake_account.delegation();
         let voter_pubkey = delegation.voter_pubkey;
         let stake = delegation.stake(self.epoch, Some(&self.stake_history));
@@ -603,7 +603,7 @@ pub(crate) mod tests {
                 );
             }
 
-            stake_account.set_lamports(42);
+            stake_account.set_satomis(42);
             stakes_cache.check_and_store(&stake_pubkey, &stake_account);
             {
                 let stakes = stakes_cache.stakes();
@@ -630,7 +630,7 @@ pub(crate) mod tests {
                 ); // now stake of 42 is activated
             }
 
-            stake_account.set_lamports(0);
+            stake_account.set_satomis(0);
             stakes_cache.check_and_store(&stake_pubkey, &stake_account);
             {
                 let stakes = stakes_cache.stakes();
@@ -685,7 +685,7 @@ pub(crate) mod tests {
             assert_eq!(vote_accounts.get_delegated_stake(&vote_pubkey), 10);
         }
 
-        vote_account.set_lamports(0);
+        vote_account.set_satomis(0);
         stakes_cache.check_and_store(&vote_pubkey, &vote_account);
 
         {
@@ -695,7 +695,7 @@ pub(crate) mod tests {
             assert_eq!(vote_accounts.get_delegated_stake(&vote_pubkey), 0);
         }
 
-        vote_account.set_lamports(1);
+        vote_account.set_satomis(1);
         stakes_cache.check_and_store(&vote_pubkey, &vote_account);
 
         {
@@ -896,7 +896,7 @@ pub(crate) mod tests {
                 let vote_balance: u64 = self
                     .vote_accounts
                     .iter()
-                    .map(|(_pubkey, account)| account.lamports())
+                    .map(|(_pubkey, account)| account.satomis())
                     .sum();
                 let warmed_stake: u64 = self
                     .vote_accounts
@@ -922,7 +922,7 @@ pub(crate) mod tests {
         let thread_pool = ThreadPoolBuilder::new().num_threads(1).build().unwrap();
         for (epoch, expected_warmed_stake) in ((genesis_epoch + 1)..=3).zip(&[2, 3, 4]) {
             stakes_cache.activate_epoch(epoch, &thread_pool);
-            // vote_balance_and_staked() always remain to return same lamports
+            // vote_balance_and_staked() always remain to return same satomis
             // while vote_balance_and_warmed_staked() gradually increases
             let stakes = stakes_cache.stakes();
             assert_eq!(stakes.vote_balance_and_staked(), 11);
@@ -954,7 +954,7 @@ pub(crate) mod tests {
                 &vote_pubkey,
                 &domichain_sdk::pubkey::new_rand(), // node_pubkey
                 rng.gen_range(0, 101),           // commission
-                rng.gen_range(0, 1_000_000),     // lamports
+                rng.gen_range(0, 1_000_000),     // satomis
             );
             stakes_cache.check_and_store(&vote_pubkey, &vote_account);
             for _ in 0..rng.gen_range(10usize, 20) {
@@ -965,7 +965,7 @@ pub(crate) mod tests {
                     &vote_pubkey,
                     &vote_account,
                     &rent,
-                    rng.gen_range(0, 1_000_000), // lamports
+                    rng.gen_range(0, 1_000_000), // satomis
                 );
                 stakes_cache.check_and_store(&stake_pubkey, &stake_account);
             }

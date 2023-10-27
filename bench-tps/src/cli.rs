@@ -17,7 +17,7 @@ use {
     },
 };
 
-const NUM_LAMPORTS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::LAMPORTS_PER_DOMI;
+const NUM_SATOMIS_PER_ACCOUNT_DEFAULT: u64 = domichain_sdk::native_token::SATOMIS_PER_DOMI;
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum ExternalClientType {
@@ -60,9 +60,9 @@ pub struct Config {
     pub client_ids_and_stake_file: String,
     pub write_to_client_file: bool,
     pub read_from_client_file: bool,
-    pub target_lamports_per_signature: u64,
+    pub target_satomis_per_signature: u64,
     pub multi_client: bool,
-    pub num_lamports_per_account: u64,
+    pub num_satomis_per_account: u64,
     pub target_slots_per_epoch: u64,
     pub target_node: Option<Pubkey>,
     pub external_client_type: ExternalClientType,
@@ -95,9 +95,9 @@ impl Default for Config {
             client_ids_and_stake_file: String::new(),
             write_to_client_file: false,
             read_from_client_file: false,
-            target_lamports_per_signature: FeeRateGovernor::default().target_lamports_per_signature,
+            target_satomis_per_signature: FeeRateGovernor::default().target_satomis_per_signature,
             multi_client: true,
-            num_lamports_per_account: NUM_LAMPORTS_PER_ACCOUNT_DEFAULT,
+            num_satomis_per_account: NUM_SATOMIS_PER_ACCOUNT_DEFAULT,
             target_slots_per_epoch: 0,
             target_node: None,
             external_client_type: ExternalClientType::default(),
@@ -277,22 +277,22 @@ pub fn build_args<'a>(version: &'_ str) -> App<'a, '_> {
                 .help("Read client keys and stakes from the YAML file"),
         )
         .arg(
-            Arg::with_name("target_lamports_per_signature")
-                .long("target-lamports-per-signature")
-                .value_name("LAMPORTS")
+            Arg::with_name("target_satomis_per_signature")
+                .long("target-satomis-per-signature")
+                .value_name("SATOMIS")
                 .takes_value(true)
                 .help(
-                    "The cost in lamports that the cluster will charge for signature \
+                    "The cost in satomis that the cluster will charge for signature \
                      verification when the cluster is operating at target-signatures-per-slot",
                 ),
         )
         .arg(
-            Arg::with_name("num_lamports_per_account")
-                .long("num-lamports-per-account")
-                .value_name("LAMPORTS")
+            Arg::with_name("num_satomis_per_account")
+                .long("num-satomis-per-account")
+                .value_name("SATOMIS")
                 .takes_value(true)
                 .help(
-                    "Number of lamports per account.",
+                    "Number of satomis per account.",
                 ),
         )
         .arg(
@@ -489,11 +489,11 @@ pub fn parse_args(matches: &ArgMatches) -> Result<Config, &'static str> {
         args.client_ids_and_stake_file = s.to_string();
     }
 
-    if let Some(v) = matches.value_of("target_lamports_per_signature") {
-        args.target_lamports_per_signature = v
+    if let Some(v) = matches.value_of("target_satomis_per_signature") {
+        args.target_satomis_per_signature = v
             .to_string()
             .parse()
-            .map_err(|_| "can't parse target-lamports-per-signature")?;
+            .map_err(|_| "can't parse target-satomis-per-signature")?;
     }
 
     args.multi_client = !matches.is_present("no-multi-client");
@@ -503,11 +503,11 @@ pub fn parse_args(matches: &ArgMatches) -> Result<Config, &'static str> {
         .transpose()
         .map_err(|_| "Failed to parse target-node")?;
 
-    if let Some(v) = matches.value_of("num_lamports_per_account") {
-        args.num_lamports_per_account = v
+    if let Some(v) = matches.value_of("num_satomis_per_account") {
+        args.num_satomis_per_account = v
             .to_string()
             .parse()
-            .map_err(|_| "can't parse num-lamports-per-account")?;
+            .map_err(|_| "can't parse num-satomis-per-account")?;
     }
 
     if let Some(t) = matches.value_of("target_slots_per_epoch") {

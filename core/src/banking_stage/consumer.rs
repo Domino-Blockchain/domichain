@@ -1331,12 +1331,12 @@ mod tests {
     #[test]
     fn test_process_transactions_instruction_error() {
         domichain_logger::setup();
-        let lamports = 10_000;
+        let satomis = 10_000;
         let GenesisConfigInfo {
             genesis_config,
             mint_keypair,
             ..
-        } = create_slow_genesis_config(lamports);
+        } = create_slow_genesis_config(satomis);
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
         // set cost tracker limits to MAX so it will not filter out TXs
         bank.write_cost_tracker()
@@ -1351,7 +1351,7 @@ mod tests {
             system_transaction::transfer(
                 &mint_keypair,
                 &Pubkey::new_unique(),
-                lamports + 1,
+                satomis + 1,
                 genesis_config.hash(),
             );
             MAX_NUM_TRANSACTIONS_PER_BATCH
@@ -1536,8 +1536,8 @@ mod tests {
             mut genesis_config,
             mint_keypair,
             ..
-        } = create_slow_genesis_config(domichain_sdk::native_token::domi_to_lamports(1000.0));
-        genesis_config.rent.lamports_per_byte_year = 50;
+        } = create_slow_genesis_config(domichain_sdk::native_token::domi_to_satomis(1000.0));
+        genesis_config.rent.satomis_per_byte_year = 50;
         genesis_config.rent.exemption_threshold = 2.0;
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
         let pubkey = domichain_sdk::pubkey::new_rand();

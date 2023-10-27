@@ -118,7 +118,7 @@ resulting in faster execution times.
 
 A transaction's [prioritization fee](./terminology.md#prioritization-fee) is
 calculated by multiplying the maximum number of **_compute units_** by the
-**_compute unit price_** (measured in _micro-lamports_).
+**_compute unit price_** (measured in _micro-satomis_).
 
 Each transaction can set the maximum number of compute units it is allowed to
 consume and the compute unit price by including a `SetComputeUnitLimit` and
@@ -183,7 +183,7 @@ const instruction = ComputeBudgetProgram.setComputeUnitLimit({
 
 ```js
 const instruction = ComputeBudgetProgram.setComputeUnitPrice({
-  microLamports: 1,
+  microSatomis: 1,
 });
 ```
 

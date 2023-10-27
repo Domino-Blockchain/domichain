@@ -21,7 +21,7 @@ pub type StoredExtendedRewards = Vec<StoredExtendedReward>;
 #[derive(Serialize, Deserialize)]
 pub struct StoredExtendedReward {
     pubkey: String,
-    lamports: i64,
+    satomis: i64,
     #[serde(deserialize_with = "default_on_eof")]
     post_balance: u64,
     #[serde(deserialize_with = "default_on_eof")]
@@ -34,14 +34,14 @@ impl From<StoredExtendedReward> for Reward {
     fn from(value: StoredExtendedReward) -> Self {
         let StoredExtendedReward {
             pubkey,
-            lamports,
+            satomis,
             post_balance,
             reward_type,
             commission,
         } = value;
         Self {
             pubkey,
-            lamports,
+            satomis,
             post_balance,
             reward_type,
             commission,
@@ -53,14 +53,14 @@ impl From<Reward> for StoredExtendedReward {
     fn from(value: Reward) -> Self {
         let Reward {
             pubkey,
-            lamports,
+            satomis,
             post_balance,
             reward_type,
             commission,
         } = value;
         Self {
             pubkey,
-            lamports,
+            satomis,
             post_balance,
             reward_type,
             commission,

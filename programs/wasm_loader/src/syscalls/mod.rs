@@ -3192,10 +3192,10 @@ mod tests {
         src_epochschedule.first_normal_slot = 4;
         let mut src_fees = create_filled_type::<Fees>(false);
         src_fees.fee_calculator = FeeCalculator {
-            lamports_per_signature: 1,
+            satomis_per_signature: 1,
         };
         let mut src_rent = create_filled_type::<Rent>(false);
-        src_rent.lamports_per_byte_year = 1;
+        src_rent.satomis_per_byte_year = 1;
         src_rent.exemption_threshold = 2.0;
         src_rent.burn_percent = 3;
 
@@ -3362,7 +3362,7 @@ mod tests {
             assert_eq!(got_rent, src_rent);
 
             let mut clean_rent = create_filled_type::<Rent>(true);
-            clean_rent.lamports_per_byte_year = src_rent.lamports_per_byte_year;
+            clean_rent.satomis_per_byte_year = src_rent.satomis_per_byte_year;
             clean_rent.exemption_threshold = src_rent.exemption_threshold;
             clean_rent.burn_percent = src_rent.burn_percent;
             assert!(are_bytes_equal(&got_rent, &clean_rent));

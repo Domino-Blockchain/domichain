@@ -6,7 +6,7 @@ use {
     crate::{
         accounts_db::AppendVecId,
         accounts_file::ALIGN_BOUNDARY_OFFSET,
-        accounts_index::{IsCached, ZeroLamport},
+        accounts_index::{IsCached, ZeroSatomi},
     },
     modular_bitfield::prelude::*,
 };
@@ -78,8 +78,8 @@ const CACHED_OFFSET: OffsetReduced = (1 << (OffsetReduced::BITS - 1)) - 1;
 pub struct PackedOffsetAndFlags {
     /// this provides 2^31 bits, which when multipled by 8 (sizeof(u64)) = 16G, which is the maximum size of an append vec
     offset_reduced: B31,
-    /// use 1 bit to specify that the entry is zero lamport
-    is_zero_lamport: bool,
+    /// use 1 bit to specify that the entry is zero satomi
+    is_zero_satomi: bool,
 }
 
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy)]
@@ -97,11 +97,11 @@ pub struct AccountOffsetAndFlags {
     packed_offset_and_flags: PackedOffsetAndFlags,
 }
 
-impl ZeroLamport for AccountInfo {
-    fn is_zero_lamport(&self) -> bool {
+impl ZeroSatomi for AccountInfo {
+    fn is_zero_satomi(&self) -> bool {
         self.account_offset_and_flags
             .packed_offset_and_flags
-            .is_zero_lamport()
+            .is_zero_satomi()
     }
 }
 
@@ -124,7 +124,7 @@ impl IsCached for StorageLocation {
 const CACHE_VIRTUAL_STORAGE_ID: AppendVecId = AppendVecId::MAX;
 
 impl AccountInfo {
-    pub fn new(storage_location: StorageLocation, lamports: u64) -> Self {
+    pub fn new(storage_location: StorageLocation, satomis: u64) -> Self {
         let mut packed_offset_and_flags = PackedOffsetAndFlags::default();
         let store_id = match storage_location {
             StorageLocation::AppendVec(store_id, offset) => {
@@ -146,7 +146,7 @@ impl AccountInfo {
                 CACHE_VIRTUAL_STORAGE_ID
             }
         };
-        packed_offset_and_flags.set_is_zero_lamport(lamports == 0);
+        packed_offset_and_flags.set_is_zero_satomi(satomis == 0);
         let account_offset_and_flags = AccountOffsetAndFlags {
             packed_offset_and_flags,
         };

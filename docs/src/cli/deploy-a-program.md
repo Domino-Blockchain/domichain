@@ -133,7 +133,7 @@ valley flat great hockey share token excess clever benefit traffic avocado athle
 ==================================================================================
 To resume a deploy, pass the recovered keypair as
 the [BUFFER_SIGNER] to `domichain program deploy` or `domichain program write-buffer'.
-Or to recover the account's lamports, pass it as the
+Or to recover the account's satomis, pass it as the
 [BUFFER_ACCOUNT_ADDRESS] argument to `domichain program drain`.
 ==================================================================================
 ```
@@ -152,13 +152,13 @@ Then issue a new `deploy` command and specify the buffer:
 domichain program deploy --buffer <KEYPAIR_PATH> <PROGRAM_FILEPATH>
 ```
 
-### Closing program and buffer accounts, and reclaiming their lamports
+### Closing program and buffer accounts, and reclaiming their satomis
 
-Both program and buffer accounts can be closed and their lamport balances
+Both program and buffer accounts can be closed and their satomi balances
 transferred to a recipient's account.
 
 If deployment fails there will be a left over buffer account that holds
-lamports. The buffer account can either be used to [resume a
+satomis. The buffer account can either be used to [resume a
 deploy](#resuming-a-failed-deploy) or closed.
 
 The program or buffer account's authority must be present to close an account,

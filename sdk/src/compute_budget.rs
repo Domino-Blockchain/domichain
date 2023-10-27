@@ -38,7 +38,7 @@ pub enum ComputeBudgetInstruction {
     RequestHeapFrame(u32),
     /// Set a specific compute unit limit that the transaction is allowed to consume.
     SetComputeUnitLimit(u32),
-    /// Set a compute unit price in "micro-lamports" to pay a higher transaction
+    /// Set a compute unit price in "micro-satomis" to pay a higher transaction
     /// fee for higher transaction prioritization.
     SetComputeUnitPrice(u64),
     /// Set a specific transaction-wide account data size limit, in bytes, is allowed to load.
@@ -57,8 +57,8 @@ impl ComputeBudgetInstruction {
     }
 
     /// Create a `ComputeBudgetInstruction::SetComputeUnitPrice` `Instruction`
-    pub fn set_compute_unit_price(micro_lamports: u64) -> Instruction {
-        Instruction::new_with_borsh(id(), &Self::SetComputeUnitPrice(micro_lamports), vec![])
+    pub fn set_compute_unit_price(micro_satomis: u64) -> Instruction {
+        Instruction::new_with_borsh(id(), &Self::SetComputeUnitPrice(micro_satomis), vec![])
     }
 
     /// Serialize Instruction using borsh, this is only used in runtime::cost_model::tests but compilation

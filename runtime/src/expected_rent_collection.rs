@@ -59,7 +59,7 @@ Reason A for this file's existence:
 When we encounter the skipped-rewrite account data as part of a load, we may need to update rent_epoch.
 Many operations work like this:
   1. read account
-  2. add lamports (ex: reward was paid)
+  2. add satomis (ex: reward was paid)
   3. write account
 If the account is written with the WRONG rent_epoch field, then we will store an 'incorrect' rent_epoch field and the hash will be incorrect.
 So, at (1. read account), we must FIX the rent_epoch to be as it would be if the rewrite would have occurred.
@@ -203,7 +203,7 @@ Every highest_root >= 432k * 2 + 80 and < 432k * 3 + 80 is this same result
 [footnote3:]
   when we do a rewrite of account data, only this data changes:
   1. rent_epoch
-  2. computed hash value (which is a function of (data, lamports, executable, owner, rent_epoch, pubkey) + slot
+  2. computed hash value (which is a function of (data, satomis, executable, owner, rent_epoch, pubkey) + slot
   3. into a new append vec that is associated with the slot#
 
 */
@@ -599,7 +599,7 @@ pub mod tests {
             genesis_config.slots_per_year(),
             &genesis_config.rent,
         );
-        rent_collector.rent.lamports_per_byte_year = 0; // temporarily disable rent
+        rent_collector.rent.satomis_per_byte_year = 0; // temporarily disable rent
         let find_unskipped_slot = Some;
         // slot in current epoch
         let result = ExpectedRentCollection::new(
@@ -980,7 +980,7 @@ pub mod tests {
             genesis_config.slots_per_year(),
             &genesis_config.rent,
         );
-        rent_collector.rent.lamports_per_byte_year = 0; // temporarily disable rent
+        rent_collector.rent.satomis_per_byte_year = 0; // temporarily disable rent
 
         assert_eq!(
             slots_per_epoch,
@@ -1173,7 +1173,7 @@ pub mod tests {
             genesis_config.slots_per_year(),
             &genesis_config.rent,
         );
-        rent_collector.rent.lamports_per_byte_year = 0; // temporarily disable rent
+        rent_collector.rent.satomis_per_byte_year = 0; // temporarily disable rent
 
         assert_eq!(
             slots_per_epoch,

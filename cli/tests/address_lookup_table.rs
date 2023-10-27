@@ -9,7 +9,7 @@ use {
     domichain_cli_output::{CliAddressLookupTable, CliAddressLookupTableCreated, OutputFormat},
     domichain_faucet::faucet::run_local_faucet,
     domichain_sdk::{
-        native_token::LAMPORTS_PER_DOMI,
+        native_token::SATOMIS_PER_DOMI,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
@@ -35,7 +35,7 @@ fn test_cli_create_extend_and_freeze_address_lookup_table() {
     // Airdrop DOMI for transaction fees
     config.command = CliCommand::Airdrop {
         pubkey: None,
-        lamports: 10 * LAMPORTS_PER_DOMI,
+        satomis: 10 * SATOMIS_PER_DOMI,
     };
     process_command(&config).unwrap();
 
@@ -150,7 +150,7 @@ fn test_cli_create_and_deactivate_address_lookup_table() {
     // Airdrop DOMI for transaction fees
     config.command = CliCommand::Airdrop {
         pubkey: None,
-        lamports: 10 * LAMPORTS_PER_DOMI,
+        satomis: 10 * SATOMIS_PER_DOMI,
     };
     process_command(&config).unwrap();
 

@@ -283,7 +283,7 @@ export function BlockHistoryCard({ block }: { block: BlockResponse }) {
 
                     <td className="text-end">
                       {tx.meta !== null ? (
-                        <SolBalance lamports={-tx.meta.fee} />
+                        <SolBalance satomis={-tx.meta.fee} />
                       ) : (
                         "Unknown"
                       )}

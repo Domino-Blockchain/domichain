@@ -286,7 +286,7 @@ function LoadedView({
 }
 
 const DEFAULT_FEES = {
-  lamportsPerSignature: 5000,
+  satomisPerSignature: 5000,
 };
 
 function OverviewCard({
@@ -299,7 +299,7 @@ function OverviewCard({
   onClear: () => void;
 }) {
   const fee =
-    message.header.numRequiredSignatures * DEFAULT_FEES.lamportsPerSignature;
+    message.header.numRequiredSignatures * DEFAULT_FEES.satomisPerSignature;
   const feePayerValidator = createFeePayerValidator(fee);
 
   const size = React.useMemo(() => {
@@ -336,9 +336,9 @@ function OverviewCard({
             <td>Fees</td>
             <td className="text-lg-end">
               <div className="d-flex align-items-end flex-column">
-                <SolBalance lamports={fee} />
+                <SolBalance satomis={fee} />
                 <span className="text-muted">
-                  {`Each signature costs ${DEFAULT_FEES.lamportsPerSignature} lamports`}
+                  {`Each signature costs ${DEFAULT_FEES.satomisPerSignature} satomis`}
                 </span>
               </div>
             </td>

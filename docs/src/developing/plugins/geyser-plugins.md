@@ -390,8 +390,8 @@ records in `account` are updated, as shown in `create_schema.sql`,
 ```
 CREATE FUNCTION audit_account_update() RETURNS trigger AS $audit_account_update$
     BEGIN
-		INSERT INTO account_audit (pubkey, owner, lamports, slot, executable, rent_epoch, data, write_version, updated_on)
-            VALUES (OLD.pubkey, OLD.owner, OLD.lamports, OLD.slot,
+		INSERT INTO account_audit (pubkey, owner, satomis, slot, executable, rent_epoch, data, write_version, updated_on)
+            VALUES (OLD.pubkey, OLD.owner, OLD.satomis, OLD.slot,
                     OLD.executable, OLD.rent_epoch, OLD.data, OLD.write_version, OLD.updated_on);
         RETURN NEW;
     END;
@@ -417,7 +417,7 @@ recent records for an account:
 ```
 delete from account_audit a2 where (pubkey, write_version) in
     (select pubkey, write_version from
-        (select a.pubkey, a.updated_on, a.slot, a.write_version, a.lamports,
+        (select a.pubkey, a.updated_on, a.slot, a.write_version, a.satomis,
             rank() OVER ( partition by pubkey order by write_version desc) as rnk
             from account_audit a) ranked
             where ranked.rnk > 1000)
