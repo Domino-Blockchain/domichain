@@ -2413,9 +2413,10 @@ impl Bank {
         dbg!(validator_rate, foundation_rate);
 
         let prev_epoch_duration_in_years = self.epoch_duration_in_years(prev_epoch);
+        let init_capitalization as u64 = 250_000_000 * SATOMIS_PER_DOMI;
         dbg!(prev_epoch_duration_in_years);
         let validator_rewards = (validator_rate
-            * prev_epoch_capitalization as f64
+            * init_capitalization as f64
             * prev_epoch_duration_in_years) as u64;
 
         dbg!(validator_rewards);
