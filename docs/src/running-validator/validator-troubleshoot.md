@@ -7,7 +7,7 @@ testnet participants, [https://solana.com/discord](https://solana.com/discord)
 
 ## Useful Links & Discussion
 
-- [Network Explorer](http://explorer.domichain.com/)
+- [Network Explorer](http://explorer.domichain.io/)
 - [Testnet Metrics Dashboard](https://metrics.domichain.com:3000/d/monitor-edge/cluster-telemetry-edge?refresh=60s&orgId=2)
 - Validator chat channels
   - [\#validator-support](https://discord.gg/rZsenD) General support channel for any Validator related queries.
