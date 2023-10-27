@@ -358,7 +358,7 @@ pub fn deserialize_parameters_unaligned(
                     .and_then(|_| borrowed_account.can_data_be_changed())
                 {
                     Ok(()) => borrowed_account.set_data_from_slice(data)?,
-                    Err(err) if dbg!(borrowed_account.get_data() != data) => return Err(err),
+                    Err(err) if borrowed_account.get_data() != data => return Err(err),
                     _ => {}
                 }
                 start += pre_len; // data
@@ -501,13 +501,11 @@ pub fn deserialize_parameters_aligned(
                     .ok_or(InstructionError::InvalidArgument)?;
                 match borrowed_account
                     .can_data_be_resized(post_len)
-                    .and_then(|_| dbg!(borrowed_account.can_data_be_changed()))
+                    .and_then(|_| borrowed_account.can_data_be_changed())
                 {
                     Ok(()) => borrowed_account.set_data_from_slice(data)?,
-                    Err(err) if borrowed_account.get_data() != data => return dbg!(Err(err)),
-                    _ => {
-                        dbg!();
-                    }
+                    Err(err) if borrowed_account.get_data() != data => return Err(err),
+                    _ => {}
                 }
                 start += *pre_len; // data
             } else {

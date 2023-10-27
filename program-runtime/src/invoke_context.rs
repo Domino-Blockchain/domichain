@@ -595,27 +595,14 @@ impl<'a> InvokeContext<'a> {
             if instruction_account.is_signer
                 && !(borrowed_account.is_signer() || signers.contains(borrowed_account.get_key()))
             {
-                dbg!(&instruction_account);
-                // dbg!(format_args!("{:?}", &borrowed_account));
-                dbg!(&signers);
-                dbg!(borrowed_account.get_key());
-
-                dbg!(instruction_account.is_signer);
-                dbg!(borrowed_account.is_signer());
-                dbg!(signers.contains(borrowed_account.get_key()));
-                dbg!(
-                    instruction_account.is_signer
-                        && !(borrowed_account.is_signer() || signers.contains(borrowed_account.get_key()))
-                );
                 ic_msg!(
                     self,
                     "{}'s signer privilege escalated",
                     borrowed_account.get_key()
                 );
-                dbg!(InstructionError::PrivilegeEscalation);
                 // panic!();
                 exit(1);
-                return dbg!(Err(InstructionError::PrivilegeEscalation));
+                return Err(InstructionError::PrivilegeEscalation);
             }
         }
         let instruction_accounts = duplicate_indicies
@@ -634,7 +621,7 @@ impl<'a> InvokeContext<'a> {
             .find_index_of_instruction_account(self.transaction_context, &callee_program_id)
             .ok_or_else(|| {
                 ic_msg!(self, "Unknown program {}", callee_program_id);
-                dbg!(InstructionError::MissingAccount)
+                InstructionError::MissingAccount
             })?;
         let borrowed_program_account = instruction_context
             .try_borrow_instruction_account(self.transaction_context, program_account_index)?;
@@ -739,24 +726,11 @@ impl<'a> InvokeContext<'a> {
                 *owner_id
             };
 
-            // if builtin_id.to_string().contains("Loader") {
-            //     // dbg!(&instruction_context);
-            //     // dbg!(&self.transaction_context);
-            //     dbg!(owner_id);
-            //     if dbg!(native_loader::check_id(owner_id)) {
-            //         dbg!(*borrowed_root_account.get_key());
-            //         dbg!(borrowed_root_account.get_index_in_transaction());
-            //     }
-            // }
-
             builtin_id
         };
 
         // The Murmur3 hash value (used by RBPF) of the string "entrypoint"
         const ENTRYPOINT_KEY: u32 = 0x71E3CF81;
-        // if builtin_id.to_string().contains("Loader") {
-        //     dbg!(builtin_id);
-        // }
         let entry = self
             .programs_loaded_for_tx_batch
             .find(&builtin_id)
@@ -771,14 +745,6 @@ impl<'a> InvokeContext<'a> {
         entry.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
 
         let program_id = *instruction_context.get_last_program_key(self.transaction_context)?;
-        // if builtin_id.to_string().contains("Loader") {
-
-        //     dbg!(program_id);
-        //     if program_id.to_string().contains("Token") {
-        //         dbg!(&instruction_context);
-        //         dbg!(&self.transaction_context);
-        //     }
-        // }
         self.transaction_context
             .set_return_data(program_id, Vec::new())?;
         let logger = self.get_log_collector();
@@ -836,7 +802,6 @@ impl<'a> InvokeContext<'a> {
 
         if builtin_id.to_string().contains("Loader") {
             timings.execute_accessories.process_instructions.process_executable_chain_us;
-            // dbg!(timings.execute_accessories.process_instructions.process_executable_chain_us);
         }
         result
     }

@@ -35,7 +35,6 @@ fi
 args=(
   "$@"
   --max-genesis-archive-unpacked-size 1073741824
-  --enable-warmup-epochs
   --bootstrap-validator "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/identity.json
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/vote-account.json
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/stake-account.json

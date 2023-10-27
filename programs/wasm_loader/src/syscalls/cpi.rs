@@ -194,8 +194,6 @@ impl<'a> CallerAccount<'a> {
         account_info: &AccountInfoRaw,
         original_data_len: usize,
     ) -> Result<CallerAccount<'a>, Error> {
-        // dbg!(size_of::<AccountInfo>());
-        // dbg!(size_of::<AccountInfoRaw>());
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
@@ -218,15 +216,13 @@ impl<'a> CallerAccount<'a> {
             // let t = value.borrow();
             // let t = *t;
             // dbg!(t);
-            dbg!(translate_type_mut::<u64>(memory_mapping, account_info.lamports as u64, invoke_context.get_check_aligned())?)
+            translate_type_mut::<u64>(memory_mapping, account_info.lamports as u64, invoke_context.get_check_aligned())?
         };
-        dbg!(&lamports);
         let owner = translate_type_mut::<Pubkey>(
             memory_mapping,
             account_info.owner as u64,
             invoke_context.get_check_aligned(),
         )?;
-        dbg!(&owner);
 
         let is_bpf_account_data_direct_mapping_active = invoke_context
             .feature_set
@@ -234,8 +230,6 @@ impl<'a> CallerAccount<'a> {
         let is_move_serialized_len_ptr_in_cpi_active = invoke_context
             .feature_set
             .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
-        dbg!(is_bpf_account_data_direct_mapping_active);
-        dbg!(is_move_serialized_len_ptr_in_cpi_active);
 
         let (serialized_data, vm_data_addr, ref_to_len_in_vm, serialized_len_ptr) = {
             // // Double translate data out of RefCell
@@ -281,7 +275,6 @@ impl<'a> CallerAccount<'a> {
             let serialized_data = if is_bpf_account_data_direct_mapping_active {
                 let vm_addr = vm_data_addr.saturating_add(original_data_len as u64);
                 let len = if is_loader_deprecated { 0 } else { MAX_PERMITTED_DATA_INCREASE } as u64;
-                dbg!(vm_addr as *const (), len);
                 translate_slice_mut::<u8>(
                     memory_mapping,
                     vm_addr,
@@ -299,9 +292,6 @@ impl<'a> CallerAccount<'a> {
                 //     invoke_context.get_check_size(),
                 // )
             }?;
-
-            dbg!(vm_data_addr as *const ());
-            dbg!(original_data_len);
 
             // pub(crate) struct Hex<'a>(pub(crate) &'a [u8]);
             // impl fmt::Debug for Hex<'_> {
@@ -323,17 +313,6 @@ impl<'a> CallerAccount<'a> {
             // ).unwrap();
             // dbg!(format_args!("{:?}", &Hex(&data_dbg[..(original_data_len + MAX_PERMITTED_DATA_INCREASE)])));
             // dbg!(format_args!("{:?}", &Hex(&serialized_data[..serialized_data.len()])));
-
-            let slice_dbg: [u32; 2] = translate_slice::<u32>(
-                memory_mapping,
-                account_info.ptr_to_slice as _,
-                2,
-                invoke_context.get_check_aligned(),
-                invoke_context.get_check_size(),
-            ).unwrap().try_into().unwrap();
-            let [ptr, len] = slice_dbg;
-            dbg!(format_args!("{:p}", ptr as u64 as *const ()));
-            dbg!(len);
 
             (
                 serialized_data,
@@ -423,7 +402,6 @@ impl<'a> CallerAccount<'a> {
             data_len_vm_addr,
             size_of::<u64>() as u64,
         )?;
-        let ref_to_len_in_vm = unsafe { &mut *(data_len_addr as *mut u64) };
 
         let ref_of_len_in_input_buffer =
             (account_info.data_addr as *mut u8 as u64).saturating_sub(8);
@@ -524,17 +502,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
         memory_mapping: &mut MemoryMapping,
         invoke_context: &mut InvokeContext,
     ) -> Result<StableInstruction, Error> {
-        // dbg!(size_of::<StableInstruction>());
-        // dbg!(size_of::<StableVec<AccountMeta>>());
-        // dbg!(size_of::<StableVec<u8>>());
-
-        // dbg!(size_of::<StableInstructionFixed>());
-        // dbg!(size_of::<StableVecFixed<AccountMeta>>());
-        // dbg!(size_of::<StableVecFixed<u8>>());
-
-        // dbg!(size_of::<AccountMeta>());
-
-        // println!("[{file}:{line}] translate_type::<StableInstructionFixed>", file=file!(), line=line!());
         let ix_: &StableInstructionFixed = translate_type::<StableInstructionFixed>(
             memory_mapping,
             addr,
@@ -547,9 +514,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
         let ix_accounts_as_ptr = ix_.accounts.as_ptr();
         let ix_program_id = ix_.program_id;
 
-        // dbg!(ix_accounts_as_ptr);
-        // dbg!(ix_data_as_ptr);
-
         check_instruction_size(ix_accounts_len, ix_data_len, invoke_context)?;
 
         // println!("[{file}:{line}] translate_slice::<AccountMeta>", file=file!(), line=line!());
@@ -561,7 +525,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             invoke_context.get_check_size(),
         )?
         .to_vec();
-        // dbg!(&accounts);
 
         let ix_data_len = ix_data_len as u64;
         if invoke_context
@@ -584,9 +547,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             invoke_context.get_check_size(),
         )?
         .to_vec();
-        // dbg!(format_args!("{data:?}"));
-
-        // dbg!(&ix_program_id);
 
         Ok(StableInstruction {
             accounts: accounts.into(),
@@ -613,12 +573,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             invoke_context,
         )?;
-        // for i in 0..account_infos.len() {
-        //     dbg!(format_args!("{:?}", account_infos[i]));
-        // }
-        dbg!(&account_info_keys);
-
-        // dbg!();
         let res = translate_and_update_accounts(
             instruction_accounts,
             program_indices,
@@ -630,7 +584,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             CallerAccount::from_wasm_account_info,
         );
-        // dbg!();
         res
     }
 
@@ -712,7 +665,7 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
                     .collect::<Result<Vec<_>, Error>>()?;
                 let signer = Pubkey::create_program_address(&seeds, program_id)
                     .map_err(SyscallError::BadSeeds)?;
-                let seeds_: Vec<_> = seeds.into_iter().map(|s| Pubkey::try_from(s).map_err(|_| s)).collect();
+                // let seeds_: Vec<_> = seeds.into_iter().map(|s| Pubkey::try_from(s).map_err(|_| s)).collect();
                 // dbg!(format_args!("Pubkey::create_program_address {seeds_:?} + {program_id:?} => {signer:?}"));
                 signers.push(signer);
             }
@@ -812,7 +765,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedC {
             invoke_context.get_check_aligned(),
         )?;
 
-        panic!();
         check_instruction_size(
             ix_c.accounts_len as usize,
             ix_c.data_len as usize,
@@ -968,7 +920,6 @@ fn translate_account_infos<'a, T, F>(
 where
     F: Fn(&T) -> u64,
 {
-    dbg!();
     let account_infos = translate_slice::<T>(
         memory_mapping,
         account_infos_addr,
@@ -976,9 +927,7 @@ where
         invoke_context.get_check_aligned(),
         invoke_context.get_check_size(),
     )?;
-    dbg!();
     check_account_infos(account_infos.len(), invoke_context)?;
-    dbg!();
     let account_info_keys = account_infos
         .iter()
         .map(|account_info| {
@@ -990,7 +939,6 @@ where
         })
         .collect::<Result<Vec<_>, Error>>()?;
 
-    dbg!();
     Ok((account_infos, account_info_keys))
 }
 
@@ -1070,7 +1018,6 @@ where
                 })?;
 
             // build the CallerAccount corresponding to this account.
-            dbg!(&account_key);
             let caller_account =
                 do_translate(
                     invoke_context,
@@ -1084,7 +1031,6 @@ where
                         .ok_or(SyscallError::InvalidLength)?,
                     original_data_len,
                 )?;
-            dbg!();
 
             // before initiating CPI, the caller may have modified the
             // account (caller_account). We need to update the corresponding
@@ -1097,7 +1043,6 @@ where
                 callee_account,
                 direct_mapping,
             )?;
-            dbg!();
 
             let caller_account = if instruction_account.is_writable {
                 Some(caller_account)
@@ -1311,11 +1256,10 @@ fn cpi_common<S: SyscallInvokeSigned>(
                 &mut callee_account,
                 direct_mapping,
             )?;
-            dbg!();
         }
     }
 
-    dbg!(Ok(SUCCESS))
+    Ok(SUCCESS)
 }
 
 // Update the given account before executing CPI.
@@ -1363,13 +1307,12 @@ fn update_callee_account(
                         );
                 }
             }
-            Err(err) if dbg!(prev_len != post_len) => {
+            Err(err) if prev_len != post_len => {
                 return Err(Box::new(err));
             }
             _ => {}
         }
     } else {
-        dbg!();
         // The redundant check helps to avoid the expensive data comparison if we can
         match callee_account
             .can_data_be_resized(caller_account.serialized_data.len())
@@ -1381,7 +1324,6 @@ fn update_callee_account(
             }
             _ => {}
         }
-        dbg!();
     }
 
     if !is_disable_cpi_setting_executable_and_rent_epoch_active
@@ -1436,11 +1378,8 @@ fn update_caller_account(
     callee_account: &mut BorrowedAccount<'_>,
     direct_mapping: bool,
 ) -> Result<(), Error> {
-    dbg!();
     *caller_account.lamports = callee_account.get_lamports();
-    dbg!();
     *caller_account.owner = *callee_account.get_owner();
-    dbg!();
 
     if direct_mapping && caller_account.original_data_len > 0 {
         // Since each instruction account is directly mapped in a memory region
@@ -1458,20 +1397,13 @@ fn update_caller_account(
         // corresponding MemoryRegion in the caller's address space. Address
         // spaces are fixed so we don't need to update the MemoryRegion's length.
         // dbg!(&memory_mapping);
-        dbg!(memory_mapping.get_regions());
-        dbg!(&caller_account);
         let new_vm_data_addr = caller_account.vm_data_addr + solana_rbpf::ebpf::MM_HEAP_START;
-        dbg!(new_vm_data_addr as *const ());
         let region = memory_mapping.region(AccessType::Load, new_vm_data_addr)?;
-        dbg!();
         let callee_ptr = callee_account.get_data().as_ptr() as u64;
-        dbg!(callee_ptr as *const ());
-        dbg!(region.host_addr.get() as *const ());
-        if dbg!(region.host_addr.get() != callee_ptr) {
-            dbg!();
+        if region.host_addr.get() != callee_ptr {
             // FIXME: check how this works with WASM
             // region.host_addr.set(callee_ptr);
-            dbg!();
+            // dbg!();
         }
     }
     let prev_len = *caller_account.ref_to_len_in_vm as usize;
@@ -1529,7 +1461,6 @@ fn update_caller_account(
         // with direct_mapping on, serialized_data is fixed and holds the
         // realloc padding
         if !direct_mapping {
-            dbg!();
             caller_account.serialized_data = translate_slice_mut::<u8>(
                 memory_mapping,
                 caller_account.vm_data_addr,
@@ -1537,7 +1468,6 @@ fn update_caller_account(
                 false, // Don't care since it is byte aligned
                 invoke_context.get_check_size(),
             )?;
-            dbg!();
         }
         // this is the len field in the AccountInfo::data slice
         *caller_account.ref_to_len_in_vm = post_len.try_into().unwrap();
@@ -1547,7 +1477,6 @@ fn update_caller_account(
             .feature_set
             .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id())
         {
-            dbg!();
             let serialized_len_ptr = translate_type_mut::<u64>(
                 memory_mapping,
                 caller_account
@@ -1555,9 +1484,7 @@ fn update_caller_account(
                     .saturating_sub(std::mem::size_of::<u64>() as u64),
                 invoke_context.get_check_aligned(),
             )?;
-            dbg!();
             *serialized_len_ptr = post_len as u64;
-            dbg!();
         } else {
             unsafe {
                 *caller_account.serialized_len_ptr = post_len as u64;
@@ -1565,7 +1492,6 @@ fn update_caller_account(
         }
     }
     let realloc_bytes_used = post_len.saturating_sub(caller_account.original_data_len);
-    dbg!();
     if !direct_mapping {
         let to_slice = &mut caller_account.serialized_data;
         let from_slice = callee_account
@@ -1587,7 +1513,6 @@ fn update_caller_account(
             .ok_or(SyscallError::InvalidLength)?;
         to_slice.copy_from_slice(from_slice);
     }
-    dbg!();
 
     Ok(())
 }

@@ -2400,7 +2400,9 @@ impl Bank {
         prev_epoch_capitalization: u64,
         prev_epoch: Epoch,
     ) -> PrevEpochInflationRewards {
+        dbg!(prev_epoch_capitalization, prev_epoch);
         let slot_in_year = self.slot_in_year_for_inflation();
+        dbg!(slot_in_year);
         let (validator_rate, foundation_rate) = {
             let inflation = self.inflation.read().unwrap();
             (
@@ -2408,12 +2410,15 @@ impl Bank {
                 (*inflation).foundation(slot_in_year),
             )
         };
+        dbg!(validator_rate, foundation_rate);
 
         let prev_epoch_duration_in_years = self.epoch_duration_in_years(prev_epoch);
+        dbg!(prev_epoch_duration_in_years);
         let validator_rewards = (validator_rate
             * prev_epoch_capitalization as f64
             * prev_epoch_duration_in_years) as u64;
 
+        dbg!(validator_rewards);
         PrevEpochInflationRewards {
             validator_rewards,
             prev_epoch_duration_in_years,

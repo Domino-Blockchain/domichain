@@ -136,6 +136,18 @@ mod tests {
 
     #[test]
     #[allow(clippy::float_cmp)]
+    fn test_inflation_4_years() {
+        let inflation = Inflation::default();
+
+        for year in 0..100 {
+            let last = inflation.total(year as f64);
+            println!("{year}: {last}");
+            // assert_eq!(last, DEFAULT_INITIAL);
+        }
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
     fn test_inflation_fixed() {
         let inflation = Inflation::new_fixed(0.001);
         for year in &[0.1, 0.5, 1.0, DEFAULT_FOUNDATION_TERM, 100.0] {

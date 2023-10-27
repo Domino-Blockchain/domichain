@@ -380,9 +380,6 @@ impl<'a> MemoryChunkIterator<'a> {
         len: u64,
     ) -> Result<MemoryChunkIterator<'a>, EbpfError> {
         let vm_addr_end = vm_addr.checked_add(len).ok_or_else(|| {
-            dbg!(vm_addr as *const u8);
-            dbg!(len);
-            dbg!(unsafe { (vm_addr as *const u8).add(len as _) });
             EbpfError::AccessViolation(
                 0,
                 access_type,
