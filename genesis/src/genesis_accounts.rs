@@ -102,7 +102,7 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lampo
             &UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR,
         );
 
-    // "one thanks" (maintanance pool) gets 10_000_000 DOMI (total) - above distributions
+    // "one thanks" (maintanance pool) gets 10_000_000 DOMI - above distributions
     create_and_add_stakes(
         genesis_config,
         &StakerInfo {
@@ -111,7 +111,7 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lampo
             lamports: (250_000_000 * LAMPORTS_PER_DOMI).saturating_sub(issued_lamports),
             withdrawer: Some("9He2rQZWGobpx65LdaUuU2u6Dkb5y4EoC5oV16P5B3Go"),
         },
-        &UNLOCKS_ALL_DAY_ZERO,
+        &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
         None,
     );
 }
@@ -132,6 +132,6 @@ mod tests {
             .map(|account| account.lamports)
             .sum::<u64>();
 
-        assert_eq!(500_000_000 * LAMPORTS_PER_DOMI, lamports);
+        assert_eq!(250_000_000 * LAMPORTS_PER_DOMI, lamports);
     }
 }
