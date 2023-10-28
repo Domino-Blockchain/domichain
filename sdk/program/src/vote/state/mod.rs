@@ -352,7 +352,7 @@ impl VoteState {
         {
             deserialize::<VoteStateVersions>(_input)
                 .map(|versioned| versioned.convert_to_current())
-                .map_err(|_| dbg!(InstructionError::InvalidAccountData))
+                .map_err(|_| InstructionError::InvalidAccountData)
         }
         #[cfg(target_os = "wasi")]
         unimplemented!();
@@ -557,7 +557,7 @@ impl VoteState {
         let (latest_epoch, latest_authorized_pubkey) = self
             .authorized_voters
             .last()
-            .ok_or(dbg!(InstructionError::InvalidAccountData))?;
+            .ok_or(InstructionError::InvalidAccountData)?;
 
         // If we're not setting the same pubkey as authorized pubkey again,
         // then update the list of prior voters to mark the expiration
@@ -596,7 +596,7 @@ impl VoteState {
         let pubkey = self
             .authorized_voters
             .get_and_cache_authorized_voter_for_epoch(current_epoch)
-            .ok_or_else(|| dbg!(InstructionError::InvalidAccountData))?;
+            .ok_or_else(|| InstructionError::InvalidAccountData)?;
         self.authorized_voters
             .purge_authorized_voters(current_epoch);
         Ok(pubkey)

@@ -504,8 +504,6 @@ impl Pubkey {
                     seeds_with_bump.push(&bump_seed);
                     match Self::create_program_address(&seeds_with_bump, program_id) {
                         Ok(address) => {
-                            dbg!(seeds_with_bump.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
-                            dbg!(program_id, address);
                             return Some((address, bump_seed[0]))
                         },
                         Err(PubkeyError::InvalidSeeds) => (),

@@ -64,7 +64,7 @@ pub fn advance_nonce_account(
                 "Advance nonce account: Account {} state is invalid",
                 account.get_key()
             );
-            Err(dbg!(InstructionError::InvalidAccountData))
+            Err(InstructionError::InvalidAccountData)
         }
     }
 }
@@ -192,7 +192,7 @@ pub fn initialize_nonce_account(
                 "Initialize nonce account: Account {} state is invalid",
                 account.get_key()
             );
-            Err(dbg!(InstructionError::InvalidAccountData))
+            Err(InstructionError::InvalidAccountData)
         }
     }
 }
@@ -222,7 +222,7 @@ pub fn authorize_nonce_account(
                 "Authorize nonce account: Account {} state is invalid",
                 account.get_key()
             );
-            Err(dbg!(InstructionError::InvalidAccountData))
+            Err(InstructionError::InvalidAccountData)
         }
         Err(AuthorizeNonceError::MissingRequiredSignature(account_authority)) => {
             ic_msg!(
@@ -470,7 +470,7 @@ mod test {
         signers.insert(*nonce_account.get_key());
         set_invoke_context_blockhash!(invoke_context, 63);
         let result = advance_nonce_account(&mut nonce_account, &signers, &invoke_context);
-        assert_eq!(result, Err(dbg!(InstructionError::InvalidAccountData)));
+        assert_eq!(result, Err(InstructionError::InvalidAccountData));
     }
 
     #[test]
@@ -981,7 +981,7 @@ mod test {
         set_invoke_context_blockhash!(invoke_context, 0);
         let result =
             initialize_nonce_account(&mut nonce_account, &authorized, &rent, &invoke_context);
-        assert_eq!(result, Err(dbg!(InstructionError::InvalidAccountData)));
+        assert_eq!(result, Err(InstructionError::InvalidAccountData));
     }
 
     #[test]
@@ -1052,7 +1052,7 @@ mod test {
             &signers,
             &invoke_context,
         );
-        assert_eq!(result, Err(dbg!(InstructionError::InvalidAccountData)));
+        assert_eq!(result, Err(InstructionError::InvalidAccountData));
     }
 
     #[test]

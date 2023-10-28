@@ -154,7 +154,6 @@ impl<'a> AccountInfoFromWasm<'a> {
         unsafe { transmute(self.key as u64 as *mut Pubkey) }
     }
     pub fn satomis(&self) -> &Rc<RefCell<&'a mut u64>> {
-        dbg!(self.satomis as u64 as *mut Rc<RefCell<&'a mut u64>>);
         unsafe { transmute(self.satomis as u64 as *mut Rc<RefCell<&'a mut u64>>) }
     }
     pub fn data(&self) -> &Rc<RefCell<&'a mut [u8]>> {
