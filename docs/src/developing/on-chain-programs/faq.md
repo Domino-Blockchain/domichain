@@ -204,7 +204,7 @@ encoding is little endian):
     - 4 bytes of padding
     - 32 bytes of the account public key
     - 32 bytes of the account's owner public key
-    - 8 bytes unsigned number of lamports owned by the account
+    - 8 bytes unsigned number of satomis owned by the account
     - 8 bytes unsigned number of bytes of account data
     - x bytes of account data
     - 10k bytes of padding, used for realloc

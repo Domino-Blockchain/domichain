@@ -29,13 +29,13 @@ Here is an example of an Instruction enum using the new accounts format:
 ```rust,ignore
 #[instructions(test_program::id())]
 pub enum TestInstruction {
-    /// Transfer lamports
+    /// Transfer satomis
     #[accounts(
         from_account(SIGNER, WRITABLE, desc = "Funding account"),
         to_account(WRITABLE, desc = "Recipient account"),
     )]
     Transfer {
-        lamports: u64,
+        satomis: u64,
     },
 
     /// Provide M of N required signatures
@@ -59,13 +59,13 @@ An example of the generated TestInstruction with docs:
 
 ```rust,ignore
 pub enum TestInstruction {
-    /// Transfer lamports
+    /// Transfer satomis
     ///
     /// * Accounts expected by this instruction:
     ///   0. `[WRITABLE, SIGNER]` Funding account
     ///   1. `[WRITABLE]` Recipient account
     Transfer {
-        lamports: u64,
+        satomis: u64,
     },
 
     /// Provide M of N required signatures
@@ -88,18 +88,18 @@ pub enum TestInstruction {
 Generated constructors:
 
 ```rust,ignore
-/// Transfer lamports
+/// Transfer satomis
 ///
 /// * `from_account` - `[WRITABLE, SIGNER]` Funding account
 /// * `to_account` - `[WRITABLE]` Recipient account
-pub fn transfer(from_account: Pubkey, to_account: Pubkey, lamports: u64) -> Instruction {
+pub fn transfer(from_account: Pubkey, to_account: Pubkey, satomis: u64) -> Instruction {
     let account_metas = vec![
         AccountMeta::new(from_pubkey, true),
         AccountMeta::new(to_pubkey, false),
     ];
     Instruction::new_with_bincode(
         test_program::id(),
-        &SystemInstruction::Transfer { lamports },
+        &SystemInstruction::Transfer { satomis },
         account_metas,
     )
 }
@@ -154,7 +154,7 @@ Generated TestInstructionVerbose enum:
 ```rust,ignore
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum TestInstruction {
-    /// Transfer lamports
+    /// Transfer satomis
     Transfer {
         /// Funding account
         funding_account: u8
@@ -162,7 +162,7 @@ pub enum TestInstruction {
         /// Recipient account
         recipient_account: u8
 
-        lamports: u64,
+        satomis: u64,
     },
 
     /// Provide M of N required signatures
@@ -182,10 +182,10 @@ pub enum TestInstruction {
 impl TestInstructionVerbose {
     pub fn from_instruction(instruction: TestInstruction, account_keys: Vec<u8>) -> Self {
         match instruction {
-            TestInstruction::Transfer { lamports } => TestInstructionVerbose::Transfer {
+            TestInstruction::Transfer { satomis } => TestInstructionVerbose::Transfer {
                 funding_account: account_keys[0],
                 recipient_account: account_keys[1],
-                lamports,
+                satomis,
             }
             TestInstruction::Multisig => TestInstructionVerbose::Multisig {
                 data_account: account_keys[0],

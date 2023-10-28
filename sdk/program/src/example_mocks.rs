@@ -126,7 +126,7 @@ pub mod domichain_sdk {
         use crate::{clock::Epoch, pubkey::Pubkey};
         #[derive(Clone)]
         pub struct Account {
-            pub lamports: u64,
+            pub satomis: u64,
             pub data: Vec<u8>,
             pub owner: Pubkey,
             pub executable: bool,

@@ -352,7 +352,7 @@ impl VoteState {
         {
             deserialize::<VoteStateVersions>(_input)
                 .map(|versioned| versioned.convert_to_current())
-                .map_err(|_| dbg!(InstructionError::InvalidAccountData))
+                .map_err(|_| InstructionError::InvalidAccountData)
         }
         #[cfg(target_os = "wasi")]
         unimplemented!();
@@ -381,8 +381,8 @@ impl VoteState {
                 // Calculate mine and theirs independently and symmetrically instead of
                 // using the remainder of the other to treat them strictly equally.
                 // This is also to cancel the rewarding if either of the parties
-                // should receive only fractional lamports, resulting in not being rewarded at all.
-                // Thus, note that we intentionally discard any residual fractional lamports.
+                // should receive only fractional satomis, resulting in not being rewarded at all.
+                // Thus, note that we intentionally discard any residual fractional satomis.
                 let mine = on
                     .checked_mul(u128::from(split))
                     .expect("multiplication of a u64 and u8 should not overflow")
@@ -513,7 +513,7 @@ impl VoteState {
     }
 
     /// Number of "credits" owed to this account from the mining pool. Submit this
-    /// VoteState to the Rewards program to trade credits for lamports.
+    /// VoteState to the Rewards program to trade credits for satomis.
     pub fn credits(&self) -> u64 {
         if self.epoch_credits.is_empty() {
             0
@@ -557,7 +557,7 @@ impl VoteState {
         let (latest_epoch, latest_authorized_pubkey) = self
             .authorized_voters
             .last()
-            .ok_or(dbg!(InstructionError::InvalidAccountData))?;
+            .ok_or(InstructionError::InvalidAccountData)?;
 
         // If we're not setting the same pubkey as authorized pubkey again,
         // then update the list of prior voters to mark the expiration
@@ -596,7 +596,7 @@ impl VoteState {
         let pubkey = self
             .authorized_voters
             .get_and_cache_authorized_voter_for_epoch(current_epoch)
-            .ok_or_else(|| dbg!(InstructionError::InvalidAccountData))?;
+            .ok_or_else(|| InstructionError::InvalidAccountData)?;
         self.authorized_voters
             .purge_authorized_voters(current_epoch);
         Ok(pubkey)
@@ -1250,6 +1250,7 @@ mod tests {
             root,
             hash,
             timestamp,
+            vrf_proof: None,
         };
         #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
         enum VoteInstruction {

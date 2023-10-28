@@ -46,11 +46,11 @@ use {
         },
         accounts_db::{
             AccountShrinkThreshold, AccountStorageEntry, AccountsDbConfig,
-            CalcAccountsHashDataSource, IncludeSlotInHash, VerifyAccountsHashAndLamportsConfig,
+            CalcAccountsHashDataSource, IncludeSlotInHash, VerifyAccountsHashAndSatomisConfig,
             ACCOUNTS_DB_CONFIG_FOR_BENCHMARKS, ACCOUNTS_DB_CONFIG_FOR_TESTING,
         },
         accounts_hash::{AccountsHash, CalcAccountsHashConfig, HashStats, IncrementalAccountsHash},
-        accounts_index::{AccountSecondaryIndexes, IndexKey, ScanConfig, ScanResult, ZeroLamport},
+        accounts_index::{AccountSecondaryIndexes, IndexKey, ScanConfig, ScanResult, ZeroSatomi},
         accounts_partition::{self, Partition, PartitionIndex},
         accounts_update_notifier_interface::AccountsUpdateNotifier,
         ancestors::{Ancestors, AncestorsForSerialization},
@@ -140,11 +140,11 @@ use {
         incinerator,
         inflation::Inflation,
         instruction::{CompiledInstruction, TRANSACTION_LEVEL_STACK_HEIGHT},
-        lamports::LamportsError,
+        satomis::SatomisError,
         loader_v4,
         message::{AccountKeys, SanitizedMessage},
         native_loader,
-        native_token::{domi_to_lamports, LAMPORTS_PER_DOMI},
+        native_token::{domi_to_satomis, SATOMIS_PER_DOMI},
         nonce::{self, state::DurableNonce, NONCED_TX_MARKER_IX_INDEX},
         nonce_account,
         packet::PACKET_DATA_SIZE,
@@ -385,17 +385,17 @@ pub enum DurableNonceFee {
 
 impl From<&NonceFull> for DurableNonceFee {
     fn from(nonce: &NonceFull) -> Self {
-        match nonce.lamports_per_signature() {
-            Some(lamports_per_signature) => Self::Valid(lamports_per_signature),
+        match nonce.satomis_per_signature() {
+            Some(satomis_per_signature) => Self::Valid(satomis_per_signature),
             None => Self::Invalid,
         }
     }
 }
 
 impl DurableNonceFee {
-    pub fn lamports_per_signature(&self) -> Option<u64> {
+    pub fn satomis_per_signature(&self) -> Option<u64> {
         match self {
-            Self::Valid(lamports_per_signature) => Some(*lamports_per_signature),
+            Self::Valid(satomis_per_signature) => Some(*satomis_per_signature),
             Self::Invalid => None,
         }
     }
@@ -554,7 +554,7 @@ impl TransactionLogCollector {
 pub trait NonceInfo {
     fn address(&self) -> &Pubkey;
     fn account(&self) -> &AccountSharedData;
-    fn lamports_per_signature(&self) -> Option<u64>;
+    fn satomis_per_signature(&self) -> Option<u64>;
     fn fee_payer_account(&self) -> Option<&AccountSharedData>;
 }
 
@@ -576,8 +576,8 @@ impl NonceInfo for NoncePartial {
     fn account(&self) -> &AccountSharedData {
         &self.account
     }
-    fn lamports_per_signature(&self) -> Option<u64> {
-        nonce_account::lamports_per_signature_of(&self.account)
+    fn satomis_per_signature(&self) -> Option<u64> {
+        nonce_account::satomis_per_signature_of(&self.account)
     }
     fn fee_payer_account(&self) -> Option<&AccountSharedData> {
         None
@@ -621,7 +621,7 @@ impl NonceFull {
         if let Some((fee_payer_address, fee_payer_account)) = fee_payer {
             let mut fee_payer_account = fee_payer_account.clone();
             let rent_debit = rent_debits.get_account_rent_debit(fee_payer_address);
-            fee_payer_account.set_lamports(fee_payer_account.lamports().saturating_add(rent_debit));
+            fee_payer_account.set_satomis(fee_payer_account.satomis().saturating_add(rent_debit));
 
             let nonce_address = *partial.address();
             if *fee_payer_address == nonce_address {
@@ -645,8 +645,8 @@ impl NonceInfo for NonceFull {
     fn account(&self) -> &AccountSharedData {
         &self.account
     }
-    fn lamports_per_signature(&self) -> Option<u64> {
-        nonce_account::lamports_per_signature_of(&self.account)
+    fn satomis_per_signature(&self) -> Option<u64> {
+        nonce_account::satomis_per_signature_of(&self.account)
     }
     fn fee_payer_account(&self) -> Option<&AccountSharedData> {
         self.fee_payer_account.as_ref()
@@ -870,8 +870,8 @@ pub trait DropCallback: fmt::Debug {
 pub struct RewardInfo {
     pub reward_type: RewardType,
     /// Reward amount
-    pub lamports: i64,
-    /// Account balance in lamports after `lamports` was applied
+    pub satomis: i64,
+    /// Account balance in satomis after `satomis` was applied
     pub post_balance: u64,
     /// Vote account commission when the reward was credited, only present for voting and staking rewards
     pub commission: Option<u8>,
@@ -1155,7 +1155,7 @@ pub(crate) struct StakeReward {
 
 impl StakeReward {
     fn get_stake_reward(&self) -> i64 {
-        self.stake_reward_info.lamports
+        self.stake_reward_info.satomis
     }
 }
 
@@ -2131,7 +2131,7 @@ impl Bank {
         let old_account = self.get_account_with_fixed_root(pubkey);
         let mut new_account = updater(&old_account);
 
-        // When new sysvar comes into existence (with RENT_UNADJUSTED_INITIAL_BALANCE lamports),
+        // When new sysvar comes into existence (with RENT_UNADJUSTED_INITIAL_BALANCE satomis),
         // this code ensures that the sysvar's balance is adjusted to be rent-exempt.
         //
         // More generally, this code always re-calculates for possible sysvar data size change,
@@ -2149,7 +2149,7 @@ impl Bank {
         (
             old_account
                 .as_ref()
-                .map(|a| a.lamports())
+                .map(|a| a.satomis())
                 .unwrap_or(RENT_UNADJUSTED_INITIAL_BALANCE),
             old_account
                 .as_ref()
@@ -2400,7 +2400,9 @@ impl Bank {
         prev_epoch_capitalization: u64,
         prev_epoch: Epoch,
     ) -> PrevEpochInflationRewards {
+        dbg!(prev_epoch_capitalization, prev_epoch);
         let slot_in_year = self.slot_in_year_for_inflation();
+        dbg!(slot_in_year);
         let (validator_rate, foundation_rate) = {
             let inflation = self.inflation.read().unwrap();
             (
@@ -2408,12 +2410,16 @@ impl Bank {
                 (*inflation).foundation(slot_in_year),
             )
         };
+        dbg!(validator_rate, foundation_rate);
 
         let prev_epoch_duration_in_years = self.epoch_duration_in_years(prev_epoch);
+        let init_capitalization = 250_000_000 * SATOMIS_PER_DOMI;
+        dbg!(prev_epoch_duration_in_years);
         let validator_rewards = (validator_rate
-            * prev_epoch_capitalization as f64
+            * init_capitalization as f64
             * prev_epoch_duration_in_years) as u64;
 
+        dbg!(validator_rewards);
         PrevEpochInflationRewards {
             validator_rewards,
             prev_epoch_duration_in_years,
@@ -2464,7 +2470,7 @@ impl Bank {
                     .iter()
                     .map(|(_address, reward_info)| {
                         match reward_info.reward_type {
-                            RewardType::Voting | RewardType::Staking => reward_info.lamports,
+                            RewardType::Voting | RewardType::Staking => reward_info.satomis,
                             _ => 0,
                         }
                     })
@@ -2560,7 +2566,7 @@ impl Bank {
                         }
                         invalid_cached_stake_accounts.fetch_add(1, Relaxed);
                         let cached_stake_account = cached_stake_account.account();
-                        if cached_stake_account.lamports() == stake_account.lamports()
+                        if cached_stake_account.satomis() == stake_account.satomis()
                             && cached_stake_account.data() == stake_account.data()
                             && cached_stake_account.owner() == stake_account.owner()
                             && cached_stake_account.executable() == stake_account.executable()
@@ -2689,7 +2695,7 @@ impl Bank {
             let num_stake_delegations = stakes.stake_delegations().len();
             let min_stake_delegation =
                 domichain_stake_program::get_minimum_delegation(&self.feature_set)
-                    .max(LAMPORTS_PER_DOMI);
+                    .max(SATOMIS_PER_DOMI);
 
             let (stake_delegations, filter_timer) = measure!(stakes
                 .stake_delegations()
@@ -3025,12 +3031,12 @@ impl Bank {
                             *vote_rewards_sum = vote_rewards_sum.saturating_add(voters_reward);
                         }
 
-                        let post_balance = stake_account.lamports();
+                        let post_balance = stake_account.satomis();
                         return Some(StakeReward {
                             stake_pubkey,
                             stake_reward_info: RewardInfo {
                                 reward_type: RewardType::Staking,
-                                lamports: i64::try_from(stakers_reward).unwrap(),
+                                satomis: i64::try_from(stakers_reward).unwrap(),
                                 post_balance,
                                 commission: Some(vote_state.commission),
                             },
@@ -3078,7 +3084,7 @@ impl Bank {
                         vote_needs_store,
                     },
                 )| {
-                    if let Err(err) = vote_account.checked_add_lamports(vote_rewards) {
+                    if let Err(err) = vote_account.checked_add_satomis(vote_rewards) {
                         debug!("reward redemption failed for {}: {:?}", vote_pubkey, err);
                         return None;
                     }
@@ -3091,8 +3097,8 @@ impl Bank {
                         vote_pubkey,
                         RewardInfo {
                             reward_type: RewardType::Voting,
-                            lamports: vote_rewards as i64,
-                            post_balance: vote_account.lamports(),
+                            satomis: vote_rewards as i64,
+                            post_balance: vote_account.satomis(),
                             commission: Some(commission),
                         },
                     ))
@@ -3216,7 +3222,7 @@ impl Bank {
                             self.collector_id,
                             RewardInfo {
                                 reward_type: RewardType::Fee,
-                                lamports: deposit as i64,
+                                satomis: deposit as i64,
                                 post_balance,
                                 commission: None,
                             },
@@ -3231,7 +3237,7 @@ impl Bank {
                     datapoint_error!(
                         "bank-burned_fee",
                         ("slot", self.slot(), i64),
-                        ("num_lamports", deposit, i64)
+                        ("num_satomis", deposit, i64)
                     );
                     burn += deposit;
                 }
@@ -3355,7 +3361,7 @@ impl Bank {
                 "{pubkey} repeated in genesis config"
             );
             self.store_account(pubkey, account);
-            self.capitalization.fetch_add(account.lamports(), Relaxed);
+            self.capitalization.fetch_add(account.satomis(), Relaxed);
             self.accounts_data_size_initial += account.data().len() as u64;
         }
         // updating sysvars (the fees sysvar in this case) now depends on feature activations in
@@ -3382,7 +3388,7 @@ impl Bank {
         self.block_seed = genesis_hash;
         self.blockhash_queue.write().unwrap().genesis_hash(
             &genesis_hash,
-            self.fee_rate_governor.lamports_per_signature,
+            self.fee_rate_governor.satomis_per_signature,
         );
 
         self.hashes_per_tick = genesis_config.hashes_per_tick();
@@ -3411,10 +3417,10 @@ impl Bank {
 
     fn burn_and_purge_account(&self, program_id: &Pubkey, mut account: AccountSharedData) {
         let old_data_size = account.data().len();
-        self.capitalization.fetch_sub(account.lamports(), Relaxed);
+        self.capitalization.fetch_sub(account.satomis(), Relaxed);
         // Both resetting account balance to 0 and zeroing the account data
         // is needed to really purge from AccountsDb and flush the Stakes cache
-        account.set_lamports(0);
+        account.set_satomis(0);
         account.data_as_mut_slice().fill(0);
         self.store_account(program_id, &account);
         self.calculate_and_update_accounts_data_size_delta_off_chain(old_data_size, 0);
@@ -3497,9 +3503,9 @@ impl Bank {
         );
 
         // Add a bogus executable account, which will be loaded and ignored.
-        let (lamports, rent_epoch) = self.inherit_specially_retained_account_fields(&None);
+        let (satomis, rent_epoch) = self.inherit_specially_retained_account_fields(&None);
         let account = AccountSharedData::from(Account {
-            lamports,
+            satomis,
             owner,
             data: vec![],
             executable: true,
@@ -3521,13 +3527,13 @@ impl Bank {
         self.blockhash_queue.read().unwrap().last_hash()
     }
 
-    pub fn last_blockhash_and_lamports_per_signature(&self) -> (Hash, u64) {
+    pub fn last_blockhash_and_satomis_per_signature(&self) -> (Hash, u64) {
         let blockhash_queue = self.blockhash_queue.read().unwrap();
         let last_hash = blockhash_queue.last_hash();
-        let last_lamports_per_signature = blockhash_queue
-            .get_lamports_per_signature(&last_hash)
+        let last_satomis_per_signature = blockhash_queue
+            .get_satomis_per_signature(&last_hash)
             .unwrap(); // safe so long as the BlockhashQueue is consistent
-        (last_hash, last_lamports_per_signature)
+        (last_hash, last_satomis_per_signature)
     }
 
     pub fn is_blockhash_valid(&self, hash: &Hash) -> bool {
@@ -3539,13 +3545,13 @@ impl Bank {
         self.rent_collector.rent.minimum_balance(data_len).max(1)
     }
 
-    pub fn get_lamports_per_signature(&self) -> u64 {
-        self.fee_rate_governor.lamports_per_signature
+    pub fn get_satomis_per_signature(&self) -> u64 {
+        self.fee_rate_governor.satomis_per_signature
     }
 
-    pub fn get_lamports_per_signature_for_blockhash(&self, hash: &Hash) -> Option<u64> {
+    pub fn get_satomis_per_signature_for_blockhash(&self, hash: &Hash) -> Option<u64> {
         let blockhash_queue = self.blockhash_queue.read().unwrap();
-        blockhash_queue.get_lamports_per_signature(hash)
+        blockhash_queue.get_satomis_per_signature(hash)
     }
 
     #[deprecated(since = "1.9.0", note = "Please use `get_fee_for_message` instead")]
@@ -3554,19 +3560,19 @@ impl Bank {
     }
 
     pub fn get_fee_for_message(&self, message: &SanitizedMessage) -> Option<u64> {
-        let lamports_per_signature = {
+        let satomis_per_signature = {
             let blockhash_queue = self.blockhash_queue.read().unwrap();
-            blockhash_queue.get_lamports_per_signature(message.recent_blockhash())
+            blockhash_queue.get_satomis_per_signature(message.recent_blockhash())
         }
         .or_else(|| {
             self.check_message_for_nonce(message)
                 .and_then(|(address, account)| {
-                    NoncePartial::new(address, account).lamports_per_signature()
+                    NoncePartial::new(address, account).satomis_per_signature()
                 })
         })?;
         Some(Self::calculate_fee(
             message,
-            lamports_per_signature,
+            satomis_per_signature,
             &self.fee_structure,
             self.feature_set
                 .is_active(&use_default_units_in_fee_calculation::id()),
@@ -3610,14 +3616,14 @@ impl Bank {
             .verification_complete()
     }
 
-    pub fn get_fee_for_message_with_lamports_per_signature(
+    pub fn get_fee_for_message_with_satomis_per_signature(
         &self,
         message: &SanitizedMessage,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
     ) -> u64 {
         Self::calculate_fee(
             message,
-            lamports_per_signature,
+            satomis_per_signature,
             &self.fee_structure,
             self.feature_set
                 .is_active(&use_default_units_in_fee_calculation::id()),
@@ -3715,7 +3721,7 @@ impl Bank {
         // readers can starve this write lock acquisition and ticks would be slowed down too
         // much if the write lock is acquired for each tick.
         let mut w_blockhash_queue = self.blockhash_queue.write().unwrap();
-        w_blockhash_queue.register_hash(blockhash, self.fee_rate_governor.lamports_per_signature);
+        w_blockhash_queue.register_hash(blockhash, self.fee_rate_governor.satomis_per_signature);
         self.update_recent_blockhashes_locked(&w_blockhash_queue);
     }
 
@@ -4314,7 +4320,7 @@ impl Bank {
             None
         };
 
-        let (blockhash, lamports_per_signature) = self.last_blockhash_and_lamports_per_signature();
+        let (blockhash, satomis_per_signature) = self.last_blockhash_and_satomis_per_signature();
 
         let mut executed_units = 0u64;
         let mut programs_modified_by_tx = LoadedProgramsForTxBatch::new(self.slot);
@@ -4334,7 +4340,7 @@ impl Bank {
             timings,
             &self.sysvar_cache.read().unwrap(),
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             prev_accounts_data_len,
             &mut executed_units,
         );
@@ -4937,7 +4943,7 @@ impl Bank {
     /// Calculate fee for `SanitizedMessage`
     pub fn calculate_fee(
         message: &SanitizedMessage,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         fee_structure: &FeeStructure,
         use_default_units_per_instruction: bool,
         support_request_units_deprecated: bool,
@@ -4947,13 +4953,13 @@ impl Bank {
         include_loaded_account_data_size_in_fee: bool,
     ) -> u64 {
         // Fee based on compute units and signatures
-        let congestion_multiplier = if lamports_per_signature == 0 {
+        let congestion_multiplier = if satomis_per_signature == 0 {
             0.0 // test only
         } else if remove_congestion_multiplier {
             1.0 // multiplier that has no effect
         } else {
             const BASE_CONGESTION: f64 = 5_000.0;
-            let current_congestion = BASE_CONGESTION.max(lamports_per_signature as f64);
+            let current_congestion = BASE_CONGESTION.max(satomis_per_signature as f64);
             BASE_CONGESTION / current_congestion
         };
 
@@ -4969,9 +4975,9 @@ impl Bank {
             .unwrap_or_default();
         let prioritization_fee = prioritization_fee_details.get_fee();
         let signature_fee = Self::get_num_signatures_in_message(message)
-            .saturating_mul(fee_structure.lamports_per_signature);
+            .saturating_mul(fee_structure.satomis_per_signature);
         let write_lock_fee = Self::get_num_write_locks_in_message(message)
-            .saturating_mul(fee_structure.lamports_per_write_lock);
+            .saturating_mul(fee_structure.satomis_per_write_lock);
 
         // `compute_fee` covers costs for both requested_compute_units and
         // requested_loaded_account_data_size
@@ -5039,21 +5045,21 @@ impl Bank {
                     TransactionExecutionResult::NotExecuted(err) => Err(err.clone()),
                 }?;
 
-                let (lamports_per_signature, is_nonce) = durable_nonce_fee
-                    .map(|durable_nonce_fee| durable_nonce_fee.lamports_per_signature())
-                    .map(|maybe_lamports_per_signature| (maybe_lamports_per_signature, true))
+                let (satomis_per_signature, is_nonce) = durable_nonce_fee
+                    .map(|durable_nonce_fee| durable_nonce_fee.satomis_per_signature())
+                    .map(|maybe_satomis_per_signature| (maybe_satomis_per_signature, true))
                     .unwrap_or_else(|| {
                         (
-                            hash_queue.get_lamports_per_signature(tx.message().recent_blockhash()),
+                            hash_queue.get_satomis_per_signature(tx.message().recent_blockhash()),
                             false,
                         )
                     });
 
-                let lamports_per_signature =
-                    lamports_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
+                let satomis_per_signature =
+                    satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
                 let fee = Self::calculate_fee(
                     tx.message(),
-                    lamports_per_signature,
+                    satomis_per_signature,
                     &self.fee_structure,
                     self.feature_set
                         .is_active(&use_default_units_in_fee_calculation::id()),
@@ -5099,7 +5105,7 @@ impl Bank {
         loaded_txs: &mut [TransactionLoadResult],
         execution_results: Vec<TransactionExecutionResult>,
         last_blockhash: Hash,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         counts: CommitTransactionCounts,
         timings: &mut ExecuteTimings,
     ) -> TransactionResults {
@@ -5143,7 +5149,7 @@ impl Bank {
             loaded_txs,
             &self.rent_collector,
             &durable_nonce,
-            lamports_per_signature,
+            satomis_per_signature,
             self.include_slot_in_hash(),
         );
         let rent_debits = self.collect_rent(&execution_results, loaded_txs);
@@ -5295,16 +5301,16 @@ impl Bank {
             })
             .collect::<Vec<(Pubkey, u64)>>();
 
-        // Leftover lamports after fraction calculation, will be paid to validators starting from highest stake
+        // Leftover satomis after fraction calculation, will be paid to validators starting from highest stake
         // holder
-        let mut leftover_lamports = rent_to_be_distributed - rent_distributed_in_initial_round;
+        let mut leftover_satomis = rent_to_be_distributed - rent_distributed_in_initial_round;
 
         let mut rewards = vec![];
         validator_rent_shares
             .into_iter()
             .for_each(|(pubkey, rent_share)| {
-                let rent_to_be_paid = if leftover_lamports > 0 {
-                    leftover_lamports -= 1;
+                let rent_to_be_paid = if leftover_satomis > 0 {
+                    leftover_satomis -= 1;
                     rent_share + 1
                 } else {
                     rent_share
@@ -5315,7 +5321,7 @@ impl Bank {
                         .unwrap_or_default();
                     let rent = self.rent_collector().rent;
                     let recipient_pre_rent_state = RentState::from_account(&account, &rent);
-                    let distribution = account.checked_add_lamports(rent_to_be_paid);
+                    let distribution = account.checked_add_satomis(rent_to_be_paid);
                     let recipient_post_rent_state = RentState::from_account(&account, &rent);
                     let rent_state_transition_allowed = recipient_post_rent_state
                         .transition_allowed_from(&recipient_pre_rent_state);
@@ -5335,16 +5341,16 @@ impl Bank {
                         || (self.prevent_rent_paying_rent_recipients()
                             && !rent_state_transition_allowed)
                     {
-                        // overflow adding lamports or resulting account is not rent-exempt
+                        // overflow adding satomis or resulting account is not rent-exempt
                         self.capitalization.fetch_sub(rent_to_be_paid, Relaxed);
                         error!(
-                            "Burned {} rent lamports instead of sending to {}",
+                            "Burned {} rent satomis instead of sending to {}",
                             rent_to_be_paid, pubkey
                         );
                         datapoint_error!(
                             "bank-burned_rent",
                             ("slot", self.slot(), i64),
-                            ("num_lamports", rent_to_be_paid, i64)
+                            ("num_satomis", rent_to_be_paid, i64)
                         );
                     } else {
                         self.store_account(&pubkey, &account);
@@ -5352,8 +5358,8 @@ impl Bank {
                             pubkey,
                             RewardInfo {
                                 reward_type: RewardType::Rent,
-                                lamports: rent_to_be_paid as i64,
-                                post_balance: account.lamports(),
+                                satomis: rent_to_be_paid as i64,
+                                post_balance: account.satomis(),
                                 commission: None,
                             },
                         ));
@@ -5363,13 +5369,13 @@ impl Bank {
         self.rewards.write().unwrap().append(&mut rewards);
 
         if enforce_fix {
-            assert_eq!(leftover_lamports, 0);
-        } else if leftover_lamports != 0 {
+            assert_eq!(leftover_satomis, 0);
+        } else if leftover_satomis != 0 {
             warn!(
                 "There was leftover from rent distribution: {}",
-                leftover_lamports
+                leftover_satomis
             );
-            self.capitalization.fetch_sub(leftover_lamports, Relaxed);
+            self.capitalization.fetch_sub(leftover_satomis, Relaxed);
         }
     }
 
@@ -5422,7 +5428,7 @@ impl Bank {
         if let Some((account, _)) =
             self.get_account_modified_since_parent_with_fixed_root(&incinerator::id())
         {
-            self.capitalization.fetch_sub(account.lamports(), Relaxed);
+            self.capitalization.fetch_sub(account.satomis(), Relaxed);
             self.store_account(&incinerator::id(), &AccountSharedData::default());
         }
     }
@@ -5625,7 +5631,7 @@ impl Bank {
                 total_rent_collected_info += rent_collected_info;
                 accounts_to_store.push((pubkey, account));
             }
-            rent_debits.insert(pubkey, rent_collected_info.rent_amount, account.lamports());
+            rent_debits.insert(pubkey, rent_collected_info.rent_amount, account.satomis());
         }
 
         if !accounts_to_store.is_empty() {
@@ -5756,7 +5762,7 @@ impl Bank {
                 );
 
             // We cannot assert here that we collected from all expected keys.
-            // Some accounts may have been topped off or may have had all funds removed and gone to 0 lamports.
+            // Some accounts may have been topped off or may have had all funds removed and gone to 0 satomis.
 
             self.rc
                 .accounts
@@ -5993,14 +5999,14 @@ impl Bank {
             log_messages_bytes_limit,
         );
 
-        let (last_blockhash, lamports_per_signature) =
-            self.last_blockhash_and_lamports_per_signature();
+        let (last_blockhash, satomis_per_signature) =
+            self.last_blockhash_and_satomis_per_signature();
         let results = self.commit_transactions(
             batch.sanitized_transactions(),
             &mut loaded_transactions,
             execution_results,
             last_blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             CommitTransactionCounts {
                 committed_transactions_count: executed_transactions_count as u64,
                 committed_non_vote_transactions_count: executed_non_vote_transactions_count as u64,
@@ -6126,7 +6132,7 @@ impl Bank {
     }
 
     /// Create, sign, and process a Transaction from `keypair` to `to` of
-    /// `n` lamports where `blockhash` is the last Entry ID observed by the client.
+    /// `n` satomis where `blockhash` is the last Entry ID observed by the client.
     pub fn transfer(&self, n: u64, keypair: &Keypair, to: &Pubkey) -> Result<Signature> {
         let blockhash = self.last_blockhash();
         let tx = system_transaction::transfer(keypair, to, n, blockhash);
@@ -6135,7 +6141,7 @@ impl Bank {
     }
 
     pub fn read_balance(account: &AccountSharedData) -> u64 {
-        account.lamports()
+        account.satomis()
     }
     /// Each program would need to be able to introspect its own state
     /// this is hard-coded to the Budget language
@@ -6163,7 +6169,7 @@ impl Bank {
         parents
     }
 
-    pub fn store_account<T: ReadableAccount + Sync + ZeroLamport>(
+    pub fn store_account<T: ReadableAccount + Sync + ZeroSatomi>(
         &self,
         pubkey: &Pubkey,
         account: &T,
@@ -6175,7 +6181,7 @@ impl Bank {
         ))
     }
 
-    pub fn store_accounts<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    pub fn store_accounts<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
     ) {
@@ -6221,7 +6227,7 @@ impl Bank {
         self.rc.accounts.accounts_db.expire_old_recycle_stores()
     }
 
-    /// Technically this issues (or even burns!) new lamports,
+    /// Technically this issues (or even burns!) new satomis,
     /// so be extra careful for its usage
     fn store_account_and_update_capitalization(
         &self,
@@ -6230,9 +6236,9 @@ impl Bank {
     ) {
         let old_account_data_size =
             if let Some(old_account) = self.get_account_with_fixed_root(pubkey) {
-                match new_account.lamports().cmp(&old_account.lamports()) {
+                match new_account.satomis().cmp(&old_account.satomis()) {
                     std::cmp::Ordering::Greater => {
-                        let increased = new_account.lamports() - old_account.lamports();
+                        let increased = new_account.satomis() - old_account.satomis();
                         trace!(
                             "store_account_and_update_capitalization: increased: {} {}",
                             pubkey,
@@ -6241,7 +6247,7 @@ impl Bank {
                         self.capitalization.fetch_add(increased, Relaxed);
                     }
                     std::cmp::Ordering::Less => {
-                        let decreased = old_account.lamports() - new_account.lamports();
+                        let decreased = old_account.satomis() - new_account.satomis();
                         trace!(
                             "store_account_and_update_capitalization: decreased: {} {}",
                             pubkey,
@@ -6256,10 +6262,10 @@ impl Bank {
                 trace!(
                     "store_account_and_update_capitalization: created: {} {}",
                     pubkey,
-                    new_account.lamports()
+                    new_account.satomis()
                 );
                 self.capitalization
-                    .fetch_add(new_account.lamports(), Relaxed);
+                    .fetch_add(new_account.satomis(), Relaxed);
                 0
             };
 
@@ -6270,7 +6276,7 @@ impl Bank {
         );
     }
 
-    fn withdraw(&self, pubkey: &Pubkey, lamports: u64) -> Result<()> {
+    fn withdraw(&self, pubkey: &Pubkey, satomis: u64) -> Result<()> {
         match self.get_account_with_fixed_root(pubkey) {
             Some(mut account) => {
                 let min_balance = match get_system_account_kind(&account) {
@@ -6281,12 +6287,12 @@ impl Bank {
                     _ => 0,
                 };
 
-                lamports
+                satomis
                     .checked_add(min_balance)
-                    .filter(|required_balance| *required_balance <= account.lamports())
+                    .filter(|required_balance| *required_balance <= account.satomis())
                     .ok_or(TransactionError::InsufficientFundsForFee)?;
                 account
-                    .checked_sub_lamports(lamports)
+                    .checked_sub_satomis(satomis)
                     .map_err(|_| TransactionError::InsufficientFundsForFee)?;
                 self.store_account(pubkey, &account);
 
@@ -6299,14 +6305,14 @@ impl Bank {
     pub fn deposit(
         &self,
         pubkey: &Pubkey,
-        lamports: u64,
-    ) -> std::result::Result<u64, LamportsError> {
+        satomis: u64,
+    ) -> std::result::Result<u64, SatomisError> {
         // This doesn't collect rents intentionally.
         // Rents should only be applied to actual TXes
         let mut account = self.get_account_with_fixed_root(pubkey).unwrap_or_default();
-        account.checked_add_lamports(lamports)?;
+        account.checked_add_satomis(satomis)?;
         self.store_account(pubkey, &account);
-        Ok(account.lamports())
+        Ok(account.satomis())
     }
 
     pub fn accounts(&self) -> Arc<Accounts> {
@@ -6760,11 +6766,11 @@ impl Bank {
                         info!(
                             "running initial verification accounts hash calculation in background"
                         );
-                        let result = accounts_.verify_accounts_hash_and_lamports(
+                        let result = accounts_.verify_accounts_hash_and_satomis(
                             slot,
                             cap,
                             base,
-                            VerifyAccountsHashAndLamportsConfig {
+                            VerifyAccountsHashAndSatomisConfig {
                                 ancestors: &ancestors,
                                 test_hash_calculation: config.test_hash_calculation,
                                 epoch_schedule: &epoch_schedule,
@@ -6785,11 +6791,11 @@ impl Bank {
             });
             true // initial result is true. We haven't failed yet. If verification fails, we'll panic from bg thread.
         } else {
-            let result = accounts.verify_accounts_hash_and_lamports(
+            let result = accounts.verify_accounts_hash_and_satomis(
                 slot,
                 cap,
                 base,
-                VerifyAccountsHashAndLamportsConfig {
+                VerifyAccountsHashAndSatomisConfig {
                     ancestors,
                     test_hash_calculation: config.test_hash_calculation,
                     epoch_schedule,
@@ -7015,7 +7021,7 @@ impl Bank {
         mut debug_verify: bool,
         is_startup: bool,
     ) -> AccountsHash {
-        let (accounts_hash, total_lamports) = self.rc.accounts.accounts_db.update_accounts_hash(
+        let (accounts_hash, total_satomis) = self.rc.accounts.accounts_db.update_accounts_hash(
             data_source,
             debug_verify,
             self.slot(),
@@ -7026,11 +7032,11 @@ impl Bank {
             is_startup,
             self.include_slot_in_hash(),
         );
-        if total_lamports != self.capitalization() {
+        if total_satomis != self.capitalization() {
             datapoint_info!(
                 "capitalization_mismatch",
                 ("slot", self.slot(), i64),
-                ("calculated_lamports", total_lamports, i64),
+                ("calculated_satomis", total_satomis, i64),
                 ("capitalization", self.capitalization(), i64),
             );
 
@@ -7052,9 +7058,9 @@ impl Bank {
             }
 
             panic!(
-                "capitalization_mismatch. slot: {}, calculated_lamports: {}, capitalization: {}",
+                "capitalization_mismatch. slot: {}, calculated_satomis: {}, capitalization: {}",
                 self.slot(),
-                total_lamports,
+                total_satomis,
                 self.capitalization()
             );
         }
@@ -7091,7 +7097,7 @@ impl Bank {
             .0
     }
 
-    /// A snapshot bank should be purged of 0 lamport accounts which are not part of the hash
+    /// A snapshot bank should be purged of 0 satomi accounts which are not part of the hash
     /// calculation and could shield other real accounts.
     pub fn verify_snapshot_bank(
         &self,
@@ -7430,7 +7436,7 @@ impl Bank {
     // This fn is meant to be called by the snapshot handler in Accounts Background Service.  If
     // calling from elsewhere, ensure the same invariants hold/expectations are met.
     pub(crate) fn clean_accounts(&self, last_full_snapshot_slot: Option<Slot>) {
-        // Don't clean the slot we're snapshotting because it may have zero-lamport
+        // Don't clean the slot we're snapshotting because it may have zero-satomi
         // accounts that were included in the bank delta hash when the bank was frozen,
         // and if we clean them here, any newly created snapshot's hash for this bank
         // may not match the frozen hash.
@@ -7571,9 +7577,9 @@ impl Bank {
     }
 
     fn adjust_sysvar_balance_for_rent(&self, account: &mut AccountSharedData) {
-        account.set_lamports(
+        account.set_satomis(
             self.get_minimum_balance_for_rent_exemption(account.data().len())
-                .max(account.lamports()),
+                .max(account.satomis()),
         );
     }
 
@@ -7697,9 +7703,9 @@ impl Bank {
             if let Some(new_account) = self.get_account_with_fixed_root(new_address) {
                 datapoint_info!(datapoint_name, ("slot", self.slot, i64));
 
-                // Burn lamports in the old account
+                // Burn satomis in the old account
                 self.capitalization
-                    .fetch_sub(old_account.lamports(), Relaxed);
+                    .fetch_sub(old_account.satomis(), Relaxed);
 
                 // Transfer new account to old account
                 self.store_account(old_address, &new_account);
@@ -7733,7 +7739,7 @@ impl Bank {
             let mut native_mint_account = domichain_sdk::account::AccountSharedData::from(Account {
                 owner: inline_spl_token::id(),
                 data: inline_spl_token::native_mint::ACCOUNT_DATA.to_vec(),
-                lamports: domi_to_lamports(1.),
+                satomis: domi_to_satomis(1.),
                 executable: false,
                 rent_epoch: self.epoch() + 1,
             });
@@ -7747,7 +7753,7 @@ impl Bank {
             {
                 old_account_data_size = existing_native_mint_account.data().len();
                 if existing_native_mint_account.owner() == &domichain_sdk::system_program::id() {
-                    native_mint_account.set_lamports(existing_native_mint_account.lamports());
+                    native_mint_account.set_satomis(existing_native_mint_account.satomis());
                     true
                 } else {
                     false
@@ -7755,7 +7761,7 @@ impl Bank {
             } else {
                 old_account_data_size = 0;
                 self.capitalization
-                    .fetch_add(native_mint_account.lamports(), Relaxed);
+                    .fetch_add(native_mint_account.satomis(), Relaxed);
                 true
             };
 
@@ -7978,8 +7984,8 @@ pub struct TotalAccountsStats {
     pub num_rent_paying_accounts: usize,
     /// Total number of rent paying accounts without data
     pub num_rent_paying_accounts_without_data: usize,
-    /// Total amount of lamports in rent paying accounts
-    pub lamports_in_rent_paying_accounts: u64,
+    /// Total amount of satomis in rent paying accounts
+    pub satomis_in_rent_paying_accounts: u64,
 }
 
 impl TotalAccountsStats {
@@ -8004,7 +8010,7 @@ impl TotalAccountsStats {
             self.num_rent_exempt_accounts += 1;
         } else {
             self.num_rent_paying_accounts += 1;
-            self.lamports_in_rent_paying_accounts += account.lamports();
+            self.satomis_in_rent_paying_accounts += account.satomis();
             if data_len == 0 {
                 self.num_rent_paying_accounts_without_data += 1;
             }

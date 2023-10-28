@@ -31,20 +31,20 @@ extern uint64_t entrypoint(const uint8_t *input) {
     accounts[3].data[0] += 2;
     break;
   case (4):
-    sol_log("modify first account lamports");
-    *accounts[1].lamports -= 1;
-    *accounts[2].lamports += 1;
+    sol_log("modify first account satomis");
+    *accounts[1].satomis -= 1;
+    *accounts[2].satomis += 1;
     break;
   case (5):
-    sol_log("modify first account lamports");
-    *accounts[1].lamports -= 2;
-    *accounts[3].lamports += 2;
+    sol_log("modify first account satomis");
+    *accounts[1].satomis -= 2;
+    *accounts[3].satomis += 2;
     break;
   case (6):
-    sol_log("modify both account lamports");
-    *accounts[1].lamports -= 3;
-    *accounts[2].lamports += 1;
-    *accounts[3].lamports += 2;
+    sol_log("modify both account satomis");
+    *accounts[1].satomis -= 3;
+    *accounts[2].satomis += 1;
+    *accounts[3].satomis += 2;
     break;
   case (7):
     sol_log("check account (0,1,2,3) privs");

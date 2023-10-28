@@ -604,7 +604,7 @@ mod tests {
         domichain_runtime::{
             bank::Bank,
             bank_forks::BankForks,
-            genesis_utils::{activate_feature, bootstrap_validator_stake_lamports},
+            genesis_utils::{activate_feature, bootstrap_validator_stake_satomis},
         },
         domichain_sdk::{
             hash::Hash,
@@ -905,7 +905,7 @@ mod tests {
         let banking_tracer = BankingTracer::new_disabled();
         let (non_vote_sender, non_vote_receiver) = banking_tracer.create_channel_non_vote();
 
-        // Process a batch that includes a transaction that receives two lamports.
+        // Process a batch that includes a transaction that receives two satomis.
         let alice = Keypair::new();
         let tx =
             system_transaction::transfer(&mint_keypair, &alice.pubkey(), 2, genesis_config.hash());
@@ -1000,7 +1000,7 @@ mod tests {
                     .for_each(|x| assert_eq!(*x, Ok(())));
             }
 
-            // Assert the user doesn't hold three lamports. If the stage only outputs one
+            // Assert the user doesn't hold three satomis. If the stage only outputs one
             // entry, then one of the transactions will be rejected, because it drives
             // the account balance below zero before the credit is added.
             assert!(bank.get_balance(&alice.pubkey()) != 3);
@@ -1074,19 +1074,19 @@ mod tests {
         Blockstore::destroy(ledger_path.path()).unwrap();
     }
 
-    pub(crate) fn create_slow_genesis_config(lamports: u64) -> GenesisConfigInfo {
-        create_slow_genesis_config_with_leader(lamports, &domichain_sdk::pubkey::new_rand())
+    pub(crate) fn create_slow_genesis_config(satomis: u64) -> GenesisConfigInfo {
+        create_slow_genesis_config_with_leader(satomis, &domichain_sdk::pubkey::new_rand())
     }
 
     pub(crate) fn create_slow_genesis_config_with_leader(
-        lamports: u64,
+        satomis: u64,
         validator_pubkey: &Pubkey,
     ) -> GenesisConfigInfo {
         let mut config_info = create_genesis_config_with_leader(
-            lamports,
+            satomis,
             validator_pubkey,
             // See domichain_ledger::genesis_utils::create_genesis_config.
-            bootstrap_validator_stake_lamports(),
+            bootstrap_validator_stake_satomis(),
         );
 
         // For these tests there's only 1 slot, don't want to run out of ticks

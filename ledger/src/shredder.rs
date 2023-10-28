@@ -981,7 +981,7 @@ mod tests {
             let instruction = domichain_sdk::system_instruction::transfer(
                 &from_pubkey,
                 &Pubkey::new_unique(), // to
-                rng.gen(),             // lamports
+                rng.gen(),             // satomis
             );
             let message = domichain_sdk::message::Message::new(&[instruction], Some(&from_pubkey));
             let mut tx = domichain_sdk::transaction::Transaction::new_unsigned(message);

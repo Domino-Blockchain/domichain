@@ -113,7 +113,7 @@ impl AccountsUpdateNotifierImpl {
     ) -> Option<ReplicaAccountInfoV3<'a>> {
         Some(ReplicaAccountInfoV3 {
             pubkey: pubkey.as_ref(),
-            lamports: account.lamports(),
+            satomis: account.satomis(),
             owner: account.owner().as_ref(),
             executable: account.executable(),
             rent_epoch: account.rent_epoch(),
@@ -129,7 +129,7 @@ impl AccountsUpdateNotifierImpl {
     ) -> Option<ReplicaAccountInfoV3<'a>> {
         Some(ReplicaAccountInfoV3 {
             pubkey: stored_account_meta.pubkey().as_ref(),
-            lamports: stored_account_meta.lamports(),
+            satomis: stored_account_meta.satomis(),
             owner: stored_account_meta.owner().as_ref(),
             executable: stored_account_meta.executable(),
             rent_epoch: stored_account_meta.rent_epoch(),

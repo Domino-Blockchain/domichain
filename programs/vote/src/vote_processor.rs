@@ -68,7 +68,7 @@ declare_process_instruction!(process_instruction, 2100, |invoke_context| {
     match limited_deserialize(data)? {
         VoteInstruction::InitializeAccount(vote_init) => {
             let rent = get_sysvar_with_account_check::rent(invoke_context, instruction_context, 1)?;
-            if !rent.is_exempt(me.get_lamports(), me.get_data().len()) {
+            if !rent.is_exempt(me.get_satomis(), me.get_data().len()) {
                 return Err(InstructionError::InsufficientFunds);
             }
             let clock =
@@ -215,7 +215,7 @@ declare_process_instruction!(process_instruction, 2100, |invoke_context| {
             }
         }
 
-        VoteInstruction::Withdraw(lamports) => {
+        VoteInstruction::Withdraw(satomis) => {
             instruction_context.check_number_of_instruction_accounts(2)?;
             let rent_sysvar = invoke_context.get_sysvar_cache().get_rent()?;
             let clock_sysvar = invoke_context.get_sysvar_cache().get_clock()?;
@@ -225,7 +225,7 @@ declare_process_instruction!(process_instruction, 2100, |invoke_context| {
                 transaction_context,
                 instruction_context,
                 0,
-                lamports,
+                satomis,
                 1,
                 &signers,
                 &rent_sysvar,
@@ -498,9 +498,9 @@ mod tests {
             previous_epoch_credits = current_epoch_credits;
         }
 
-        let lamports = vote_account.lamports();
+        let satomis = vote_account.satomis();
         let mut vote_account_with_epoch_credits =
-            AccountSharedData::new(lamports, vote_account_space, &id());
+            AccountSharedData::new(satomis, vote_account_space, &id());
         let versioned = VoteStateVersions::new_current(vote_state);
         vote_state::to(&versioned, &mut vote_account_with_epoch_credits);
 
@@ -1057,7 +1057,7 @@ mod tests {
     #[test]
     fn test_vote_withdraw() {
         let (vote_pubkey, vote_account) = create_test_account();
-        let lamports = vote_account.lamports();
+        let satomis = vote_account.satomis();
         let authorized_withdrawer_pubkey = domichain_sdk::pubkey::new_rand();
         let mut transaction_accounts = vec![
             (vote_pubkey, vote_account.clone()),
@@ -1097,13 +1097,13 @@ mod tests {
         };
         transaction_accounts[0] = (vote_pubkey, accounts[0].clone());
         let accounts = process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
         );
-        assert_eq!(accounts[0].lamports(), 0);
-        assert_eq!(accounts[3].lamports(), lamports);
+        assert_eq!(accounts[0].satomis(), 0);
+        assert_eq!(accounts[3].satomis(), satomis);
         let post_state: VoteStateVersions = accounts[0].state().unwrap();
         // State has been deinitialized since balance is zero
         assert!(post_state.is_uninitialized());
@@ -1111,7 +1111,7 @@ mod tests {
         // should fail, unsigned
         transaction_accounts[0] = (vote_pubkey, vote_account);
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::MissingRequiredSignature),
@@ -1120,7 +1120,7 @@ mod tests {
 
         // should pass
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -1128,22 +1128,22 @@ mod tests {
 
         // should fail, insufficient funds
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports + 1)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
         );
 
         // should pass, partial withdraw
-        let withdraw_lamports = 42;
+        let withdraw_satomis = 42;
         let accounts = process_instruction(
-            &serialize(&VoteInstruction::Withdraw(withdraw_lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(withdraw_satomis)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Ok(()),
         );
-        assert_eq!(accounts[0].lamports(), lamports - withdraw_lamports);
-        assert_eq!(accounts[3].lamports(), withdraw_lamports);
+        assert_eq!(accounts[0].satomis(), satomis - withdraw_satomis);
+        assert_eq!(accounts[3].satomis(), withdraw_satomis);
     }
 
     #[test]
@@ -1162,7 +1162,7 @@ mod tests {
         let minimum_balance = rent_sysvar
             .minimum_balance(vote_account_with_epoch_credits_1.data().len())
             .max(1);
-        let lamports = vote_account_with_epoch_credits_1.lamports();
+        let satomis = vote_account_with_epoch_credits_1.satomis();
         let transaction_accounts = vec![
             (vote_pubkey_1, vote_account_with_epoch_credits_1),
             (vote_pubkey_2, vote_account_with_epoch_credits_2),
@@ -1189,7 +1189,7 @@ mod tests {
         // non rent exempt withdraw, with 0 credit epoch
         instruction_accounts[0].pubkey = vote_pubkey_1;
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports - minimum_balance + 1)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis - minimum_balance + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
@@ -1198,7 +1198,7 @@ mod tests {
         // non rent exempt withdraw, without 0 credit epoch
         instruction_accounts[0].pubkey = vote_pubkey_2;
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports - minimum_balance + 1)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis - minimum_balance + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
@@ -1207,7 +1207,7 @@ mod tests {
         // full withdraw, with 0 credit epoch
         instruction_accounts[0].pubkey = vote_pubkey_1;
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -1216,7 +1216,7 @@ mod tests {
         // full withdraw, without 0 credit epoch
         instruction_accounts[0].pubkey = vote_pubkey_2;
         process_instruction(
-            &serialize(&VoteInstruction::Withdraw(lamports)).unwrap(),
+            &serialize(&VoteInstruction::Withdraw(satomis)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(VoteError::ActiveVoteAccountClose.into()),

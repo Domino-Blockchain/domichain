@@ -271,7 +271,7 @@ fn serialize_parameters_unaligned(
                 size += size_of::<u8>() // is_signer
                 + size_of::<u8>() // is_writable
                 + size_of::<Pubkey>() // key
-                + size_of::<u64>()  // lamports
+                + size_of::<u64>()  // satomis
                 + size_of::<u64>()  // data len
                 + size_of::<Pubkey>() // owner
                 + size_of::<u8>() // executable
@@ -297,7 +297,7 @@ fn serialize_parameters_unaligned(
                 s.write::<u8>(account.is_signer() as u8);
                 s.write::<u8>(account.is_writable() as u8);
                 s.write_all(account.get_key().as_ref());
-                s.write::<u64>(account.get_lamports().to_le());
+                s.write::<u64>(account.get_satomis().to_le());
                 s.write::<u64>((account.get_data().len() as u64).to_le());
                 s.write_account(&mut account)?;
                 s.write_all(account.get_owner().as_ref());
@@ -338,15 +338,15 @@ pub fn deserialize_parameters_unaligned(
             start += size_of::<u8>(); // is_signer
             start += size_of::<u8>(); // is_writable
             start += size_of::<Pubkey>(); // key
-            let lamports = LittleEndian::read_u64(
+            let satomis = LittleEndian::read_u64(
                 buffer
                     .get(start..)
                     .ok_or(InstructionError::InvalidArgument)?,
             );
-            if borrowed_account.get_lamports() != lamports {
-                borrowed_account.set_lamports(lamports)?;
+            if borrowed_account.get_satomis() != satomis {
+                borrowed_account.set_satomis(satomis)?;
             }
-            start += size_of::<u64>() // lamports
+            start += size_of::<u64>() // satomis
                 + size_of::<u64>(); // data length
             if copy_account_data {
                 let data = buffer
@@ -358,7 +358,7 @@ pub fn deserialize_parameters_unaligned(
                     .and_then(|_| borrowed_account.can_data_be_changed())
                 {
                     Ok(()) => borrowed_account.set_data_from_slice(data)?,
-                    Err(err) if dbg!(borrowed_account.get_data() != data) => return Err(err),
+                    Err(err) if borrowed_account.get_data() != data => return Err(err),
                     _ => {}
                 }
                 start += pre_len; // data
@@ -391,7 +391,7 @@ fn serialize_parameters_aligned(
                 + size_of::<u32>() // original_data_len
                 + size_of::<Pubkey>()  // key
                 + size_of::<Pubkey>() // owner
-                + size_of::<u64>()  // lamports
+                + size_of::<u64>()  // satomis
                 + size_of::<u64>()  // data len
                 + MAX_PERMITTED_DATA_INCREASE
                 + size_of::<u64>(); // rent epoch
@@ -421,7 +421,7 @@ fn serialize_parameters_aligned(
                 s.write_all(&[0u8, 0, 0, 0]);
                 s.write_all(borrowed_account.get_key().as_ref());
                 s.write_all(borrowed_account.get_owner().as_ref());
-                s.write::<u64>(borrowed_account.get_lamports().to_le());
+                s.write::<u64>(borrowed_account.get_satomis().to_le());
                 s.write::<u64>((borrowed_account.get_data().len() as u64).to_le());
                 s.write_account(&mut borrowed_account)?;
                 s.write::<u64>((borrowed_account.get_rent_epoch()).to_le());
@@ -473,15 +473,15 @@ pub fn deserialize_parameters_aligned(
                 .get(start..start + size_of::<Pubkey>())
                 .ok_or(InstructionError::InvalidArgument)?;
             start += size_of::<Pubkey>(); // owner
-            let lamports = LittleEndian::read_u64(
+            let satomis = LittleEndian::read_u64(
                 buffer
                     .get(start..)
                     .ok_or(InstructionError::InvalidArgument)?,
             );
-            if borrowed_account.get_lamports() != lamports {
-                borrowed_account.set_lamports(lamports)?;
+            if borrowed_account.get_satomis() != satomis {
+                borrowed_account.set_satomis(satomis)?;
             }
-            start += size_of::<u64>(); // lamports
+            start += size_of::<u64>(); // satomis
             let post_len = LittleEndian::read_u64(
                 buffer
                     .get(start..)
@@ -501,13 +501,11 @@ pub fn deserialize_parameters_aligned(
                     .ok_or(InstructionError::InvalidArgument)?;
                 match borrowed_account
                     .can_data_be_resized(post_len)
-                    .and_then(|_| dbg!(borrowed_account.can_data_be_changed()))
+                    .and_then(|_| borrowed_account.can_data_be_changed())
                 {
                     Ok(()) => borrowed_account.set_data_from_slice(data)?,
-                    Err(err) if borrowed_account.get_data() != data => return dbg!(Err(err)),
-                    _ => {
-                        dbg!();
-                    }
+                    Err(err) if borrowed_account.get_data() != data => return Err(err),
+                    _ => {}
                 }
                 start += *pre_len; // data
             } else {
@@ -543,7 +541,7 @@ pub fn deserialize_parameters_aligned(
             start += alignment_offset;
             start += size_of::<u64>(); // rent_epoch
             if borrowed_account.get_owner().to_bytes() != owner {
-                // Change the owner at the end so that we are allowed to change the lamports and data before
+                // Change the owner at the end so that we are allowed to change the satomis and data before
                 borrowed_account.set_owner(owner)?;
             }
         }
@@ -640,7 +638,7 @@ mod tests {
                 let mut transaction_accounts = vec![(
                     program_id,
                     AccountSharedData::from(Account {
-                        lamports: 0,
+                        satomis: 0,
                         data: vec![],
                         owner: wasm_loader::id(),
                         executable: true,
@@ -651,7 +649,7 @@ mod tests {
                     transaction_accounts.push((
                         Pubkey::new_unique(),
                         AccountSharedData::from(Account {
-                            lamports: 0,
+                            satomis: 0,
                             data: vec![],
                             owner: program_id,
                             executable: false,
@@ -730,7 +728,7 @@ mod tests {
                         .get_account_at_index(index_in_transaction)
                         .unwrap()
                         .borrow();
-                    assert_eq!(account.lamports(), account_info.lamports());
+                    assert_eq!(account.satomis(), account_info.satomis());
                     assert_eq!(account.data(), &account_info.data.borrow()[..]);
                     assert_eq!(account.owner(), account_info.owner);
                     assert_eq!(account.executable(), account_info.executable);
@@ -748,7 +746,7 @@ mod tests {
                 (
                     program_id,
                     AccountSharedData::from(Account {
-                        lamports: 0,
+                        satomis: 0,
                         data: vec![],
                         owner: wasm_loader::id(),
                         executable: true,
@@ -758,7 +756,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 1,
+                        satomis: 1,
                         data: vec![1u8, 2, 3, 4, 5],
                         owner: wasm_loader::id(),
                         executable: false,
@@ -768,7 +766,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 2,
+                        satomis: 2,
                         data: vec![11u8, 12, 13, 14, 15, 16, 17, 18, 19],
                         owner: wasm_loader::id(),
                         executable: true,
@@ -778,7 +776,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 3,
+                        satomis: 3,
                         data: vec![],
                         owner: wasm_loader::id(),
                         executable: false,
@@ -788,7 +786,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 4,
+                        satomis: 4,
                         data: vec![1u8, 2, 3, 4, 5],
                         owner: wasm_loader::id(),
                         executable: false,
@@ -798,7 +796,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 5,
+                        satomis: 5,
                         data: vec![11u8, 12, 13, 14, 15, 16, 17, 18, 19],
                         owner: wasm_loader::id(),
                         executable: true,
@@ -808,7 +806,7 @@ mod tests {
                 (
                     domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
-                        lamports: 6,
+                        satomis: 6,
                         data: vec![],
                         owner: wasm_loader::id(),
                         executable: false,
@@ -885,14 +883,14 @@ mod tests {
                     .get_account_at_index(index_in_transaction)
                     .unwrap()
                     .borrow();
-                assert_eq!(account.lamports(), account_info.lamports());
+                assert_eq!(account.satomis(), account_info.satomis());
                 assert_eq!(account.data(), &account_info.data.borrow()[..]);
                 assert_eq!(account.owner(), account_info.owner);
                 assert_eq!(account.executable(), account_info.executable);
                 assert_eq!(account.rent_epoch(), account_info.rent_epoch);
 
                 assert_eq!(
-                    (*account_info.lamports.borrow() as *const u64).align_offset(BPF_ALIGN_OF_U128),
+                    (*account_info.satomis.borrow() as *const u64).align_offset(BPF_ALIGN_OF_U128),
                     0
                 );
                 assert_eq!(
@@ -969,7 +967,7 @@ mod tests {
                     .get_account_at_index(index_in_transaction)
                     .unwrap()
                     .borrow();
-                assert_eq!(account.lamports(), account_info.lamports());
+                assert_eq!(account.satomis(), account_info.satomis());
                 assert_eq!(account.data(), &account_info.data.borrow()[..]);
                 assert_eq!(account.owner(), account_info.owner);
                 assert_eq!(account.executable(), account_info.executable);
@@ -1068,7 +1066,7 @@ mod tests {
                 let key = Ptr::<Pubkey>::ref_possibly_unaligned(input, offset);
                 offset += size_of::<Pubkey>();
 
-                let lamports = Rc::new(RefCell::new(Ptr::mut_possibly_unaligned(input, offset)));
+                let satomis = Rc::new(RefCell::new(Ptr::mut_possibly_unaligned(input, offset)));
                 offset += size_of::<u64>();
 
                 let data_len = Ptr::<u64>::read_possibly_unaligned(input, offset) as usize;
@@ -1092,7 +1090,7 @@ mod tests {
                     key,
                     is_signer,
                     is_writable,
-                    lamports,
+                    satomis,
                     data,
                     owner,
                     executable,

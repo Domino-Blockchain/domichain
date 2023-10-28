@@ -69,7 +69,7 @@ impl<'a: 'b, 'b, T: ReadableAccount + Sync + 'b, U: StorableAccounts<'a, T>, V: 
 
     /// get all account fields at 'index'
     pub fn get(&self, index: usize) -> (Option<&T>, &Pubkey, &Hash, StoredMetaWriteVersion) {
-        let account = self.accounts.account_default_if_zero_lamport(index);
+        let account = self.accounts.account_default_if_zero_satomi(index);
         let pubkey = self.accounts.pubkey(index);
         let (hash, write_version) = if self.accounts.has_hash_and_write_version() {
             (
@@ -83,11 +83,11 @@ impl<'a: 'b, 'b, T: ReadableAccount + Sync + 'b, U: StorableAccounts<'a, T>, V: 
         (account, pubkey, hash, write_version)
     }
 
-    /// None if account at index has lamports == 0
+    /// None if account at index has satomis == 0
     /// Otherwise, Some(account)
     /// This is the only way to access the account.
     pub fn account(&self, index: usize) -> Option<&T> {
-        self.accounts.account_default_if_zero_lamport(index)
+        self.accounts.account_default_if_zero_satomi(index)
     }
 
     /// # accounts to write
@@ -177,9 +177,9 @@ impl<'a> StoredAccountMeta<'a> {
 }
 
 impl<'a> ReadableAccount for StoredAccountMeta<'a> {
-    fn lamports(&self) -> u64 {
+    fn satomis(&self) -> u64 {
         match self {
-            Self::AppendVec(av) => av.lamports(),
+            Self::AppendVec(av) => av.satomis(),
         }
     }
     fn data(&self) -> &[u8] {
@@ -225,8 +225,8 @@ pub struct StoredMeta {
 #[derive(Serialize, Deserialize, Clone, Debug, Default, Eq, PartialEq)]
 #[repr(C)]
 pub struct AccountMeta {
-    /// lamports in the account
-    pub lamports: u64,
+    /// satomis in the account
+    pub satomis: u64,
     /// the epoch at which this account will next owe rent
     pub rent_epoch: Epoch,
     /// the program that owns this account. If executable, the program that loads this account.
@@ -238,7 +238,7 @@ pub struct AccountMeta {
 impl<'a, T: ReadableAccount> From<&'a T> for AccountMeta {
     fn from(account: &'a T) -> Self {
         Self {
-            lamports: account.lamports(),
+            satomis: account.satomis(),
             owner: *account.owner(),
             executable: account.executable(),
             rent_epoch: account.rent_epoch(),

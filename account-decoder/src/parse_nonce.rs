@@ -8,14 +8,14 @@ use {
 
 pub fn parse_nonce(data: &[u8]) -> Result<UiNonceState, ParseAccountError> {
     let nonce_versions: Versions = bincode::deserialize(data)
-        .map_err(|_| ParseAccountError::from(dbg!(InstructionError::InvalidAccountData)))?;
+        .map_err(|_| ParseAccountError::from(InstructionError::InvalidAccountData))?;
     match nonce_versions.state() {
         // This prevents parsing an allocated System-owned account with empty data of any non-zero
         // length as `uninitialized` nonce. An empty account of the wrong length can never be
         // initialized as a nonce account, and an empty account of the correct length may not be an
         // uninitialized nonce account, since it can be assigned to another program.
         State::Uninitialized => Err(ParseAccountError::from(
-            dbg!(InstructionError::InvalidAccountData),
+            InstructionError::InvalidAccountData,
         )),
         State::Initialized(data) => Ok(UiNonceState::Initialized(UiNonceData {
             authority: data.authority.to_string(),
@@ -65,7 +65,7 @@ mod test {
                 authority: Pubkey::default().to_string(),
                 blockhash: Hash::default().to_string(),
                 fee_calculator: UiFeeCalculator {
-                    lamports_per_signature: 0.to_string(),
+                    satomis_per_signature: 0.to_string(),
                 },
             }),
         );

@@ -266,7 +266,7 @@ function DetailsSections({
     return <LoadingCard />;
   } else if (
     info.status === FetchStatus.FetchFailed ||
-    info.data?.lamports === undefined
+    info.data?.satomis === undefined
   ) {
     return <ErrorCard retry={() => fetchAccount(pubkey)} text="Fetch Failed" />;
   }

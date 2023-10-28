@@ -114,13 +114,13 @@ fn get_bench_keypairs<T>(
     client: Arc<T>,
     id: &Keypair,
     keypair_count: usize,
-    num_lamports_per_account: u64,
+    num_satomis_per_account: u64,
 ) -> Vec<Keypair>
 where
     T: 'static + BenchTpsClient + Send + Sync,
 {
     let (mut keypairs, extra) = generate_keypairs(&Keypair::new(), keypair_count as u64);
-    fund_keypairs(client, id, &keypairs, extra, num_lamports_per_account).unwrap();
+    fund_keypairs(client, id, &keypairs, extra, num_satomis_per_account).unwrap();
     
     // 'generate_keypairs' generates extra keys to be able to have size-aligned funding batches for fund_keys.
     keypairs.truncate(keypair_count);
@@ -250,7 +250,7 @@ fn main() {
 
     let cli::Config {
         id,
-        num_lamports_per_account,
+        num_satomis_per_account,
         tx_count,
         ..
     } = &cli_config;
@@ -272,7 +272,7 @@ fn main() {
         client.clone(),
         &id,
         1,
-        num_lamports_per_account + nonce_rent * n as u64,
+        num_satomis_per_account + nonce_rent * n as u64,
     ).into_iter().nth(0).unwrap();
 
     let to = get_bench_keypairs(

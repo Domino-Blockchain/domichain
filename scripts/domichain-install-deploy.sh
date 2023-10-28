@@ -69,8 +69,8 @@ PATH="$DOMICHAIN_ROOT"/target/debug:$PATH
 
 set -x
 # shellcheck disable=SC2086 # Don't want to double quote $maybeKeypair
-balance=$(domichain $maybeKeypair --url "$URL" balance --lamports)
-if [[ $balance = "0 lamports" ]]; then
+balance=$(domichain $maybeKeypair --url "$URL" balance --satomis)
+if [[ $balance = "0 satomis" ]]; then
   # shellcheck disable=SC2086 # Don't want to double quote $maybeKeypair
   domichain $maybeKeypair --url "$URL" airdrop 0.000000042
 fi

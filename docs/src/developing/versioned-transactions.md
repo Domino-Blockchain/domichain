@@ -98,7 +98,7 @@ const instructions = [
   web3.SystemProgram.transfer({
     fromPubkey: payer.publicKey,
     toPubkey: toAccount.publicKey,
-    lamports: minRent,
+    satomis: minRent,
   }),
 ];
 ```

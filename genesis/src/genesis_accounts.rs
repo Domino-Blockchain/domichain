@@ -3,24 +3,24 @@ use {
         stakes::{create_and_add_stakes, StakerInfo},
         unlocks::UnlockInfo,
     },
-    domichain_sdk::{genesis_config::GenesisConfig, native_token::LAMPORTS_PER_DOMI},
+    domichain_sdk::{genesis_config::GenesisConfig, native_token::SATOMIS_PER_DOMI},
 };
 
-// 9 month schedule is 100% after 9 months
-const UNLOCKS_ALL_AT_9_MONTHS: UnlockInfo = UnlockInfo {
-    cliff_fraction: 1.0,
-    cliff_years: 0.75,
-    unlocks: 0,
-    unlock_years: 0.0,
+// 3 years schedule, then monthly for 20 months (by 5%)
+const UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS: UnlockInfo = UnlockInfo {
+    cliff_fraction: 0.05, // 1.0 / 20.0
+    cliff_years: 3.0,
+    unlocks: 19,
+    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
     custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
 };
 
-// 9 month schedule is 50% after 9 months, then monthly for 2 years
-const UNLOCKS_HALF_AT_9_MONTHS: UnlockInfo = UnlockInfo {
-    cliff_fraction: 0.5,
-    cliff_years: 0.75,
-    unlocks: 24,
-    unlock_years: 2.0,
+// 1 years schedule, then monthly for 20 months (by 5%)
+const UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR: UnlockInfo = UnlockInfo {
+    cliff_fraction: 0.05, // 1.0 / 20.0
+    cliff_years: 1.0,
+    unlocks: 19,
+    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
     custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
 };
 
@@ -33,186 +33,43 @@ const UNLOCKS_ALL_DAY_ZERO: UnlockInfo = UnlockInfo {
     custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
 };
 
-pub const CREATOR_STAKER_INFOS: &[StakerInfo] = &[
+pub const INVESTORS_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "impossible pizza",
-        staker: "uE3TVEffRp69mrgknYr71M18GDqL7GxCNGYYRjb3oUt",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("59SLqk4ete5QttM1WmjfMA7uNJnJVFLQqXJSy9rvuj7c"),
+        name: "shrill charity",
+        staker: "3Y8Gfv4bpqVh15Y71Zy6a1ezvKfLkoDHYJZ8CKac74gy",
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
+        withdrawer: Some("ACkRSLK6xsHXbXT2Zr5DnyhmCLEjg1aXwKjc6GMExy77"),
     },
     StakerInfo {
-        name: "nutritious examination",
-        staker: "9noVEZreMmgQvE8iyKmxy7CGTJ2enELyuJ1qxFtXrfJB",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("ERnx3Csgu3LjrGGrCeCUZzuHguRu6XabT1kufSB1NDWi"),
+        name: "legal gate",
+        staker: "FDSASFuLNtjxk5cEpNvcDnKa8VijjpFYppGsK4GDQoaZ",
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
+        withdrawer: Some("EMJjT9WuT2mzEuVGQhamzZskF7P12BV8a2Qghssa3byc"),
     },
     StakerInfo {
-        name: "tidy impression",
-        staker: "BU7LA4kYvicfPCp22EM2Tth3eaeWAXYo6yCgWXQFJ42z",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("5eKcGy7ZCPJdQSQGVnfmT7kGz6MKPMKaNaMEYJbmwhuT"),
-    },
-    StakerInfo {
-        name: "dramatic treatment",
-        staker: "BrNFrFeuev8TosKhRe2kvVZTYrcUuYaqCfptWutxs17B",
-        lamports: 1_205_602 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("2pKqwFKfKj2nGrknPNDSP8vXGYrgAjd28fT6yLew8sT3"),
-    },
-    StakerInfo {
-        name: "angry noise",
-        staker: "34HCVh8Yx4jNkaeLUQEKibFKUZDPQMjWzkXy8qUfdhS4",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("Hw3sP6PreBtFCnwXbNvUypMhty62GXibjfiZ1zHBXFk6"),
-    },
-    StakerInfo {
-        name: "hard cousin",
-        staker: "AyZb3xrZE8wnS6gYBdsJg5v8CjyrX2ZGXU2zMakCFyYd",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("9j3WzBSZRHrD2DbzFTUVVi81QX6boVvUTpGWcSiMwD5W"),
-    },
-    StakerInfo {
-        name: "lopsided skill",
-        staker: "7SbpY8LmZUb5XRqDbyoreUrSVVV9c39wkpEz81kEAXu5",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("EJyZGbQ1PmpcWxfqGME6SUNHfurh1zggDqCT7rV9xLzL"),
-    },
-    StakerInfo {
-        name: "red snake",
-        staker: "C9CfFpmLDsQsz6wt7MrrZquNB5oS4QkpJkmDAiboVEZZ",
-        lamports: 3_655_292 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("JBGnGdLyo7V2z9hz51mnnbyDp9sBACtw5WYH9YRG8n7e"),
-    },
-    StakerInfo {
-        name: "jolly year",
-        staker: "5WbxKiW7bghkr8JN6ZAv2TQt4PfJFvtuqNaN8gyQ5UzU",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("43XAfG3AFiF1ockdh7xp91fpFyZkbWSZq9ZFBCGUVV41"),
-    },
-    StakerInfo {
-        name: "typical initiative",
-        staker: "Gc8XnHU6Nnriwt9RbEwi7PTosx4YanLyXak9GTbB8VaH",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("7s2GVwFo8VSrCwX9Tztt42ueiEaUtJ6zCEHU8XGvuf5E"),
-    },
-    StakerInfo {
-        name: "deserted window",
-        staker: "AMmYEynkd78uNTZDFFrMw6NKjWTgqW7M8EFjvajk23VR",
-        lamports: 3_655_292 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("23PJYLS1WFLqhXnXq2Hobc17DbvZaoinoTZYLyGRT8E2"),
-    },
-    StakerInfo {
-        name: "eight nation",
-        staker: "4qWoqt71p7h6siSDS6osu4oVWpw8R7E6uYYiY7Z6oJbH",
-        lamports: 103_519 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("6bFjx3egMjVsGKFb445564a4bwgibwbUB2tVFsJcdPv7"),
-    },
-    StakerInfo {
-        name: "earsplitting meaning",
-        staker: "GYitoBY53E9awc56NWHJ2kxMwj4do5GSmvTRowjGaRDw",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("jXMEkVQQpoqebVMGN7DfpvdRLwJDEkoVNrwPVphNm7i"),
-    },
-    StakerInfo {
-        name: "alike cheese",
-        staker: "Drg9uSvSEfjtn15jqmmrEQnA4pvU1ToYSGSa1Dv9C6Fk",
-        lamports: 3_880_295 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("BxmwgfnyAqZnqRCJGdsEea35pcc92GFTcyGeSj4RNfJJ"),
-    },
-    StakerInfo {
-        name: "noisy honey",
-        staker: "95HsPFFvwbWpk42MKzenauSoULNzk8Tg6fc6EiJhLsUZ",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("Aj3K933zdRQhYEJi2Yjz8hJWXN3Z3hrKJQtPtE8VmUnq"),
+        name: "cluttered complaint",
+        staker: "A4bpL66yo47EXs5civo1o2Kn5ohQfVCM4oK1FdzA77L5",
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
+        withdrawer: Some("9i11wBcKUNui9bq188s7NedF4dc9bNmheT8X7GyoPEkV"),
     },
 ];
 
-pub const SERVICE_STAKER_INFOS: &[StakerInfo] = &[
-    StakerInfo {
-        name: "wretched texture",
-        staker: "B1hegzthtfNQxyEPzkESySxRjMidNqaxrzbQ28GaEwn8",
-        lamports: 225_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("HWzeqw1Yk5uiLgT2uGUim5ocFJNCwYUFbeCtDVpx9yUb"),
-    },
+// ./target/release/domichain-keygen new --silent --no-bip39-passphrase --outfile - | ./target/release/domichain-keygen pubkey -
+pub const MAINTANACE_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
         name: "unbecoming silver",
-        staker: "4AcoZa1P8fF5XK21RJsiuMRZPEScbbWNc75oakRFHiBz",
-        lamports: 28_800 * LAMPORTS_PER_DOMI,
-        withdrawer: None,
-    },
-    StakerInfo {
-        name: "inexpensive uncle",
-        staker: "AkJ7yssRqS3X4UWLUsPTxbP6LfVgdPYBWH4Jgk5EETgZ",
-        lamports: 300_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("6mudxxoe5VyXXNXsJ3NSGSTGESfG2t86PBCQGbouHpXX"),
-    },
-    StakerInfo {
-        name: "hellish money",
-        staker: "4DVkqvRP8y26JvzNwsnQEQuC7HASwpGs58GsAT9XJMVg",
-        lamports: 200_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("ASJpWZAxY96kbciLqzb7sg45gsH32yPzGcxjn7HPcARn"),
-    },
-    StakerInfo {
-        name: "full grape",
-        staker: "B2EWnwgmNd3KMpD71yZMijhML1jd4TYp96zJdhMiWZ7b",
-        lamports: 450_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("9oaCkokBBhgBsgyg4sL7fMJyQseaJb1TbADZeoPdpWdc"),
-    },
-    StakerInfo {
-        name: "nice ghost",
-        staker: "HtQS1CH3nsUHmnLpenj5W6KHzFWTf3mzCn1mTqK7LkB7",
-        lamports: 650_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("4YnNnycEZXCkuVs2hDthdNxMD4E8wc7ZPgyAK7Lm1uZc"),
+        staker: "4jyUPfUU4nA59E7pkran1vkcLkN6dRAJTNmSPbEuD6GL",
+        satomis: 40_000_000 * SATOMIS_PER_DOMI,
+        withdrawer: Some("2Mk89SdDymFcxEDFZVwU2zMgz1wP2vri8iuFeAieN3ET"),
     },
 ];
 
 pub const FOUNDATION_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "lyrical supermarket",
-        staker: "4xh7vtQCTim3vgpQ1dQQWjtKrBSkbtL3s15FimXVJAAP",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("C7WS9ic7KN9XNcLsNoMvzTvbzURM3rFGDEQN7qJMWNLn"),
-    },
-    StakerInfo {
-        name: "frequent description",
-        staker: "95Nf8XfoecteSXU9nbcvzkrFQdu6FqPaH3EvhwLaC83t",
-        lamports: 57_500_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("FdGYQdiRky8NZzN9wZtczTBcWLYYRXrJ3LMDhqDPn5rM"),
-    },
-];
-
-pub const GRANTS_STAKER_INFOS: &[StakerInfo] = &[
-    StakerInfo {
-        name: "rightful agreement",
-        staker: "8w5cgUQfXAZZWyVgenPHpQ1uABXUVLnymqXbuZPx7yqt",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("EDwSQShtUWQtmFfN9SpUUd6hgonL7tRdxngAsNKv9Pe6"),
-    },
-    StakerInfo {
-        name: "tasty location",
-        staker: "9eyXtP43dCp59oyvWG2R7WQCeJ2bA6TWoLzXg1KTDfQQ",
-        lamports: 15_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("9BgvWHerNACjnx6ZpK51k2LEsnwBP3gFwWDzhKkHKH1m"),
-    },
-];
-
-pub const COMMUNITY_STAKER_INFOS: &[StakerInfo] = &[
-    StakerInfo {
         name: "shrill charity",
-        staker: "Eo1iDtrZZiAkQFA8u431hedChaSUnPbU8MWg849MFvEZ",
-        lamports: 5_000_000 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("8CUUMKYNGxdgYio5CLHRHyzMEhhVRMcqefgE6dLqnVRK"),
-    },
-    StakerInfo {
-        name: "legal gate",
-        staker: "7KCzZCbZz6V1U1YXUpBNaqQzQCg2DKo8JsNhKASKtYxe",
-        lamports: 30_301_032 * LAMPORTS_PER_DOMI,
-        withdrawer: Some("92viKFftk1dJjqJwreFqT2qHXxjSUuEE9VyHvTdY1mpY"),
-    },
-    StakerInfo {
-        name: "cluttered complaint",
-        staker: "2J8mJU6tWg78DdQVEqMfpN3rMeNbcRT9qGL3yLbmSXYL",
-        lamports: 153_333_633 * LAMPORTS_PER_DOMI + 41 * LAMPORTS_PER_DOMI / 100,
-        withdrawer: Some("7kgfDmgbEfypBujqn4tyApjf8H7ZWuaL3F6Ah9vQHzgR"),
+        staker: "JBPTHdeVwbZsx4yZ9RMcPkojjAnd318HvmW2WVriehkW",
+        satomis: 50_000_000 * SATOMIS_PER_DOMI,
+        withdrawer: Some("CUpX8BoNMoHfTJGsPaFjiGExMhShwD8ALtefVFfC3tPr"),
     },
 ];
 
@@ -227,39 +84,34 @@ fn add_stakes(
         .sum::<u64>()
 }
 
-pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_lamports: u64) {
+pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_satomis: u64) {
     // add_stakes() and add_validators() award tokens for rent exemption and
     //  to cover an initial transfer-free period of the network
 
-    issued_lamports += add_stakes(
-        genesis_config,
-        CREATOR_STAKER_INFOS,
-        &UNLOCKS_HALF_AT_9_MONTHS,
-    ) + add_stakes(
-        genesis_config,
-        SERVICE_STAKER_INFOS,
-        &UNLOCKS_ALL_AT_9_MONTHS,
-    ) + add_stakes(
-        genesis_config,
-        FOUNDATION_STAKER_INFOS,
-        &UNLOCKS_ALL_DAY_ZERO,
-    ) + add_stakes(genesis_config, GRANTS_STAKER_INFOS, &UNLOCKS_ALL_DAY_ZERO)
-        + add_stakes(
+    issued_satomis += add_stakes(
             genesis_config,
-            COMMUNITY_STAKER_INFOS,
+            INVESTORS_STAKER_INFOS,
             &UNLOCKS_ALL_DAY_ZERO,
+        ) + add_stakes(
+            genesis_config,
+            MAINTANACE_STAKER_INFOS,
+            &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
+        ) + add_stakes(
+            genesis_config,
+            FOUNDATION_STAKER_INFOS,
+            &UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR,
         );
 
-    // "one thanks" (community pool) gets 500_000_000SOL (total) - above distributions
+    // "one thanks" (maintanance pool) gets 10_000_000 DOMI - above distributions
     create_and_add_stakes(
         genesis_config,
         &StakerInfo {
             name: "one thanks",
-            staker: "7vEAL3nS9CWmy1q6njUUyHE7Cf5RmyQpND6CsoHjzPiR",
-            lamports: (500_000_000 * LAMPORTS_PER_DOMI).saturating_sub(issued_lamports),
-            withdrawer: Some("3FFaheyqtyAXZSYxDzsr5CVKvJuvZD1WE1VEsBtDbRqB"),
+            staker: "Ay9XxmEc3YZy5PMxWTuNqRCyu9HiJ6QKqp2rAfqBrtiH",
+            satomis: (250_000_000 * SATOMIS_PER_DOMI).saturating_sub(issued_satomis),
+            withdrawer: Some("9He2rQZWGobpx65LdaUuU2u6Dkb5y4EoC5oV16P5B3Go"),
         },
-        &UNLOCKS_ALL_DAY_ZERO,
+        &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
         None,
     );
 }
@@ -274,12 +126,12 @@ mod tests {
 
         add_genesis_accounts(&mut genesis_config, 0);
 
-        let lamports = genesis_config
+        let satomis = genesis_config
             .accounts
             .values()
-            .map(|account| account.lamports)
+            .map(|account| account.satomis)
             .sum::<u64>();
 
-        assert_eq!(500_000_000 * LAMPORTS_PER_DOMI, lamports);
+        assert_eq!(250_000_000 * SATOMIS_PER_DOMI, satomis);
     }
 }

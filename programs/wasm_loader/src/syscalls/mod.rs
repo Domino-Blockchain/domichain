@@ -333,21 +333,7 @@ fn translate(
     
     // dbg!("translate", access_type, vm_addr, len, new_vm_addr);
     // FIXME: vm_addr is address in WASM space. For non-heap access this won't work
-    let res: Result<u64, Error> = memory_mapping.map(access_type, new_vm_addr, len, 0).into();
-    let _ = res.as_ref().map(|a| {
-        let host_addr = *a as *mut usize;
-        let new_vm_addr = new_vm_addr as *mut usize;
-        // println!("[{}:{}] translate: vm_addr = {:?} host_addr = {:?}",
-        //     file!(),
-        //     line!(),
-        //     new_vm_addr,
-        //     host_addr,
-        // );
-    }).map_err(|e| {
-        dbg!(e);
-        dbg!(access_type, new_vm_addr as *const u8, len, unsafe {(new_vm_addr as *const u8).add(len as _)})
-    });
-    res
+    memory_mapping.map(access_type, new_vm_addr, len, 0).into()
 }
 
 fn translate_type_inner<'a, T>(
@@ -371,9 +357,6 @@ fn translate_type_inner<'a, T>(
     // // dbg!("translate_type_inner", bytes_in_place);
 
     if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
-        dbg!(host_addr as *mut T as usize);
-        dbg!(align_of::<T>());
-        dbg!((host_addr as *mut T as usize).wrapping_rem(align_of::<T>()));
         return Err(SyscallError::UnalignedPointer.into());
     }
     Ok(unsafe { &mut *(host_addr as *mut T) })
@@ -824,7 +807,6 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        dbg!(vals_addr, vals_len, result_addr);
         let compute_budget = invoke_context.get_compute_budget();
         if compute_budget.sha256_max_slices < vals_len {
             ic_msg!(
@@ -3210,10 +3192,10 @@ mod tests {
         src_epochschedule.first_normal_slot = 4;
         let mut src_fees = create_filled_type::<Fees>(false);
         src_fees.fee_calculator = FeeCalculator {
-            lamports_per_signature: 1,
+            satomis_per_signature: 1,
         };
         let mut src_rent = create_filled_type::<Rent>(false);
-        src_rent.lamports_per_byte_year = 1;
+        src_rent.satomis_per_byte_year = 1;
         src_rent.exemption_threshold = 2.0;
         src_rent.burn_percent = 3;
 
@@ -3380,7 +3362,7 @@ mod tests {
             assert_eq!(got_rent, src_rent);
 
             let mut clean_rent = create_filled_type::<Rent>(true);
-            clean_rent.lamports_per_byte_year = src_rent.lamports_per_byte_year;
+            clean_rent.satomis_per_byte_year = src_rent.satomis_per_byte_year;
             clean_rent.exemption_threshold = src_rent.exemption_threshold;
             clean_rent.burn_percent = src_rent.burn_percent;
             assert!(are_bytes_equal(&got_rent, &clean_rent));

@@ -78,7 +78,7 @@ pub trait BenchTpsClient {
     fn request_airdrop_with_blockhash(
         &self,
         pubkey: &Pubkey,
-        lamports: u64,
+        satomis: u64,
         recent_blockhash: &Hash,
     ) -> Result<Signature>;
 

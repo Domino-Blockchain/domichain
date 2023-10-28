@@ -14,10 +14,10 @@ pub trait StorableAccounts<'a, T: ReadableAccount + Sync>: Sync {
     fn pubkey(&self, index: usize) -> &Pubkey;
     /// account at 'index'
     fn account(&self, index: usize) -> &T;
-    /// None if account is zero lamports
-    fn account_default_if_zero_lamport(&self, index: usize) -> Option<&T> {
+    /// None if account is zero satomis
+    fn account_default_if_zero_satomi(&self, index: usize) -> Option<&T> {
         let account = self.account(index);
-        (account.lamports() != 0).then_some(account)
+        (account.satomis() != 0).then_some(account)
     }
     // current slot for account at 'index'
     fn slot(&self, index: usize) -> Slot;
@@ -363,7 +363,7 @@ pub mod tests {
     fn test_contains_multiple_slots() {
         let pk = Pubkey::from([1; 32]);
         let slot = 0;
-        let lamports = 1;
+        let satomis = 1;
         let owner = Pubkey::default();
         let executable = false;
         let rent_epoch = 0;
@@ -373,7 +373,7 @@ pub mod tests {
             data_len: 7,
         };
         let account_meta = AccountMeta {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
@@ -431,7 +431,7 @@ pub mod tests {
                                 data_len: u64::MAX, // just something
                             },
                             AccountMeta {
-                                lamports: account.lamports(),
+                                satomis: account.satomis(),
                                 owner: *account.owner(),
                                 executable: account.executable(),
                                 rent_epoch: account.rent_epoch(),
@@ -543,7 +543,7 @@ pub mod tests {
                         data_len: (entry * 2) as u64, // just something
                     },
                     AccountMeta {
-                        lamports: account.lamports(),
+                        satomis: account.satomis(),
                         owner: *account.owner(),
                         executable: account.executable(),
                         rent_epoch: account.rent_epoch(),

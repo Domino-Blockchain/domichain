@@ -45,7 +45,7 @@ use {
         hash::Hash,
         instruction::{AccountMeta, Instruction},
         message::Message,
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         pubkey::Pubkey,
         rent::Rent,
         signature::{read_keypair_file, write_keypair_file, Keypair, Signer},
@@ -439,14 +439,14 @@ impl TestValidatorGenesis {
     pub fn add_account_with_file_data(
         &mut self,
         address: Pubkey,
-        lamports: u64,
+        satomis: u64,
         owner: Pubkey,
         filename: &str,
     ) -> &mut Self {
         self.add_account(
             address,
             AccountSharedData::from(Account {
-                lamports,
+                satomis,
                 data: domichain_program_test::read_file(
                     domichain_program_test::find_file(filename).unwrap_or_else(|| {
                         panic!("Unable to locate {filename}");
@@ -464,14 +464,14 @@ impl TestValidatorGenesis {
     pub fn add_account_with_base64_data(
         &mut self,
         address: Pubkey,
-        lamports: u64,
+        satomis: u64,
         owner: Pubkey,
         data_base64: &str,
     ) -> &mut Self {
         self.add_account(
             address,
             AccountSharedData::from(Account {
-                lamports,
+                satomis,
                 data: BASE64_STANDARD
                     .decode(data_base64)
                     .unwrap_or_else(|err| panic!("Failed to base64 decode: {err}")),
@@ -633,7 +633,7 @@ impl TestValidator {
         TestValidatorGenesis::default()
             .fee_rate_governor(FeeRateGovernor::new(0, 0))
             .rent(Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 exemption_threshold: 1.0,
                 ..Rent::default()
             })
@@ -652,7 +652,7 @@ impl TestValidator {
             .tpu_enable_udp(true)
             .fee_rate_governor(FeeRateGovernor::new(0, 0))
             .rent(Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 exemption_threshold: 1.0,
                 ..Rent::default()
             })
@@ -667,14 +667,14 @@ impl TestValidator {
     /// This function panics on initialization failure.
     pub fn with_custom_fees(
         mint_address: Pubkey,
-        target_lamports_per_signature: u64,
+        target_satomis_per_signature: u64,
         faucet_addr: Option<SocketAddr>,
         socket_addr_space: SocketAddrSpace,
     ) -> Self {
         TestValidatorGenesis::default()
-            .fee_rate_governor(FeeRateGovernor::new(target_lamports_per_signature, 0))
+            .fee_rate_governor(FeeRateGovernor::new(target_satomis_per_signature, 0))
             .rent(Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 exemption_threshold: 1.0,
                 ..Rent::default()
             })
@@ -705,9 +705,9 @@ impl TestValidator {
         let validator_identity = Keypair::new();
         let validator_vote_account = Keypair::new();
         let validator_stake_account = Keypair::new();
-        let validator_identity_lamports = domi_to_lamports(500.);
-        let validator_stake_lamports = domi_to_lamports(1_000_000.);
-        let mint_lamports = domi_to_lamports(500_000_000.);
+        let validator_identity_satomis = domi_to_satomis(500.);
+        let validator_stake_satomis = domi_to_satomis(1_000_000.);
+        let mint_satomis = domi_to_satomis(500_000_000.);
 
         let mut accounts = config.accounts.clone();
         for (address, account) in domichain_program_test::programs::spl_programs(&config.rent) {
@@ -719,7 +719,7 @@ impl TestValidator {
             accounts.insert(
                 program.program_id,
                 AccountSharedData::from(Account {
-                    lamports: Rent::default().minimum_balance(data.len()).max(1),
+                    satomis: Rent::default().minimum_balance(data.len()).max(1),
                     data,
                     owner: program.loader,
                     executable: true,
@@ -742,7 +742,7 @@ impl TestValidator {
             accounts.insert(
                 programdata_address,
                 AccountSharedData::from(Account {
-                    lamports: Rent::default().minimum_balance(program_data.len()).max(1),
+                    satomis: Rent::default().minimum_balance(program_data.len()).max(1),
                     data: program_data,
                     owner: upgradeable_program.loader,
                     executable: true,
@@ -757,7 +757,7 @@ impl TestValidator {
             accounts.insert(
                 upgradeable_program.program_id,
                 AccountSharedData::from(Account {
-                    lamports: Rent::default().minimum_balance(data.len()).max(1),
+                    satomis: Rent::default().minimum_balance(data.len()).max(1),
                     data,
                     owner: upgradeable_program.loader,
                     executable: true,
@@ -767,13 +767,13 @@ impl TestValidator {
         }
 
         let mut genesis_config = create_genesis_config_with_leader_ex(
-            mint_lamports,
+            mint_satomis,
             &mint_address,
             &validator_identity.pubkey(),
             &validator_vote_account.pubkey(),
             &validator_stake_account.pubkey(),
-            validator_stake_lamports,
-            validator_identity_lamports,
+            validator_stake_satomis,
+            validator_identity_satomis,
             config.fee_rate_governor.clone(),
             config.rent,
             domichain_sdk::genesis_config::ClusterType::Development,

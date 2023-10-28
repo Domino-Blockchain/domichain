@@ -35,7 +35,6 @@ fi
 args=(
   "$@"
   --max-genesis-archive-unpacked-size 1073741824
-  --enable-warmup-epochs
   --bootstrap-validator "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/identity.json
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/vote-account.json
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/stake-account.json
@@ -51,7 +50,7 @@ fi
 
 default_arg --ledger "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator
 default_arg --faucet-pubkey "$DOMICHAIN_CONFIG_DIR"/faucet.json
-default_arg --faucet-lamports 500000000000000000
+default_arg --faucet-satomis 500000000000000000
 default_arg --hashes-per-tick auto
 default_arg --cluster-type development
 

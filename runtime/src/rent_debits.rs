@@ -17,7 +17,7 @@ impl RentDebit {
             .and_then(|r| r.checked_neg());
         rent_debit.map(|rent_debit| RewardInfo {
             reward_type: RewardType::Rent,
-            lamports: rent_debit,
+            satomis: rent_debit,
             post_balance: self.post_balance,
             commission: None, // Not applicable
         })

@@ -44,10 +44,10 @@ fn main() {
             break;
         }
         info!(
-            "  account: {:?} version: {} lamports: {} data: {} hash: {:?}",
+            "  account: {:?} version: {} satomis: {} data: {} hash: {:?}",
             account.pubkey(),
             account.write_version(),
-            account.lamports(),
+            account.satomis(),
             account.data_len(),
             account.hash()
         );

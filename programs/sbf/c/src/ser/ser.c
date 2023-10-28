@@ -20,7 +20,7 @@ extern uint64_t entrypoint(const uint8_t *input) {
 
   sol_assert(params.ka_num == 2);
   for (int i = 0; i < 2; i++) {
-    sol_assert(*params.ka[i].lamports == 42);
+    sol_assert(*params.ka[i].satomis == 42);
     sol_assert(!sol_memcmp(params.ka[i].data, ka_data, 4));
     sol_assert(SolPubkey_same(params.ka[i].owner, &ka_owner));
     sol_assert(params.ka[i].is_signer == false);

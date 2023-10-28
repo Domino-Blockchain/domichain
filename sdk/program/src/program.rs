@@ -48,7 +48,7 @@ use crate::{
 ///
 /// The `AccountInfo` structures passed to this function contain data that is
 /// directly accessed by the runtime and is copied to and from the memory space
-/// of the called program. Some of that data, the [`AccountInfo::lamports`] and
+/// of the called program. Some of that data, the [`AccountInfo::satomis`] and
 /// [`AccountInfo::data`] fields, may be mutated as a side-effect of the called
 /// program, if that program has writable access to the given account.
 ///
@@ -74,8 +74,8 @@ use crate::{
 /// violated then the transaction will immediately fail. A non-exhaustive list
 /// of these invariants includes:
 ///
-/// - The sum of lamports owned by all referenced accounts has not changed.
-/// - A program has not debited lamports from an account it does not own.
+/// - The sum of satomis owned by all referenced accounts has not changed.
+/// - A program has not debited satomis from an account it does not own.
 /// - A program has not otherwise written to an account that it does not own.
 /// - A program has not written to an account that is not writable.
 /// - The size of account data has not exceeded applicable limits.
@@ -92,7 +92,7 @@ use crate::{
 ///
 /// # Examples
 ///
-/// A simple example of transferring lamports via CPI:
+/// A simple example of transferring satomis via CPI:
 ///
 /// ```
 /// use domichain_program::{
@@ -125,10 +125,10 @@ use crate::{
 ///     assert!(recipient.is_writable);
 ///     assert!(system_program::check_id(system_program_account.key));
 ///
-///     let lamports = 1000000;
+///     let satomis = 1000000;
 ///
 ///     invoke(
-///         &system_instruction::transfer(payer.key, recipient.key, lamports),
+///         &system_instruction::transfer(payer.key, recipient.key, satomis),
 ///         &[payer.clone(), recipient.clone(), system_program_account.clone()],
 ///     )
 /// }
@@ -222,14 +222,14 @@ pub fn invoke_unchecked(instruction: &Instruction, account_infos: &[AccountInfo]
 ///
 ///     assert_eq!(vault_pda.key, &expected_vault_pda);
 ///
-///     let lamports = 10000000;
+///     let satomis = 10000000;
 ///     let vault_size = 16;
 ///
 ///     invoke_signed(
 ///         &system_instruction::create_account(
 ///             &payer.key,
 ///             &vault_pda.key,
-///             lamports,
+///             satomis,
 ///             vault_size,
 ///             &program_id,
 ///         ),
@@ -258,10 +258,10 @@ pub fn invoke_signed(
         for account_info in account_infos.iter() {
             if account_meta.pubkey == *account_info.key {
                 if account_meta.is_writable {
-                    let _ = account_info.try_borrow_mut_lamports()?;
+                    let _ = account_info.try_borrow_mut_satomis()?;
                     let _ = account_info.try_borrow_mut_data()?;
                 } else {
-                    let _ = account_info.try_borrow_lamports()?;
+                    let _ = account_info.try_borrow_satomis()?;
                     let _ = account_info.try_borrow_data()?;
                 }
                 break;
@@ -574,14 +574,14 @@ pub fn check_type_assumptions() {
     // Enforce AccountInfo layout
     {
         let key = Pubkey::from_str("6o8R9NsUxNskF1MfWM1f265y4w86JYbEwqCmTacdLkHp").unwrap();
-        let mut lamports = 31;
+        let mut satomis = 31;
         let mut data = vec![1, 2, 3, 4, 5];
         let owner = Pubkey::from_str("2tjK4XyNU54XdN9jokx46QzLybbLVGwQQvTfhcuBXAjR").unwrap();
         let account_info = AccountInfo {
             key: &key,
             is_signer: true,
             is_writable: false,
-            lamports: Rc::new(RefCell::new(&mut lamports)),
+            satomis: Rc::new(RefCell::new(&mut satomis)),
             data: Rc::new(RefCell::new(&mut data)),
             owner: &owner,
             executable: true,
@@ -596,11 +596,11 @@ pub fn check_type_assumptions() {
             assert_eq!(**key_ptr, key);
         }
 
-        // lamports
-        assert_eq!(offset_of!(AccountInfo, lamports), 8);
-        let lamports_ptr = (account_info_addr + 8) as *const Rc<RefCell<&mut u64>>;
+        // satomis
+        assert_eq!(offset_of!(AccountInfo, satomis), 8);
+        let satomis_ptr = (account_info_addr + 8) as *const Rc<RefCell<&mut u64>>;
         unsafe {
-            assert_eq!(**(*lamports_ptr).as_ptr(), 31);
+            assert_eq!(**(*satomis_ptr).as_ptr(), 31);
         }
 
         // data

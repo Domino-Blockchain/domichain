@@ -55,7 +55,7 @@ struct Account {
     owner: Option<String>,
     is_signer: Option<bool>,
     is_writable: Option<bool>,
-    lamports: Option<u64>,
+    satomis: Option<u64>,
     data: Option<Vec<u8>>,
 }
 #[derive(Serialize, Deserialize)]
@@ -192,7 +192,7 @@ and the following fields are required
             "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
             "is_signer": false,
             "is_writable": true,
-            "lamports": 1000,
+            "satomis": 1000,
             "data": [0, 0, 0, 3]
         }
     ],
@@ -494,10 +494,10 @@ pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
                             }
                         }
                     }
-                    // Override account data and lamports from input file if provided
+                    // Override account data and satomis from input file if provided
                     if space > 0 {
-                        let lamports = account_info.lamports.unwrap_or(account.lamports());
-                        let mut account = AccountSharedData::new(lamports, space, &owner);
+                        let satomis = account_info.satomis.unwrap_or(account.satomis());
+                        let mut account = AccountSharedData::new(satomis, space, &owner);
                         account.set_data(data);
                         account
                     } else {
@@ -511,8 +511,8 @@ pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
                         eprintln!("Invalid owner key in input {owner}, error {err}");
                         Pubkey::new_unique()
                     });
-                    let lamports = account_info.lamports.unwrap_or(0);
-                    let mut account = AccountSharedData::new(lamports, space, &owner);
+                    let satomis = account_info.satomis.unwrap_or(0);
+                    let mut account = AccountSharedData::new(satomis, space, &owner);
                     account.set_data(data);
                     account
                 };

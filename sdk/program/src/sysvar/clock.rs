@@ -107,7 +107,7 @@
 //! #
 //! fn print_sysvar_clock(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(clock::ID, Account {
-//! #       lamports: 1169280,
+//! #       satomis: 1169280,
 //! #       data: vec![240, 153, 233, 7, 0, 0, 0, 0, 11, 115, 118, 98, 0, 0, 0, 0, 51, 1, 0, 0, 0, 0, 0, 0, 52, 1, 0, 0, 0, 0, 0, 0, 121, 50, 119, 98, 0, 0, 0, 0],
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

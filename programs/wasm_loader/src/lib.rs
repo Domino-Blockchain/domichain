@@ -1,18 +1,15 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
 
-use std::{fmt::Debug, process::exit};
-
 use domichain_program_runtime::loaded_programs::WasmExecutable;
-use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_deploy_of_alloc_free_syscall};
-use itertools::Itertools;
-use solana_rbpf::{ebpf::{MM_PROGRAM_START, MM_INPUT_START, MM_STACK_START}, vm::{StableResult, Config}, aligned_memory::is_memory_aligned};
-use wasmi::{core::Trap, Caller, Extern, Func};
+use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar};
+use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
+use wasmi::{core::Trap, Caller, Func};
 use wasmi_wasi::WasiCtx;
 
 use crate::syscalls::{
-    SyscallAbort,
-    SyscallPanic,
+    // SyscallAbort,
+    // SyscallPanic,
     SyscallLog,
     SyscallLogU64,
     SyscallLogBpfComputeUnits,
@@ -40,7 +37,7 @@ use crate::syscalls::{
     SyscallGetReturnData,
     SyscallInvokeSignedC,
     SyscallInvokeSignedRust,
-    SyscallAllocFree,
+    // SyscallAllocFree,
     SyscallAltBn128,
     SyscallBigModExp,
     SyscallLogData,
@@ -100,7 +97,6 @@ use {
     },
     std::{
         cell::RefCell,
-        mem,
         rc::Rc,
         sync::{atomic::Ordering, Arc},
     },
@@ -135,7 +131,7 @@ pub fn load_program_from_bytes(
     )
     .map_err(|err| {
         ic_logger_msg!(log_collector, "{}", err);
-        dbg!(InstructionError::InvalidAccountData)
+        InstructionError::InvalidAccountData
     })?;
     Ok(loaded_program)
 }
@@ -169,11 +165,11 @@ pub fn load_program_from_account(
                     (UpgradeableLoaderState::size_of_programdata_metadata(), slot)
                 } else {
                     ic_logger_msg!(log_collector, "Program has been closed");
-                    return Err(dbg!(InstructionError::InvalidAccountData));
+                    return Err(InstructionError::InvalidAccountData);
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             }
         } else {
             (0, 0)
@@ -721,10 +717,10 @@ fn process_instruction_inner(
 
     let mut get_or_create_executor_time = Measure::start("get_or_create_executor_time");
     let executor = find_program_in_cache(invoke_context, program_account.get_key())
-        .ok_or_else(|| dbg!(InstructionError::InvalidAccountData))?;
+        .ok_or_else(|| InstructionError::InvalidAccountData)?;
 
     if executor.is_tombstone() {
-        return Err(Box::new(dbg!(InstructionError::InvalidAccountData)));
+        return Err(Box::new(InstructionError::InvalidAccountData));
     }
 
     drop(program_account);
@@ -739,7 +735,7 @@ fn process_instruction_inner(
         LoadedProgramType::FailedVerification(_)
         | LoadedProgramType::Closed
         | LoadedProgramType::DelayVisibility => {
-            Err(Box::new(dbg!(InstructionError::InvalidAccountData)) as Box<dyn std::error::Error>)
+            Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
         }
         LoadedProgramType::LegacyV0(executable) => execute(executable, invoke_context),
         LoadedProgramType::LegacyV1(executable) => execute(executable, invoke_context),
@@ -799,7 +795,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Buffer account");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             }
             drop(buffer);
             write_program_data(
@@ -836,7 +832,7 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "Program account too small");
                 return Err(InstructionError::AccountDataTooSmall);
             }
-            if program.get_lamports() < rent.minimum_balance(program.get_data().len()) {
+            if program.get_satomis() < rent.minimum_balance(program.get_data().len()) {
                 ic_logger_msg!(log_collector, "Program account not rent-exempt");
                 return Err(InstructionError::ExecutableAccountNotRentExempt);
             }
@@ -869,7 +865,7 @@ fn process_loader_upgradeable_instruction(
                 || buffer_data_len == 0
             {
                 ic_logger_msg!(log_collector, "Buffer account too small");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             }
             drop(buffer);
             if max_data_len < buffer_data_len {
@@ -898,8 +894,8 @@ fn process_loader_upgradeable_instruction(
                     instruction_context.try_borrow_instruction_account(transaction_context, 3)?;
                 let mut payer =
                     instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
-                payer.checked_add_lamports(buffer.get_lamports())?;
-                buffer.set_lamports(0)?;
+                payer.checked_add_satomis(buffer.get_satomis())?;
+                buffer.set_satomis(0)?;
             }
 
             let owner_id = *program_id;
@@ -1029,7 +1025,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid Program account");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             }
             let new_program_id = *program.get_key();
             drop(program);
@@ -1051,14 +1047,14 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "Invalid Buffer account");
                 return Err(InstructionError::InvalidArgument);
             }
-            let buffer_lamports = buffer.get_lamports();
+            let buffer_satomis = buffer.get_satomis();
             let buffer_data_offset = UpgradeableLoaderState::size_of_buffer_metadata();
             let buffer_data_len = buffer.get_data().len().saturating_sub(buffer_data_offset);
             if buffer.get_data().len() < UpgradeableLoaderState::size_of_buffer_metadata()
                 || buffer_data_len == 0
             {
                 ic_logger_msg!(log_collector, "Buffer account too small");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             }
             drop(buffer);
 
@@ -1075,7 +1071,7 @@ fn process_loader_upgradeable_instruction(
                 ic_logger_msg!(log_collector, "ProgramData account not large enough");
                 return Err(InstructionError::AccountDataTooSmall);
             }
-            if programdata.get_lamports().saturating_add(buffer_lamports)
+            if programdata.get_satomis().saturating_add(buffer_satomis)
                 < programdata_balance_required
             {
                 ic_logger_msg!(
@@ -1111,7 +1107,7 @@ fn process_loader_upgradeable_instruction(
                 }
             } else {
                 ic_logger_msg!(log_collector, "Invalid ProgramData account");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             };
             let programdata_len = programdata.get_data().len();
             drop(programdata);
@@ -1172,14 +1168,14 @@ fn process_loader_upgradeable_instruction(
                 instruction_context.try_borrow_instruction_account(transaction_context, 2)?;
             let mut spill =
                 instruction_context.try_borrow_instruction_account(transaction_context, 3)?;
-            spill.checked_add_lamports(
+            spill.checked_add_satomis(
                 programdata
-                    .get_lamports()
-                    .saturating_add(buffer_lamports)
+                    .get_satomis()
+                    .saturating_add(buffer_satomis)
                     .saturating_sub(programdata_balance_required),
             )?;
-            buffer.set_lamports(0)?;
-            programdata.set_lamports(programdata_balance_required)?;
+            buffer.set_satomis(0)?;
+            programdata.set_satomis(programdata_balance_required)?;
             if invoke_context
                 .feature_set
                 .is_active(&enable_program_redeployment_cooldown::id())
@@ -1352,8 +1348,8 @@ fn process_loader_upgradeable_instruction(
                 UpgradeableLoaderState::Uninitialized => {
                     let mut recipient_account = instruction_context
                         .try_borrow_instruction_account(transaction_context, 1)?;
-                    recipient_account.checked_add_lamports(close_account.get_lamports())?;
-                    close_account.set_lamports(0)?;
+                    recipient_account.checked_add_satomis(close_account.get_satomis())?;
+                    close_account.set_satomis(0)?;
 
                     ic_logger_msg!(log_collector, "Closed Uninitialized {}", close_key);
                 }
@@ -1516,7 +1512,7 @@ fn process_loader_upgradeable_instruction(
                 }
                 _ => {
                     ic_logger_msg!(log_collector, "Invalid Program account");
-                    return Err(dbg!(InstructionError::InvalidAccountData));
+                    return Err(InstructionError::InvalidAccountData);
                 }
             }
             drop(program_account);
@@ -1558,11 +1554,11 @@ fn process_loader_upgradeable_instruction(
                 upgrade_authority_address
             } else {
                 ic_logger_msg!(log_collector, "ProgramData state is invalid");
-                return Err(dbg!(InstructionError::InvalidAccountData));
+                return Err(InstructionError::InvalidAccountData);
             };
 
             let required_payment = {
-                let balance = programdata_account.get_lamports();
+                let balance = programdata_account.get_satomis();
                 let rent = invoke_context.get_sysvar_cache().get_rent()?;
                 let min_balance = rent.minimum_balance(new_len).max(1);
                 min_balance.saturating_sub(balance)
@@ -1655,8 +1651,8 @@ fn common_close_account(
         instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
     let mut recipient_account =
         instruction_context.try_borrow_instruction_account(transaction_context, 1)?;
-    recipient_account.checked_add_lamports(close_account.get_lamports())?;
-    close_account.set_lamports(0)?;
+    recipient_account.checked_add_satomis(close_account.get_satomis())?;
+    close_account.set_satomis(0)?;
     close_account.set_state(&UpgradeableLoaderState::Uninitialized)?;
     Ok(())
 }
@@ -1719,7 +1715,7 @@ fn map_wasmi_to_bpf_syscalls<'a, 'b>(
     arg5: u64,
 ) -> Result<i32, Trap> {
     let invoke_context = caller.data().1.clone();
-    let config = caller.data().2;
+    // let config = caller.data().2;
 
     // // let mut syscall = init(ic);
 
@@ -1798,7 +1794,7 @@ fn map_wasmi_to_bpf_syscalls<'a, 'b>(
     let invoke_context_ref: &mut RefCell<&mut InvokeContext<'_>> = unsafe { std::mem::transmute::<_, _>(invoke_context_ref) };
 
     // let invoke_context = Rc::get_mut(&mut invoke_context).unwrap();
-    
+
     // let mut invoke_context = Rc::into_inner(invoke_context).unwrap();
     syscall(invoke_context_ref.get_mut(), arg1, arg2, arg3, arg4, arg5, memory_mapping, &mut result);
 
@@ -1812,7 +1808,6 @@ fn execute<'a, 'b: 'a>(
     executable: &'a WasmExecutable,
     invoke_context: &'a mut InvokeContext<'b>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    dbg!("WasmLoader: execute");
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -1850,10 +1845,10 @@ fn execute<'a, 'b: 'a>(
     let invoke_context: Rc<RefCell<&mut InvokeContext<'_>>> = Rc::new(RefCell::new(invoke_context));
     let execution_result = {
         let compute_meter_prev = invoke_context.borrow().get_remaining();
-        
+
         // programs/wasm_loader/src/lib.rs:274
         // programs/wasm_loader/src/lib.rs:323
-        
+
         // create_vm!(
         //     vm,
         //     // We dropped the lifetime tracking in the Executor by setting it to 'static,
@@ -1876,8 +1871,13 @@ fn execute<'a, 'b: 'a>(
             account_lengths,
             Rc::clone(&invoke_context),
         );
-        // dbg!(&vm_result);
-        let (memory_mapping, stack_size) = vm_result.unwrap();
+        let (memory_mapping, _stack_size) = match vm_result {
+            Ok(info) => info,
+            Err(e) => {
+                ic_logger_msg!(log_collector, "Failed to create WASM VM: {}", e);
+                return Err(Box::new(InstructionError::ProgramEnvironmentSetupFailure));
+            }
+        };
 
         // ($vm:ident, $program:expr, $regions:expr, $orig_account_lengths:expr, $invoke_context:expr $(,)?) => {
         //     let invoke_context = &*$invoke_context;
@@ -1930,16 +1930,6 @@ fn execute<'a, 'b: 'a>(
         //     trace_log: Vec::new(),
         // })?;
 
-
-
-
-
-
-
-
-
-        
-
         let ctx = wasmi_wasi::WasiCtxBuilder::new().build();
         let mut store = wasmi::Store::new(
             &executable.engine,
@@ -1973,7 +1963,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_log_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, message: u32, len: u64| {
-                    // dbg!("sol_log_");
                     map_wasmi_to_bpf_syscalls(SyscallLog::call, caller, message as _, len as _, 0, 0, 0)?;
                     Ok(())
                 }),
@@ -1983,7 +1972,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_log_64_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, arg1: u64, arg2: u64, arg3: u64, arg4: u64, arg5: u64| {
-                    dbg!("sol_log_64_");
                     map_wasmi_to_bpf_syscalls(SyscallLogU64::call, caller, arg1 as _, arg2 as _, arg3 as _, arg4 as _, arg5 as _)?;
                     Ok(())
                 }),
@@ -1993,7 +1981,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_log_compute_units_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, | {
-                    dbg!("sol_log_compute_units_");
                     map_wasmi_to_bpf_syscalls(SyscallLogBpfComputeUnits::call, caller, 0, 0, 0, 0, 0)?;
                     Ok(())
                 }),
@@ -2003,7 +1990,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_log_pubkey",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, pubkey_addr: u32| {
-                    dbg!("sol_log_pubkey");
                     map_wasmi_to_bpf_syscalls(SyscallLogPubkey::call, caller, pubkey_addr as _, 0, 0, 0, 0)?;
                     Ok(())
                 }),
@@ -2013,7 +1999,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_create_program_address",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, seeds_addr: u32, seeds_len: u64, program_id_addr: u32, address_bytes_addr: u32| {
-                    dbg!("sol_create_program_address");
                     map_wasmi_to_bpf_syscalls(SyscallCreateProgramAddress::call, caller, seeds_addr as _, seeds_len as _, program_id_addr as _, address_bytes_addr as _, 0)
                         .map(|i| i as u64)
                 }),
@@ -2023,7 +2008,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_try_find_program_address",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, seeds_addr: u32, seeds_len: u64, program_id_addr: u32, address_bytes_addr: u32, bump_seed_addr: u32| {
-                    dbg!("sol_try_find_program_address");
                     map_wasmi_to_bpf_syscalls(SyscallTryFindProgramAddress::call, caller, seeds_addr as _, seeds_len as _, program_id_addr as _, address_bytes_addr as _, bump_seed_addr as _)
                         .map(|i| i as u64)
                 }),
@@ -2033,7 +2017,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_sha256",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, vals: u32, val_len: u64, hash_result: u32| {
-                    dbg!("sol_sha256");
                     map_wasmi_to_bpf_syscalls(SyscallSha256::call, caller, vals as _, val_len as _, hash_result as _, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2043,7 +2026,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_keccak256",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, vals: u32, val_len: u64, hash_result: u32| {
-                    dbg!("sol_keccak256");
                     map_wasmi_to_bpf_syscalls(SyscallKeccak256::call, caller, vals as _, val_len as _, hash_result as _, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2053,7 +2035,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_secp256k1_recover",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, hash: u32, recovery_id: u64, signature: u32, result: u32| {
-                    dbg!("sol_secp256k1_recover");
                     map_wasmi_to_bpf_syscalls(SyscallSecp256k1Recover::call, caller, hash as _, recovery_id as _, signature as _, result as _, 0)
                         .map(|i| i as u64)
                 }),
@@ -2064,7 +2045,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_blake3",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, vals: u32, val_len: u64, hash_result: u32| {
-                        dbg!("sol_blake3");
                         map_wasmi_to_bpf_syscalls(SyscallBlake3::call, caller, vals as _, val_len as _, hash_result as _, 0, 0)
                             .map(|i| i as u64)
                     }),
@@ -2075,7 +2055,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_clock_sysvar",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, addr: u32| {
-                    dbg!("sol_get_clock_sysvar");
                     map_wasmi_to_bpf_syscalls(SyscallGetClockSysvar::call, caller, addr as _, 0, 0, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2085,7 +2064,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_epoch_schedule_sysvar",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, addr: u32| {
-                    dbg!("sol_get_epoch_schedule_sysvar");
                     map_wasmi_to_bpf_syscalls(SyscallGetEpochScheduleSysvar::call, caller, addr as _, 0, 0, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2096,7 +2074,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_get_fees_sysvar",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, addr: u32| {
-                        dbg!("sol_get_fees_sysvar");
                         map_wasmi_to_bpf_syscalls(SyscallGetFeesSysvar::call, caller, addr as _, 0, 0, 0, 0)
                             .map(|i| i as u64)
                     }),
@@ -2107,7 +2084,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_rent_sysvar",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, addr: u32| {
-                    dbg!("sol_get_rent_sysvar");
                     map_wasmi_to_bpf_syscalls(SyscallGetRentSysvar::call, caller, addr as _, 0, 0, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2117,7 +2093,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_memcpy_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, dst: u32, src: u32, n: u64| {
-                    dbg!("sol_memcpy_");
                     map_wasmi_to_bpf_syscalls(SyscallMemcpy::call, caller, dst as _, src as _, n as _, 0, 0)?;
                     Ok(())
                 }),
@@ -2127,7 +2102,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_memmove_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, dst: u32, src: u32, n: u64| {
-                    dbg!("sol_memmove_");
                     map_wasmi_to_bpf_syscalls(SyscallMemmove::call, caller, dst as _, src as _, n as _, 0, 0)?;
                     Ok(())
                 }),
@@ -2137,7 +2111,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_memcmp_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, s1: u32, s2: u32, n: u64, result: u32| {
-                    dbg!("sol_memcmp_");
                     map_wasmi_to_bpf_syscalls(SyscallMemcmp::call, caller, s1 as _, s2 as _, n as _, result as _, 0)?;
                     Ok(())
                 }),
@@ -2147,7 +2120,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_memset_",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, s: u32, c: u32, n: u64| {
-                    dbg!("sol_memset_");
                     map_wasmi_to_bpf_syscalls(SyscallMemset::call, caller, s as _, c as _, n as _, 0, 0)?;
                     Ok(())
                 }),
@@ -2157,7 +2129,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_invoke_signed_c",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, instruction_addr: u32, account_infos_addr: u32, account_infos_len: u64, signers_seeds_addr: u32, signers_seeds_len: u64| {
-                    dbg!("sol_invoke_signed_c");
                     map_wasmi_to_bpf_syscalls(SyscallInvokeSignedC::call, caller, instruction_addr as _, account_infos_addr as _, account_infos_len as _, signers_seeds_addr as _, signers_seeds_len as _)
                         .map(|i| i as u64)
                 }),
@@ -2167,7 +2138,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_invoke_signed_rust",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, instruction_addr: u32, account_infos_addr: u32, account_infos_len: u64, signers_seeds_addr: u32, signers_seeds_len: u64| {
-                    dbg!("sol_invoke_signed_rust");
                     map_wasmi_to_bpf_syscalls(SyscallInvokeSignedRust::call, caller, instruction_addr as _, account_infos_addr as _, account_infos_len as _, signers_seeds_addr as _, signers_seeds_len as _)
                         .map(|i| i as u64)
                 }),
@@ -2177,7 +2147,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_set_return_data",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, data: u32, length: u64| {
-                    dbg!("sol_set_return_data");
                     map_wasmi_to_bpf_syscalls(SyscallSetReturnData::call, caller, data as _, length as _, 0, 0, 0)?;
                     Ok(())
                 }),
@@ -2187,7 +2156,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_return_data",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, data: u32, length: u64, program_id: u32| {
-                    dbg!("sol_get_return_data");
                     map_wasmi_to_bpf_syscalls(SyscallGetReturnData::call, caller, data as _, length as _, program_id as _, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2197,7 +2165,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_log_data",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, data: u32, data_len: u64| {
-                    dbg!("sol_log_data");
                     map_wasmi_to_bpf_syscalls(SyscallLogData::call, caller, data as _, data_len as _, 0, 0, 0)?;
                     Ok(())
                 }),
@@ -2207,7 +2174,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_processed_sibling_instruction",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, index: u64, meta: u32, program_id: u32, data: u32, accounts: u32| {
-                    dbg!("sol_get_processed_sibling_instruction");
                     map_wasmi_to_bpf_syscalls(SyscallGetProcessedSiblingInstruction::call, caller, index as _, meta as _, program_id as _, data as _, accounts as _)
                         .map(|i| i as u64)
                 }),
@@ -2217,7 +2183,6 @@ fn execute<'a, 'b: 'a>(
                 "env",
                 "sol_get_stack_height",
                 Func::wrap(&mut store, |caller: Caller<'_, HostState>, | {
-                    dbg!("sol_get_stack_height");
                     map_wasmi_to_bpf_syscalls(SyscallGetStackHeight::call, caller, 0, 0, 0, 0, 0)
                         .map(|i| i as u64)
                 }),
@@ -2228,7 +2193,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_curve_validate_point",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, curve_id: u64, point_addr: u32, result: u32| {
-                        dbg!("sol_curve_validate_point");
                         map_wasmi_to_bpf_syscalls(SyscallCurvePointValidation::call, caller, curve_id as _, point_addr as _, result as _, 0, 0)
                             .map(|i| i as u64)
                     }),
@@ -2238,7 +2202,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_curve_group_op",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, curve_id: u64, group_op: u64, left_input_addr: u32, right_input_addr: u32, result_point_addr: u32| {
-                        dbg!("sol_curve_group_op");
                         map_wasmi_to_bpf_syscalls(SyscallCurveGroupOps::call, caller, curve_id as _, group_op as _, left_input_addr as _, right_input_addr as _, result_point_addr as _)
                             .map(|i| i as u64)
                     }),
@@ -2248,7 +2211,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_curve_multiscalar_mul",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, curve_id: u64, scalars_addr: u32, points_addr: u32, points_len: u64, result_point_addr: u32| {
-                        dbg!("sol_curve_multiscalar_mul");
                         map_wasmi_to_bpf_syscalls(SyscallCurveMultiscalarMultiplication::call, caller, curve_id as _, scalars_addr as _, points_addr as _, points_len as _, result_point_addr as _)
                             .map(|i| i as u64)
                     }),
@@ -2260,7 +2222,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_alt_bn128_group_op",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, group_op: u64, input: u32, input_size: u64, result: u32| {
-                        dbg!("sol_alt_bn128_group_op");
                         map_wasmi_to_bpf_syscalls(SyscallAltBn128::call, caller, group_op as _, input as _, input_size as _, result as _, 0)
                             .map(|i| i as u64)
                     }),
@@ -2272,7 +2233,6 @@ fn execute<'a, 'b: 'a>(
                     "env",
                     "sol_big_mod_exp",
                     Func::wrap(&mut store, |caller: Caller<'_, HostState>, params: u32, result: u32| {
-                        dbg!("sol_big_mod_exp");
                         map_wasmi_to_bpf_syscalls(SyscallBigModExp::call, caller, params as _, result as _, 0, 0, 0)
                             .map(|i| i as u64)
                     }),
@@ -2302,41 +2262,48 @@ fn execute<'a, 'b: 'a>(
 
         let instance = linker
             .instantiate(&mut store, &executable.verified_executable).unwrap()
-            .start(&mut store).unwrap();
+            .start(&mut store)
+            .map_err(|e| {
+                ic_logger_msg!(log_collector, "Failed to create WASM VM: start() error {}", e);
+                Box::new(InstructionError::ProgramEnvironmentSetupFailure)
+            })?;
 
-        let memory = instance.get_memory(&mut store, "memory").unwrap();
+        let memory = instance.get_memory(&mut store, "memory")
+            .ok_or_else(|| {
+                ic_logger_msg!(log_collector, "Failed to create WASM VM: get_memory() error");
+                Box::new(InstructionError::ProgramEnvironmentSetupFailure)
+            })?;
 
+        // struct DbgSlice<'a>(&'a [u8]);
 
-        struct DbgSlice<'a>(&'a [u8]);
+        // impl<'a> Debug for DbgSlice<'a> {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //         f.write_str("[").unwrap();
+        //         for n in self.0.iter().dedup_with_count().map(|(c, n)| DbgN(*n, c)) {
+        //             f.write_fmt(format_args!("{n:?},")).unwrap();
+        //         }
+        //         f.write_str("]")
+        //         // f.debug_list()
+        //         //     .entries(
+        //         //         self.0.iter()
+        //         //         .dedup_with_count()
+        //         //         .map(|(c, n)| DbgN(*n, c))
+        //         //     )
+        //         //     .finish()
+        //     }
+        // }
 
-        impl<'a> Debug for DbgSlice<'a> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.write_str("[").unwrap();
-                for n in self.0.iter().dedup_with_count().map(|(c, n)| DbgN(*n, c)) {
-                    f.write_fmt(format_args!("{n:?},")).unwrap();
-                }
-                f.write_str("]")
-                // f.debug_list()
-                //     .entries(
-                //         self.0.iter()
-                //         .dedup_with_count()
-                //         .map(|(c, n)| DbgN(*n, c))
-                //     )
-                //     .finish()
-            }
-        }
+        // struct DbgN(u8, usize);
 
-        struct DbgN(u8, usize);
-
-        impl Debug for DbgN {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                if self.1 > 16 {
-                    f.write_fmt(format_args!("{}x{}times", self.0, self.1))
-                } else {
-                    f.write_fmt(format_args!("{}", self.0))
-                }
-            }
-        }
+        // impl Debug for DbgN {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //         if self.1 > 16 {
+        //             f.write_fmt(format_args!("{}x{}times", self.0, self.1))
+        //         } else {
+        //             f.write_fmt(format_args!("{}", self.0))
+        //         }
+        //     }
+        // }
 
         // dbg!(DbgSlice(memory.data_mut(&mut store)));
 
@@ -2366,34 +2333,21 @@ fn execute<'a, 'b: 'a>(
 
         memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
             .copy_from_slice(parameter_bytes_slice);
-        let data_len = memory.data_mut(&mut store).len();
-        dbg!(data_len);
-        // dbg!(memory.ty(&store));
-        let host_mem_start = memory.data_mut(&mut store).as_ptr();
-        let host_mem_end = unsafe{memory.data_mut(&mut store).as_ptr().add(data_len)};
-        dbg!(host_mem_start, host_mem_end);
 
         assert_eq!(is_memory_aligned(memory.data_mut(&mut store).as_ptr() as _, solana_rbpf::ebpf::HOST_ALIGN), true);
 
-        let vm = instance.get_typed_func::<i32, i64>(&store, "entrypoint").unwrap();
+        let vm = instance.get_typed_func::<i32, i64>(&store, "entrypoint")
+            .map_err(|e| {
+                ic_logger_msg!(log_collector, "Failed to create WASM VM: get_typed_func(entrypoint) error {}", e);
+                Box::new(InstructionError::ProgramEnvironmentSetupFailure)
+            })?;
 
-
-        
         let heap_region_index = store.data_mut().3.get_regions().iter().position(|r| r.vm_addr == MM_HEAP_START).unwrap();
         let new_heap = MemoryRegion::new_writable(memory.data_mut(&mut store), MM_HEAP_START);
         store.data_mut().3.replace_region(
             heap_region_index,
             new_heap,
         ).unwrap();
-
-
-
-
-
-
-
-
-
 
         // let mut vm = match vm {
         //     Ok(info) => info,
@@ -2405,22 +2359,22 @@ fn execute<'a, 'b: 'a>(
         create_vm_time.stop();
 
         execute_time = Measure::start("execute");
-        
+
         // TODO
         // dbg!();
-        let result = match vm.call(&mut store, 0) {
-            Ok(code) => code,
+        let result: StableResult<u64, Box<dyn std::error::Error>> = match vm.call(&mut store, 0) {
+            Ok(code) => Ok(code as u64),
             Err(trap) => {
-                let error_str = format!("{trap}");
-                let error_pointers = error_str.split(", ").filter_map(|n| n.parse::<u64>().ok()).map(|n| n as *mut u8).collect::<Vec<_>>();
-                dbg!(format_args!("{:?}", error_pointers));
-                panic!("{trap:?}");
+                // let error_str = format!("{trap}");
+                // let error_pointers = error_str.split(", ").filter_map(|n| n.parse::<u64>().ok()).map(|n| n as *mut u8).collect::<Vec<_>>();
+                // dbg!(format_args!("{:?}", error_pointers));
+                // panic!("{trap:?}");
+                Err(Box::new(trap) as Box<dyn std::error::Error>)
             }
-        };
+        }.into();
 
         // let (compute_units_consumed, result) = vm.execute_program(!use_jit);
         let compute_units_consumed = 0;
-        let result: StableResult<u64, Box<dyn std::error::Error>> = StableResult::Ok(result as _);
 
         // drop(vm);
 
@@ -2444,7 +2398,7 @@ fn execute<'a, 'b: 'a>(
         // }
 
         let invoke_context_ref = invoke_context.borrow_mut();
-        
+
         let (_returned_from_program_id, return_data) =
             invoke_context_ref.transaction_context.get_return_data();
         if !return_data.is_empty() {
@@ -2515,7 +2469,6 @@ fn execute<'a, 'b: 'a>(
 
     let mut deserialize_time = Measure::start("deserialize");
     let execute_or_deserialize_result = execution_result.and_then(|_| {
-        dbg!(bpf_account_data_direct_mapping);
         // Mint outside of smart contract
         deserialize_parameters(
             invoke_context,
@@ -2802,7 +2755,7 @@ mod tests {
                 is_signer: true,
                 is_writable: true,
             }],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData),
         );
     }
 
@@ -3072,7 +3025,7 @@ mod tests {
             &instruction,
             vec![(buffer_address, buffer_account.clone())],
             instruction_accounts.clone(),
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData),
         );
 
         // Case: Write entire buffer
@@ -3440,10 +3393,10 @@ mod tests {
         );
         assert_eq!(
             min_programdata_balance,
-            accounts.first().unwrap().lamports()
+            accounts.first().unwrap().satomis()
         );
-        assert_eq!(0, accounts.get(2).unwrap().lamports());
-        assert_eq!(1, accounts.get(3).unwrap().lamports());
+        assert_eq!(0, accounts.get(2).unwrap().satomis());
+        assert_eq!(1, accounts.get(3).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(
             state,
@@ -3622,7 +3575,7 @@ mod tests {
         process_instruction(
             transaction_accounts,
             instruction_accounts,
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData),
         );
 
         // Case: Program ProgramData account mismatch
@@ -3711,7 +3664,7 @@ mod tests {
         process_instruction(
             transaction_accounts,
             instruction_accounts,
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData),
         );
 
         // Case: Mismatched buffer and program authority
@@ -4657,8 +4610,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(
@@ -4709,8 +4662,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(
@@ -4746,8 +4699,8 @@ mod tests {
             ],
             Ok(()),
         );
-        assert_eq!(0, accounts.first().unwrap().lamports());
-        assert_eq!(2, accounts.get(1).unwrap().lamports());
+        assert_eq!(0, accounts.first().unwrap().satomis());
+        assert_eq!(2, accounts.get(1).unwrap().satomis());
         let state: UpgradeableLoaderState = accounts.first().unwrap().state().unwrap();
         assert_eq!(state, UpgradeableLoaderState::Uninitialized);
         assert_eq!(
@@ -4767,7 +4720,7 @@ mod tests {
                 (program_address, program_account.clone()),
             ],
             Vec::new(),
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData),
         );
 
         // Case: Reopen should fail

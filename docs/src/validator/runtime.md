@@ -10,7 +10,7 @@ The transaction structure specifies a list of public keys and signatures for tho
 
 #### Account Structure
 
-Accounts maintain a lamport balance and program-specific memory.
+Accounts maintain a satomi balance and program-specific memory.
 
 ## Transaction Engine
 
@@ -45,7 +45,7 @@ The interface is best described by the `Instruction::data` that the user encodes
   - a mnemonic string (seed), and
   - the pubkey of the Program
 - `Assign` - Allows the user to assign an existing account to a program.
-- `Transfer` - Transfers lamports between accounts.
+- `Transfer` - Transfers satomis between accounts.
 
 ### Program State Security
 
@@ -60,7 +60,7 @@ To pass messages between programs, the receiving program must accept the message
 - Transactions that assign an account to a program or allocate space must be signed by the Account address' private key unless the Account is being created by `CreateAccountWithSeed`, in which case there is no corresponding private key for the account's address/pubkey.
 - Once assigned to program an Account cannot be reassigned.
 - Runtime guarantees that a program's code is the only code that can modify Account data that the Account is assigned to.
-- Runtime guarantees that the program can only spend lamports that are in accounts that are assigned to it.
+- Runtime guarantees that the program can only spend satomis that are in accounts that are assigned to it.
 - Runtime guarantees the balances belonging to accounts are balanced before and after the transaction.
 - Runtime guarantees that instructions all executed successfully when a transaction is committed.
 

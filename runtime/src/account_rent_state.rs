@@ -11,27 +11,27 @@ use {
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum RentState {
-    /// account.lamports == 0
+    /// account.satomis == 0
     Uninitialized,
-    /// 0 < account.lamports < rent-exempt-minimum
+    /// 0 < account.satomis < rent-exempt-minimum
     RentPaying {
-        lamports: u64,    // account.lamports()
+        satomis: u64,    // account.satomis()
         data_size: usize, // account.data().len()
     },
-    /// account.lamports >= rent-exempt-minimum
+    /// account.satomis >= rent-exempt-minimum
     RentExempt,
 }
 
 impl RentState {
     pub(crate) fn from_account(account: &AccountSharedData, rent: &Rent) -> Self {
-        if account.lamports() == 0 {
+        if account.satomis() == 0 {
             Self::Uninitialized
-        } else if rent.is_exempt(account.lamports(), account.data().len()) {
+        } else if rent.is_exempt(account.satomis(), account.data().len()) {
             Self::RentExempt
         } else {
             Self::RentPaying {
                 data_size: account.data().len(),
-                lamports: account.lamports(),
+                satomis: account.satomis(),
             }
         }
     }
@@ -41,16 +41,16 @@ impl RentState {
             Self::Uninitialized | Self::RentExempt => true,
             Self::RentPaying {
                 data_size: post_data_size,
-                lamports: post_lamports,
+                satomis: post_satomis,
             } => {
                 match pre_rent_state {
                     Self::Uninitialized | Self::RentExempt => false,
                     Self::RentPaying {
                         data_size: pre_data_size,
-                        lamports: pre_lamports,
+                        satomis: pre_satomis,
                     } => {
                         // Cannot remain RentPaying if resized or credited.
-                        post_data_size == pre_data_size && post_lamports <= pre_lamports
+                        post_data_size == pre_data_size && post_satomis <= pre_satomis
                     }
                 }
             }
@@ -131,7 +131,7 @@ mod tests {
         let account_data_size = 100;
 
         let rent = Rent::free();
-        let rent_exempt_account = AccountSharedData::new(1, account_data_size, &program_id); // if rent is free, all accounts with non-zero lamports and non-empty data are rent-exempt
+        let rent_exempt_account = AccountSharedData::new(1, account_data_size, &program_id); // if rent is free, all accounts with non-zero satomis and non-empty data are rent-exempt
 
         assert_eq!(
             RentState::from_account(&uninitialized_account, &rent),
@@ -163,7 +163,7 @@ mod tests {
             RentState::from_account(&rent_paying_account, &rent),
             RentState::RentPaying {
                 data_size: account_data_size,
-                lamports: rent_paying_account.lamports(),
+                satomis: rent_paying_account.satomis(),
             }
         );
         assert_eq!(
@@ -180,7 +180,7 @@ mod tests {
         assert!(
             post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 0,
-                lamports: 1,
+                satomis: 1,
             })
         );
 
@@ -190,49 +190,49 @@ mod tests {
         assert!(
             post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 0,
-                lamports: 1,
+                satomis: 1,
             })
         );
         let post_rent_state = RentState::RentPaying {
             data_size: 2,
-            lamports: 5,
+            satomis: 5,
         };
         assert!(!post_rent_state.transition_allowed_from(&RentState::Uninitialized));
         assert!(!post_rent_state.transition_allowed_from(&RentState::RentExempt));
         assert!(
             !post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 3,
-                lamports: 5
+                satomis: 5
             })
         );
         assert!(
             !post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 1,
-                lamports: 5
+                satomis: 5
             })
         );
         // Transition is always allowed if there is no account data resize or
-        // change in account's lamports.
+        // change in account's satomis.
         assert!(
             post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 2,
-                lamports: 5
+                satomis: 5
             })
         );
         // Transition is always allowed if there is no account data resize and
-        // account's lamports is reduced.
+        // account's satomis is reduced.
         assert!(
             post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 2,
-                lamports: 7
+                satomis: 7
             })
         );
         // Transition is not allowed if the account is credited with more
-        // lamports and remains rent-paying.
+        // satomis and remains rent-paying.
         assert!(
             !post_rent_state.transition_allowed_from(&RentState::RentPaying {
                 data_size: 2,
-                lamports: 3
+                satomis: 3
             }),
         );
     }

@@ -31,12 +31,12 @@ function get_cluster_version {
 }
 
 function get_token_capitalization {
-  totalSupplyLamports="$(curl -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getTotalSupply"}' "$url" | cut -d , -f 2 | cut -d : -f 2)"
-  totalSupplySol=$((totalSupplyLamports / LAMPORTS_PER_DOMI))
+  totalSupplySatomis="$(curl -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getTotalSupply"}' "$url" | cut -d , -f 2 | cut -d : -f 2)"
+  totalSupplySol=$((totalSupplySatomis / SATOMIS_PER_DOMI))
 
   printf "\n--- Token Capitalization ---\n"
   printf "Total token capitalization %'d DOMI\n" "$totalSupplySol"
-  printf "Total token capitalization %'d Lamports\n" "$totalSupplyLamports"
+  printf "Total token capitalization %'d Satomis\n" "$totalSupplySatomis"
 
 }
 
@@ -44,40 +44,40 @@ function get_program_account_balance_totals {
   PROGRAM_NAME="$1"
 
   # shellcheck disable=SC2002
-  accountBalancesLamports="$(cat "${PROGRAM_NAME}_account_data.json" | \
-    jq '.result | .[] | .account | .lamports')"
+  accountBalancesSatomis="$(cat "${PROGRAM_NAME}_account_data.json" | \
+    jq '.result | .[] | .account | .satomis')"
 
-  totalAccountBalancesLamports=0
+  totalAccountBalancesSatomis=0
   numberOfAccounts=0
 
   # shellcheck disable=SC2068
-  for account in ${accountBalancesLamports[@]}; do
-    totalAccountBalancesLamports=$((totalAccountBalancesLamports + account))
+  for account in ${accountBalancesSatomis[@]}; do
+    totalAccountBalancesSatomis=$((totalAccountBalancesSatomis + account))
     numberOfAccounts=$((numberOfAccounts + 1))
   done
-  totalAccountBalancesSol=$((totalAccountBalancesLamports / LAMPORTS_PER_DOMI))
+  totalAccountBalancesSol=$((totalAccountBalancesSatomis / SATOMIS_PER_DOMI))
 
   printf "\n--- %s Account Balance Totals ---\n" "$PROGRAM_NAME"
   printf "Number of %s Program accounts: %'.f\n" "$PROGRAM_NAME" "$numberOfAccounts"
   printf "Total token balance in all %s accounts: %'d DOMI\n" "$PROGRAM_NAME" "$totalAccountBalancesSol"
-  printf "Total token balance in all %s accounts: %'d Lamports\n" "$PROGRAM_NAME" "$totalAccountBalancesLamports"
+  printf "Total token balance in all %s accounts: %'d Satomis\n" "$PROGRAM_NAME" "$totalAccountBalancesSatomis"
 
   case $PROGRAM_NAME in
     SYSTEM)
       systemAccountBalanceTotalSol=$totalAccountBalancesSol
-      systemAccountBalanceTotalLamports=$totalAccountBalancesLamports
+      systemAccountBalanceTotalSatomis=$totalAccountBalancesSatomis
       ;;
     STAKE)
       stakeAccountBalanceTotalSol=$totalAccountBalancesSol
-      stakeAccountBalanceTotalLamports=$totalAccountBalancesLamports
+      stakeAccountBalanceTotalSatomis=$totalAccountBalancesSatomis
       ;;
     VOTE)
       voteAccountBalanceTotalSol=$totalAccountBalancesSol
-      voteAccountBalanceTotalLamports=$totalAccountBalancesLamports
+      voteAccountBalanceTotalSatomis=$totalAccountBalancesSatomis
       ;;
     CONFIG)
       configAccountBalanceTotalSol=$totalAccountBalancesSol
-      configAccountBalanceTotalLamports=$totalAccountBalancesLamports
+      configAccountBalanceTotalSatomis=$totalAccountBalancesSatomis
       ;;
     *)
       echo "Unknown program: $PROGRAM_NAME"
@@ -88,28 +88,28 @@ function get_program_account_balance_totals {
 
 function sum_account_balances_totals {
   grandTotalAccountBalancesSol=$((systemAccountBalanceTotalSol + stakeAccountBalanceTotalSol + voteAccountBalanceTotalSol + configAccountBalanceTotalSol))
-  grandTotalAccountBalancesLamports=$((systemAccountBalanceTotalLamports + stakeAccountBalanceTotalLamports + voteAccountBalanceTotalLamports + configAccountBalanceTotalLamports))
+  grandTotalAccountBalancesSatomis=$((systemAccountBalanceTotalSatomis + stakeAccountBalanceTotalSatomis + voteAccountBalanceTotalSatomis + configAccountBalanceTotalSatomis))
 
   printf "\n--- Total Token Distribution in all Account Balances ---\n"
   printf "Total DOMI in all Account Balances: %'d\n" "$grandTotalAccountBalancesSol"
-  printf "Total Lamports in all Account Balances: %'d\n" "$grandTotalAccountBalancesLamports"
+  printf "Total Satomis in all Account Balances: %'d\n" "$grandTotalAccountBalancesSatomis"
 }
 
 url=$1
 [[ -n $url ]] || usage "Missing required RPC URL"
 shift
 
-LAMPORTS_PER_DOMI=1000000000 # 1 billion
+SATOMIS_PER_DOMI=1000000000 # 1 billion
 
 stakeAccountBalanceTotalSol=
 systemAccountBalanceTotalSol=
 voteAccountBalanceTotalSol=
 configAccountBalanceTotalSol=
 
-stakeAccountBalanceTotalLamports=
-systemAccountBalanceTotalLamports=
-voteAccountBalanceTotalLamports=
-configAccountBalanceTotalLamports=
+stakeAccountBalanceTotalSatomis=
+systemAccountBalanceTotalSatomis=
+voteAccountBalanceTotalSatomis=
+configAccountBalanceTotalSatomis=
 
 echo "--- Querying RPC URL: $url ---"
 get_cluster_version

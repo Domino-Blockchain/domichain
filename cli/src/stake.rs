@@ -673,10 +673,10 @@ impl StakeSubCommands for App<'_, '_> {
                         "The stake account to display. ")
                 )
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI")
+                        .help("Display balance in satomis instead of DOMI")
                 )
                 .arg(
                     Arg::with_name("with_rewards")
@@ -700,10 +700,10 @@ impl StakeSubCommands for App<'_, '_> {
                 .about("Show the stake history")
                 .alias("show-stake-history")
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI")
+                        .help("Display balance in satomis instead of DOMI")
                 )
                 .arg(
                     Arg::with_name("limit")
@@ -723,10 +723,10 @@ impl StakeSubCommands for App<'_, '_> {
             SubCommand::with_name("stake-minimum-delegation")
                 .about("Get the stake minimum delegation amount")
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display minimum delegation in lamports instead of DOMI")
+                        .help("Display minimum delegation in satomis instead of DOMI")
                 )
         )
     }
@@ -1001,7 +1001,7 @@ pub fn parse_split_stake(
         pubkey_of_signer(matches, "stake_account_pubkey", wallet_manager)?.unwrap();
     let (split_stake_account, split_stake_account_pubkey) =
         signer_of(matches, "split_stake_account", wallet_manager)?;
-    let lamports = lamports_of_sol(matches, "amount").unwrap();
+    let satomis = satomis_of_sol(matches, "amount").unwrap();
     let seed = matches.value_of("seed").map(|s| s.to_string());
 
     let sign_only = matches.is_present(SIGN_ONLY_ARG.name);
@@ -1035,7 +1035,7 @@ pub fn parse_split_stake(
             memo,
             split_stake_account: signer_info.index_of(split_stake_account_pubkey).unwrap(),
             seed,
-            lamports,
+            satomis,
             fee_payer: signer_info.index_of(fee_payer_pubkey).unwrap(),
             compute_unit_price,
         },
@@ -1268,7 +1268,7 @@ pub fn parse_show_stake_account(
 ) -> Result<CliCommandInfo, CliError> {
     let stake_account_pubkey =
         pubkey_of_signer(matches, "stake_account_pubkey", wallet_manager)?.unwrap();
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     let with_rewards = if matches.is_present("with_rewards") {
         Some(value_of(matches, "num_rewards_epochs").unwrap())
     } else {
@@ -1277,7 +1277,7 @@ pub fn parse_show_stake_account(
     Ok(CliCommandInfo {
         command: CliCommand::ShowStakeAccount {
             pubkey: stake_account_pubkey,
-            use_lamports_unit,
+            use_satomis_unit,
             with_rewards,
         },
         signers: vec![],
@@ -1285,11 +1285,11 @@ pub fn parse_show_stake_account(
 }
 
 pub fn parse_show_stake_history(matches: &ArgMatches<'_>) -> Result<CliCommandInfo, CliError> {
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     let limit_results = value_of(matches, "limit").unwrap();
     Ok(CliCommandInfo {
         command: CliCommand::ShowStakeHistory {
-            use_lamports_unit,
+            use_satomis_unit,
             limit_results,
         },
         signers: vec![],
@@ -1299,9 +1299,9 @@ pub fn parse_show_stake_history(matches: &ArgMatches<'_>) -> Result<CliCommandIn
 pub fn parse_stake_minimum_delegation(
     matches: &ArgMatches<'_>,
 ) -> Result<CliCommandInfo, CliError> {
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     Ok(CliCommandInfo {
-        command: CliCommand::StakeMinimumDelegation { use_lamports_unit },
+        command: CliCommand::StakeMinimumDelegation { use_satomis_unit },
         signers: vec![],
     })
 }
@@ -1342,7 +1342,7 @@ pub fn process_create_stake_account(
     let fee_payer = config.signers[fee_payer];
     let nonce_authority = config.signers[nonce_authority];
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let authorized = Authorized {
             staker: staker.unwrap_or(from.pubkey()),
             withdrawer: withdrawer.unwrap_or(from.pubkey()),
@@ -1356,7 +1356,7 @@ pub fn process_create_stake_account(
                     &stake_account.pubkey(), // base
                     seed,                    // seed
                     &authorized,
-                    lamports,
+                    satomis,
                 )
             }
             (Some(seed), None) => stake_instruction::create_account_with_seed(
@@ -1366,20 +1366,20 @@ pub fn process_create_stake_account(
                 seed,                    // seed
                 &authorized,
                 lockup,
-                lamports,
+                satomis,
             ),
             (None, Some(_withdrawer_signer)) => stake_instruction::create_account_checked(
                 &from.pubkey(),
                 &stake_account.pubkey(),
                 &authorized,
-                lamports,
+                satomis,
             ),
             (None, None) => stake_instruction::create_account(
                 &from.pubkey(),
                 &stake_account.pubkey(),
                 &authorized,
                 lockup,
-                lamports,
+                satomis,
             ),
         }
         .with_memo(memo)
@@ -1398,7 +1398,7 @@ pub fn process_create_stake_account(
 
     let recent_blockhash = blockhash_query.get_blockhash(rpc_client, config.commitment)?;
 
-    let (message, lamports) = resolve_spend_tx_and_check_account_balances(
+    let (message, satomis) = resolve_spend_tx_and_check_account_balances(
         rpc_client,
         sign_only,
         amount,
@@ -1422,9 +1422,9 @@ pub fn process_create_stake_account(
         let minimum_balance =
             rpc_client.get_minimum_balance_for_rent_exemption(StakeState::size_of())?;
 
-        if lamports < minimum_balance {
+        if satomis < minimum_balance {
             return Err(CliError::BadParameter(format!(
-                "need at least {minimum_balance} lamports for stake account to be rent exempt, provided lamports: {lamports}"
+                "need at least {minimum_balance} satomis for stake account to be rent exempt, provided satomis: {satomis}"
             ))
             .into());
         }
@@ -1764,12 +1764,12 @@ pub fn process_withdraw_stake(
     let fee_payer = config.signers[fee_payer];
     let nonce_authority = config.signers[nonce_authority];
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let ixs = vec![stake_instruction::withdraw(
             &stake_account_address,
             &withdraw_authority.pubkey(),
             destination_account_pubkey,
-            lamports,
+            satomis,
             custodian.map(|signer| signer.pubkey()).as_ref(),
         )]
         .with_memo(memo)
@@ -1844,7 +1844,7 @@ pub fn process_split_stake(
     memo: Option<&String>,
     split_stake_account: SignerIndex,
     split_stake_account_seed: &Option<String>,
-    lamports: u64,
+    satomis: u64,
     fee_payer: SignerIndex,
     compute_unit_price: Option<&u64>,
 ) -> ProcessResult {
@@ -1895,9 +1895,9 @@ pub fn process_split_stake(
         let minimum_balance =
             rpc_client.get_minimum_balance_for_rent_exemption(StakeState::size_of())?;
 
-        if lamports < minimum_balance {
+        if satomis < minimum_balance {
             return Err(CliError::BadParameter(format!(
-                "need at least {minimum_balance} lamports for stake account to be rent exempt, provided lamports: {lamports}"
+                "need at least {minimum_balance} satomis for stake account to be rent exempt, provided satomis: {satomis}"
             ))
             .into());
         }
@@ -1909,7 +1909,7 @@ pub fn process_split_stake(
         stake_instruction::split_with_seed(
             stake_account_pubkey,
             &stake_authority.pubkey(),
-            lamports,
+            satomis,
             &split_stake_account_address,
             &split_stake_account.pubkey(),
             seed,
@@ -1920,7 +1920,7 @@ pub fn process_split_stake(
         stake_instruction::split(
             stake_account_pubkey,
             &stake_authority.pubkey(),
-            lamports,
+            satomis,
             &split_stake_account_address,
         )
         .with_memo(memo)
@@ -2183,7 +2183,7 @@ fn u64_some_if_not_zero(n: u64) -> Option<u64> {
 pub fn build_stake_state(
     account_balance: u64,
     stake_state: &StakeState,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     stake_history: &StakeHistory,
     clock: &Clock,
 ) -> CliStakeState {
@@ -2233,7 +2233,7 @@ pub fn build_stake_state(
                 },
                 authorized: Some(authorized.into()),
                 lockup,
-                use_lamports_unit,
+                use_satomis_unit,
                 current_epoch,
                 rent_exempt_reserve: Some(*rent_exempt_reserve),
                 active_stake: u64_some_if_not_zero(effective),
@@ -2267,7 +2267,7 @@ pub fn build_stake_state(
                 credits_observed: Some(0),
                 authorized: Some(authorized.into()),
                 lockup,
-                use_lamports_unit,
+                use_satomis_unit,
                 rent_exempt_reserve: Some(*rent_exempt_reserve),
                 ..CliStakeState::default()
             }
@@ -2403,7 +2403,7 @@ pub fn process_show_stake_account(
     rpc_client: &RpcClient,
     config: &CliConfig,
     stake_account_address: &Pubkey,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     with_rewards: Option<usize>,
 ) -> ProcessResult {
     let stake_account = rpc_client.get_account(stake_account_address)?;
@@ -2425,9 +2425,9 @@ pub fn process_show_stake_account(
             })?;
 
             let mut state = build_stake_state(
-                stake_account.lamports,
+                stake_account.satomis,
                 &stake_state,
-                use_lamports_unit,
+                use_satomis_unit,
                 &stake_history,
                 &clock,
             );
@@ -2456,7 +2456,7 @@ pub fn process_show_stake_account(
 pub fn process_show_stake_history(
     rpc_client: &RpcClient,
     config: &CliConfig,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     limit_results: usize,
 ) -> ProcessResult {
     let stake_history_account = rpc_client.get_account(&stake_history::id())?;
@@ -2481,7 +2481,7 @@ pub fn process_show_stake_history(
     }
     let stake_history_output = CliStakeHistory {
         entries,
-        use_lamports_unit,
+        use_satomis_unit,
     };
     Ok(config.output_format.formatted_string(&stake_history_output))
 }
@@ -2640,15 +2640,15 @@ pub fn process_delegate_stake(
 pub fn process_stake_minimum_delegation(
     rpc_client: &RpcClient,
     config: &CliConfig,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
 ) -> ProcessResult {
     let stake_minimum_delegation =
         rpc_client.get_stake_minimum_delegation_with_commitment(config.commitment)?;
 
     let stake_minimum_delegation_output = CliBalance {
-        lamports: stake_minimum_delegation,
+        satomis: stake_minimum_delegation,
         config: BuildBalanceMessageConfig {
-            use_lamports_unit,
+            use_satomis_unit,
             show_unit: true,
             trim_trailing_zeros: true,
         },
@@ -4828,7 +4828,7 @@ mod tests {
                     memo: None,
                     split_stake_account: 1,
                     seed: None,
-                    lamports: 50_000_000_000,
+                    satomis: 50_000_000_000,
                     fee_payer: 0,
                     compute_unit_price: None,
                 },
@@ -4895,7 +4895,7 @@ mod tests {
                     memo: None,
                     split_stake_account: 2,
                     seed: None,
-                    lamports: 50_000_000_000,
+                    satomis: 50_000_000_000,
                     fee_payer: 1,
                     compute_unit_price: None,
                 },

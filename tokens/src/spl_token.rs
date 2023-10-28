@@ -6,7 +6,7 @@ use {
     console::style,
     domichain_account_decoder::parse_token::{real_number_string, real_number_string_trimmed},
     domichain_rpc_client::rpc_client::RpcClient,
-    domichain_sdk::{instruction::Instruction, message::Message, native_token::lamports_to_domi},
+    domichain_sdk::{instruction::Instruction, message::Message, native_token::satomis_to_domi},
     spl_associated_token_account::{
         get_associated_token_address, instruction::create_associated_token_account,
     },
@@ -98,7 +98,7 @@ pub fn check_spl_token_balances(
     if fee_payer_balance < fees + account_creation_amount {
         return Err(Error::InsufficientFunds(
             vec![FundingSource::FeePayer].into(),
-            lamports_to_domi(fees + account_creation_amount).to_string(),
+            satomis_to_domi(fees + account_creation_amount).to_string(),
         ));
     }
     let source_token_account = client

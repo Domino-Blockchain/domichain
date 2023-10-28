@@ -54,7 +54,7 @@ impl Processor {
 
         let lookup_table_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
-        let lookup_table_lamports = lookup_table_account.get_lamports();
+        let lookup_table_satomis = lookup_table_account.get_satomis();
         let table_key = *lookup_table_account.get_key();
         let lookup_table_owner = *lookup_table_account.get_owner();
         if !invoke_context
@@ -133,14 +133,14 @@ impl Processor {
 
         let table_account_data_len = LOOKUP_TABLE_META_SIZE;
         let rent = invoke_context.get_sysvar_cache().get_rent()?;
-        let required_lamports = rent
+        let required_satomis = rent
             .minimum_balance(table_account_data_len)
             .max(1)
-            .saturating_sub(lookup_table_lamports);
+            .saturating_sub(lookup_table_satomis);
 
-        if required_lamports > 0 {
+        if required_satomis > 0 {
             invoke_context.native_invoke(
-                system_instruction::transfer(&payer_key, &table_key, required_lamports).into(),
+                system_instruction::transfer(&payer_key, &table_key, required_satomis).into(),
                 &[payer_key],
             )?;
         }
@@ -244,7 +244,7 @@ impl Processor {
         let mut lookup_table_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
         let lookup_table_data = lookup_table_account.get_data();
-        let lookup_table_lamports = lookup_table_account.get_lamports();
+        let lookup_table_satomis = lookup_table_account.get_satomis();
         let mut lookup_table = AddressLookupTable::deserialize(lookup_table_data)?;
 
         if lookup_table.meta.authority.is_none() {
@@ -291,7 +291,7 @@ impl Processor {
                 u8::try_from(lookup_table.addresses.len()).map_err(|_| {
                     // This is impossible as long as the length of new_addresses
                     // is non-zero and LOOKUP_TABLE_MAX_ADDRESSES == u8::MAX + 1.
-                    dbg!(InstructionError::InvalidAccountData)
+                    InstructionError::InvalidAccountData
                 })?;
         }
 
@@ -312,12 +312,12 @@ impl Processor {
         drop(lookup_table_account);
 
         let rent = invoke_context.get_sysvar_cache().get_rent()?;
-        let required_lamports = rent
+        let required_satomis = rent
             .minimum_balance(new_table_data_len)
             .max(1)
-            .saturating_sub(lookup_table_lamports);
+            .saturating_sub(lookup_table_satomis);
 
-        if required_lamports > 0 {
+        if required_satomis > 0 {
             let payer_account =
                 instruction_context.try_borrow_instruction_account(transaction_context, 2)?;
             let payer_key = *payer_account.get_key();
@@ -328,7 +328,7 @@ impl Processor {
             drop(payer_account);
 
             invoke_context.native_invoke(
-                system_instruction::transfer(&payer_key, &table_key, required_lamports).into(),
+                system_instruction::transfer(&payer_key, &table_key, required_satomis).into(),
                 &[payer_key],
             )?;
         }
@@ -411,14 +411,14 @@ impl Processor {
         {
             ic_msg!(
                 invoke_context,
-                "Lookup table cannot be the recipient of reclaimed lamports"
+                "Lookup table cannot be the recipient of reclaimed satomis"
             );
             return Err(InstructionError::InvalidArgument);
         }
 
         let lookup_table_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
-        let withdrawn_lamports = lookup_table_account.get_lamports();
+        let withdrawn_satomis = lookup_table_account.get_satomis();
         let lookup_table_data = lookup_table_account.get_data();
         let lookup_table = AddressLookupTable::deserialize(lookup_table_data)?;
 
@@ -453,13 +453,13 @@ impl Processor {
 
         let mut recipient_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 2)?;
-        recipient_account.checked_add_lamports(withdrawn_lamports)?;
+        recipient_account.checked_add_satomis(withdrawn_satomis)?;
         drop(recipient_account);
 
         let mut lookup_table_account =
             instruction_context.try_borrow_instruction_account(transaction_context, 0)?;
         lookup_table_account.set_data_length(0)?;
-        lookup_table_account.set_lamports(0)?;
+        lookup_table_account.set_satomis(0)?;
 
         Ok(())
     }

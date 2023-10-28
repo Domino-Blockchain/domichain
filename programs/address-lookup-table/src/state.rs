@@ -127,7 +127,7 @@ impl<'a> AddressLookupTable<'a> {
     ) -> Result<(), InstructionError> {
         let meta_data = data
             .get_mut(0..LOOKUP_TABLE_META_SIZE)
-            .ok_or(dbg!(InstructionError::InvalidAccountData))?;
+            .ok_or(InstructionError::InvalidAccountData)?;
         meta_data.fill(0);
         bincode::serialize_into(meta_data, &ProgramState::LookupTable(lookup_table_meta))
             .map_err(|_| InstructionError::GenericError)?;
@@ -191,7 +191,7 @@ impl<'a> AddressLookupTable<'a> {
     /// for stored addresses.
     pub fn deserialize(data: &'a [u8]) -> Result<AddressLookupTable<'a>, InstructionError> {
         let program_state: ProgramState =
-            bincode::deserialize(data).map_err(|_| dbg!(InstructionError::InvalidAccountData))?;
+            bincode::deserialize(data).map_err(|_| InstructionError::InvalidAccountData)?;
 
         let meta = match program_state {
             ProgramState::LookupTable(meta) => Ok(meta),
@@ -201,12 +201,12 @@ impl<'a> AddressLookupTable<'a> {
         let raw_addresses_data = data.get(LOOKUP_TABLE_META_SIZE..).ok_or({
             // Should be impossible because table accounts must
             // always be LOOKUP_TABLE_META_SIZE in length
-            dbg!(InstructionError::InvalidAccountData)
+            InstructionError::InvalidAccountData
         })?;
         let addresses: &[Pubkey] = bytemuck::try_cast_slice(raw_addresses_data).map_err(|_| {
             // Should be impossible because raw address data
             // should be aligned and sized in multiples of 32 bytes
-            dbg!(InstructionError::InvalidAccountData)
+            InstructionError::InvalidAccountData
         })?;
 
         Ok(Self {
@@ -341,7 +341,7 @@ mod tests {
     fn test_deserialize() {
         assert_eq!(
             AddressLookupTable::deserialize(&[]).err(),
-            Some(dbg!(InstructionError::InvalidAccountData)),
+            Some(InstructionError::InvalidAccountData),
         );
 
         assert_eq!(

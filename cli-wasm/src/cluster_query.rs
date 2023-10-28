@@ -45,7 +45,7 @@ use {
         epoch_schedule::Epoch,
         hash::Hash,
         message::Message,
-        native_token::lamports_to_domi,
+        native_token::satomis_to_domi,
         nonce::State as NonceState,
         pubkey::Pubkey,
         rent::Rent,
@@ -325,10 +325,10 @@ impl ClusterQuerySubCommands for App<'_, '_> {
             SubCommand::with_name("stakes")
                 .about("Show stake account information")
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI"),
+                        .help("Display balance in satomis instead of DOMI"),
                 )
                 .arg(
                     pubkey!(Arg::with_name("vote_account_pubkeys")
@@ -349,10 +349,10 @@ impl ClusterQuerySubCommands for App<'_, '_> {
                 .about("Show summary information about the current validators")
                 .alias("show-validators")
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI"),
+                        .help("Display balance in satomis instead of DOMI"),
                 )
                 .arg(
                     Arg::with_name("number")
@@ -475,10 +475,10 @@ impl ClusterQuerySubCommands for App<'_, '_> {
                         .help("Length of data field in the account to calculate rent for, or moniker: [nonce, stake, system, vote]"),
                 )
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display rent in lamports instead of DOMI"),
+                        .help("Display rent in satomis instead of DOMI"),
                 ),
         )
     }
@@ -630,13 +630,13 @@ pub fn parse_show_stakes(
     matches: &ArgMatches<'_>,
     wallet_manager: &mut Option<Arc<RemoteWalletManager>>,
 ) -> Result<CliCommandInfo, CliError> {
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     let vote_account_pubkeys =
         pubkeys_of_multiple_signers(matches, "vote_account_pubkeys", wallet_manager)?;
     let withdraw_authority = pubkey_of(matches, "withdraw_authority");
     Ok(CliCommandInfo {
         command: CliCommand::ShowStakes {
-            use_lamports_unit,
+            use_satomis_unit,
             vote_account_pubkeys,
             withdraw_authority,
         },
@@ -645,7 +645,7 @@ pub fn parse_show_stakes(
 }
 
 pub fn parse_show_validators(matches: &ArgMatches<'_>) -> Result<CliCommandInfo, CliError> {
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     let number_validators = matches.is_present("number");
     let reverse_sort = matches.is_present("reverse");
     let keep_unstaked_delinquents = matches.is_present("keep_unstaked_delinquents");
@@ -667,7 +667,7 @@ pub fn parse_show_validators(matches: &ArgMatches<'_>) -> Result<CliCommandInfo,
 
     Ok(CliCommandInfo {
         command: CliCommand::ShowValidators {
-            use_lamports_unit,
+            use_satomis_unit,
             sort_order,
             reverse_sort,
             number_validators,
@@ -966,7 +966,7 @@ pub fn process_fees(
             CliFees::some(
                 result.context.slot,
                 *recent_blockhash,
-                fee_calculator.lamports_per_signature,
+                fee_calculator.satomis_per_signature,
                 None,
                 None,
             )
@@ -979,7 +979,7 @@ pub fn process_fees(
         CliFees::some(
             result.context.slot,
             result.value.blockhash,
-            result.value.fee_calculator.lamports_per_signature,
+            result.value.fee_calculator.satomis_per_signature,
             None,
             Some(result.value.last_valid_block_height),
         )
@@ -1373,7 +1373,7 @@ pub fn process_supply(
 
 pub fn process_total_supply(rpc_client: &RpcClient, _config: &CliConfig) -> ProcessResult {
     let supply = rpc_client.supply()?.value;
-    Ok(format!("{} DOMI", lamports_to_domi(supply.total)))
+    Ok(format!("{} DOMI", satomis_to_domi(supply.total)))
 }
 
 pub fn process_get_transaction_count(rpc_client: &RpcClient, _config: &CliConfig) -> ProcessResult {
@@ -1404,7 +1404,7 @@ pub fn process_ping(
     let mut confirmation_time: VecDeque<u64> = VecDeque::with_capacity(1024);
 
     let mut blockhash = rpc_client.get_latest_blockhash()?;
-    let mut lamports = 0;
+    let mut satomis = 0;
     let mut blockhash_acquired = Instant::now();
     let mut blockhash_from_cluster = false;
     if let Some(fixed_blockhash) = fixed_blockhash {
@@ -1421,18 +1421,18 @@ pub fn process_ping(
             // Fetch a new blockhash every minute
             let new_blockhash = rpc_client.get_new_latest_blockhash(&blockhash)?;
             blockhash = new_blockhash;
-            lamports = 0;
+            satomis = 0;
             blockhash_acquired = Instant::now();
         }
 
         let to = config.signers[0].pubkey();
-        lamports += 1;
+        satomis += 1;
 
-        let build_message = |lamports| {
+        let build_message = |satomis| {
             let ixs = vec![system_instruction::transfer(
                 &config.signers[0].pubkey(),
                 &to,
-                lamports,
+                satomis,
             )]
             .with_compute_unit_price(compute_unit_price);
             Message::new(&ixs, Some(&config.signers[0].pubkey()))
@@ -1440,7 +1440,7 @@ pub fn process_ping(
         let (message, _) = resolve_spend_tx_and_check_account_balance(
             rpc_client,
             false,
-            SpendAmount::Some(lamports),
+            SpendAmount::Some(satomis),
             &blockhash,
             &config.signers[0].pubkey(),
             build_message,
@@ -1476,7 +1476,7 @@ pub fn process_ping(
                                     timestamp: timestamp(),
                                     print_timestamp,
                                     sequence: seq,
-                                    lamports: Some(lamports),
+                                    satomis: Some(satomis),
                                 };
                                 eprint!("{cli_ping_data}");
                                 cli_pings.push(cli_ping_data);
@@ -1491,7 +1491,7 @@ pub fn process_ping(
                                     timestamp: timestamp(),
                                     print_timestamp,
                                     sequence: seq,
-                                    lamports: None,
+                                    satomis: None,
                                 };
                                 eprint!("{cli_ping_data}");
                                 cli_pings.push(cli_ping_data);
@@ -1509,7 +1509,7 @@ pub fn process_ping(
                             timestamp: timestamp(),
                             print_timestamp,
                             sequence: seq,
-                            lamports: None,
+                            satomis: None,
                         };
                         eprint!("{cli_ping_data}");
                         cli_pings.push(cli_ping_data);
@@ -1534,7 +1534,7 @@ pub fn process_ping(
                     timestamp: timestamp(),
                     print_timestamp,
                     sequence: seq,
-                    lamports: None,
+                    satomis: None,
                 };
                 eprint!("{cli_ping_data}");
                 cli_pings.push(cli_ping_data);
@@ -1745,7 +1745,7 @@ pub fn process_show_gossip(rpc_client: &RpcClient, config: &CliConfig) -> Proces
 pub fn process_show_stakes(
     rpc_client: &RpcClient,
     config: &CliConfig,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     vote_account_pubkeys: Option<&[Pubkey]>,
     withdraw_authority_pubkey: Option<&Pubkey>,
 ) -> ProcessResult {
@@ -1810,9 +1810,9 @@ pub fn process_show_stakes(
                         stake_accounts.push(CliKeyedStakeState {
                             stake_pubkey: stake_pubkey.to_string(),
                             stake_state: build_stake_state(
-                                stake_account.lamports,
+                                stake_account.satomis,
                                 &stake_state,
-                                use_lamports_unit,
+                                use_satomis_unit,
                                 &stake_history,
                                 &clock,
                             ),
@@ -1828,9 +1828,9 @@ pub fn process_show_stakes(
                         stake_accounts.push(CliKeyedStakeState {
                             stake_pubkey: stake_pubkey.to_string(),
                             stake_state: build_stake_state(
-                                stake_account.lamports,
+                                stake_account.satomis,
                                 &stake_state,
-                                use_lamports_unit,
+                                use_satomis_unit,
                                 &stake_history,
                                 &clock,
                             ),
@@ -1859,7 +1859,7 @@ pub fn process_wait_for_max_stake(
 pub fn process_show_validators(
     rpc_client: &RpcClient,
     config: &CliConfig,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     validators_sort_order: CliValidatorsSortOrder,
     validators_reverse_sort: bool,
     number_validators: bool,
@@ -2010,7 +2010,7 @@ pub fn process_show_validators(
         validators_reverse_sort,
         number_validators,
         stake_by_version,
-        use_lamports_unit,
+        use_satomis_unit,
     };
     Ok(config.output_format.formatted_string(&cli_validators))
 }
@@ -2113,24 +2113,24 @@ pub fn process_transaction_history(
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CliRentCalculation {
-    // lamports_per_* fields are deprecated since all accounts must be rent
+    // satomis_per_* fields are deprecated since all accounts must be rent
     // exempt; however, they are kept here for the sake of compatibility.
-    pub lamports_per_byte_year: u64,
-    pub lamports_per_epoch: u64,
-    pub rent_exempt_minimum_lamports: u64,
+    pub satomis_per_byte_year: u64,
+    pub satomis_per_epoch: u64,
+    pub rent_exempt_minimum_satomis: u64,
     #[serde(skip)]
-    pub use_lamports_unit: bool,
+    pub use_satomis_unit: bool,
 }
 
 impl CliRentCalculation {
-    fn build_balance_message(&self, lamports: u64) -> String {
-        build_balance_message(lamports, self.use_lamports_unit, true)
+    fn build_balance_message(&self, satomis: u64) -> String {
+        build_balance_message(satomis, self.use_satomis_unit, true)
     }
 }
 
 impl fmt::Display for CliRentCalculation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let exempt_minimum = self.build_balance_message(self.rent_exempt_minimum_lamports);
+        let exempt_minimum = self.build_balance_message(self.rent_exempt_minimum_satomis);
         writeln_name_value(f, "Rent-exempt minimum:", &exempt_minimum)
     }
 }
@@ -2183,16 +2183,16 @@ pub fn process_calculate_rent(
     rpc_client: &RpcClient,
     config: &CliConfig,
     data_length: usize,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
 ) -> ProcessResult {
     let rent_account = rpc_client.get_account(&sysvar::rent::id())?;
     let rent: Rent = rent_account.deserialize_data()?;
-    let rent_exempt_minimum_lamports = rent.minimum_balance(data_length);
+    let rent_exempt_minimum_satomis = rent.minimum_balance(data_length);
     let cli_rent_calculation = CliRentCalculation {
-        lamports_per_byte_year: 0,
-        lamports_per_epoch: 0,
-        rent_exempt_minimum_lamports,
-        use_lamports_unit,
+        satomis_per_byte_year: 0,
+        satomis_per_epoch: 0,
+        rent_exempt_minimum_satomis,
+        use_satomis_unit,
     };
 
     Ok(config.output_format.formatted_string(&cli_rent_calculation))

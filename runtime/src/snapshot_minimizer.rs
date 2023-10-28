@@ -497,11 +497,11 @@ mod tests {
         domichain_logger::setup();
 
         let bootstrap_validator_pubkey = domichain_sdk::pubkey::new_rand();
-        let bootstrap_validator_stake_lamports = 30;
+        let bootstrap_validator_stake_satomis = 30;
         let genesis_config_info = create_genesis_config_with_leader(
             10,
             &bootstrap_validator_pubkey,
-            bootstrap_validator_stake_lamports,
+            bootstrap_validator_stake_satomis,
         );
 
         let bank = Arc::new(Bank::new_for_tests(&genesis_config_info.genesis_config));
@@ -527,11 +527,11 @@ mod tests {
         domichain_logger::setup();
 
         let bootstrap_validator_pubkey = domichain_sdk::pubkey::new_rand();
-        let bootstrap_validator_stake_lamports = 30;
+        let bootstrap_validator_stake_satomis = 30;
         let genesis_config_info = create_genesis_config_with_leader(
             10,
             &bootstrap_validator_pubkey,
-            bootstrap_validator_stake_lamports,
+            bootstrap_validator_stake_satomis,
         );
 
         let bank = Arc::new(Bank::new_for_tests(&genesis_config_info.genesis_config));
@@ -652,10 +652,10 @@ mod tests {
                 .map(|_| domichain_sdk::pubkey::new_rand())
                 .collect();
 
-            let some_lamport = 223;
+            let some_satomi = 223;
             let no_data = 0;
             let owner = *AccountSharedData::default().owner();
-            let account = AccountSharedData::new(some_lamport, no_data, &owner);
+            let account = AccountSharedData::new(some_satomi, no_data, &owner);
 
             current_slot += 1;
 

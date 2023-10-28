@@ -143,7 +143,7 @@ const PULL_RESPONSE_MIN_SERIALIZED_SIZE: usize = 161;
 pub(crate) const CRDS_UNIQUE_PUBKEY_CAPACITY: usize = 8192;
 /// Minimum stake that a node should have so that its CRDS values are
 /// propagated through gossip (few types are exempted).
-const MIN_STAKE_FOR_GOSSIP: u64 = domichain_sdk::native_token::LAMPORTS_PER_DOMI;
+const MIN_STAKE_FOR_GOSSIP: u64 = domichain_sdk::native_token::SATOMIS_PER_DOMI;
 /// Minimum number of staked nodes for enforcing stakes in gossip.
 const MIN_NUM_STAKED_NODES: usize = 500;
 

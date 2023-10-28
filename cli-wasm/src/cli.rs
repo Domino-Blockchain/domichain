@@ -96,7 +96,7 @@ pub enum CliCommand {
     },
     Rent {
         data_length: usize,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
     },
     ShowBlockProduction {
         epoch: Option<Epoch>,
@@ -104,12 +104,12 @@ pub enum CliCommand {
     },
     ShowGossip,
     ShowStakes {
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
         vote_account_pubkeys: Option<Vec<Pubkey>>,
         withdraw_authority: Option<Pubkey>,
     },
     ShowValidators {
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
         sort_order: CliValidatorsSortOrder,
         reverse_sort: bool,
         number_validators: bool,
@@ -155,14 +155,14 @@ pub enum CliCommand {
     },
     ShowNonceAccount {
         nonce_account_pubkey: Pubkey,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
     },
     WithdrawFromNonceAccount {
         nonce_account: Pubkey,
         nonce_authority: SignerIndex,
         memo: Option<String>,
         destination_account_pubkey: Pubkey,
-        lamports: u64,
+        satomis: u64,
         compute_unit_price: Option<u64>,
     },
     UpgradeNonceAccount {
@@ -232,7 +232,7 @@ pub enum CliCommand {
         memo: Option<String>,
         split_stake_account: SignerIndex,
         seed: Option<String>,
-        lamports: u64,
+        satomis: u64,
         fee_payer: SignerIndex,
         compute_unit_price: Option<u64>,
     },
@@ -250,12 +250,12 @@ pub enum CliCommand {
         compute_unit_price: Option<u64>,
     },
     ShowStakeHistory {
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
         limit_results: usize,
     },
     ShowStakeAccount {
         pubkey: Pubkey,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
         with_rewards: Option<usize>,
     },
     StakeAuthorize {
@@ -328,7 +328,7 @@ pub enum CliCommand {
     },
     ShowVoteAccount {
         pubkey: Pubkey,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
         with_rewards: Option<usize>,
     },
     WithdrawFromVoteAccount {
@@ -398,11 +398,11 @@ pub enum CliCommand {
     Address,
     Airdrop {
         pubkey: Option<Pubkey>,
-        lamports: u64,
+        satomis: u64,
     },
     Balance {
         pubkey: Option<Pubkey>,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
     },
     Confirm(Signature),
     CreateAddressWithSeed {
@@ -415,7 +415,7 @@ pub enum CliCommand {
     ShowAccount {
         pubkey: Pubkey,
         output_file: Option<String>,
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
     },
     Transfer {
         amount: SpendAmount,
@@ -435,7 +435,7 @@ pub enum CliCommand {
         compute_unit_price: Option<u64>,
     },
     StakeMinimumDelegation {
-        use_lamports_unit: bool,
+        use_satomis_unit: bool,
     },
     // Address lookup table commands
     AddressLookupTable(AddressLookupTableCliCommand),
@@ -544,7 +544,7 @@ impl Default for CliConfig<'_> {
         CliConfig {
             command: CliCommand::Balance {
                 pubkey: Some(Pubkey::default()),
-                use_lamports_unit: false,
+                use_satomis_unit: false,
             },
             json_rpc_url: ConfigInput::default().json_rpc_url,
             websocket_url: ConfigInput::default().websocket_url,
@@ -644,11 +644,11 @@ pub fn parse_command(
             let data_length = value_of::<RentLengthValue>(matches, "data_length")
                 .unwrap()
                 .length();
-            let use_lamports_unit = matches.is_present("lamports");
+            let use_satomis_unit = matches.is_present("satomis");
             Ok(CliCommandInfo {
                 command: CliCommand::Rent {
                     data_length,
-                    use_lamports_unit,
+                    use_satomis_unit,
                 },
                 signers: vec![],
             })
@@ -937,20 +937,20 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         ),
         CliCommand::Rent {
             data_length,
-            use_lamports_unit,
-        } => process_calculate_rent(&rpc_client, config, *data_length, *use_lamports_unit),
+            use_satomis_unit,
+        } => process_calculate_rent(&rpc_client, config, *data_length, *use_satomis_unit),
         CliCommand::ShowBlockProduction { epoch, slot_limit } => {
             process_show_block_production(&rpc_client, config, *epoch, *slot_limit)
         }
         CliCommand::ShowGossip => process_show_gossip(&rpc_client, config),
         CliCommand::ShowStakes {
-            use_lamports_unit,
+            use_satomis_unit,
             vote_account_pubkeys,
             withdraw_authority,
         } => process_show_stakes(
             &rpc_client,
             config,
-            *use_lamports_unit,
+            *use_satomis_unit,
             vote_account_pubkeys.as_deref(),
             withdraw_authority.as_ref(),
         ),
@@ -958,7 +958,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             process_wait_for_max_stake(&rpc_client, config, *max_stake_percent)
         }
         CliCommand::ShowValidators {
-            use_lamports_unit,
+            use_satomis_unit,
             sort_order,
             reverse_sort,
             number_validators,
@@ -967,7 +967,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         } => process_show_validators(
             &rpc_client,
             config,
-            *use_lamports_unit,
+            *use_satomis_unit,
             *sort_order,
             *reverse_sort,
             *number_validators,
@@ -1051,20 +1051,20 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         // Show the contents of a nonce account
         CliCommand::ShowNonceAccount {
             nonce_account_pubkey,
-            use_lamports_unit,
+            use_satomis_unit,
         } => process_show_nonce_account(
             &rpc_client,
             config,
             nonce_account_pubkey,
-            *use_lamports_unit,
+            *use_satomis_unit,
         ),
-        // Withdraw lamports from a nonce account
+        // Withdraw satomis from a nonce account
         CliCommand::WithdrawFromNonceAccount {
             nonce_account,
             nonce_authority,
             memo,
             destination_account_pubkey,
-            lamports,
+            satomis,
             compute_unit_price,
         } => process_withdraw_from_nonce_account(
             &rpc_client,
@@ -1073,7 +1073,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             *nonce_authority,
             memo.as_ref(),
             destination_account_pubkey,
-            *lamports,
+            *satomis,
             compute_unit_price.as_ref(),
         ),
         // Upgrade nonce account out of blockhash domain.
@@ -1212,7 +1212,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             memo,
             split_stake_account,
             seed,
-            lamports,
+            satomis,
             fee_payer,
             compute_unit_price,
         } => process_split_stake(
@@ -1228,7 +1228,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             memo.as_ref(),
             *split_stake_account,
             seed,
-            *lamports,
+            *satomis,
             *fee_payer,
             compute_unit_price.as_ref(),
         ),
@@ -1261,19 +1261,19 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         ),
         CliCommand::ShowStakeAccount {
             pubkey: stake_account_pubkey,
-            use_lamports_unit,
+            use_satomis_unit,
             with_rewards,
         } => process_show_stake_account(
             &rpc_client,
             config,
             stake_account_pubkey,
-            *use_lamports_unit,
+            *use_satomis_unit,
             *with_rewards,
         ),
         CliCommand::ShowStakeHistory {
-            use_lamports_unit,
+            use_satomis_unit,
             limit_results,
-        } => process_show_stake_history(&rpc_client, config, *use_lamports_unit, *limit_results),
+        } => process_show_stake_history(&rpc_client, config, *use_satomis_unit, *limit_results),
         CliCommand::StakeAuthorize {
             stake_account_pubkey,
             ref new_authorizations,
@@ -1365,8 +1365,8 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             *fee_payer,
             compute_unit_price.as_ref(),
         ),
-        CliCommand::StakeMinimumDelegation { use_lamports_unit } => {
-            process_stake_minimum_delegation(&rpc_client, config, *use_lamports_unit)
+        CliCommand::StakeMinimumDelegation { use_satomis_unit } => {
+            process_stake_minimum_delegation(&rpc_client, config, *use_satomis_unit)
         }
 
         // Validator Info Commands
@@ -1426,13 +1426,13 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         ),
         CliCommand::ShowVoteAccount {
             pubkey: vote_account_pubkey,
-            use_lamports_unit,
+            use_satomis_unit,
             with_rewards,
         } => process_show_vote_account(
             &rpc_client,
             config,
             vote_account_pubkey,
-            *use_lamports_unit,
+            *use_satomis_unit,
             *with_rewards,
         ),
         CliCommand::WithdrawFromVoteAccount {
@@ -1570,14 +1570,14 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         // Wallet Commands
 
         // Request an airdrop from Domichain Faucet;
-        CliCommand::Airdrop { pubkey, lamports } => {
-            process_airdrop(&rpc_client, config, pubkey, *lamports)
+        CliCommand::Airdrop { pubkey, satomis } => {
+            process_airdrop(&rpc_client, config, pubkey, *satomis)
         }
         // Check client balance
         CliCommand::Balance {
             pubkey,
-            use_lamports_unit,
-        } => process_balance(&rpc_client, config, pubkey, *use_lamports_unit),
+            use_satomis_unit,
+        } => process_balance(&rpc_client, config, pubkey, *use_satomis_unit),
         // Confirm the last client transaction by signature
         CliCommand::Confirm(signature) => process_confirm(&rpc_client, config, signature),
         CliCommand::DecodeTransaction(transaction) => {
@@ -1593,8 +1593,8 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
         CliCommand::ShowAccount {
             pubkey,
             output_file,
-            use_lamports_unit,
-        } => process_show_account(&rpc_client, config, pubkey, output_file, *use_lamports_unit),
+            use_satomis_unit,
+        } => process_show_account(&rpc_client, config, pubkey, output_file, *use_satomis_unit),
         CliCommand::Transfer {
             amount,
             to,
@@ -1649,11 +1649,11 @@ pub fn request_and_confirm_airdrop(
     rpc_client: &RpcClient,
     config: &CliConfig,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
 ) -> ClientResult<Signature> {
     let recent_blockhash = rpc_client.get_latest_blockhash()?;
     let signature =
-        rpc_client.request_airdrop_with_blockhash(to_pubkey, lamports, &recent_blockhash)?;
+        rpc_client.request_airdrop_with_blockhash(to_pubkey, satomis, &recent_blockhash)?;
     rpc_client.confirm_transaction_with_spinner(
         &signature,
         &recent_blockhash,
@@ -1844,7 +1844,7 @@ mod tests {
             CliCommandInfo {
                 command: CliCommand::Airdrop {
                     pubkey: Some(pubkey),
-                    lamports: 50_000_000_000,
+                    satomis: 50_000_000_000,
                 },
                 signers: vec![],
             }
@@ -1861,7 +1861,7 @@ mod tests {
             CliCommandInfo {
                 command: CliCommand::Balance {
                     pubkey: Some(keypair.pubkey()),
-                    use_lamports_unit: false,
+                    use_satomis_unit: false,
                 },
                 signers: vec![],
             }
@@ -1870,14 +1870,14 @@ mod tests {
             "test",
             "balance",
             &keypair_file,
-            "--lamports",
+            "--satomis",
         ]);
         assert_eq!(
             parse_command(&test_balance, &default_signer, &mut None).unwrap(),
             CliCommandInfo {
                 command: CliCommand::Balance {
                     pubkey: Some(keypair.pubkey()),
-                    use_lamports_unit: true,
+                    use_satomis_unit: true,
                 },
                 signers: vec![],
             }
@@ -1885,13 +1885,13 @@ mod tests {
         let test_balance =
             test_commands
                 .clone()
-                .get_matches_from(vec!["test", "balance", "--lamports"]);
+                .get_matches_from(vec!["test", "balance", "--satomis"]);
         assert_eq!(
             parse_command(&test_balance, &default_signer, &mut None).unwrap(),
             CliCommandInfo {
                 command: CliCommand::Balance {
                     pubkey: None,
-                    use_lamports_unit: true,
+                    use_satomis_unit: true,
                 },
                 signers: vec![read_keypair_file(&keypair_file).unwrap().into()],
             }
@@ -2043,13 +2043,13 @@ mod tests {
 
         config.command = CliCommand::Balance {
             pubkey: None,
-            use_lamports_unit: true,
+            use_satomis_unit: true,
         };
-        assert_eq!(process_command(&config).unwrap(), "50 lamports");
+        assert_eq!(process_command(&config).unwrap(), "50 satomis");
 
         config.command = CliCommand::Balance {
             pubkey: None,
-            use_lamports_unit: false,
+            use_satomis_unit: false,
         };
         assert_eq!(process_command(&config).unwrap(), "0.00000005 DOMI");
 
@@ -2090,7 +2090,7 @@ mod tests {
             },
             value: json!({
                 "data": ["KLUv/QBYNQIAtAIBAAAAbnoc3Smwt4/ROvTFWY/v9O8qlxZuPKby5Pv8zYBQW/EFAAEAAB8ACQD6gx92zAiAAecDP4B2XeEBSIx7MQeung==", "base64+zstd"],
-                "lamports": 42,
+                "satomis": 42,
                 "owner": "Vote111111111111111111111111111111111111111",
                 "executable": false,
                 "rentEpoch": 1,
@@ -2225,7 +2225,7 @@ mod tests {
             memo: None,
             split_stake_account: 1,
             seed: None,
-            lamports: 30,
+            satomis: 30,
             fee_payer: 0,
             compute_unit_price: None,
         };
@@ -2277,7 +2277,7 @@ mod tests {
         config.signers = vec![&keypair];
         config.command = CliCommand::Airdrop {
             pubkey: Some(to),
-            lamports: 50,
+            satomis: 50,
         };
         assert!(process_command(&config).is_ok());
 
@@ -2301,13 +2301,13 @@ mod tests {
 
         config.command = CliCommand::Airdrop {
             pubkey: None,
-            lamports: 50,
+            satomis: 50,
         };
         assert!(process_command(&config).is_err());
 
         config.command = CliCommand::Balance {
             pubkey: None,
-            use_lamports_unit: false,
+            use_satomis_unit: false,
         };
         assert!(process_command(&config).is_err());
 

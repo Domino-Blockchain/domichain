@@ -20,7 +20,7 @@ fn create_rewards() -> Rewards {
     (0..100)
         .map(|i| Reward {
             pubkey: pubkey::new_rand().to_string(),
-            lamports: 42 + i,
+            satomis: 42 + i,
             post_balance: std::u64::MAX,
             reward_type: Some(RewardType::Fee),
             commission: None,

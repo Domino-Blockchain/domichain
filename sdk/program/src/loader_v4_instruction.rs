@@ -6,7 +6,7 @@ pub enum LoaderV4Instruction {
     /// Write ELF data into an undeployed program account.
     ///
     /// Writing at the end (offset is length) increases the size of the program account and
-    /// providing additional lamports (via the payer account) is necessary to reach rent exemption.
+    /// providing additional satomis (via the payer account) is necessary to reach rent exemption.
     /// The first write (at offset zero when the account is empty) automatically
     /// initializes the program account and sets the authority needed for subsequent writes.
     /// Thus, the first write should be in the same transaction as the account creation.
@@ -26,7 +26,7 @@ pub enum LoaderV4Instruction {
     /// Decrease the size of an undeployed program account.
     ///
     /// Decreasing to size zero closes the program account and resets it into an uninitialized state.
-    /// Superflous lamports are transfered to the recipient account.
+    /// Superflous satomis are transfered to the recipient account.
     ///
     /// # Account references
     ///   0. `[writable]` The program account to change the size of.
@@ -42,13 +42,13 @@ pub enum LoaderV4Instruction {
     /// If this succeeds the program becomes executable, and is ready to use.
     /// A source program account can be provided to overwrite the data before deployment
     /// in one step, instead retracting the program and writing to it and redeploying it.
-    /// The source program is truncated to zero (thus closed) and lamports necessary for
+    /// The source program is truncated to zero (thus closed) and satomis necessary for
     /// rent exemption are transferred, in case that the source was bigger than the program.
     ///
     /// # Account references
     ///   0. `[writable]` The program account to deploy.
     ///   1. `[signer]` The authority of the program.
-    ///   2. `[writable]` Optional, an undeployed source program account to take data and lamports from.
+    ///   2. `[writable]` Optional, an undeployed source program account to take data and satomis from.
     Deploy,
 
     /// Undo the deployment of a program account.

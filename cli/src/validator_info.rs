@@ -323,7 +323,7 @@ pub fn process_set_validator_info(
         (config.signers[0].pubkey(), true),
     ];
     let data_len = ValidatorInfo::max_space() + ConfigKeys::serialized_size(keys.clone());
-    let lamports = rpc_client.get_minimum_balance_for_rent_exemption(data_len as usize)?;
+    let satomis = rpc_client.get_minimum_balance_for_rent_exemption(data_len as usize)?;
 
     let signers = if balance == 0 {
         if info_pubkey != info_keypair.pubkey() {
@@ -335,7 +335,7 @@ pub fn process_set_validator_info(
         vec![config.signers[0]]
     };
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let keys = keys.clone();
         if balance == 0 {
             println!(
@@ -345,7 +345,7 @@ pub fn process_set_validator_info(
             let mut instructions = config_instruction::create_account::<ValidatorInfo>(
                 &config.signers[0].pubkey(),
                 &info_pubkey,
-                lamports,
+                satomis,
                 keys.clone(),
             );
             instructions.extend_from_slice(&[config_instruction::store(
@@ -376,7 +376,7 @@ pub fn process_set_validator_info(
     let (message, _) = resolve_spend_tx_and_check_account_balance(
         rpc_client,
         false,
-        SpendAmount::Some(lamports),
+        SpendAmount::Some(satomis),
         &latest_blockhash,
         &config.signers[0].pubkey(),
         build_message,

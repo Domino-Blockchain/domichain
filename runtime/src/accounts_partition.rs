@@ -381,7 +381,7 @@ lazy_static! {
 /// populated at startup with the accounts that were found that are rent paying.
 /// These are the 'possible' rent paying accounts.
 /// This set can never grow during runtime since it is not possible to create rent paying accounts now.
-/// It can shrink during execution if a rent paying account is dropped to lamports=0 or is topped off.
+/// It can shrink during execution if a rent paying account is dropped to satomis=0 or is topped off.
 /// The next time the validator restarts, it will remove the account from this list.
 #[derive(Debug, Default)]
 pub struct RentPayingAccountsByPartition {

@@ -2,7 +2,7 @@ use {
     crate::{
         accounts_index::{
             AccountMapEntry, AccountMapEntryInner, AccountMapEntryMeta, DiskIndexValue, IndexValue,
-            PreAllocatedAccountMapEntry, RefCount, SlotList, UpsertReclaim, ZeroLamport,
+            PreAllocatedAccountMapEntry, RefCount, SlotList, UpsertReclaim, ZeroSatomi,
         },
         bucket_map_holder::{Age, BucketMapHolder},
         bucket_map_holder_stats::BucketMapHolderStats,
@@ -126,8 +126,8 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> Debug for InMemAccoun
 
 pub enum InsertNewEntryResults {
     DidNotExist,
-    ExistedNewEntryZeroLamports,
-    ExistedNewEntryNonZeroLamports,
+    ExistedNewEntryZeroSatomis,
+    ExistedNewEntryNonZeroSatomis,
 }
 
 #[derive(Default, Debug)]
@@ -691,7 +691,7 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> InMemAccountsIndex<T,
         let mut map = self.map_internal.write().unwrap();
         let entry = map.entry(pubkey);
         m.stop();
-        let new_entry_zero_lamports = new_entry.is_zero_lamport();
+        let new_entry_zero_satomis = new_entry.is_zero_satomi();
         let (found_in_mem, already_existed) = match entry {
             Entry::Occupied(occupied) => {
                 // in cache, so merge into cache
@@ -748,10 +748,10 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> InMemAccountsIndex<T,
         }
         if !already_existed {
             InsertNewEntryResults::DidNotExist
-        } else if new_entry_zero_lamports {
-            InsertNewEntryResults::ExistedNewEntryZeroLamports
+        } else if new_entry_zero_satomis {
+            InsertNewEntryResults::ExistedNewEntryZeroSatomis
         } else {
-            InsertNewEntryResults::ExistedNewEntryNonZeroLamports
+            InsertNewEntryResults::ExistedNewEntryNonZeroSatomis
         }
     }
 

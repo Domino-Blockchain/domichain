@@ -330,11 +330,11 @@ impl Pubkey {
     /// #[derive(BorshSerialize, BorshDeserialize, Debug)]
     /// pub struct InstructionData {
     ///     pub vault_bump_seed: u8,
-    ///     pub lamports: u64,
+    ///     pub satomis: u64,
     /// }
     ///
     /// // The size in bytes of a vault account. The client program needs
-    /// // this information to calculate the quantity of lamports necessary
+    /// // this information to calculate the quantity of satomis necessary
     /// // to pay for the account's rent.
     /// pub static VAULT_ACCOUNT_SIZE: u64 = 1024;
     ///
@@ -353,7 +353,7 @@ impl Pubkey {
     ///     let mut instruction_data = instruction_data;
     ///     let instr = InstructionData::deserialize(&mut instruction_data)?;
     ///     let vault_bump_seed = instr.vault_bump_seed;
-    ///     let lamports = instr.lamports;
+    ///     let satomis = instr.satomis;
     ///     let vault_size = VAULT_ACCOUNT_SIZE;
     ///
     ///     // Invoke the system program to create an account while virtually
@@ -362,7 +362,7 @@ impl Pubkey {
     ///         &system_instruction::create_account(
     ///             &payer.key,
     ///             &vault.key,
-    ///             lamports,
+    ///             satomis,
     ///             vault_size,
     ///             &program_id,
     ///         ),
@@ -411,7 +411,7 @@ impl Pubkey {
     /// # #[derive(BorshSerialize, BorshDeserialize, Debug)]
     /// # struct InstructionData {
     /// #    pub vault_bump_seed: u8,
-    /// #    pub lamports: u64,
+    /// #    pub satomis: u64,
     /// # }
     /// #
     /// # pub static VAULT_ACCOUNT_SIZE: u64 = 1024;
@@ -428,14 +428,14 @@ impl Pubkey {
     ///         &program_id
     ///     );
     ///
-    ///     // Get the amount of lamports needed to pay for the vault's rent
+    ///     // Get the amount of satomis needed to pay for the vault's rent
     ///     let vault_account_size = usize::try_from(VAULT_ACCOUNT_SIZE)?;
-    ///     let lamports = client.get_minimum_balance_for_rent_exemption(vault_account_size)?;
+    ///     let satomis = client.get_minimum_balance_for_rent_exemption(vault_account_size)?;
     ///
     ///     // The on-chain program's instruction data, imported from that program's crate.
     ///     let instr_data = InstructionData {
     ///         vault_bump_seed,
-    ///         lamports,
+    ///         satomis,
     ///     };
     ///
     ///     // The accounts required by both our on-chain program and the system program's
@@ -504,8 +504,6 @@ impl Pubkey {
                     seeds_with_bump.push(&bump_seed);
                     match Self::create_program_address(&seeds_with_bump, program_id) {
                         Ok(address) => {
-                            dbg!(seeds_with_bump.iter().map(|s| Pubkey::try_from(*s).map_err(|_| s)).collect::<Vec<_>>());
-                            dbg!(program_id, address);
                             return Some((address, bump_seed[0]))
                         },
                         Err(PubkeyError::InvalidSeeds) => (),

@@ -129,9 +129,9 @@ You can read more about instructions
 
 Every time you submit a transaction, somebody on the network is providing space
 and processing power to make it happen. To facilitate this, transactions on
-Domichain require a fee to be paid in Lamports, which are the smallest units of DOMI
+Domichain require a fee to be paid in Satomis, which are the smallest units of DOMI
 (like cents to a dollar or paise to a rupee). One DOMI is equal to 1,000,000,000
-Lamports, and one Lamport has a value of 0.000000001 DOMI. This fee is paid to
+Satomis, and one Satomi has a value of 0.000000001 DOMI. This fee is paid to
 the validators who process the transaction.
 
 Transactions fees are calculated based on two main parts:

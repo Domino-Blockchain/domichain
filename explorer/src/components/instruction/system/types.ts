@@ -7,7 +7,7 @@ export type CreateAccountInfo = Infer<typeof CreateAccountInfo>;
 export const CreateAccountInfo = type({
   source: PublicKeyFromString,
   newAccount: PublicKeyFromString,
-  lamports: number(),
+  satomis: number(),
   space: number(),
   owner: PublicKeyFromString,
 });
@@ -22,7 +22,7 @@ export type TransferInfo = Infer<typeof TransferInfo>;
 export const TransferInfo = type({
   source: PublicKeyFromString,
   destination: PublicKeyFromString,
-  lamports: number(),
+  satomis: number(),
 });
 
 export type CreateAccountWithSeedInfo = Infer<typeof CreateAccountWithSeedInfo>;
@@ -31,7 +31,7 @@ export const CreateAccountWithSeedInfo = type({
   newAccount: PublicKeyFromString,
   base: PublicKeyFromString,
   seed: string(),
-  lamports: number(),
+  satomis: number(),
   space: number(),
   owner: PublicKeyFromString,
 });
@@ -47,7 +47,7 @@ export const WithdrawNonceInfo = type({
   nonceAccount: PublicKeyFromString,
   destination: PublicKeyFromString,
   nonceAuthority: PublicKeyFromString,
-  lamports: number(),
+  satomis: number(),
 });
 
 export type InitializeNonceInfo = Infer<typeof InitializeNonceInfo>;
@@ -91,7 +91,7 @@ export const TransferWithSeedInfo = type({
   source: PublicKeyFromString,
   sourceBase: PublicKeyFromString,
   destination: PublicKeyFromString,
-  lamports: number(),
+  satomis: number(),
   sourceSeed: string(),
   sourceOwner: PublicKeyFromString,
 });

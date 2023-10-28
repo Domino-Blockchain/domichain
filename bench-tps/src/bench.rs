@@ -47,15 +47,15 @@ const MAX_TX_QUEUE_AGE: u64 = (MAX_PROCESSING_AGE as f64 * DEFAULT_S_PER_SLOT) a
 const MAX_COMPUTE_UNIT_PRICE: u64 = 50;
 const TRANSFER_TRANSACTION_COMPUTE_UNIT: u32 = 450;
 /// calculate maximum possible prioritization fee, if `use-randomized-compute-unit-price` is
-/// enabled, round to nearest lamports.
-pub fn max_lamports_for_prioritization(use_randomized_compute_unit_price: bool) -> u64 {
+/// enabled, round to nearest satomis.
+pub fn max_satomis_for_prioritization(use_randomized_compute_unit_price: bool) -> u64 {
     if use_randomized_compute_unit_price {
-        const MICRO_LAMPORTS_PER_LAMPORT: u64 = 1_000_000;
-        let micro_lamport_fee: u128 = (MAX_COMPUTE_UNIT_PRICE as u128)
+        const MICRO_SATOMIS_PER_SATOMI: u64 = 1_000_000;
+        let micro_satomi_fee: u128 = (MAX_COMPUTE_UNIT_PRICE as u128)
             .saturating_mul(TRANSFER_TRANSACTION_COMPUTE_UNIT as u128);
-        let fee = micro_lamport_fee
-            .saturating_add(MICRO_LAMPORTS_PER_LAMPORT.saturating_sub(1) as u128)
-            .saturating_div(MICRO_LAMPORTS_PER_LAMPORT as u128);
+        let fee = micro_satomi_fee
+            .saturating_add(MICRO_SATOMIS_PER_SATOMI.saturating_sub(1) as u128)
+            .saturating_div(MICRO_SATOMIS_PER_SATOMI as u128);
         u64::try_from(fee).unwrap_or(u64::MAX)
     } else {
         0u64
@@ -111,7 +111,7 @@ struct TransactionChunkGenerator<'a, 'b, T: ?Sized> {
     account_chunks: KeypairChunks<'a>,
     nonce_chunks: Option<KeypairChunks<'b>>,
     chunk_index: usize,
-    reclaim_lamports_back_to_source_account: bool,
+    reclaim_satomis_back_to_source_account: bool,
     use_randomized_compute_unit_price: bool,
     instruction_padding_config: Option<InstructionPaddingConfig>,
 }
@@ -142,19 +142,19 @@ where
             account_chunks,
             nonce_chunks,
             chunk_index: 0,
-            reclaim_lamports_back_to_source_account: false,
+            reclaim_satomis_back_to_source_account: false,
             use_randomized_compute_unit_price,
             instruction_padding_config,
         }
     }
 
-    /// generate transactions to transfer lamports from source to destination accounts
+    /// generate transactions to transfer satomis from source to destination accounts
     /// if durable nonce is used, blockhash is None
     fn generate(&mut self, blockhash: Option<&Hash>) -> Vec<TimestampedTransaction> {
         let tx_count = self.account_chunks.source.len();
         info!(
             "Signing transactions... {} (reclaim={}, blockhash={:?})",
-            tx_count, self.reclaim_lamports_back_to_source_account, blockhash
+            tx_count, self.reclaim_satomis_back_to_source_account, blockhash
         );
         let signing_start = Instant::now();
 
@@ -169,7 +169,7 @@ where
                 dest_chunk,
                 source_nonce_chunk,
                 dest_nonce_chunk,
-                self.reclaim_lamports_back_to_source_account,
+                self.reclaim_satomis_back_to_source_account,
                 &self.instruction_padding_config,
             )
         } else {
@@ -177,7 +177,7 @@ where
             generate_system_txs(
                 source_chunk,
                 dest_chunk,
-                self.reclaim_lamports_back_to_source_account,
+                self.reclaim_satomis_back_to_source_account,
                 blockhash.unwrap(),
                 &self.instruction_padding_config,
                 self.use_randomized_compute_unit_price,
@@ -215,8 +215,8 @@ where
 
         // Switch directions after transfering for each "chunk"
         if self.chunk_index == 0 {
-            self.reclaim_lamports_back_to_source_account =
-                !self.reclaim_lamports_back_to_source_account;
+            self.reclaim_satomis_back_to_source_account =
+                !self.reclaim_satomis_back_to_source_account;
         }
     }
 }
@@ -492,7 +492,7 @@ where
     }
 
     let balance = client.get_balance(&id.pubkey()).unwrap_or(0);
-    metrics_submit_lamport_balance(balance);
+    metrics_submit_satomi_balance(balance);
 
     let balances_after: u64 = gen_keypairs.iter()
         .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
@@ -511,11 +511,11 @@ where
     r_maxes.first().unwrap().1.txs
 }
 
-fn metrics_submit_lamport_balance(lamport_balance: u64) {
-    info!("Token balance: {}", lamport_balance);
+fn metrics_submit_satomi_balance(satomi_balance: u64) {
+    info!("Token balance: {}", satomi_balance);
     datapoint_info!(
-        "bench-tps-lamport_balance",
-        ("balance", lamport_balance, i64)
+        "bench-tps-satomi_balance",
+        ("balance", satomi_balance, i64)
     );
 }
 
@@ -580,13 +580,13 @@ fn generate_system_txs(
 fn transfer_with_compute_unit_price_and_padding(
     from_keypair: &Keypair,
     to: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     recent_blockhash: Hash,
     instruction_padding_config: &Option<InstructionPaddingConfig>,
     compute_unit_price: Option<u64>,
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
-    let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
+    let transfer_instruction = system_instruction::transfer(&from_pubkey, to, satomis);
     let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
         wrap_instruction(
             instruction_padding_config.program_id.into(),
@@ -672,14 +672,14 @@ fn get_nonce_blockhashes<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
 fn nonced_transfer_with_padding(
     from_keypair: &Keypair,
     to: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     nonce_account: &Pubkey,
     nonce_authority: &Keypair,
     nonce_hash: Hash,
     instruction_padding_config: &Option<InstructionPaddingConfig>,
 ) -> Transaction {
     let from_pubkey = from_keypair.pubkey();
-    let transfer_instruction = system_instruction::transfer(&from_pubkey, to, lamports);
+    let transfer_instruction = system_instruction::transfer(&from_pubkey, to, satomis);
     let instruction = if let Some(instruction_padding_config) = instruction_padding_config {
         wrap_instruction(
             instruction_padding_config.program_id.into(),
@@ -828,7 +828,7 @@ fn poll_blockhash<T: BenchTpsClient + ?Sized>(
 
         if blockhash_updated {
             let balance = client.get_balance(id).unwrap_or(0);
-            metrics_submit_lamport_balance(balance);
+            metrics_submit_satomi_balance(balance);
             datapoint_info!(
                 "blockhash_stats",
                 (
@@ -1004,15 +1004,15 @@ pub fn generate_and_fund_keypairs<T: 'static + BenchTpsClient + Send + Sync + ?S
     client: Arc<T>,
     funding_key: &Keypair,
     keypair_count: usize,
-    lamports_per_account: u64,
+    satomis_per_account: u64,
 ) -> Result<Vec<Keypair>> {
     let rent = client.get_minimum_balance_for_rent_exemption(0)?;
-    let lamports_per_account = lamports_per_account + rent;
+    let satomis_per_account = satomis_per_account + rent;
 
     info!("Creating {} keypairs...", keypair_count);
     let (mut keypairs, extra) = generate_keypairs(funding_key, keypair_count as u64);
-    info!("lamports_per_account={lamports_per_account}");
-    fund_keypairs(client, funding_key, &keypairs, extra, lamports_per_account)?;
+    info!("satomis_per_account={satomis_per_account}");
+    fund_keypairs(client, funding_key, &keypairs, extra, satomis_per_account)?;
 
     // 'generate_keypairs' generates extra keys to be able to have size-aligned funding batches for fund_keys.
     keypairs.truncate(keypair_count);
@@ -1025,12 +1025,12 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
     funding_key: &Keypair,
     keypairs: &[Keypair],
     extra: u64,
-    lamports_per_account: u64,
+    satomis_per_account: u64,
 ) -> Result<()> {
     let rent = client.get_minimum_balance_for_rent_exemption(0)?;
-    info!("Get lamports...");
+    info!("Get satomis...");
 
-    // Sample the first keypair, to prevent lamport loss on repeated domichain-bench-tps executions
+    // Sample the first keypair, to prevent satomi loss on repeated domichain-bench-tps executions
     let first_key = keypairs[0].pubkey();
     let first_keypair_balance = client.get_balance(&first_key).unwrap_or(0);
 
@@ -1042,8 +1042,8 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
     //   start another bench-tps run without re-funding all of the keypairs, check if the
     //   keypairs still have at least 80% of the expected funds. That should be enough to
     //   pay for the transaction fees in a new run.
-    let enough_lamports = 8 * lamports_per_account / 10;
-    if first_keypair_balance < enough_lamports || last_keypair_balance < enough_lamports {
+    let enough_satomis = 8 * satomis_per_account / 10;
+    if first_keypair_balance < enough_satomis || last_keypair_balance < enough_satomis {
         let single_sig_message = Message::new_with_blockhash(
             &[Instruction::new_with_bytes(
                 Pubkey::new_unique(),
@@ -1056,12 +1056,12 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
         let max_fee = client.get_fee_for_message(&single_sig_message).unwrap();
         let extra_fees = extra * max_fee;
         let total_keypairs = keypairs.len() as u64 + 1; // Add one for funding keypair
-        let total = lamports_per_account * total_keypairs + extra_fees;
+        let total = satomis_per_account * total_keypairs + extra_fees;
 
         let funding_key_balance = client.get_balance(&funding_key.pubkey()).unwrap_or(0);
         info!(
-            "Funding keypair balance: {} max_fee: {} lamports_per_account: {} extra: {} total: {}",
-            funding_key_balance, max_fee, lamports_per_account, extra, total
+            "Funding keypair balance: {} max_fee: {} satomis_per_account: {} extra: {} total: {}",
+            funding_key_balance, max_fee, satomis_per_account, extra, total
         );
 
         if funding_key_balance < total + rent {
@@ -1089,12 +1089,12 @@ pub fn fund_keypairs<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
             keypairs,
             total,
             max_fee,
-            lamports_per_account,
+            satomis_per_account,
         );
         let balances: u64 = keypairs.iter()
             .map(|kp| client.get_balance(&kp.pubkey()).unwrap_or(0))
             .sum();
-        info!("total={total}, max_fee={max_fee}, lamports_per_account={lamports_per_account}");
+        info!("total={total}, max_fee={max_fee}, satomis_per_account={satomis_per_account}");
         info!("fund_keypairs balances={balances}");
     }
     Ok(())
@@ -1107,13 +1107,13 @@ mod tests {
         domichain_runtime::{bank::Bank, bank_client::BankClient},
         domichain_sdk::{
             commitment_config::CommitmentConfig, fee_calculator::FeeRateGovernor,
-            genesis_config::create_genesis_config, native_token::domi_to_lamports, nonce::State,
+            genesis_config::create_genesis_config, native_token::domi_to_satomis, nonce::State,
         },
     };
 
     #[test]
     fn test_bench_tps_bank_client() {
-        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_satomis(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
 
@@ -1133,55 +1133,55 @@ mod tests {
 
     #[test]
     fn test_bench_tps_fund_keys() {
-        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_satomis(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
         let keypair_count = 20;
-        let lamports = 20;
+        let satomis = 20;
         let rent = client.get_minimum_balance_for_rent_exemption(0).unwrap();
 
         let keypairs =
-            generate_and_fund_keypairs(client.clone(), &id, keypair_count, lamports).unwrap();
+            generate_and_fund_keypairs(client.clone(), &id, keypair_count, satomis).unwrap();
 
         for kp in &keypairs {
             assert_eq!(
                 client
                     .get_balance_with_commitment(&kp.pubkey(), CommitmentConfig::processed())
                     .unwrap(),
-                lamports + rent
+                satomis + rent
             );
         }
     }
 
     #[test]
     fn test_bench_tps_fund_keys_with_fees() {
-        let (mut genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
+        let (mut genesis_config, id) = create_genesis_config(domi_to_satomis(10_000.0));
         let fee_rate_governor = FeeRateGovernor::new(11, 0);
         genesis_config.fee_rate_governor = fee_rate_governor;
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
         let keypair_count = 20;
-        let lamports = 20;
+        let satomis = 20;
         let rent = client.get_minimum_balance_for_rent_exemption(0).unwrap();
 
         let keypairs =
-            generate_and_fund_keypairs(client.clone(), &id, keypair_count, lamports).unwrap();
+            generate_and_fund_keypairs(client.clone(), &id, keypair_count, satomis).unwrap();
 
         for kp in &keypairs {
-            assert_eq!(client.get_balance(&kp.pubkey()).unwrap(), lamports + rent);
+            assert_eq!(client.get_balance(&kp.pubkey()).unwrap(), satomis + rent);
         }
     }
 
     #[test]
     fn test_bench_tps_create_durable_nonce() {
-        let (genesis_config, id) = create_genesis_config(domi_to_lamports(10_000.0));
+        let (genesis_config, id) = create_genesis_config(domi_to_satomis(10_000.0));
         let bank = Bank::new_for_tests(&genesis_config);
         let client = Arc::new(BankClient::new(bank));
         let keypair_count = 10;
-        let lamports = 10_000_000;
+        let satomis = 10_000_000;
 
         let authority_keypairs =
-            generate_and_fund_keypairs(client.clone(), &id, keypair_count, lamports).unwrap();
+            generate_and_fund_keypairs(client.clone(), &id, keypair_count, satomis).unwrap();
 
         let nonce_keypairs = generate_durable_nonce_accounts(client.clone(), &authority_keypairs);
 

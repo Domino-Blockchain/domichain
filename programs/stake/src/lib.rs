@@ -8,7 +8,7 @@ pub use domichain_sdk::stake::program::{check_id, id};
 use domichain_sdk::{
     feature_set::{self, FeatureSet},
     genesis_config::GenesisConfig,
-    native_token::LAMPORTS_PER_DOMI,
+    native_token::SATOMIS_PER_DOMI,
 };
 
 pub mod config;
@@ -19,14 +19,14 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig) -> u64 {
     config::add_genesis_account(genesis_config)
 }
 
-/// The minimum stake amount that can be delegated, in lamports.
+/// The minimum stake amount that can be delegated, in satomis.
 /// NOTE: This is also used to calculate the minimum balance of a stake account, which is the
 /// rent exempt reserve _plus_ the minimum stake delegation.
 #[inline(always)]
 pub fn get_minimum_delegation(feature_set: &FeatureSet) -> u64 {
     if feature_set.is_active(&feature_set::stake_raise_minimum_delegation_to_1_domi::id()) {
         const MINIMUM_DELEGATION_SOL: u64 = 1;
-        MINIMUM_DELEGATION_SOL * LAMPORTS_PER_DOMI
+        MINIMUM_DELEGATION_SOL * SATOMIS_PER_DOMI
     } else {
         #[allow(deprecated)]
         domichain_sdk::stake::MINIMUM_STAKE_DELEGATION

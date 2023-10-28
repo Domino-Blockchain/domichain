@@ -3,7 +3,7 @@ use {
     domichain_rpc_client::rpc_client::RpcClient,
     domichain_rpc_client_api::client_error::{Error as ClientError, Result as ClientResult},
     domichain_sdk::{
-        commitment_config::CommitmentConfig, message::Message, native_token::lamports_to_domi,
+        commitment_config::CommitmentConfig, message::Message, native_token::satomis_to_domi,
         pubkey::Pubkey,
     },
 };
@@ -92,13 +92,13 @@ pub fn check_account_for_spend_and_fee_with_commitment(
     {
         if balance > 0 {
             return Err(CliError::InsufficientFundsForSpendAndFee(
-                lamports_to_domi(balance),
-                lamports_to_domi(fee),
+                satomis_to_domi(balance),
+                satomis_to_domi(fee),
                 *account_pubkey,
             ));
         } else {
             return Err(CliError::InsufficientFundsForFee(
-                lamports_to_domi(fee),
+                satomis_to_domi(fee),
                 *account_pubkey,
             ));
         }
@@ -137,10 +137,10 @@ pub fn check_account_for_balance_with_commitment(
     balance: u64,
     commitment: CommitmentConfig,
 ) -> ClientResult<bool> {
-    let lamports = rpc_client
+    let satomis = rpc_client
         .get_balance_with_commitment(account_pubkey, commitment)?
         .value;
-    if lamports != 0 && lamports >= balance {
+    if satomis != 0 && satomis >= balance {
         return Ok(true);
     }
     Ok(false)

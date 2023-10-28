@@ -132,9 +132,9 @@ const renderAccountRow = (
         <Address pubkey={account.address} link />
       </td>
       <td className="text-end">
-        <SolBalance lamports={account.lamports} maximumFractionDigits={0} />
+        <SolBalance satomis={account.satomis} maximumFractionDigits={0} />
       </td>
-      <td className="text-end">{`${((100 * account.lamports) / supply).toFixed(
+      <td className="text-end">{`${((100 * account.satomis) / supply).toFixed(
         3
       )}%`}</td>
     </tr>

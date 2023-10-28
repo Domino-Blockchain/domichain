@@ -73,15 +73,15 @@ impl SyncClient for BankClient {
         self.send_and_confirm_message(&[keypair], message)
     }
 
-    /// Transfer `lamports` from `keypair` to `pubkey`
+    /// Transfer `satomis` from `keypair` to `pubkey`
     fn transfer_and_confirm(
         &self,
-        lamports: u64,
+        satomis: u64,
         keypair: &Keypair,
         pubkey: &Pubkey,
     ) -> Result<Signature> {
         let transfer_instruction =
-            system_instruction::transfer(&keypair.pubkey(), pubkey, lamports);
+            system_instruction::transfer(&keypair.pubkey(), pubkey, satomis);
         self.send_and_confirm_instruction(keypair, transfer_instruction)
     }
 
@@ -123,7 +123,7 @@ impl SyncClient for BankClient {
     fn get_recent_blockhash(&self) -> Result<(Hash, FeeCalculator)> {
         Ok((
             self.bank.last_blockhash(),
-            FeeCalculator::new(self.bank.get_lamports_per_signature()),
+            FeeCalculator::new(self.bank.get_satomis_per_signature()),
         ))
     }
 
@@ -139,7 +139,7 @@ impl SyncClient for BankClient {
             .expect("bank blockhash queue should contain blockhash");
         Ok((
             blockhash,
-            FeeCalculator::new(self.bank.get_lamports_per_signature()),
+            FeeCalculator::new(self.bank.get_satomis_per_signature()),
             last_valid_slot,
         ))
     }
@@ -147,7 +147,7 @@ impl SyncClient for BankClient {
     fn get_fee_calculator_for_blockhash(&self, blockhash: &Hash) -> Result<Option<FeeCalculator>> {
         Ok(self
             .bank
-            .get_lamports_per_signature_for_blockhash(blockhash)
+            .get_satomis_per_signature_for_blockhash(blockhash)
             .map(FeeCalculator::new))
     }
 
@@ -246,7 +246,7 @@ impl SyncClient for BankClient {
         if recent_blockhash != *blockhash {
             Ok((
                 recent_blockhash,
-                FeeCalculator::new(self.bank.get_lamports_per_signature()),
+                FeeCalculator::new(self.bank.get_satomis_per_signature()),
             ))
         } else {
             Err(TransportError::IoError(io::Error::new(
@@ -351,13 +351,13 @@ mod tests {
         super::*,
         domichain_sdk::{
             genesis_config::create_genesis_config, instruction::AccountMeta,
-            native_token::domi_to_lamports,
+            native_token::domi_to_satomis,
         },
     };
 
     #[test]
     fn test_bank_client_new_with_keypairs() {
-        let (genesis_config, john_doe_keypair) = create_genesis_config(domi_to_lamports(1.0));
+        let (genesis_config, john_doe_keypair) = create_genesis_config(domi_to_satomis(1.0));
         let john_pubkey = john_doe_keypair.pubkey();
         let jane_doe_keypair = Keypair::new();
         let jane_pubkey = jane_doe_keypair.pubkey();

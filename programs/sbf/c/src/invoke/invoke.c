@@ -26,7 +26,7 @@ static const uint8_t TEST_PRIVILEGE_DEESCALATION_ESCALATION_WRITABLE = 13;
 static const uint8_t TEST_WRITABLE_DEESCALATION_WRITABLE = 14;
 static const uint8_t TEST_NESTED_INVOKE_TOO_DEEP = 15;
 static const uint8_t TEST_CALL_PRECOMPILE = 16;
-static const uint8_t ADD_LAMPORTS = 17;
+static const uint8_t ADD_SATOMIS = 17;
 static const uint8_t TEST_RETURN_DATA_TOO_LARGE = 18;
 static const uint8_t TEST_DUPLICATE_PRIVILEGE_ESCALATION_SIGNER = 19;
 static const uint8_t TEST_DUPLICATE_PRIVILEGE_ESCALATION_WRITABLE = 20;
@@ -50,8 +50,8 @@ uint64_t do_nested_invokes(uint64_t num_nested_invokes,
                            SolAccountInfo *accounts, uint64_t num_accounts) {
   sol_assert(accounts[ARGUMENT_INDEX].is_signer);
 
-  *accounts[ARGUMENT_INDEX].lamports -= 5;
-  *accounts[INVOKED_ARGUMENT_INDEX].lamports += 5;
+  *accounts[ARGUMENT_INDEX].satomis -= 5;
+  *accounts[INVOKED_ARGUMENT_INDEX].satomis += 5;
 
   SolAccountMeta arguments[] = {
       {accounts[INVOKED_ARGUMENT_INDEX].key, true, true},
@@ -67,9 +67,9 @@ uint64_t do_nested_invokes(uint64_t num_nested_invokes,
   sol_log("2nd invoke from first program");
   sol_assert(SUCCESS == sol_invoke(&instruction, accounts, num_accounts));
 
-  sol_assert(*accounts[ARGUMENT_INDEX].lamports ==
+  sol_assert(*accounts[ARGUMENT_INDEX].satomis ==
              42 - 5 + (2 * num_nested_invokes));
-  sol_assert(*accounts[INVOKED_ARGUMENT_INDEX].lamports ==
+  sol_assert(*accounts[INVOKED_ARGUMENT_INDEX].satomis ==
              10 + 5 - (2 * num_nested_invokes));
 
   return SUCCESS;
@@ -93,8 +93,8 @@ extern uint64_t entrypoint(const uint8_t *input) {
   case TEST_SUCCESS: {
     sol_log("Call system program create account");
     {
-      uint64_t from_lamports = *accounts[FROM_INDEX].lamports;
-      uint64_t to_lamports = *accounts[DERIVED_KEY1_INDEX].lamports;
+      uint64_t from_satomis = *accounts[FROM_INDEX].satomis;
+      uint64_t to_satomis = *accounts[DERIVED_KEY1_INDEX].satomis;
       SolAccountMeta arguments[] = {
           {accounts[FROM_INDEX].key, true, true},
           {accounts[DERIVED_KEY1_INDEX].key, true, true}};
@@ -114,8 +114,8 @@ extern uint64_t entrypoint(const uint8_t *input) {
                                               SOL_ARRAY_SIZE(accounts),
                                               signers_seeds,
                                               SOL_ARRAY_SIZE(signers_seeds)));
-      sol_assert(*accounts[FROM_INDEX].lamports == from_lamports - 42);
-      sol_assert(*accounts[DERIVED_KEY1_INDEX].lamports == to_lamports + 42);
+      sol_assert(*accounts[FROM_INDEX].satomis == from_satomis - 42);
+      sol_assert(*accounts[DERIVED_KEY1_INDEX].satomis == to_satomis + 42);
       sol_assert(SolPubkey_same(accounts[DERIVED_KEY1_INDEX].owner,
                                 params.program_id));
       sol_assert(accounts[DERIVED_KEY1_INDEX].data_len ==
@@ -134,8 +134,8 @@ extern uint64_t entrypoint(const uint8_t *input) {
 
     sol_log("Call system program transfer");
     {
-      uint64_t from_lamports = *accounts[FROM_INDEX].lamports;
-      uint64_t to_lamports = *accounts[DERIVED_KEY1_INDEX].lamports;
+      uint64_t from_satomis = *accounts[FROM_INDEX].satomis;
+      uint64_t to_satomis = *accounts[DERIVED_KEY1_INDEX].satomis;
       SolAccountMeta arguments[] = {
           {accounts[FROM_INDEX].key, true, true},
           {accounts[DERIVED_KEY1_INDEX].key, true, false}};
@@ -145,8 +145,8 @@ extern uint64_t entrypoint(const uint8_t *input) {
                                           data, SOL_ARRAY_SIZE(data)};
       sol_assert(SUCCESS ==
                  sol_invoke(&instruction, accounts, SOL_ARRAY_SIZE(accounts)));
-      sol_assert(*accounts[FROM_INDEX].lamports == from_lamports - 1);
-      sol_assert(*accounts[DERIVED_KEY1_INDEX].lamports == to_lamports + 1);
+      sol_assert(*accounts[FROM_INDEX].satomis == from_satomis - 1);
+      sol_assert(*accounts[DERIVED_KEY1_INDEX].satomis == to_satomis + 1);
     }
 
     sol_log("Test data translation");
@@ -476,7 +476,7 @@ extern uint64_t entrypoint(const uint8_t *input) {
 
     SolAccountInfo derived_account = {
         .key = accounts[DERIVED_KEY1_INDEX].key,
-        .lamports = accounts[DERIVED_KEY1_INDEX].lamports,
+        .satomis = accounts[DERIVED_KEY1_INDEX].satomis,
         .data_len = accounts[DERIVED_KEY1_INDEX].data_len,
         // Point to top edge of heap, attempt to allocate into unprivileged
         // memory
@@ -617,8 +617,8 @@ extern uint64_t entrypoint(const uint8_t *input) {
     sol_invoke(&instruction, accounts, SOL_ARRAY_SIZE(accounts));
     break;
   }
-  case ADD_LAMPORTS: {
-    *accounts[0].lamports += 1;
+  case ADD_SATOMIS: {
+    *accounts[0].satomis += 1;
      break;
   }
   case TEST_RETURN_DATA_TOO_LARGE: {

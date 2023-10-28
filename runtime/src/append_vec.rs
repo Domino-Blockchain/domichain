@@ -120,7 +120,7 @@ pub struct AppendVecStoredAccountMeta<'append_vec> {
 impl<'append_vec> AppendVecStoredAccountMeta<'append_vec> {
     pub fn clone_account(&self) -> AccountSharedData {
         AccountSharedData::from(Account {
-            lamports: self.account_meta.lamports,
+            satomis: self.account_meta.satomis,
             owner: self.account_meta.owner,
             executable: self.account_meta.executable,
             rent_epoch: self.account_meta.rent_epoch,
@@ -165,7 +165,7 @@ impl<'append_vec> AppendVecStoredAccountMeta<'append_vec> {
     }
 
     pub(crate) fn sanitize(&self) -> bool {
-        self.sanitize_executable() && self.sanitize_lamports()
+        self.sanitize_executable() && self.sanitize_satomis()
     }
 
     fn sanitize_executable(&self) -> bool {
@@ -173,9 +173,9 @@ impl<'append_vec> AppendVecStoredAccountMeta<'append_vec> {
         self.ref_executable_byte() & !1 == 0
     }
 
-    fn sanitize_lamports(&self) -> bool {
-        // Sanitize 0 lamports to ensure to be same as AccountSharedData::default()
-        self.account_meta.lamports != 0 || self.clone_account() == AccountSharedData::default()
+    fn sanitize_satomis(&self) -> bool {
+        // Sanitize 0 satomis to ensure to be same as AccountSharedData::default()
+        self.account_meta.satomis != 0 || self.clone_account() == AccountSharedData::default()
     }
 
     fn ref_executable_byte(&self) -> &u8 {
@@ -189,8 +189,8 @@ impl<'append_vec> AppendVecStoredAccountMeta<'append_vec> {
 }
 
 impl<'append_vec> ReadableAccount for AppendVecStoredAccountMeta<'append_vec> {
-    fn lamports(&self) -> u64 {
-        self.account_meta.lamports
+    fn satomis(&self) -> u64 {
+        self.account_meta.satomis
     }
     fn data(&self) -> &'append_vec [u8] {
         self.data()
@@ -533,7 +533,7 @@ impl AppendVec {
     }
 
     /// Return Ok(index_of_matching_owner) if the account owner at `offset` is one of the pubkeys in `owners`.
-    /// Return Err(MatchAccountOwnerError::NoMatch) if the account has 0 lamports or the owner is not one of
+    /// Return Err(MatchAccountOwnerError::NoMatch) if the account has 0 satomis or the owner is not one of
     /// the pubkeys in `owners`.
     /// Return Err(MatchAccountOwnerError::UnableToLoad) if the `offset` value causes a data overrun.
     pub fn account_matches_owners(
@@ -544,7 +544,7 @@ impl AppendVec {
         let account_meta = self
             .get_account_meta(offset)
             .ok_or(MatchAccountOwnerError::UnableToLoad)?;
-        if account_meta.lamports == 0 {
+        if account_meta.satomis == 0 {
             Err(MatchAccountOwnerError::NoMatch)
         } else {
             // dbg!(&account_meta);
@@ -611,7 +611,7 @@ impl AppendVec {
             let (account, pubkey, hash, write_version_obsolete) = accounts.get(i);
             let account_meta = account
                 .map(|account| AccountMeta {
-                    lamports: account.lamports(),
+                    satomis: account.satomis(),
                     owner: *account.owner(),
                     rent_epoch: account.rent_epoch(),
                     executable: account.executable(),
@@ -848,7 +848,7 @@ pub mod tests {
 
     #[test]
     fn test_storable_accounts_with_hashes_and_write_versions_default() {
-        // 0 lamport account, should return default account (or None in this case)
+        // 0 satomi account, should return default account (or None in this case)
         let account = Account {
             data: vec![0],
             ..Account::default()
@@ -870,9 +870,9 @@ pub mod tests {
         let get_account = storable.account(0);
         assert!(get_account.is_none());
 
-        // non-zero lamports, data should be correct
+        // non-zero satomis, data should be correct
         let account = Account {
-            lamports: 1,
+            satomis: 1,
             data: vec![0],
             ..Account::default()
         }
@@ -907,13 +907,13 @@ pub mod tests {
     #[test]
     fn test_account_meta_non_default() {
         let def1 = AccountMeta {
-            lamports: 1,
+            satomis: 1,
             owner: Pubkey::new_unique(),
             executable: true,
             rent_epoch: 3,
         };
         let def2_account = Account {
-            lamports: def1.lamports,
+            satomis: def1.satomis,
             owner: def1.owner,
             executable: def1.executable,
             rent_epoch: def1.rent_epoch,
@@ -1107,10 +1107,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_new_from_file_crafted_zero_lamport_account() {
-        // This test verifies that when we sanitize on load, that we fail sanitizing if we load an account with zero lamports that does not have all default value fields.
-        // This test writes an account with zero lamports, but with 3 bytes of data. On load, it asserts that load fails.
-        // It used to be possible to use the append vec api to write an account to an append vec with zero lamports, but with non-default values for other account fields.
+    fn test_new_from_file_crafted_zero_satomi_account() {
+        // This test verifies that when we sanitize on load, that we fail sanitizing if we load an account with zero satomis that does not have all default value fields.
+        // This test writes an account with zero satomis, but with 3 bytes of data. On load, it asserts that load fails.
+        // It used to be possible to use the append vec api to write an account to an append vec with zero satomis, but with non-default values for other account fields.
         // This will no longer be possible. Thus, to implement the write portion of this test would require additional test-only parameters to public apis or otherwise duplicating code paths.
         // So, the sanitizing on load behavior can be tested by capturing [u8] that would be created if such a write was possible (as it used to be).
         // The contents of [u8] written by an append vec cannot easily or reasonably change frequently since it has released a long time.
@@ -1301,7 +1301,7 @@ pub mod tests {
         assert_eq!(offset_of!(StoredMeta, pubkey), 0x10);
         assert_eq!(mem::size_of::<StoredMeta>(), 0x30);
 
-        assert_eq!(offset_of!(AccountMeta, lamports), 0x00);
+        assert_eq!(offset_of!(AccountMeta, satomis), 0x00);
         assert_eq!(offset_of!(AccountMeta, rent_epoch), 0x08);
         assert_eq!(offset_of!(AccountMeta, owner), 0x10);
         assert_eq!(offset_of!(AccountMeta, executable), 0x30);

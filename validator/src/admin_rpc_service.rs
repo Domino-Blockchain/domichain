@@ -1052,13 +1052,13 @@ mod tests {
 
             // Add 2 basic wallet accounts
             let wallet1_account = AccountSharedData::from(Account {
-                lamports: 11111111,
+                satomis: 11111111,
                 owner: system_program::id(),
                 ..Account::default()
             });
             bank.store_account(&wallet1_pubkey, &wallet1_account);
             let wallet2_account = AccountSharedData::from(Account {
-                lamports: 11111111,
+                satomis: 11111111,
                 owner: system_program::id(),
                 ..Account::default()
             });
@@ -1078,7 +1078,7 @@ mod tests {
             };
             TokenAccount::pack(token_account1, &mut account1_data).unwrap();
             let token_account1 = AccountSharedData::from(Account {
-                lamports: 111,
+                satomis: 111,
                 data: account1_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()
@@ -1096,7 +1096,7 @@ mod tests {
             };
             Mint::pack(mint1_state, &mut mint1_data).unwrap();
             let mint_account1 = AccountSharedData::from(Account {
-                lamports: 222,
+                satomis: 222,
                 data: mint1_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()
@@ -1117,7 +1117,7 @@ mod tests {
             };
             TokenAccount::pack(token_account2, &mut account2_data).unwrap();
             let token_account2 = AccountSharedData::from(Account {
-                lamports: 333,
+                satomis: 333,
                 data: account2_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()
@@ -1138,7 +1138,7 @@ mod tests {
             };
             TokenAccount::pack(token_account3, &mut account3_data).unwrap();
             let token_account3 = AccountSharedData::from(Account {
-                lamports: 444,
+                satomis: 444,
                 data: account3_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()
@@ -1156,7 +1156,7 @@ mod tests {
             };
             Mint::pack(mint2_state, &mut mint2_data).unwrap();
             let mint_account2 = AccountSharedData::from(Account {
-                lamports: 555,
+                satomis: 555,
                 data: mint2_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()
@@ -1312,7 +1312,7 @@ mod tests {
             let pubkey = Pubkey::new_unique();
             dummy_account_pubkeys.push(pubkey);
             let account = AccountSharedData::from(Account {
-                lamports: 11111111,
+                satomis: 11111111,
                 owner: system_program::id(),
                 ..Account::default()
             });
@@ -1327,7 +1327,7 @@ mod tests {
             for _j in 0..num_children.unwrap_or(0) {
                 let child_pubkey = Pubkey::new_unique();
                 let child_account = AccountSharedData::from(Account {
-                    lamports: bank.get_minimum_balance_for_rent_exemption(0),
+                    satomis: bank.get_minimum_balance_for_rent_exemption(0),
                     owner: *dummy_account,
                     ..Account::default()
                 });
@@ -1375,7 +1375,7 @@ mod tests {
                 };
                 TokenAccount::pack(token_state, &mut account_data).unwrap();
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 22222222,
+                    satomis: 22222222,
                     data: account_data.to_vec(),
                     owner: inline_spl_token::id(),
                     ..Account::default()
@@ -1396,7 +1396,7 @@ mod tests {
             };
             Mint::pack(mint_state, &mut mint_data).unwrap();
             let mint_account = AccountSharedData::from(Account {
-                lamports: 33333333,
+                satomis: 33333333,
                 data: mint_data.to_vec(),
                 owner: inline_spl_token::id(),
                 ..Account::default()

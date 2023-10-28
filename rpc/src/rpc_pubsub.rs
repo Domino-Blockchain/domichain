@@ -941,7 +941,7 @@ mod tests {
                    "context": { "slot": 1 },
                    "value": {
                        "owner": stake_program_id.to_string(),
-                       "lamports": balance,
+                       "satomis": balance,
                        "data": [BASE64_STANDARD.encode(expected_data), encoding],
                        "executable": false,
                        "rentEpoch": u64::MAX,
@@ -1064,7 +1064,7 @@ mod tests {
                    "context": { "slot": 1 },
                    "value": {
                        "owner": system_program::id().to_string(),
-                       "lamports": 100,
+                       "satomis": 100,
                        "data": expected_data,
                        "executable": false,
                        "rentEpoch": u64::MAX,
@@ -1250,7 +1250,7 @@ mod tests {
                    "context": { "slot": 1 },
                    "value": {
                        "owner": system_program::id().to_string(),
-                       "lamports": 100,
+                       "satomis": 100,
                        "data": "",
                        "executable": false,
                        "rentEpoch": u64::MAX,

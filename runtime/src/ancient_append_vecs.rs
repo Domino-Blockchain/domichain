@@ -12,7 +12,7 @@ use {
             INCLUDE_SLOT_IN_HASH_IRRELEVANT_APPEND_VEC_OPERATION,
         },
         accounts_file::AccountsFile,
-        accounts_index::{AccountsIndexScanResult, ZeroLamport},
+        accounts_index::{AccountsIndexScanResult, ZeroSatomi},
         active_stats::ActiveStatItem,
         append_vec::aligned_stored_size,
         storable_accounts::{StorableAccounts, StorableAccountsBySlot},
@@ -374,7 +374,7 @@ impl AccountsDb {
     /// write 'accounts_to_write' into it
     /// return shrink_in_progress and some metrics
     #[allow(dead_code)]
-    fn write_ancient_accounts<'a, 'b: 'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    fn write_ancient_accounts<'a, 'b: 'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &'b self,
         bytes: u64,
         accounts_to_write: impl StorableAccounts<'a, T>,
@@ -1111,7 +1111,7 @@ pub mod tests {
                     })
                     .unwrap_or_default();
                 // add some accounts to each storage so we can make partial progress
-                let mut lamports = 1000;
+                let mut satomis = 1000;
                 let _pubkeys_and_accounts = storages
                     .iter()
                     .map(|storage| {
@@ -1119,8 +1119,8 @@ pub mod tests {
                             .map(|_| {
                                 let pk = domichain_sdk::pubkey::new_rand();
                                 let mut account = account_template.clone();
-                                account.set_lamports(lamports);
-                                lamports += 1;
+                                account.set_satomis(satomis);
+                                satomis += 1;
                                 append_single_account_with_default_hash(
                                     storage,
                                     &pk,
@@ -1615,7 +1615,7 @@ pub mod tests {
                 .unwrap();
             let pk_with_2_refs = account_with_2_refs.pubkey();
             let mut account_with_1_ref = account_with_2_refs.to_account_shared_data();
-            _ = account_with_1_ref.checked_add_lamports(1);
+            _ = account_with_1_ref.checked_add_satomis(1);
             append_single_account_with_default_hash(
                 &storage,
                 &pk_with_1_ref,
@@ -1820,7 +1820,7 @@ pub mod tests {
         let account = AccountSharedData::default();
 
         let account_meta = AccountMeta {
-            lamports: 1,
+            satomis: 1,
             owner: Pubkey::from([2; 32]),
             executable: false,
             rent_epoch: 0,
@@ -2783,7 +2783,7 @@ pub mod tests {
     #[test]
     fn test_get_many_refs_pubkeys() {
         let rent_epoch = 0;
-        let lamports = 0;
+        let satomis = 0;
         let executable = false;
         let owner = Pubkey::default();
         let data = Vec::new();
@@ -2802,7 +2802,7 @@ pub mod tests {
             data_len: 7,
         };
         let account_meta = AccountMeta {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
@@ -2853,7 +2853,7 @@ pub mod tests {
                 },
                 alive_total_bytes: 0,
                 total_starting_accounts: 0,
-                all_are_zero_lamports: false,
+                all_are_zero_satomis: false,
                 _index_entries_being_shrunk: Vec::default(),
             };
             let pks = AccountsDb::get_many_refs_pubkeys(&shrink_collect);
@@ -2865,7 +2865,7 @@ pub mod tests {
     fn test_revisit_accounts_with_many_refs() {
         let db = AccountsDb::new_single_for_tests();
         let rent_epoch = 0;
-        let lamports = 0;
+        let satomis = 0;
         let executable = false;
         let owner = Pubkey::default();
         let data = Vec::new();
@@ -2884,7 +2884,7 @@ pub mod tests {
             data_len: 7,
         };
         let account_meta = AccountMeta {
-            lamports,
+            satomis,
             owner,
             executable,
             rent_epoch,
@@ -2962,7 +2962,7 @@ pub mod tests {
                         },
                         alive_total_bytes: 0,
                         total_starting_accounts: 0,
-                        all_are_zero_lamports: false,
+                        all_are_zero_satomis: false,
                         _index_entries_being_shrunk: Vec::default(),
                     };
                     db.revisit_accounts_with_many_refs(&mut shrink_collect);
@@ -3080,7 +3080,7 @@ pub mod tests {
                 },
                 alive_total_bytes: 0,
                 total_starting_accounts: 0,
-                all_are_zero_lamports: false,
+                all_are_zero_satomis: false,
                 _index_entries_being_shrunk: Vec::default(),
             };
             let accounts_to_combine = AccountsToCombine {

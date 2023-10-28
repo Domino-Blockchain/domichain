@@ -12,7 +12,7 @@ Runtime transaction processing rules need to be updated slightly. Programs still
 
 Readonly accounts have the following property:
 
-- Read-only access to all account fields, including lamports (cannot be credited or debited), and account data
+- Read-only access to all account fields, including satomis (cannot be credited or debited), and account data
 
 Instructions that credit, debit, or modify the readonly account will fail.
 

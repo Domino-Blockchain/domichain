@@ -123,7 +123,7 @@ pub fn load_program_from_account(
     )
     .map_err(|err| {
         ic_logger_msg!(log_collector, "{}", err);
-        dbg!(InstructionError::InvalidAccountData)
+        InstructionError::InvalidAccountData
     })?;
     Ok((Arc::new(loaded_program), load_program_metrics))
 }
@@ -236,7 +236,7 @@ fn check_program_account(
     }
     if program.get_data().is_empty() {
         ic_logger_msg!(log_collector, "Program is uninitialized");
-        return Err(dbg!(InstructionError::InvalidAccountData));
+        return Err(InstructionError::InvalidAccountData)
     }
     let state = get_state(program.get_data())?;
     if !program.is_writable() {
@@ -317,16 +317,16 @@ pub fn process_instruction_write(
     }
     let end_offset = (offset as usize).saturating_add(bytes.len());
     let rent = invoke_context.get_sysvar_cache().get_rent()?;
-    let required_lamports =
+    let required_satomis =
         rent.minimum_balance(LoaderV4State::program_data_offset().saturating_add(end_offset));
-    let transfer_lamports = required_lamports.saturating_sub(program.get_lamports());
-    if transfer_lamports > 0 {
-        payer = payer.filter(|payer| payer.get_lamports() >= transfer_lamports);
+    let transfer_satomis = required_satomis.saturating_sub(program.get_satomis());
+    if transfer_satomis > 0 {
+        payer = payer.filter(|payer| payer.get_satomis() >= transfer_satomis);
         if payer.is_none() {
             ic_logger_msg!(
                 log_collector,
-                "Insufficient lamports, {} are required",
-                required_lamports
+                "Insufficient satomis, {} are required",
+                required_satomis
             );
             return Err(InstructionError::InsufficientFunds);
         }
@@ -335,8 +335,8 @@ pub fn process_instruction_write(
         program.set_data_length(LoaderV4State::program_data_offset().saturating_add(end_offset))?;
     }
     if let Some(mut payer) = payer {
-        payer.checked_sub_lamports(transfer_lamports)?;
-        program.checked_add_lamports(transfer_lamports)?;
+        payer.checked_sub_satomis(transfer_satomis)?;
+        program.checked_add_satomis(transfer_satomis)?;
     }
     if is_initialization {
         let state = get_state_mut(program.get_data_mut()?)?;
@@ -386,7 +386,7 @@ pub fn process_instruction_truncate(
         ic_logger_msg!(log_collector, "Truncate out of bounds");
         return Err(InstructionError::AccountDataTooSmall);
     }
-    let required_lamports = if offset == 0 {
+    let required_satomis = if offset == 0 {
         program.set_data_length(0)?;
         0
     } else {
@@ -396,9 +396,9 @@ pub fn process_instruction_truncate(
         let rent = invoke_context.get_sysvar_cache().get_rent()?;
         rent.minimum_balance(program.get_data().len())
     };
-    let transfer_lamports = program.get_lamports().saturating_sub(required_lamports);
-    program.checked_sub_lamports(transfer_lamports)?;
-    recipient.checked_add_lamports(transfer_lamports)?;
+    let transfer_satomis = program.get_satomis().saturating_sub(required_satomis);
+    program.checked_sub_satomis(transfer_satomis)?;
+    recipient.checked_add_satomis(transfer_satomis)?;
     Ok(())
 }
 
@@ -458,12 +458,12 @@ pub fn process_instruction_deploy(
     load_program_metrics.submit_datapoint(&mut invoke_context.timings);
     if let Some(mut source_program) = source_program {
         let rent = invoke_context.get_sysvar_cache().get_rent()?;
-        let required_lamports = rent.minimum_balance(program.get_data().len());
-        let transfer_lamports = program.get_lamports().saturating_sub(required_lamports);
+        let required_satomis = rent.minimum_balance(program.get_data().len());
+        let transfer_satomis = program.get_satomis().saturating_sub(required_satomis);
         program.set_data_from_slice(source_program.get_data())?;
         source_program.set_data_length(0)?;
-        source_program.checked_sub_lamports(transfer_lamports)?;
-        program.checked_add_lamports(transfer_lamports)?;
+        source_program.checked_sub_satomis(transfer_satomis)?;
+        program.checked_add_satomis(transfer_satomis)?;
     }
     let state = get_state_mut(program.get_data_mut()?)?;
     state.slot = current_slot;
@@ -584,7 +584,7 @@ pub fn process_instruction_inner(
         }
         if program.get_data().is_empty() {
             ic_logger_msg!(log_collector, "Program is uninitialized");
-            return Err(Box::new(dbg!(InstructionError::InvalidAccountData)));
+            return Err(Box::new(InstructionError::InvalidAccountData))
         }
         let state = get_state(program.get_data())?;
         if !state.is_deployed {
@@ -613,7 +613,7 @@ pub fn process_instruction_inner(
             LoadedProgramType::FailedVerification(_)
             | LoadedProgramType::Closed
             | LoadedProgramType::DelayVisibility => {
-                Err(Box::new(dbg!(InstructionError::InvalidAccountData)) as Box<dyn std::error::Error>)
+                Err(Box::new(InstructionError::InvalidAccountData) as Box<dyn std::error::Error>)
             }
             LoadedProgramType::Typed(_executable) => {
                 todo!()
@@ -847,13 +847,13 @@ mod tests {
             accounts[0].data().len(),
             loader_v4::LoaderV4State::program_data_offset().saturating_add(4),
         );
-        assert_eq!(accounts[0].lamports(), 1252800);
+        assert_eq!(accounts[0].satomis(), 1252800);
         assert_eq!(
-            accounts[2].lamports(),
+            accounts[2].satomis(),
             transaction_accounts[2]
                 .1
-                .lamports()
-                .saturating_sub(accounts[0].lamports()),
+                .satomis()
+                .saturating_sub(accounts[0].satomis()),
         );
 
         // Error: Program is not writeable
@@ -900,15 +900,15 @@ mod tests {
             loader_v4::LoaderV4State::program_data_offset().saturating_add(8),
         );
         assert_eq!(
-            accounts[0].lamports(),
-            transaction_accounts[0].1.lamports().saturating_add(27840),
+            accounts[0].satomis(),
+            transaction_accounts[0].1.satomis().saturating_add(27840),
         );
         assert_eq!(
-            accounts[2].lamports(),
-            transaction_accounts[2].1.lamports().saturating_sub(
+            accounts[2].satomis(),
+            transaction_accounts[2].1.satomis().saturating_sub(
                 accounts[0]
-                    .lamports()
-                    .saturating_sub(transaction_accounts[0].1.lamports()),
+                    .satomis()
+                    .saturating_sub(transaction_accounts[0].1.satomis()),
             ),
         );
 
@@ -929,7 +929,7 @@ mod tests {
             accounts[0].data().len(),
             loader_v4::LoaderV4State::program_data_offset().saturating_add(8),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Empty write
         transaction_accounts[0].1 = accounts[0].clone();
@@ -948,7 +948,7 @@ mod tests {
             accounts[0].data().len(),
             loader_v4::LoaderV4State::program_data_offset().saturating_add(8),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Error: Program is not retracted
         process_instruction(
@@ -1076,13 +1076,13 @@ mod tests {
             accounts[0].data().len(),
             loader_v4::LoaderV4State::program_data_offset().saturating_add(4),
         );
-        assert_eq!(accounts[0].lamports(), 1252800);
+        assert_eq!(accounts[0].satomis(), 1252800);
         assert_eq!(
-            accounts[2].lamports(),
+            accounts[2].satomis(),
             transaction_accounts[0]
                 .1
-                .lamports()
-                .saturating_sub(accounts[0].lamports()),
+                .satomis()
+                .saturating_sub(accounts[0].satomis()),
         );
 
         // Close program account
@@ -1095,11 +1095,11 @@ mod tests {
         );
         assert_eq!(accounts[0].data().len(), 0);
         assert_eq!(
-            accounts[2].lamports(),
+            accounts[2].satomis(),
             transaction_accounts[0]
                 .1
-                .lamports()
-                .saturating_sub(accounts[0].lamports()),
+                .satomis()
+                .saturating_sub(accounts[0].satomis()),
         );
 
         // Error: Program is uninitialized
@@ -1108,7 +1108,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Truncate { offset: 0 }).unwrap(),
             transaction_accounts.clone(),
             &[(2, false, true), (1, true, false), (0, false, true)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: Program is not retracted
@@ -1177,7 +1177,7 @@ mod tests {
             accounts[0].data().len(),
             transaction_accounts[0].1.data().len(),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Error: Source program is not writable
         process_instruction(
@@ -1220,11 +1220,11 @@ mod tests {
         );
         assert_eq!(accounts[2].data().len(), 0,);
         assert_eq!(
-            accounts[2].lamports(),
-            transaction_accounts[2].1.lamports().saturating_sub(
+            accounts[2].satomis(),
+            transaction_accounts[2].1.satomis().saturating_sub(
                 accounts[0]
-                    .lamports()
-                    .saturating_sub(transaction_accounts[0].1.lamports())
+                    .satomis()
+                    .saturating_sub(transaction_accounts[0].1.satomis())
             ),
         );
 
@@ -1244,7 +1244,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Deploy).unwrap(),
             transaction_accounts.clone(),
             &[(3, false, true), (1, true, false)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: Program fails verification
@@ -1253,7 +1253,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Deploy).unwrap(),
             transaction_accounts.clone(),
             &[(4, false, true), (1, true, false)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: Program is deployed already
@@ -1307,7 +1307,7 @@ mod tests {
             accounts[0].data().len(),
             transaction_accounts[0].1.data().len(),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Error: Program is uninitialized
         process_instruction(
@@ -1315,7 +1315,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::Retract).unwrap(),
             transaction_accounts.clone(),
             &[(2, false, true), (1, true, false)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: Program is not deployed
@@ -1382,7 +1382,7 @@ mod tests {
             accounts[0].data().len(),
             transaction_accounts[0].1.data().len(),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Finalize program
         let accounts = process_instruction(
@@ -1396,7 +1396,7 @@ mod tests {
             accounts[0].data().len(),
             transaction_accounts[0].1.data().len(),
         );
-        assert_eq!(accounts[0].lamports(), transaction_accounts[0].1.lamports());
+        assert_eq!(accounts[0].satomis(), transaction_accounts[0].1.satomis());
 
         // Error: Program is uninitialized
         process_instruction(
@@ -1404,7 +1404,7 @@ mod tests {
             &bincode::serialize(&LoaderV4Instruction::TransferAuthority).unwrap(),
             transaction_accounts.clone(),
             &[(3, false, true), (1, true, false), (2, true, false)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: New authority did not sign
@@ -1469,7 +1469,7 @@ mod tests {
             &[0, 1, 2, 3],
             transaction_accounts.clone(),
             &[(1, false, true)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
 
         // Error: Program is not deployed
@@ -1487,7 +1487,7 @@ mod tests {
             &[0, 1, 2, 3],
             transaction_accounts,
             &[(1, false, true)],
-            Err(dbg!(InstructionError::InvalidAccountData)),
+            Err(InstructionError::InvalidAccountData)
         );
     }
 }

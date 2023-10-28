@@ -170,7 +170,7 @@
 //! - [`ProgramError`] and [`ProgramResult`] &mdash; The error type that all programs
 //!   must return, reported to the runtime as a `u64`.
 //! - [`Domi`] &mdash; The Domichain native token type, with conversions to and from
-//!   [_lamports_], the smallest fractional unit of DOMI, in the [`native_token`]
+//!   [_satomis_], the smallest fractional unit of DOMI, in the [`native_token`]
 //!   module.
 //!
 //! [acc]: https://docs.domichain.com/developing/programming-model/accounts
@@ -184,7 +184,7 @@
 //! [`Keypair`]: https://docs.rs/domichain-sdk/latest/domichain_sdk/signer/keypair/struct.Keypair.html
 //! [SHA-256]: https://en.wikipedia.org/wiki/SHA-2
 //! [`Domi`]: native_token::Domi
-//! [_lamports_]: https://docs.domichain.com/introduction#what-are-sols
+//! [_satomis_]: https://docs.domichain.com/introduction#what-are-sols
 //!
 //! # Serialization
 //!
@@ -274,7 +274,7 @@
 //! [`invoke_signed`]: program::invoke_signed
 //! [cpi]: https://docs.domichain.com/developing/programming-model/calling-between-programs
 //!
-//! A simple example of transferring lamports via CPI:
+//! A simple example of transferring satomis via CPI:
 //!
 //! ```
 //! use domichain_program::{
@@ -303,10 +303,10 @@
 //!     assert!(payer.is_signer);
 //!     assert!(recipient.is_writable);
 //!
-//!     let lamports = 1000000;
+//!     let satomis = 1000000;
 //!
 //!     invoke(
-//!         &system_instruction::transfer(payer.key, recipient.key, lamports),
+//!         &system_instruction::transfer(payer.key, recipient.key, satomis),
 //!         &[payer.clone(), recipient.clone()],
 //!     )
 //! }
@@ -359,14 +359,14 @@
 //!
 //!     assert_eq!(vault_pda.key, &expected_vault_pda);
 //!
-//!     let lamports = 10000000;
+//!     let satomis = 10000000;
 //!     let vault_size = 16;
 //!
 //!     invoke_signed(
 //!         &system_instruction::create_account(
 //!             &payer.key,
 //!             &vault_pda.key,
-//!             lamports,
+//!             satomis,
 //!             vault_size,
 //!             &program_id,
 //!         ),
@@ -421,7 +421,7 @@
 //! Native programs important to Domichain program authors include:
 //!
 //! - __System Program__: Creates new accounts, allocates account data, assigns
-//!   accounts to owning programs, transfers lamports from System Program owned
+//!   accounts to owning programs, transfers satomis from System Program owned
 //!   accounts and pays transaction fees.
 //!   - ID: [`domichain_program::system_program`]
 //!   - Instruction: [`domichain_program::system_instruction`]
@@ -513,7 +513,7 @@ pub mod hash;
 pub mod incinerator;
 pub mod instruction;
 pub mod keccak;
-pub mod lamports;
+pub mod satomis;
 pub mod loader_instruction;
 pub mod loader_upgradeable_instruction;
 pub mod loader_v4;

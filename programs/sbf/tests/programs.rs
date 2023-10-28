@@ -61,7 +61,7 @@ use {
         bank::Bank,
         bank_client::BankClient,
         genesis_utils::{
-            bootstrap_validator_stake_lamports, create_genesis_config,
+            bootstrap_validator_stake_satomis, create_genesis_config,
             create_genesis_config_with_leader_ex, GenesisConfigInfo,
         },
     },
@@ -186,19 +186,19 @@ fn execute_transactions(
                         ..
                     } = details;
 
-                    let lamports_per_signature = match durable_nonce_fee {
-                        Some(DurableNonceFee::Valid(lamports_per_signature)) => {
-                            Some(lamports_per_signature)
+                    let satomis_per_signature = match durable_nonce_fee {
+                        Some(DurableNonceFee::Valid(satomis_per_signature)) => {
+                            Some(satomis_per_signature)
                         }
                         Some(DurableNonceFee::Invalid) => None,
-                        None => bank.get_lamports_per_signature_for_blockhash(
+                        None => bank.get_satomis_per_signature_for_blockhash(
                             &tx.message().recent_blockhash,
                         ),
                     }
-                    .expect("lamports_per_signature must be available");
-                    let fee = bank.get_fee_for_message_with_lamports_per_signature(
+                    .expect("satomis_per_signature must be available");
+                    let fee = bank.get_fee_for_message_with_satomis_per_signature(
                         &SanitizedMessage::try_from(tx.message().clone()).unwrap(),
-                        lamports_per_signature,
+                        satomis_per_signature,
                     );
 
                     let inner_instructions = inner_instructions.map(|inner_instructions| {
@@ -544,23 +544,23 @@ fn test_program_sbf_duplicate_accounts() {
         bank.store_account(&pubkey, &account);
         let instruction = Instruction::new_with_bytes(program_id, &[4], account_metas.clone());
         let result = bank_client.send_and_confirm_instruction(&mint_keypair, instruction);
-        let lamports = bank_client.get_balance(&pubkey).unwrap();
+        let satomis = bank_client.get_balance(&pubkey).unwrap();
         assert!(result.is_ok());
-        assert_eq!(lamports, 11);
+        assert_eq!(satomis, 11);
 
         bank.store_account(&pubkey, &account);
         let instruction = Instruction::new_with_bytes(program_id, &[5], account_metas.clone());
         let result = bank_client.send_and_confirm_instruction(&mint_keypair, instruction);
-        let lamports = bank_client.get_balance(&pubkey).unwrap();
+        let satomis = bank_client.get_balance(&pubkey).unwrap();
         assert!(result.is_ok());
-        assert_eq!(lamports, 12);
+        assert_eq!(satomis, 12);
 
         bank.store_account(&pubkey, &account);
         let instruction = Instruction::new_with_bytes(program_id, &[6], account_metas.clone());
         let result = bank_client.send_and_confirm_instruction(&mint_keypair, instruction);
-        let lamports = bank_client.get_balance(&pubkey).unwrap();
+        let satomis = bank_client.get_balance(&pubkey).unwrap();
         assert!(result.is_ok());
-        assert_eq!(lamports, 13);
+        assert_eq!(satomis, 13);
 
         let keypair = Keypair::new();
         let pubkey = keypair.pubkey();
@@ -1718,7 +1718,7 @@ fn get_stable_genesis_config() -> GenesisConfigInfo {
         &validator_pubkey,
         &voting_keypair.pubkey(),
         &stake_pubkey,
-        bootstrap_validator_stake_lamports(),
+        bootstrap_validator_stake_satomis(),
         42,
         FeeRateGovernor::new(0, 0), // most tests can't handle transaction fees
         Rent::free(),               // most tests don't expect rent
@@ -3258,7 +3258,7 @@ fn test_program_sbf_realloc_invoke() {
         TransactionError::InstructionError(0, InstructionError::ReadonlyDataModified)
     );
     let account = bank.get_account(&pubkey).unwrap();
-    assert_eq!(account.lamports(), START_BALANCE);
+    assert_eq!(account.satomis(), START_BALANCE);
 
     // Realloc account to 0
     bank_client
@@ -3271,7 +3271,7 @@ fn test_program_sbf_realloc_invoke() {
         )
         .unwrap();
     let account = bank.get_account(&pubkey).unwrap();
-    assert_eq!(account.lamports(), START_BALANCE);
+    assert_eq!(account.satomis(), START_BALANCE);
     let data = bank_client.get_account_data(&pubkey).unwrap().unwrap();
     assert_eq!(0, data.len());
 
@@ -3330,7 +3330,7 @@ fn test_program_sbf_realloc_invoke() {
         )
         .unwrap();
     let account = bank.get_account(&pubkey).unwrap();
-    assert_eq!(account.lamports(), START_BALANCE);
+    assert_eq!(account.satomis(), START_BALANCE);
     let data = bank_client.get_account_data(&pubkey).unwrap().unwrap();
     assert_eq!(0, data.len());
 

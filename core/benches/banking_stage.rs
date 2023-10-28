@@ -390,13 +390,13 @@ fn simulate_process_entries(
     mut tx_vector: Vec<VersionedTransaction>,
     genesis_config: &GenesisConfig,
     keypairs: &[Keypair],
-    initial_lamports: u64,
+    initial_satomis: u64,
     num_accounts: usize,
 ) {
     let bank = Arc::new(Bank::new_for_benches(genesis_config));
 
     for i in 0..(num_accounts / 2) {
-        bank.transfer(initial_lamports, mint_keypair, &keypairs[i * 2].pubkey())
+        bank.transfer(initial_satomis, mint_keypair, &keypairs[i * 2].pubkey())
             .unwrap();
     }
 
@@ -405,14 +405,14 @@ fn simulate_process_entries(
             system_transaction::transfer(
                 &keypairs[i],
                 &keypairs[i + 1].pubkey(),
-                initial_lamports,
+                initial_satomis,
                 bank.last_blockhash(),
             )
             .into(),
         );
     }
 
-    // Transfer lamports to each other
+    // Transfer satomis to each other
     let entry = Entry {
         num_hashes: 1,
         hash: next_hash(&bank.last_blockhash(), 1, &tx_vector),
@@ -425,7 +425,7 @@ fn bench_process_entries(randomize_txs: bool, bencher: &mut Bencher) {
     // entropy multiplier should be big enough to provide sufficient entropy
     // but small enough to not take too much time while executing the test.
     let entropy_multiplier: usize = 25;
-    let initial_lamports = 100;
+    let initial_satomis = 100;
 
     // number of accounts need to be in multiple of 4 for correct
     // execution of the test.
@@ -434,7 +434,7 @@ fn bench_process_entries(randomize_txs: bool, bencher: &mut Bencher) {
         genesis_config,
         mint_keypair,
         ..
-    } = create_genesis_config((num_accounts + 1) as u64 * initial_lamports);
+    } = create_genesis_config((num_accounts + 1) as u64 * initial_satomis);
 
     let keypairs: Vec<Keypair> = repeat_with(Keypair::new).take(num_accounts).collect();
     let tx_vector: Vec<VersionedTransaction> = Vec::with_capacity(num_accounts / 2);
@@ -446,7 +446,7 @@ fn bench_process_entries(randomize_txs: bool, bencher: &mut Bencher) {
             tx_vector.clone(),
             &genesis_config,
             &keypairs,
-            initial_lamports,
+            initial_satomis,
             num_accounts,
         );
     });

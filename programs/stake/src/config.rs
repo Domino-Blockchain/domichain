@@ -22,17 +22,17 @@ pub fn from(account: &BorrowedAccount) -> Option<Config> {
         .and_then(|data| deserialize(data).ok())
 }
 
-pub fn create_account(lamports: u64, config: &Config) -> AccountSharedData {
-    create_config_account(vec![], config, lamports)
+pub fn create_account(satomis: u64, config: &Config) -> AccountSharedData {
+    create_config_account(vec![], config, satomis)
 }
 
 pub fn add_genesis_account(genesis_config: &mut GenesisConfig) -> u64 {
     let mut account = create_config_account(vec![], &Config::default(), 0);
-    let lamports = genesis_config.rent.minimum_balance(account.data().len());
+    let satomis = genesis_config.rent.minimum_balance(account.data().len());
 
-    account.set_lamports(lamports.max(1));
+    account.set_satomis(satomis.max(1));
 
     genesis_config.add_account(config::id(), account);
 
-    lamports
+    satomis
 }

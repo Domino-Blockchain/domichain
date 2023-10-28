@@ -43,7 +43,7 @@ async fn setup_stake(
     context: &mut ProgramTestContext,
     user: &Keypair,
     vote_address: &Pubkey,
-    stake_lamports: u64,
+    stake_satomis: u64,
 ) -> Pubkey {
     let stake_keypair = Keypair::new();
     let transaction = Transaction::new_signed_with_payer(
@@ -53,7 +53,7 @@ async fn setup_stake(
             vote_address,
             &Authorized::auto(&user.pubkey()),
             &Lockup::default(),
-            stake_lamports,
+            stake_satomis,
         ),
         Some(&context.payer.pubkey()),
         &vec![&context.payer, &stake_keypair, user],
@@ -79,7 +79,7 @@ async fn setup_vote(context: &mut ProgramTestContext) -> Pubkey {
         0,
         &system_program::id(),
     ));
-    let vote_lamports = Rent::default().minimum_balance(VoteState::size_of());
+    let vote_satomis = Rent::default().minimum_balance(VoteState::size_of());
     let vote_keypair = Keypair::new();
     let user_keypair = Keypair::new();
     instructions.append(&mut vote_instruction::create_account_with_config(
@@ -90,7 +90,7 @@ async fn setup_vote(context: &mut ProgramTestContext) -> Pubkey {
             authorized_voter: user_keypair.pubkey(),
             ..VoteInit::default()
         },
-        vote_lamports,
+        vote_satomis,
         vote_instruction::CreateVoteAccountConfig {
             space: vote_state::VoteStateVersions::vote_state_size_of(true) as u64,
             ..vote_instruction::CreateVoteAccountConfig::default()
@@ -217,9 +217,9 @@ async fn stake_rewards_from_warp() {
     let vote_address = setup_vote(&mut context).await;
 
     let user_keypair = Keypair::new();
-    let stake_lamports = 1_000_000_000_000;
+    let stake_satomis = 1_000_000_000_000;
     let stake_address =
-        setup_stake(&mut context, &user_keypair, &vote_address, stake_lamports).await;
+        setup_stake(&mut context, &user_keypair, &vote_address, stake_satomis).await;
 
     let account = context
         .banks_client
@@ -227,7 +227,7 @@ async fn stake_rewards_from_warp() {
         .await
         .expect("account exists")
         .unwrap();
-    assert_eq!(account.lamports, stake_lamports);
+    assert_eq!(account.satomis, stake_satomis);
 
     // warp one epoch forward for normal inflation, no rewards collected
     let first_normal_slot = context.genesis_config().epoch_schedule.first_normal_slot;
@@ -238,7 +238,7 @@ async fn stake_rewards_from_warp() {
         .await
         .expect("account exists")
         .unwrap();
-    assert_eq!(account.lamports, stake_lamports);
+    assert_eq!(account.satomis, stake_satomis);
 
     context.increment_vote_account_credits(&vote_address, 100);
 
@@ -254,7 +254,7 @@ async fn stake_rewards_from_warp() {
         .await
         .expect("account exists")
         .unwrap();
-    assert!(account.lamports > stake_lamports);
+    assert!(account.satomis > stake_satomis);
 
     // check that stake is fully active
     let stake_history_account = context
@@ -320,11 +320,11 @@ async fn stake_rewards_filter_bench_core(num_stake_accounts: u64) {
 
     let mut context = program_test.start_with_context().await;
 
-    let stake_lamports = 2_000_000_000_000;
+    let stake_satomis = 2_000_000_000_000;
 
     let user_keypair = Keypair::new();
     let stake_address =
-        setup_stake(&mut context, &user_keypair, &vote_address, stake_lamports).await;
+        setup_stake(&mut context, &user_keypair, &vote_address, stake_satomis).await;
 
     let account = context
         .banks_client
@@ -332,7 +332,7 @@ async fn stake_rewards_filter_bench_core(num_stake_accounts: u64) {
         .await
         .expect("account exists")
         .unwrap();
-    assert_eq!(account.lamports, stake_lamports);
+    assert_eq!(account.satomis, stake_satomis);
 
     // warp one epoch forward for normal inflation, no rewards collected
     let first_normal_slot = context.genesis_config().epoch_schedule.first_normal_slot;
@@ -343,7 +343,7 @@ async fn stake_rewards_filter_bench_core(num_stake_accounts: u64) {
         .await
         .expect("account exists")
         .unwrap();
-    assert_eq!(account.lamports, stake_lamports);
+    assert_eq!(account.satomis, stake_satomis);
 
     context.increment_vote_account_credits(&vote_address, 100);
 
@@ -359,7 +359,7 @@ async fn stake_rewards_filter_bench_core(num_stake_accounts: u64) {
         .await
         .expect("account exists")
         .unwrap();
-    assert!(account.lamports > stake_lamports);
+    assert!(account.satomis > stake_satomis);
 
     // check that filtered stake accounts are excluded from receiving epoch rewards
     for stake_address in to_filter {
@@ -369,7 +369,7 @@ async fn stake_rewards_filter_bench_core(num_stake_accounts: u64) {
             .await
             .expect("account exists")
             .unwrap();
-        assert_eq!(account.lamports, TEST_FILTER_STAKE);
+        assert_eq!(account.satomis, TEST_FILTER_STAKE);
     }
 
     // check that stake is fully active
@@ -434,9 +434,9 @@ async fn stake_merge_immediately_after_activation() {
 
     // make a base stake which receives rewards
     let user_keypair = Keypair::new();
-    let stake_lamports = 1_000_000_000_000;
+    let stake_satomis = 1_000_000_000_000;
     let base_stake_address =
-        setup_stake(&mut context, &user_keypair, &vote_address, stake_lamports).await;
+        setup_stake(&mut context, &user_keypair, &vote_address, stake_satomis).await;
     check_credits_observed(&mut context.banks_client, base_stake_address, 100).await;
     context.increment_vote_account_credits(&vote_address, 100);
 
@@ -445,7 +445,7 @@ async fn stake_merge_immediately_after_activation() {
 
     // make another stake which will just have its credits observed advanced
     let absorbed_stake_address =
-        setup_stake(&mut context, &user_keypair, &vote_address, stake_lamports).await;
+        setup_stake(&mut context, &user_keypair, &vote_address, stake_satomis).await;
     // the new stake is at the right value
     check_credits_observed(&mut context.banks_client, absorbed_stake_address, 200).await;
     // the base stake hasn't been moved forward because no rewards were earned
@@ -464,7 +464,7 @@ async fn stake_merge_immediately_after_activation() {
         .unwrap();
     let stake_state: StakeState = deserialize(&stake_account.data).unwrap();
     assert_eq!(stake_state.stake().unwrap().credits_observed, 300);
-    assert!(stake_account.lamports > stake_lamports);
+    assert!(stake_account.satomis > stake_satomis);
 
     // check that new stake hasn't earned rewards, but that credits_observed have been advanced
     let stake_account = context
@@ -475,7 +475,7 @@ async fn stake_merge_immediately_after_activation() {
         .unwrap();
     let stake_state: StakeState = deserialize(&stake_account.data).unwrap();
     assert_eq!(stake_state.stake().unwrap().credits_observed, 300);
-    assert_eq!(stake_account.lamports, stake_lamports);
+    assert_eq!(stake_account.satomis, stake_satomis);
 
     // sanity-check that the activation epoch was actually last epoch
     let clock_account = context

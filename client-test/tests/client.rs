@@ -26,7 +26,7 @@ use {
     domichain_sdk::{
         clock::Slot,
         commitment_config::{CommitmentConfig, CommitmentLevel},
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         pubkey::Pubkey,
         rpc_port,
         signature::{Keypair, Signer},
@@ -85,7 +85,7 @@ fn test_rpc_client() {
 
     let blockhash = client.get_latest_blockhash().unwrap();
 
-    let tx = system_transaction::transfer(&alice, &bob_pubkey, domi_to_lamports(20.0), blockhash);
+    let tx = system_transaction::transfer(&alice, &bob_pubkey, domi_to_satomis(20.0), blockhash);
     let signature = client.send_transaction(&tx).unwrap();
 
     let mut confirmed_tx = false;
@@ -111,14 +111,14 @@ fn test_rpc_client() {
             .get_balance_with_commitment(&bob_pubkey, CommitmentConfig::processed())
             .unwrap()
             .value,
-        domi_to_lamports(20.0)
+        domi_to_satomis(20.0)
     );
     assert_eq!(
         client
             .get_balance_with_commitment(&alice.pubkey(), CommitmentConfig::processed())
             .unwrap()
             .value,
-        original_alice_balance - domi_to_lamports(20.0)
+        original_alice_balance - domi_to_satomis(20.0)
     );
 }
 
@@ -167,7 +167,7 @@ fn test_account_subscription() {
     )
     .unwrap();
 
-    // Transfer 100 lamports from alice to bob
+    // Transfer 100 satomis from alice to bob
     let tx = system_transaction::transfer(&alice, &bob.pubkey(), 100, blockhash);
     bank_forks
         .write()
@@ -193,7 +193,7 @@ fn test_account_subscription() {
     "context": { "slot": 1 },
         "value": {
             "owner": system_program::id().to_string(),
-            "lamports": 100,
+            "satomis": 100,
             "data": "",
             "executable": false,
             "rentEpoch": u64::MAX,

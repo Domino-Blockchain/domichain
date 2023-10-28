@@ -90,7 +90,7 @@ stake accounts will be lost once the reward are credited on block
 stake accounts during the `rewarding interval`. Any transactions, which involves
 stake accounts, will result in a new execution error, i.e. "stake rewards
 pending, account access is restricted". However, normal rpc queries, such as
-'getBalance', will return the current lamport of the account. The user can
+'getBalance', will return the current satomi of the account. The user can
 expect the rewards to be credit as some time point during the 'rewarding
 interval'.
 

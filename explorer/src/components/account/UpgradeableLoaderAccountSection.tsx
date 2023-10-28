@@ -108,7 +108,7 @@ export function UpgradeableProgramSection({
         <tr>
           <td>Balance (DOMI)</td>
           <td className="text-lg-end text-uppercase">
-            <SolBalance lamports={account.lamports || 0} />
+            <SolBalance satomis={account.satomis || 0} />
           </td>
         </tr>
         <tr>
@@ -233,7 +233,7 @@ export function UpgradeableProgramDataSection({
         <tr>
           <td>Balance (DOMI)</td>
           <td className="text-lg-end text-uppercase">
-            <SolBalance lamports={account.lamports || 0} />
+            <SolBalance satomis={account.satomis || 0} />
           </td>
         </tr>
         {account.details?.space !== undefined && (
@@ -307,7 +307,7 @@ export function UpgradeableProgramBufferSection({
         <tr>
           <td>Balance (DOMI)</td>
           <td className="text-lg-end text-uppercase">
-            <SolBalance lamports={account.lamports || 0} />
+            <SolBalance satomis={account.satomis || 0} />
           </td>
         </tr>
         {account.details?.space !== undefined && (

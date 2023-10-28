@@ -239,13 +239,13 @@ pub fn create_account(
     from_pubkey: &Pubkey,
     vote_pubkey: &Pubkey,
     vote_init: &VoteInit,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     create_account_with_config(
         from_pubkey,
         vote_pubkey,
         vote_init,
-        lamports,
+        satomis,
         CreateVoteAccountConfig::default(),
     )
 }
@@ -260,13 +260,13 @@ pub fn create_account_with_seed(
     base: &Pubkey,
     seed: &str,
     vote_init: &VoteInit,
-    lamports: u64,
+    satomis: u64,
 ) -> Vec<Instruction> {
     create_account_with_config(
         from_pubkey,
         vote_pubkey,
         vote_init,
-        lamports,
+        satomis,
         CreateVoteAccountConfig {
             with_seed: Some((base, seed)),
             ..CreateVoteAccountConfig::default()
@@ -278,11 +278,11 @@ pub fn create_account_with_config(
     from_pubkey: &Pubkey,
     vote_pubkey: &Pubkey,
     vote_init: &VoteInit,
-    lamports: u64,
+    satomis: u64,
     config: CreateVoteAccountConfig,
 ) -> Vec<Instruction> {
     let create_ix =
-        system_instruction::create_account(from_pubkey, vote_pubkey, lamports, config.space, &id());
+        system_instruction::create_account(from_pubkey, vote_pubkey, satomis, config.space, &id());
     let init_ix = initialize_account(vote_pubkey, vote_init);
     vec![create_ix, init_ix]
 }
@@ -517,7 +517,7 @@ pub fn compact_update_vote_state_switch(
 pub fn withdraw(
     vote_pubkey: &Pubkey,
     authorized_withdrawer_pubkey: &Pubkey,
-    lamports: u64,
+    satomis: u64,
     to_pubkey: &Pubkey,
 ) -> Instruction {
     let account_metas = vec![
@@ -526,5 +526,5 @@ pub fn withdraw(
         AccountMeta::new_readonly(*authorized_withdrawer_pubkey, true),
     ];
 
-    Instruction::new_with_bincode(id(), &VoteInstruction::Withdraw(lamports), account_metas)
+    Instruction::new_with_bincode(id(), &VoteInstruction::Withdraw(satomis), account_metas)
 }

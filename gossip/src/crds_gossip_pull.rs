@@ -31,7 +31,7 @@ use {
     domichain_bloom::bloom::{AtomicBloom, Bloom},
     domichain_sdk::{
         hash::{hash, Hash},
-        native_token::LAMPORTS_PER_DOMI,
+        native_token::SATOMIS_PER_DOMI,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
     },
@@ -260,7 +260,7 @@ impl CrdsGossipPull {
             crds_gossip::dedup_gossip_addresses(nodes, stakes)
                 .into_values()
                 .map(|(stake, node)| {
-                    let stake = stake.min(stake_cap) / LAMPORTS_PER_DOMI;
+                    let stake = stake.min(stake_cap) / SATOMIS_PER_DOMI;
                     let weight = u64::BITS - stake.leading_zeros();
                     let weight = u64::from(weight).saturating_add(1).saturating_pow(2);
                     (weight, node)
@@ -570,7 +570,7 @@ impl CrdsGossipPull {
 
 pub struct CrdsTimeouts<'a> {
     pubkey: Pubkey,
-    stakes: &'a HashMap<Pubkey, /*lamports:*/ u64>,
+    stakes: &'a HashMap<Pubkey, /*satomis:*/ u64>,
     default_timeout: u64,
     extended_timeout: u64,
 }

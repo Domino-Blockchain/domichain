@@ -308,7 +308,7 @@ impl RpcSender for MockSender {
             "getLargestAccounts" => {
                 let rpc_account_balance = RpcAccountBalance {
                     address: PUBKEY.to_string(),
-                    lamports: 10000,
+                    satomis: 10000,
                 };
 
                 json!(Response {
@@ -462,7 +462,7 @@ impl RpcSender for MockSender {
             "getProgramAccounts" => {
                 let pubkey = Pubkey::from_str(PUBKEY).unwrap();
                 let account = Account {
-                    lamports: 1_000_000,
+                    satomis: 1_000_000,
                     data: vec![],
                     owner: pubkey,
                     executable: false,

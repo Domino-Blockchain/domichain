@@ -30,7 +30,7 @@ use {
         clock::Slot,
         epoch_schedule::EpochSchedule,
         feature_set,
-        native_token::LAMPORTS_PER_DOMI,
+        native_token::SATOMIS_PER_DOMI,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         system_transaction,
@@ -94,9 +94,9 @@ impl TestEnvironment {
         let full_snapshot_archives_dir = TempDir::new().unwrap();
         let incremental_snapshot_archives_dir = TempDir::new().unwrap();
         let mut genesis_config_info = genesis_utils::create_genesis_config_with_leader(
-            100_000 * LAMPORTS_PER_DOMI, // mint_lamports
+            100_000 * SATOMIS_PER_DOMI, // mint_satomis
             &Pubkey::new_unique(),      // validator_pubkey
-            100 * LAMPORTS_PER_DOMI,     // validator_stake_lamports
+            100 * SATOMIS_PER_DOMI,     // validator_stake_satomis
         );
         genesis_config_info.genesis_config.epoch_schedule =
             EpochSchedule::custom(Self::SLOTS_PER_EPOCH, Self::SLOTS_PER_EPOCH, false);

@@ -212,10 +212,10 @@ domichain balance
 Or to see in finer detail:
 
 ```text
-domichain balance --lamports
+domichain balance --satomis
 ```
 
-Read more about the [difference between DOMI and lamports here](../introduction.md#what-are-sols).
+Read more about the [difference between DOMI and satomis here](../introduction.md#what-are-sols).
 
 ## Create Authorized Withdrawer Account
 

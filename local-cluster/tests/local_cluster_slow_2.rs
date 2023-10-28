@@ -81,7 +81,7 @@ fn test_consistency_halt() {
     let validator_stake = DEFAULT_NODE_STAKE;
     let mut config = ClusterConfig {
         node_stakes: vec![validator_stake],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: vec![leader_snapshot_test_config.validator_config],
         ..ClusterConfig::default()
     };
@@ -176,7 +176,7 @@ fn test_leader_failure_4() {
     let num_nodes = 4;
     let validator_config = ValidatorConfig::default_for_test();
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         node_stakes: vec![DEFAULT_NODE_STAKE; 4],
         validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
         ..ClusterConfig::default()
@@ -210,7 +210,7 @@ fn test_ledger_cleanup_service() {
         ..ValidatorConfig::default_for_test()
     };
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         poh_config: PohConfig::new_sleep(Duration::from_millis(50)),
         node_stakes: vec![DEFAULT_NODE_STAKE; num_nodes],
         validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
@@ -300,7 +300,7 @@ fn test_slot_hash_expiry() {
     validator_configs[1].voting_disabled = true;
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes,
         validator_configs,
         validator_keys: Some(validator_keys),

@@ -19,8 +19,8 @@ pub struct ReplicaAccountInfo<'a> {
     /// The Pubkey for the account
     pub pubkey: &'a [u8],
 
-    /// The lamports for the account
-    pub lamports: u64,
+    /// The satomis for the account
+    pub satomis: u64,
 
     /// The Pubkey of the owner program account
     pub owner: &'a [u8],
@@ -49,8 +49,8 @@ pub struct ReplicaAccountInfoV2<'a> {
     /// The Pubkey for the account
     pub pubkey: &'a [u8],
 
-    /// The lamports for the account
-    pub lamports: u64,
+    /// The satomis for the account
+    pub satomis: u64,
 
     /// The Pubkey of the owner program account
     pub owner: &'a [u8],
@@ -82,8 +82,8 @@ pub struct ReplicaAccountInfoV3<'a> {
     /// The Pubkey for the account
     pub pubkey: &'a [u8],
 
-    /// The lamports for the account
-    pub lamports: u64,
+    /// The satomis for the account
+    pub satomis: u64,
 
     /// The Pubkey of the owner program account
     pub owner: &'a [u8],

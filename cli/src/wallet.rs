@@ -76,10 +76,10 @@ impl WalletSubCommands for App<'_, '_> {
                         .help("Write the account data to this file"),
                 )
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI"),
+                        .help("Display balance in satomis instead of DOMI"),
                 ),
         )
         .subcommand(
@@ -121,10 +121,10 @@ impl WalletSubCommands for App<'_, '_> {
                         "The account address of the balance to check. ")
                 )
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI"),
+                        .help("Display balance in satomis instead of DOMI"),
                 ),
         )
         .subcommand(
@@ -397,12 +397,12 @@ pub fn parse_account(
 ) -> Result<CliCommandInfo, CliError> {
     let account_pubkey = pubkey_of_signer(matches, "account_pubkey", wallet_manager)?.unwrap();
     let output_file = matches.value_of("output_file");
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     Ok(CliCommandInfo {
         command: CliCommand::ShowAccount {
             pubkey: account_pubkey,
             output_file: output_file.map(ToString::to_string),
-            use_lamports_unit,
+            use_satomis_unit,
         },
         signers: vec![],
     })
@@ -419,9 +419,9 @@ pub fn parse_airdrop(
     } else {
         vec![default_signer.signer_from_path(matches, wallet_manager)?]
     };
-    let lamports = lamports_of_sol(matches, "amount").unwrap();
+    let satomis = satomis_of_sol(matches, "amount").unwrap();
     Ok(CliCommandInfo {
-        command: CliCommand::Airdrop { pubkey, lamports },
+        command: CliCommand::Airdrop { pubkey, satomis },
         signers,
     })
 }
@@ -440,7 +440,7 @@ pub fn parse_balance(
     Ok(CliCommandInfo {
         command: CliCommand::Balance {
             pubkey,
-            use_lamports_unit: matches.is_present("lamports"),
+            use_satomis_unit: matches.is_present("satomis"),
         },
         signers,
     })
@@ -648,11 +648,11 @@ pub fn process_show_account(
     config: &CliConfig,
     account_pubkey: &Pubkey,
     output_file: &Option<String>,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
 ) -> ProcessResult {
     let account = rpc_client.get_account(account_pubkey)?;
     let data = &account.data;
-    let cli_account = CliAccount::new(account_pubkey, &account, use_lamports_unit);
+    let cli_account = CliAccount::new(account_pubkey, &account, use_satomis_unit);
 
     let mut account_string = config.output_format.formatted_string(&cli_account);
 
@@ -686,7 +686,7 @@ pub fn process_airdrop(
     rpc_client: &RpcClient,
     config: &CliConfig,
     pubkey: &Option<Pubkey>,
-    lamports: u64,
+    satomis: u64,
 ) -> ProcessResult {
     let pubkey = if let Some(pubkey) = pubkey {
         *pubkey
@@ -695,19 +695,19 @@ pub fn process_airdrop(
     };
     println!(
         "Requesting airdrop of {}",
-        build_balance_message(lamports, false, true),
+        build_balance_message(satomis, false, true),
     );
 
     let pre_balance = rpc_client.get_balance(&pubkey)?;
 
-    let result = request_and_confirm_airdrop(rpc_client, config, &pubkey, lamports);
+    let result = request_and_confirm_airdrop(rpc_client, config, &pubkey, satomis);
     if let Ok(signature) = result {
         let signature_cli_message = log_instruction_custom_error::<SystemError>(result, config)?;
         println!("{signature_cli_message}");
 
         let current_balance = rpc_client.get_balance(&pubkey)?;
 
-        if current_balance < pre_balance.saturating_add(lamports) {
+        if current_balance < pre_balance.saturating_add(satomis) {
             println!("Balance unchanged");
             println!("Run `domichain confirm -v {signature:?}` for more info");
             Ok("".to_string())
@@ -723,7 +723,7 @@ pub fn process_balance(
     rpc_client: &RpcClient,
     config: &CliConfig,
     pubkey: &Option<Pubkey>,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
 ) -> ProcessResult {
     let pubkey = if let Some(pubkey) = pubkey {
         *pubkey
@@ -732,9 +732,9 @@ pub fn process_balance(
     };
     let balance = rpc_client.get_balance(&pubkey)?;
     let balance_output = CliBalance {
-        lamports: balance,
+        satomis: balance,
         config: BuildBalanceMessageConfig {
-            use_lamports_unit,
+            use_satomis_unit,
             show_unit: true,
             trim_trailing_zeros: true,
         },
@@ -909,7 +909,7 @@ pub fn process_transfer(
         None
     };
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let ixs = if let Some((base_pubkey, seed, program_id, from_pubkey)) = with_seed.as_ref() {
             vec![system_instruction::transfer_with_seed(
                 from_pubkey,
@@ -917,12 +917,12 @@ pub fn process_transfer(
                 seed.clone(),
                 program_id,
                 to,
-                lamports,
+                satomis,
             )]
             .with_memo(memo)
             .with_compute_unit_price(compute_unit_price)
         } else {
-            vec![system_instruction::transfer(&from_pubkey, to, lamports)]
+            vec![system_instruction::transfer(&from_pubkey, to, satomis)]
                 .with_memo(memo)
                 .with_compute_unit_price(compute_unit_price)
         };

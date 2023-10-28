@@ -31,9 +31,9 @@ Returns the fee rate governor information from the root bank
 The result will be an RpcResponse JSON object with `value` equal to an `object` with the following fields:
 
 - `burnPercent: <u8>` - Percentage of fees collected to be destroyed
-- `maxLamportsPerSignature: <u64>` - Largest value `lamportsPerSignature` can attain for the next slot
-- `minLamportsPerSignature: <u64>` - Smallest value `lamportsPerSignature` can attain for the next slot
-- `targetLamportsPerSignature: <u64>` - Desired fee rate for the cluster
+- `maxSatomisPerSignature: <u64>` - Largest value `satomisPerSignature` can attain for the next slot
+- `minSatomisPerSignature: <u64>` - Smallest value `satomisPerSignature` can attain for the next slot
+- `targetSatomisPerSignature: <u64>` - Desired fee rate for the cluster
 - `targetSignaturesPerSlot: <u64>` - Desired signature rate for the cluster
 
 </CodeParams>
@@ -60,9 +60,9 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
     "value": {
       "feeRateGovernor": {
         "burnPercent": 50,
-        "maxLamportsPerSignature": 100000,
-        "minLamportsPerSignature": 5000,
-        "targetLamportsPerSignature": 10000,
+        "maxSatomisPerSignature": 100000,
+        "minSatomisPerSignature": 5000,
+        "targetSatomisPerSignature": 10000,
         "targetSignaturesPerSlot": 20000
       }
     }

@@ -13,10 +13,10 @@ use {
     std::cell::RefCell,
 };
 
-pub fn create_account(lamports: u64) -> RefCell<AccountSharedData> {
+pub fn create_account(satomis: u64) -> RefCell<AccountSharedData> {
     RefCell::new(
         AccountSharedData::new_data_with_space(
-            lamports,
+            satomis,
             &Versions::new(State::Uninitialized),
             State::size(),
             &crate::system_program::id(),
@@ -41,9 +41,9 @@ pub fn verify_nonce_account(
         .flatten()
 }
 
-pub fn lamports_per_signature_of(account: &AccountSharedData) -> Option<u64> {
+pub fn satomis_per_signature_of(account: &AccountSharedData) -> Option<u64> {
     match StateMut::<Versions>::state(account).ok()?.state() {
-        State::Initialized(data) => Some(data.fee_calculator.lamports_per_signature),
+        State::Initialized(data) => Some(data.fee_calculator.satomis_per_signature),
         State::Uninitialized => None,
     }
 }
@@ -76,7 +76,7 @@ mod tests {
 
     fn new_nonce_account(versions: Versions) -> AccountSharedData {
         AccountSharedData::new_data(
-            1_000_000,             // lamports
+            1_000_000,             // satomis
             &versions,             // state
             &system_program::id(), // owner
         )
@@ -99,7 +99,7 @@ mod tests {
             authority: Pubkey::new_unique(),
             durable_nonce,
             fee_calculator: FeeCalculator {
-                lamports_per_signature: 2718,
+                satomis_per_signature: 2718,
             },
         };
         let versions = Versions::Legacy(Box::new(State::Initialized(data.clone())));

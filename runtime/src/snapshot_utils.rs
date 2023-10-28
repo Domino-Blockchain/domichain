@@ -3441,7 +3441,7 @@ mod tests {
         bincode::{deserialize_from, serialize_into},
         domichain_sdk::{
             genesis_config::create_genesis_config,
-            native_token::{domi_to_lamports, LAMPORTS_PER_DOMI},
+            native_token::{domi_to_satomis, SATOMIS_PER_DOMI},
             signature::{Keypair, Signer},
             slot_history::SlotHistory,
             system_transaction,
@@ -4421,16 +4421,16 @@ mod tests {
         let key4 = Keypair::new();
         let key5 = Keypair::new();
 
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1_000_000.));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1_000_000.));
         let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
         bank0
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(2.), &mint_keypair, &key2.pubkey())
+            .transfer(domi_to_satomis(2.), &mint_keypair, &key2.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         while !bank0.is_complete() {
             bank0.register_tick(&Hash::new_unique());
@@ -4439,13 +4439,13 @@ mod tests {
         let slot = 1;
         let bank1 = Arc::new(Bank::new_from_parent(&bank0, &collector, slot));
         bank1
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(4.), &mint_keypair, &key4.pubkey())
+            .transfer(domi_to_satomis(4.), &mint_keypair, &key4.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(5.), &mint_keypair, &key5.pubkey())
+            .transfer(domi_to_satomis(5.), &mint_keypair, &key5.pubkey())
             .unwrap();
         while !bank1.is_complete() {
             bank1.register_tick(&Hash::new_unique());
@@ -4454,7 +4454,7 @@ mod tests {
         let slot = slot + 1;
         let bank2 = Arc::new(Bank::new_from_parent(&bank1, &collector, slot));
         bank2
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank2.is_complete() {
             bank2.register_tick(&Hash::new_unique());
@@ -4463,7 +4463,7 @@ mod tests {
         let slot = slot + 1;
         let bank3 = Arc::new(Bank::new_from_parent(&bank2, &collector, slot));
         bank3
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank3.is_complete() {
             bank3.register_tick(&Hash::new_unique());
@@ -4472,7 +4472,7 @@ mod tests {
         let slot = slot + 1;
         let bank4 = Arc::new(Bank::new_from_parent(&bank3, &collector, slot));
         bank4
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank4.is_complete() {
             bank4.register_tick(&Hash::new_unique());
@@ -4538,16 +4538,16 @@ mod tests {
         let key4 = Keypair::new();
         let key5 = Keypair::new();
 
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1_000_000.));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1_000_000.));
         let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
         bank0
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(2.), &mint_keypair, &key2.pubkey())
+            .transfer(domi_to_satomis(2.), &mint_keypair, &key2.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         while !bank0.is_complete() {
             bank0.register_tick(&Hash::new_unique());
@@ -4556,13 +4556,13 @@ mod tests {
         let slot = 1;
         let bank1 = Arc::new(Bank::new_from_parent(&bank0, &collector, slot));
         bank1
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(4.), &mint_keypair, &key4.pubkey())
+            .transfer(domi_to_satomis(4.), &mint_keypair, &key4.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(5.), &mint_keypair, &key5.pubkey())
+            .transfer(domi_to_satomis(5.), &mint_keypair, &key5.pubkey())
             .unwrap();
         while !bank1.is_complete() {
             bank1.register_tick(&Hash::new_unique());
@@ -4590,7 +4590,7 @@ mod tests {
         let slot = slot + 1;
         let bank2 = Arc::new(Bank::new_from_parent(&bank1, &collector, slot));
         bank2
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank2.is_complete() {
             bank2.register_tick(&Hash::new_unique());
@@ -4599,7 +4599,7 @@ mod tests {
         let slot = slot + 1;
         let bank3 = Arc::new(Bank::new_from_parent(&bank2, &collector, slot));
         bank3
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank3.is_complete() {
             bank3.register_tick(&Hash::new_unique());
@@ -4608,7 +4608,7 @@ mod tests {
         let slot = slot + 1;
         let bank4 = Arc::new(Bank::new_from_parent(&bank3, &collector, slot));
         bank4
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank4.is_complete() {
             bank4.register_tick(&Hash::new_unique());
@@ -4659,16 +4659,16 @@ mod tests {
         let key2 = Keypair::new();
         let key3 = Keypair::new();
 
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1_000_000.));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1_000_000.));
         let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
         bank0
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(2.), &mint_keypair, &key2.pubkey())
+            .transfer(domi_to_satomis(2.), &mint_keypair, &key2.pubkey())
             .unwrap();
         bank0
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         while !bank0.is_complete() {
             bank0.register_tick(&Hash::new_unique());
@@ -4677,13 +4677,13 @@ mod tests {
         let slot = 1;
         let bank1 = Arc::new(Bank::new_from_parent(&bank0, &collector, slot));
         bank1
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(2.), &mint_keypair, &key2.pubkey())
+            .transfer(domi_to_satomis(2.), &mint_keypair, &key2.pubkey())
             .unwrap();
         bank1
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         while !bank1.is_complete() {
             bank1.register_tick(&Hash::new_unique());
@@ -4711,7 +4711,7 @@ mod tests {
         let slot = slot + 1;
         let bank2 = Arc::new(Bank::new_from_parent(&bank1, &collector, slot));
         bank2
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank2.is_complete() {
             bank2.register_tick(&Hash::new_unique());
@@ -4720,7 +4720,7 @@ mod tests {
         let slot = slot + 1;
         let bank3 = Arc::new(Bank::new_from_parent(&bank2, &collector, slot));
         bank3
-            .transfer(domi_to_lamports(2.), &mint_keypair, &key2.pubkey())
+            .transfer(domi_to_satomis(2.), &mint_keypair, &key2.pubkey())
             .unwrap();
         while !bank3.is_complete() {
             bank3.register_tick(&Hash::new_unique());
@@ -4729,7 +4729,7 @@ mod tests {
         let slot = slot + 1;
         let bank4 = Arc::new(Bank::new_from_parent(&bank3, &collector, slot));
         bank4
-            .transfer(domi_to_lamports(3.), &mint_keypair, &key3.pubkey())
+            .transfer(domi_to_satomis(3.), &mint_keypair, &key3.pubkey())
             .unwrap();
         while !bank4.is_complete() {
             bank4.register_tick(&Hash::new_unique());
@@ -4772,14 +4772,14 @@ mod tests {
         assert_eq!(deserialized_bank, *bank4);
     }
 
-    /// Test that cleaning works well in the edge cases of zero-lamport accounts and snapshots.
+    /// Test that cleaning works well in the edge cases of zero-satomi accounts and snapshots.
     /// Here's the scenario:
     ///
     /// slot 1:
-    ///     - send some lamports to Account1 (from Account2) to bring it to life
+    ///     - send some satomis to Account1 (from Account2) to bring it to life
     ///     - take a full snapshot
     /// slot 2:
-    ///     - make Account1 have zero lamports (send back to Account2)
+    ///     - make Account1 have zero satomis (send back to Account2)
     ///     - take an incremental snapshot
     ///     - ensure deserializing from this snapshot is equal to this bank
     /// slot 3:
@@ -4795,7 +4795,7 @@ mod tests {
     /// information about Account1, but the full snapshost _does_ have info for Account1, which is
     /// no longer correct!
     #[test]
-    fn test_incremental_snapshots_handle_zero_lamport_accounts() {
+    fn test_incremental_snapshots_handle_zero_satomi_accounts() {
         let collector = Pubkey::new_unique();
         let key1 = Keypair::new();
         let key2 = Keypair::new();
@@ -4806,9 +4806,9 @@ mod tests {
         let incremental_snapshot_archives_dir = tempfile::TempDir::new().unwrap();
         let snapshot_archive_format = ArchiveFormat::Tar;
 
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1_000_000.));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1_000_000.));
 
-        let lamports_to_transfer = domi_to_lamports(123_456.);
+        let satomis_to_transfer = domi_to_satomis(123_456.);
         let bank0 = Arc::new(Bank::new_with_paths_for_tests(
             &genesis_config,
             Arc::<RuntimeConfig>::default(),
@@ -4817,7 +4817,7 @@ mod tests {
             AccountShrinkThreshold::default(),
         ));
         bank0
-            .transfer(lamports_to_transfer, &mint_keypair, &key2.pubkey())
+            .transfer(satomis_to_transfer, &mint_keypair, &key2.pubkey())
             .unwrap();
         while !bank0.is_complete() {
             bank0.register_tick(&Hash::new_unique());
@@ -4826,7 +4826,7 @@ mod tests {
         let slot = 1;
         let bank1 = Arc::new(Bank::new_from_parent(&bank0, &collector, slot));
         bank1
-            .transfer(lamports_to_transfer, &key2, &key1.pubkey())
+            .transfer(satomis_to_transfer, &key2, &key1.pubkey())
             .unwrap();
         while !bank1.is_complete() {
             bank1.register_tick(&Hash::new_unique());
@@ -4851,14 +4851,14 @@ mod tests {
         let tx = SanitizedTransaction::from_transaction_for_tests(system_transaction::transfer(
             &key1,
             &key2.pubkey(),
-            lamports_to_transfer,
+            satomis_to_transfer,
             blockhash,
         ));
         let fee = bank2.get_fee_for_message(tx.message()).unwrap();
         let tx = system_transaction::transfer(
             &key1,
             &key2.pubkey(),
-            lamports_to_transfer - fee,
+            satomis_to_transfer - fee,
             blockhash,
         );
         bank2.process_transaction(&tx).unwrap();
@@ -4915,7 +4915,7 @@ mod tests {
         let bank3 = Arc::new(Bank::new_from_parent(&bank2, &collector, slot));
         // Update Account2 so that it no longer holds a reference to slot2
         bank3
-            .transfer(lamports_to_transfer, &mint_keypair, &key2.pubkey())
+            .transfer(satomis_to_transfer, &mint_keypair, &key2.pubkey())
             .unwrap();
         while !bank3.is_complete() {
             bank3.register_tick(&Hash::new_unique());
@@ -4988,7 +4988,7 @@ mod tests {
         let collector = Pubkey::new_unique();
         let key1 = Keypair::new();
 
-        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_lamports(1_000_000.));
+        let (genesis_config, mint_keypair) = create_genesis_config(domi_to_satomis(1_000_000.));
         let bank0 = Arc::new(Bank::new_for_tests(&genesis_config));
         while !bank0.is_complete() {
             bank0.register_tick(&Hash::new_unique());
@@ -5019,7 +5019,7 @@ mod tests {
         let slot = slot + 1;
         let bank2 = Arc::new(Bank::new_from_parent(&bank1, &collector, slot));
         bank2
-            .transfer(domi_to_lamports(1.), &mint_keypair, &key1.pubkey())
+            .transfer(domi_to_satomis(1.), &mint_keypair, &key1.pubkey())
             .unwrap();
         while !bank2.is_complete() {
             bank2.register_tick(&Hash::new_unique());
@@ -5417,7 +5417,7 @@ mod tests {
 
     /// Test that snapshots with the Incremental Accounts Hash feature enabled can roundtrip.
     ///
-    /// This test generates banks with zero and non-zero lamport accounts then takes full and
+    /// This test generates banks with zero and non-zero satomi accounts then takes full and
     /// incremental snapshots.  A bank is deserialized from the snapshots, its incremental
     /// accounts hash is recalculated, and then compared with the original.
     #[test]
@@ -5427,16 +5427,16 @@ mod tests {
         let incremental_snapshot_archives_dir = tempfile::TempDir::new().unwrap();
 
         let genesis_config_info = genesis_utils::create_genesis_config_with_leader(
-            1_000_000 * LAMPORTS_PER_DOMI,
+            1_000_000 * SATOMIS_PER_DOMI,
             &Pubkey::new_unique(),
-            100 * LAMPORTS_PER_DOMI,
+            100 * SATOMIS_PER_DOMI,
         );
         let mint = &genesis_config_info.mint_keypair;
 
         let do_transfers = |bank: &Bank| {
-            let key1 = Keypair::new(); // lamports from mint
-            let key2 = Keypair::new(); // will end with ZERO lamports
-            let key3 = Keypair::new(); // lamports from key2
+            let key1 = Keypair::new(); // satomis from mint
+            let key2 = Keypair::new(); // will end with ZERO satomis
+            let key3 = Keypair::new(); // satomis from key2
 
             let amount = 123_456_789;
             let fee = {
@@ -5456,7 +5456,7 @@ mod tests {
 
         let mut bank = Arc::new(Bank::new_for_tests(&genesis_config_info.genesis_config));
 
-        // make some banks, do some transactions, ensure there's some zero-lamport accounts
+        // make some banks, do some transactions, ensure there's some zero-satomi accounts
         for _ in 0..5 {
             bank = Arc::new(Bank::new_from_parent(
                 &bank,
@@ -5485,7 +5485,7 @@ mod tests {
             .get_accounts_hash(bank.slot())
             .unwrap();
 
-        // make more banks, do more transactions, ensure there's more zero-lamport accounts
+        // make more banks, do more transactions, ensure there's more zero-satomi accounts
         for _ in 0..5 {
             bank = Arc::new(Bank::new_from_parent(
                 &bank,

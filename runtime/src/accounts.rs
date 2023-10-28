@@ -5,11 +5,11 @@ use {
         accounts_db::{
             AccountShrinkThreshold, AccountsAddRootTiming, AccountsDb, AccountsDbConfig,
             IncludeSlotInHash, LoadHint, LoadedAccount, ScanStorageResult,
-            VerifyAccountsHashAndLamportsConfig, ACCOUNTS_DB_CONFIG_FOR_BENCHMARKS,
+            VerifyAccountsHashAndSatomisConfig, ACCOUNTS_DB_CONFIG_FOR_BENCHMARKS,
             ACCOUNTS_DB_CONFIG_FOR_TESTING,
         },
         accounts_index::{
-            AccountSecondaryIndexes, IndexKey, ScanConfig, ScanError, ScanResult, ZeroLamport,
+            AccountSecondaryIndexes, IndexKey, ScanConfig, ScanError, ScanResult, ZeroSatomi,
         },
         accounts_update_notifier_interface::AccountsUpdateNotifier,
         ancestors::Ancestors,
@@ -483,7 +483,7 @@ impl Accounts {
                     }
 
                     tx_rent += rent;
-                    rent_debits.insert(key, rent, account.lamports());
+                    rent_debits.insert(key, rent, account.satomis());
 
                     account
                 };
@@ -594,7 +594,7 @@ impl Accounts {
         feature_set: &FeatureSet,
         fee: u64,
     ) -> Result<()> {
-        if payer_account.lamports() == 0 {
+        if payer_account.satomis() == 0 {
             error_counters.account_not_found += 1;
             return Err(TransactionError::AccountNotFound);
         }
@@ -614,7 +614,7 @@ impl Accounts {
         #[allow(clippy::collapsible_else_if)]
         if feature_set.is_active(&feature_set::checked_arithmetic_in_fee_validation::id()) {
             payer_account
-                .lamports()
+                .satomis()
                 .checked_sub(min_balance)
                 .and_then(|v| v.checked_sub(fee))
                 .ok_or_else(|| {
@@ -622,7 +622,7 @@ impl Accounts {
                     TransactionError::InsufficientFundsForFee
                 })?;
         } else {
-            if payer_account.lamports() < fee + min_balance {
+            if payer_account.satomis() < fee + min_balance {
                 error_counters.insufficient_funds += 1;
                 return Err(TransactionError::InsufficientFundsForFee);
             }
@@ -630,7 +630,7 @@ impl Accounts {
 
         let payer_pre_rent_state = RentState::from_account(payer_account, &rent_collector.rent);
         payer_account
-            .checked_sub_lamports(fee)
+            .checked_sub_satomis(fee)
             .map_err(|_| TransactionError::InsufficientFundsForFee)?;
 
         let payer_post_rent_state = RentState::from_account(payer_account, &rent_collector.rent);
@@ -665,9 +665,9 @@ impl Accounts {
             if let ((Ok(()), nonce), tx) = etx {
                 if nonce
                     .as_ref()
-                    .map(|nonce| nonce.lamports_per_signature())
+                    .map(|nonce| nonce.satomis_per_signature())
                     .unwrap_or_else(|| {
-                        hash_queue.get_lamports_per_signature(tx.message().recent_blockhash())
+                        hash_queue.get_satomis_per_signature(tx.message().recent_blockhash())
                     })
                     .is_some()
                 {
@@ -723,16 +723,16 @@ impl Accounts {
             .zip(lock_results)
             .map(|etx| match etx {
                 (tx, (Ok(()), nonce)) => {
-                    let lamports_per_signature = nonce
+                    let satomis_per_signature = nonce
                         .as_ref()
-                        .map(|nonce| nonce.lamports_per_signature())
+                        .map(|nonce| nonce.satomis_per_signature())
                         .unwrap_or_else(|| {
-                            hash_queue.get_lamports_per_signature(tx.message().recent_blockhash())
+                            hash_queue.get_satomis_per_signature(tx.message().recent_blockhash())
                         });
-                    let fee = if let Some(lamports_per_signature) = lamports_per_signature {
+                    let fee = if let Some(satomis_per_signature) = satomis_per_signature {
                         Bank::calculate_fee(
                             tx.message(),
-                            lamports_per_signature,
+                            satomis_per_signature,
                             fee_structure,
                             feature_set.is_active(&use_default_units_in_fee_calculation::id()),
                             !feature_set.is_active(&remove_deprecated_request_unit_ix::id()),
@@ -818,7 +818,7 @@ impl Accounts {
     }
 
     /// Slow because lock is held for 1 operation instead of many
-    /// This always returns None for zero-lamport accounts.
+    /// This always returns None for zero-satomi accounts.
     fn load_slow(
         &self,
         ancestors: &Ancestors,
@@ -911,7 +911,7 @@ impl Accounts {
             bank_id,
             |option| {
                 if let Some((pubkey, account, _slot)) = option {
-                    if account.lamports() == 0 {
+                    if account.satomis() == 0 {
                         return;
                     }
                     let contains_address = filter_by_address.contains(pubkey);
@@ -926,12 +926,12 @@ impl Accounts {
                         let Reverse(entry) = account_balances
                             .peek()
                             .expect("BinaryHeap::peek should succeed when len > 0");
-                        if *entry >= (account.lamports(), *pubkey) {
+                        if *entry >= (account.satomis(), *pubkey) {
                             return;
                         }
                         account_balances.pop();
                     }
-                    account_balances.push(Reverse((account.lamports(), *pubkey)));
+                    account_balances.push(Reverse((account.satomis(), *pubkey)));
                 }
             },
             &ScanConfig::default(),
@@ -945,16 +945,16 @@ impl Accounts {
 
     /// Only called from startup or test code.
     #[must_use]
-    pub fn verify_accounts_hash_and_lamports(
+    pub fn verify_accounts_hash_and_satomis(
         &self,
         slot: Slot,
-        total_lamports: u64,
+        total_satomis: u64,
         base: Option<(Slot, /*capitalization*/ u64)>,
-        config: VerifyAccountsHashAndLamportsConfig,
+        config: VerifyAccountsHashAndSatomisConfig,
     ) -> bool {
         if let Err(err) =
             self.accounts_db
-                .verify_accounts_hash_and_lamports(slot, total_lamports, base, config)
+                .verify_accounts_hash_and_satomis(slot, total_satomis, base, config)
         {
             warn!("verify_accounts_hash failed: {err:?}, slot: {slot}");
             false
@@ -963,10 +963,10 @@ impl Accounts {
         }
     }
 
-    pub fn is_loadable(lamports: u64) -> bool {
-        // Don't ever load zero lamport accounts into runtime because
-        // the existence of zero-lamport accounts are never deterministic!!
-        lamports > 0
+    pub fn is_loadable(satomis: u64) -> bool {
+        // Don't ever load zero satomi accounts into runtime because
+        // the existence of zero-satomi accounts are never deterministic!!
+        satomis > 0
     }
 
     fn load_while_filtering<F: Fn(&AccountSharedData) -> bool>(
@@ -975,7 +975,7 @@ impl Accounts {
         filter: F,
     ) {
         if let Some(mapped_account_tuple) = some_account_tuple
-            .filter(|(_, account, _)| Self::is_loadable(account.lamports()) && filter(account))
+            .filter(|(_, account, _)| Self::is_loadable(account.satomis()) && filter(account))
             .map(|(pubkey, account, _slot)| (*pubkey, account))
         {
             collector.push(mapped_account_tuple)
@@ -987,7 +987,7 @@ impl Accounts {
         some_account_tuple: Option<(&Pubkey, AccountSharedData, Slot)>,
     ) {
         if let Some(mapped_account_tuple) = some_account_tuple
-            .filter(|(_, account, _)| Self::is_loadable(account.lamports()))
+            .filter(|(_, account, _)| Self::is_loadable(account.satomis()))
             .map(|(pubkey, account, slot)| (*pubkey, account, slot))
         {
             collector.push(mapped_account_tuple)
@@ -1131,7 +1131,7 @@ impl Accounts {
                 bank_id,
                 |some_account_tuple| {
                     if let Some((pubkey, account, slot)) = some_account_tuple
-                        .filter(|(_, account, _)| Self::is_loadable(account.lamports()))
+                        .filter(|(_, account, _)| Self::is_loadable(account.satomis()))
                     {
                         collector.push((*pubkey, account, slot))
                     }
@@ -1328,7 +1328,7 @@ impl Accounts {
         loaded: &mut [TransactionLoadResult],
         rent_collector: &RentCollector,
         durable_nonce: &DurableNonce,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         include_slot_in_hash: IncludeSlotInHash,
     ) {
         let (accounts_to_store, transactions) = self.collect_accounts_to_store(
@@ -1337,7 +1337,7 @@ impl Accounts {
             loaded,
             rent_collector,
             durable_nonce,
-            lamports_per_signature,
+            satomis_per_signature,
         );
         self.accounts_db.store_cached_inline_update_index(
             (slot, &accounts_to_store[..], include_slot_in_hash),
@@ -1345,7 +1345,7 @@ impl Accounts {
         );
     }
 
-    pub fn store_accounts_cached<'a, T: ReadableAccount + Sync + ZeroLamport + 'a>(
+    pub fn store_accounts_cached<'a, T: ReadableAccount + Sync + ZeroSatomi + 'a>(
         &self,
         accounts: impl StorableAccounts<'a, T>,
     ) {
@@ -1365,7 +1365,7 @@ impl Accounts {
         load_results: &'a mut [TransactionLoadResult],
         _rent_collector: &RentCollector,
         durable_nonce: &DurableNonce,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
     ) -> (
         Vec<(&'a Pubkey, &'a AccountSharedData)>,
         Vec<Option<&'a SanitizedTransaction>>,
@@ -1415,7 +1415,7 @@ impl Accounts {
                         is_fee_payer,
                         maybe_nonce,
                         durable_nonce,
-                        lamports_per_signature,
+                        satomis_per_signature,
                     );
 
                     if execution_status.is_ok() || is_nonce_account || is_fee_payer {
@@ -1437,7 +1437,7 @@ fn prepare_if_nonce_account(
     is_fee_payer: bool,
     maybe_nonce: Option<(&NonceFull, bool)>,
     &durable_nonce: &DurableNonce,
-    lamports_per_signature: u64,
+    satomis_per_signature: u64,
 ) -> bool {
     if let Some((nonce, rollback)) = maybe_nonce {
         if address == nonce.address() {
@@ -1460,7 +1460,7 @@ fn prepare_if_nonce_account(
                 let nonce_state = NonceState::new_initialized(
                     &data.authority,
                     durable_nonce,
-                    lamports_per_signature,
+                    satomis_per_signature,
                 );
                 let nonce_versions = NonceVersions::new(nonce_state);
                 account.set_state(&nonce_versions).unwrap();
@@ -1552,14 +1552,14 @@ mod tests {
     fn load_accounts_with_fee_and_rent(
         tx: Transaction,
         ka: &[TransactionAccount],
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         rent_collector: &RentCollector,
         error_counters: &mut TransactionErrorMetrics,
         feature_set: &FeatureSet,
         fee_structure: &FeeStructure,
     ) -> Vec<TransactionLoadResult> {
         let mut hash_queue = BlockhashQueue::new(100);
-        hash_queue.register_hash(&tx.message().recent_blockhash, lamports_per_signature);
+        hash_queue.register_hash(&tx.message().recent_blockhash, satomis_per_signature);
         let accounts = Accounts::new_with_config_for_tests(
             Vec::new(),
             &ClusterType::Development,
@@ -1601,14 +1601,14 @@ mod tests {
     fn load_accounts_with_fee(
         tx: Transaction,
         ka: &[TransactionAccount],
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         error_counters: &mut TransactionErrorMetrics,
         exclude_features: Option<&[Pubkey]>,
     ) -> Vec<TransactionLoadResult> {
         load_accounts_with_fee_and_rent(
             tx,
             ka,
-            lamports_per_signature,
+            satomis_per_signature,
             &RentCollector::default(),
             error_counters,
             &all_features_except(exclude_features),
@@ -1749,7 +1749,7 @@ mod tests {
 
     #[test]
     fn test_load_accounts_insufficient_funds() {
-        let lamports_per_signature = 5000;
+        let satomis_per_signature = 5000;
         let mut accounts: Vec<TransactionAccount> = Vec::new();
         let mut error_counters = TransactionErrorMetrics::default();
 
@@ -1770,7 +1770,7 @@ mod tests {
 
         let fee = Bank::calculate_fee(
             &SanitizedMessage::try_from(tx.message().clone()).unwrap(),
-            lamports_per_signature,
+            satomis_per_signature,
             &FeeStructure::default(),
             true,
             false,
@@ -1779,12 +1779,12 @@ mod tests {
             true,
             false,
         );
-        assert_eq!(fee, lamports_per_signature);
+        assert_eq!(fee, satomis_per_signature);
 
         let loaded_accounts = load_accounts_with_fee(
             tx,
             &accounts,
-            lamports_per_signature,
+            satomis_per_signature,
             &mut error_counters,
             None,
         );
@@ -1829,14 +1829,14 @@ mod tests {
 
     #[test]
     fn test_load_accounts_fee_payer_is_nonce() {
-        let lamports_per_signature = 5000;
+        let satomis_per_signature = 5000;
         let mut error_counters = TransactionErrorMetrics::default();
         let rent_collector = RentCollector::new(
             0,
             EpochSchedule::default(),
             500_000.0,
             Rent {
-                lamports_per_byte_year: 42,
+                satomis_per_byte_year: 42,
                 ..Rent::default()
             },
         );
@@ -1845,7 +1845,7 @@ mod tests {
         let mut accounts = vec![(
             nonce.pubkey(),
             AccountSharedData::new_data(
-                min_balance + lamports_per_signature,
+                min_balance + satomis_per_signature,
                 &NonceVersions::new(NonceState::Initialized(nonce::state::Data::default())),
                 &system_program::id(),
             )
@@ -1864,7 +1864,7 @@ mod tests {
         let loaded_accounts = load_accounts_with_fee_and_rent(
             tx.clone(),
             &accounts,
-            lamports_per_signature,
+            satomis_per_signature,
             &rent_collector,
             &mut error_counters,
             &all_features_except(None),
@@ -1873,14 +1873,14 @@ mod tests {
         assert_eq!(loaded_accounts.len(), 1);
         let (load_res, _nonce) = &loaded_accounts[0];
         let loaded_transaction = load_res.as_ref().unwrap();
-        assert_eq!(loaded_transaction.accounts[0].1.lamports(), min_balance);
+        assert_eq!(loaded_transaction.accounts[0].1.satomis(), min_balance);
 
         // Fee leaves zero balance fails
-        accounts[0].1.set_lamports(lamports_per_signature);
+        accounts[0].1.set_satomis(satomis_per_signature);
         let loaded_accounts = load_accounts_with_fee_and_rent(
             tx.clone(),
             &accounts,
-            lamports_per_signature,
+            satomis_per_signature,
             &rent_collector,
             &mut error_counters,
             &FeatureSet::all_enabled(),
@@ -1893,11 +1893,11 @@ mod tests {
         // Fee leaves non-zero, but sub-min_balance balance fails
         accounts[0]
             .1
-            .set_lamports(lamports_per_signature + min_balance / 2);
+            .set_satomis(satomis_per_signature + min_balance / 2);
         let loaded_accounts = load_accounts_with_fee_and_rent(
             tx,
             &accounts,
-            lamports_per_signature,
+            satomis_per_signature,
             &rent_collector,
             &mut error_counters,
             &FeatureSet::all_enabled(),
@@ -2338,7 +2338,7 @@ mod tests {
 
         let invalid_table_key = Pubkey::new_unique();
         let mut invalid_table_account = AccountSharedData::default();
-        invalid_table_account.set_lamports(1);
+        invalid_table_account.set_satomis(1);
         accounts.store_slow_uncached(0, &invalid_table_key, &invalid_table_account);
 
         let address_table_lookup = MessageAddressTableLookup {
@@ -3455,7 +3455,7 @@ mod tests {
         let loaded_transaction = loaded_accounts[0].0.as_ref().unwrap();
         assert_eq!(loaded_transaction.accounts[0].0, keypair.pubkey());
         assert_eq!(loaded_transaction.accounts[1].0, slot_history_id);
-        assert_eq!(loaded_transaction.accounts[1].1.lamports(), 42);
+        assert_eq!(loaded_transaction.accounts[1].1.satomis(), 42);
     }
 
     fn create_accounts_prepare_if_nonce_account() -> (
@@ -3469,7 +3469,7 @@ mod tests {
         let data = NonceVersions::new(NonceState::Initialized(nonce::state::Data::default()));
         let account = AccountSharedData::new_data(42, &data, &system_program::id()).unwrap();
         let mut pre_account = account.clone();
-        pre_account.set_lamports(43);
+        pre_account.set_satomis(43);
         let durable_nonce = DurableNonce::from_blockhash(&Hash::new(&[1u8; 32]));
         (
             Pubkey::default(),
@@ -3488,7 +3488,7 @@ mod tests {
         is_fee_payer: bool,
         maybe_nonce: Option<(&NonceFull, bool)>,
         durable_nonce: &DurableNonce,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         expect_account: &AccountSharedData,
     ) -> bool {
         // Verify expect_account's relationship
@@ -3508,7 +3508,7 @@ mod tests {
             is_fee_payer,
             maybe_nonce,
             durable_nonce,
-            lamports_per_signature,
+            satomis_per_signature,
         );
         assert_eq!(expect_account, account);
         expect_account == account
@@ -3521,7 +3521,7 @@ mod tests {
             pre_account,
             mut post_account,
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             maybe_fee_payer_account,
         ) = create_accounts_prepare_if_nonce_account();
         let post_account_address = pre_account_address;
@@ -3534,7 +3534,7 @@ mod tests {
         let mut expect_account = pre_account;
         expect_account
             .set_state(&NonceVersions::new(NonceState::Initialized(
-                nonce::state::Data::new(Pubkey::default(), blockhash, lamports_per_signature),
+                nonce::state::Data::new(Pubkey::default(), blockhash, satomis_per_signature),
             )))
             .unwrap();
 
@@ -3545,7 +3545,7 @@ mod tests {
             false,
             Some((&nonce, true)),
             &blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             &expect_account,
         ));
     }
@@ -3557,7 +3557,7 @@ mod tests {
             _pre_account,
             _post_account,
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             _maybe_fee_payer_account,
         ) = create_accounts_prepare_if_nonce_account();
         let post_account_address = pre_account_address;
@@ -3571,7 +3571,7 @@ mod tests {
             false,
             None,
             &blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             &expect_account,
         ));
     }
@@ -3583,7 +3583,7 @@ mod tests {
             pre_account,
             mut post_account,
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             maybe_fee_payer_account,
         ) = create_accounts_prepare_if_nonce_account();
 
@@ -3598,7 +3598,7 @@ mod tests {
             false,
             Some((&nonce, true)),
             &blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             &expect_account,
         ));
     }
@@ -3610,7 +3610,7 @@ mod tests {
             pre_account,
             mut post_account,
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             maybe_fee_payer_account,
         ) = create_accounts_prepare_if_nonce_account();
         let post_account_address = pre_account_address;
@@ -3620,7 +3620,7 @@ mod tests {
 
         expect_account
             .set_state(&NonceVersions::new(NonceState::Initialized(
-                nonce::state::Data::new(Pubkey::default(), blockhash, lamports_per_signature),
+                nonce::state::Data::new(Pubkey::default(), blockhash, satomis_per_signature),
             )))
             .unwrap();
 
@@ -3634,7 +3634,7 @@ mod tests {
             false,
             Some((&nonce, true)),
             &blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             &expect_account,
         ));
     }
@@ -3811,8 +3811,8 @@ mod tests {
             .cloned()
             .unwrap();
         assert_eq!(
-            collected_nonce_account.lamports(),
-            nonce_account_pre.lamports(),
+            collected_nonce_account.satomis(),
+            nonce_account_pre.satomis(),
         );
         assert_matches!(
             nonce_account::verify_nonce_account(&collected_nonce_account, durable_nonce.as_hash()),
@@ -3915,8 +3915,8 @@ mod tests {
             .cloned()
             .unwrap();
         assert_eq!(
-            collected_nonce_account.lamports(),
-            nonce_account_pre.lamports()
+            collected_nonce_account.satomis(),
+            nonce_account_pre.satomis()
         );
         assert_matches!(
             nonce_account::verify_nonce_account(&collected_nonce_account, durable_nonce.as_hash()),
@@ -4306,7 +4306,7 @@ mod tests {
     #[test]
     fn test_load_accounts_too_high_prioritization_fee() {
         domichain_logger::setup();
-        let lamports_per_signature = 5000_u64;
+        let satomis_per_signature = 5000_u64;
         let request_units = 1_000_000_u32;
         let request_unit_price = 2_000_000_000_u64;
         let prioritization_fee_details = PrioritizationFeeDetails::new(
@@ -4333,7 +4333,7 @@ mod tests {
 
         let fee = Bank::calculate_fee(
             &SanitizedMessage::try_from(tx.message().clone()).unwrap(),
-            lamports_per_signature,
+            satomis_per_signature,
             &FeeStructure::default(),
             true,
             false,
@@ -4342,15 +4342,15 @@ mod tests {
             true,
             false,
         );
-        assert_eq!(fee, lamports_per_signature + prioritization_fee);
+        assert_eq!(fee, satomis_per_signature + prioritization_fee);
 
-        // assert fail to load account with 2B lamport balance for transaction asking for 2B
-        // lamports as prioritization fee.
+        // assert fail to load account with 2B satomi balance for transaction asking for 2B
+        // satomis as prioritization fee.
         let mut error_counters = TransactionErrorMetrics::default();
         let loaded_accounts = load_accounts_with_fee(
             tx,
             &accounts,
-            lamports_per_signature,
+            satomis_per_signature,
             &mut error_counters,
             None,
         );
@@ -4402,7 +4402,7 @@ mod tests {
         );
 
         assert_eq!(result, test_parameter.expected_result);
-        assert_eq!(account.lamports(), test_parameter.payer_post_balance);
+        assert_eq!(account.satomis(), test_parameter.payer_post_balance);
     }
 
     #[test]
@@ -4412,7 +4412,7 @@ mod tests {
             EpochSchedule::default(),
             500_000.0,
             Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 ..Rent::default()
             },
         );
@@ -4505,7 +4505,7 @@ mod tests {
             EpochSchedule::default(),
             500_000.0,
             Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 ..Rent::default()
             },
         );
@@ -4534,7 +4534,7 @@ mod tests {
             EpochSchedule::default(),
             500_000.0,
             Rent {
-                lamports_per_byte_year: 1,
+                satomis_per_byte_year: 1,
                 ..Rent::default()
             },
         );

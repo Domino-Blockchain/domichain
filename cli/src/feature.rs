@@ -575,7 +575,7 @@ impl ClusterInfoStats {
 fn cluster_info_stats(rpc_client: &RpcClient) -> Result<ClusterInfoStats, ClientError> {
     #[derive(Default)]
     struct StatsEntry {
-        stake_lamports: u64,
+        stake_satomis: u64,
         rpc_nodes_count: u32,
     }
 
@@ -621,7 +621,7 @@ fn cluster_info_stats(rpc_client: &RpcClient) -> Result<ClusterInfoStats, Client
             .or_default();
 
         if let Some(vote_stake) = vote_stakes.get(&node_id) {
-            stats_entry.stake_lamports += *vote_stake;
+            stats_entry.stake_satomis += *vote_stake;
         }
 
         if is_rpc {
@@ -637,11 +637,11 @@ fn cluster_info_stats(rpc_client: &RpcClient) -> Result<ClusterInfoStats, Client
                 |(
                     cluster_config,
                     StatsEntry {
-                        stake_lamports,
+                        stake_satomis,
                         rpc_nodes_count,
                     },
                 )| {
-                    let stake_percent = (stake_lamports as f64 / total_active_stake as f64) * 100.;
+                    let stake_percent = (stake_satomis as f64 / total_active_stake as f64) * 100.;
                     let rpc_percent = (rpc_nodes_count as f32 / total_rpc_nodes as f32) * 100.;
                     if stake_percent >= 0.001 || rpc_percent >= 0.001 {
                         Some((
@@ -890,9 +890,9 @@ fn process_activate(
         SpendAmount::Some(rent),
         &blockhash,
         &fee_payer.pubkey(),
-        |lamports| {
+        |satomis| {
             Message::new(
-                &feature::activate_with_lamports(&feature_id, &fee_payer.pubkey(), lamports),
+                &feature::activate_with_satomis(&feature_id, &fee_payer.pubkey(), satomis),
                 Some(&fee_payer.pubkey()),
             )
         },

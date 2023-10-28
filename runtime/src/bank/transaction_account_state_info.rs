@@ -30,7 +30,7 @@ impl Bank {
                     {
                         let account = account.borrow();
 
-                        // Native programs appear to be RentPaying because they carry low lamport
+                        // Native programs appear to be RentPaying because they carry low satomi
                         // balances; however they will never be loaded as writable
                         debug_assert!(!native_loader::check_id(account.owner()));
 

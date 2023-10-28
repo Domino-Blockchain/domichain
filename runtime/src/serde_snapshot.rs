@@ -103,7 +103,7 @@ pub struct BankIncrementalSnapshotPersistence {
     pub full_hash: SerdeAccountsHash,
     /// capitalization from the full snapshot
     pub full_capitalization: u64,
-    /// hash of the accounts in the incremental snapshot slot range, including zero-lamport accounts
+    /// hash of the accounts in the incremental snapshot slot range, including zero-satomi accounts
     pub incremental_hash: SerdeIncrementalAccountsHash,
     /// capitalization of the accounts in the incremental snapshot slot range
     pub incremental_capitalization: u64,

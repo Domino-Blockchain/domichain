@@ -300,7 +300,7 @@ impl RpcSender for MockSender {
             "getLargestAccounts" => {
                 let rpc_account_balance = RpcAccountBalance {
                     address: PUBKEY.to_string(),
-                    lamports: 10000,
+                    satomis: 10000,
                 };
 
                 json!(Response {
@@ -417,9 +417,9 @@ impl RpcSender for MockSender {
             })?,
             "getInflationGovernor" => serde_json::to_value(
                 RpcInflationGovernor {
-                    initial: 0.08,
+                    initial: 0.07,
                     terminal: 0.015,
-                    taper: 0.15,
+                    taper: 0.12,
                     foundation: 0.05,
                     foundation_term: 7.0,
                 })?,
@@ -447,7 +447,7 @@ impl RpcSender for MockSender {
             "getProgramAccounts" => {
                 let pubkey = Pubkey::from_str(PUBKEY).unwrap();
                 let account = Account {
-                    lamports: 1_000_000,
+                    satomis: 1_000_000,
                     data: vec![],
                     owner: pubkey,
                     executable: false,

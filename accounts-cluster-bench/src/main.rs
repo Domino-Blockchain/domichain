@@ -81,14 +81,14 @@ pub fn poll_get_fee_for_message(client: &RpcClient, message: &mut Message) -> (O
     }
 }
 
-fn airdrop_lamports(client: &RpcClient, id: &Keypair, desired_balance: u64) -> bool {
+fn airdrop_satomis(client: &RpcClient, id: &Keypair, desired_balance: u64) -> bool {
     let starting_balance = client.get_balance(&id.pubkey()).unwrap_or(0);
     info!("starting balance {}", starting_balance);
 
     if starting_balance < desired_balance {
         let airdrop_amount = desired_balance - starting_balance;
         info!(
-            "Airdropping {:?} lamports from {} for {}",
+            "Airdropping {:?} satomis from {} for {}",
             airdrop_amount,
             client.url(),
             id.pubkey(),
@@ -236,7 +236,7 @@ fn run_accounts_bench(
     maybe_space: Option<u64>,
     batch_size: usize,
     close_nth_batch: u64,
-    maybe_lamports: Option<u64>,
+    maybe_satomis: Option<u64>,
     num_instructions: usize,
     mint: Option<Pubkey>,
     reclaim_accounts: bool,
@@ -257,9 +257,9 @@ fn run_accounts_bench(
         .collect();
     let mut last_balance = Instant::now();
 
-    let default_max_lamports = 1000;
-    let min_balance = maybe_lamports.unwrap_or_else(|| {
-        let space = maybe_space.unwrap_or(default_max_lamports);
+    let default_max_satomis = 1000;
+    let min_balance = maybe_satomis.unwrap_or_else(|| {
+        let space = maybe_space.unwrap_or(default_max_satomis);
         client
             .get_minimum_balance_for_rent_exemption(space as usize)
             .expect("min balance")
@@ -301,20 +301,20 @@ fn run_accounts_bench(
         message.recent_blockhash = blockhash;
         let (fee, blockhash) = poll_get_fee_for_message(&client, &mut message);
         let fee = fee.expect("get_fee_for_message");
-        let lamports = min_balance + fee;
+        let satomis = min_balance + fee;
 
         for (i, balance) in balances.iter_mut().enumerate() {
-            if *balance < lamports || last_balance.elapsed().as_millis() > 2000 {
+            if *balance < satomis || last_balance.elapsed().as_millis() > 2000 {
                 if let Ok(b) = client.get_balance(&payer_keypairs[i].pubkey()) {
                     *balance = b;
                 }
                 last_balance = Instant::now();
-                if *balance < lamports * 2 {
+                if *balance < satomis * 2 {
                     info!(
                         "Balance {} is less than needed: {}, doing airdrop...",
-                        balance, lamports
+                        balance, satomis
                     );
-                    if !airdrop_lamports(&client, payer_keypairs[i], lamports * 100_000) {
+                    if !airdrop_satomis(&client, payer_keypairs[i], satomis * 100_000) {
                         warn!("failed airdrop, exiting");
                         return;
                     }
@@ -347,7 +347,7 @@ fn run_accounts_bench(
                                 Transaction::new(&signers, message, blockhash)
                             })
                             .collect();
-                        balances[i] = balances[i].saturating_sub(lamports * txs.len() as u64);
+                        balances[i] = balances[i].saturating_sub(satomis * txs.len() as u64);
                         info!("txs: {}", txs.len());
                         let new_ids = executor.push_transactions(txs);
                         info!("ids: {}", new_ids.len());
@@ -541,11 +541,11 @@ fn main() {
                 .help("Size of accounts to create"),
         )
         .arg(
-            Arg::with_name("lamports")
-                .long("lamports")
+            Arg::with_name("satomis")
+                .long("satomis")
                 .takes_value(true)
-                .value_name("LAMPORTS")
-                .help("How many lamports to fund each account"),
+                .value_name("SATOMIS")
+                .help("How many satomis to fund each account"),
         )
         .arg(
             Arg::with_name("identity")
@@ -611,7 +611,7 @@ fn main() {
     let skip_gossip = !matches.is_present("check_gossip");
 
     let space = value_t!(matches, "space", u64).ok();
-    let lamports = value_t!(matches, "lamports", u64).ok();
+    let satomis = value_t!(matches, "satomis", u64).ok();
     let batch_size = value_t!(matches, "batch_size", usize).unwrap_or(4);
     let close_nth_batch = value_t!(matches, "close_nth_batch", u64).unwrap_or(0);
     let iterations = value_t!(matches, "iterations", usize).unwrap_or(10);
@@ -693,7 +693,7 @@ fn main() {
         space,
         batch_size,
         close_nth_batch,
-        lamports,
+        satomis,
         num_instructions,
         mint,
         matches.is_present("reclaim_accounts"),
@@ -711,7 +711,7 @@ pub mod test {
             validator_configs::make_identical_validator_configs,
         },
         domichain_measure::measure::Measure,
-        domichain_sdk::{native_token::domi_to_lamports, poh_config::PohConfig},
+        domichain_sdk::{native_token::domi_to_satomis, poh_config::PohConfig},
         domichain_test_validator::TestValidator,
         spl_token::{
             domichain_program::program_pack::Pack,
@@ -725,7 +725,7 @@ pub mod test {
         let validator_config = ValidatorConfig::default_for_test();
         let num_nodes = 1;
         let mut config = ClusterConfig {
-            cluster_lamports: 10_000_000,
+            cluster_satomis: 10_000_000,
             poh_config: PohConfig::new_sleep(Duration::from_millis(50)),
             node_stakes: vec![100; num_nodes],
             validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
@@ -737,7 +737,7 @@ pub mod test {
         let maybe_space = None;
         let batch_size = 100;
         let close_nth_batch = 100;
-        let maybe_lamports = None;
+        let maybe_satomis = None;
         let num_instructions = 2;
         let mut start = Measure::start("total accounts run");
         let rpc_addr = cluster.entry_point_info.rpc().unwrap();
@@ -752,7 +752,7 @@ pub mod test {
             maybe_space,
             batch_size,
             close_nth_batch,
-            maybe_lamports,
+            maybe_satomis,
             num_instructions,
             None,
             false,
@@ -784,7 +784,7 @@ pub mod test {
         let signature = rpc_client
             .request_airdrop_with_blockhash(
                 &funder.pubkey(),
-                domi_to_lamports(1.0),
+                domi_to_satomis(1.0),
                 &latest_blockhash,
             )
             .unwrap();

@@ -51,17 +51,17 @@ NonceInstruction
     error NotReady
   stored_hash = sysvar.recent_blockhashes[0]
   success
-WithdrawInstruction(to, lamports)
+WithdrawInstruction(to, satomis)
   if state == Uninitialized
     if !signers.contains(owner)
       error MissingRequiredSignatures
   elif state == Initialized
     if !sysvar.recent_blockhashes.contains(stored_nonce)
       error NotReady
-    if lamports != account.balance && lamports + rent_exempt > account.balance
+    if satomis != account.balance && satomis + rent_exempt > account.balance
       error InsufficientFunds
-  account.balance -= lamports
-  to.balance += lamports
+  account.balance -= satomis
+  to.balance += satomis
   success
 ```
 
@@ -73,7 +73,7 @@ To initialize a newly created account, an `InitializeNonceAccount` instruction m
 issued. This instruction takes one parameter, the `Pubkey` of the account's
 [authority](../offline-signing/durable-nonce.md#nonce-authority). Nonce accounts
 must be [rent-exempt](rent.md#two-tiered-rent-regime) to meet the data-persistence
-requirements of the feature, and as such, require that sufficient lamports be
+requirements of the feature, and as such, require that sufficient satomis be
 deposited before they can be initialized. Upon successful initialization, the
 cluster's most recent blockhash is stored along with specified nonce authority
 `Pubkey`.
@@ -85,10 +85,10 @@ replaying transactions within the same block.
 
 Due to nonce accounts' [rent-exempt](rent.md#two-tiered-rent-regime) requirement,
 a custom withdraw instruction is used to move funds out of the account.
-The `WithdrawNonceAccount` instruction takes a single argument, lamports to withdraw,
+The `WithdrawNonceAccount` instruction takes a single argument, satomis to withdraw,
 and enforces rent-exemption by preventing the account's balance from falling
 below the rent-exempt minimum. An exception to this check is if the final balance
-would be zero lamports, which makes the account eligible for deletion. This
+would be zero satomis, which makes the account eligible for deletion. This
 account closure detail has an additional requirement that the stored nonce value
 must not match the cluster's most recent blockhash, as per `AdvanceNonceAccount`.
 

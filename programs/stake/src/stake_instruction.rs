@@ -186,7 +186,7 @@ declare_process_instruction!(process_instruction, 750, |invoke_context| {
                 &invoke_context.feature_set,
             )
         }
-        Ok(StakeInstruction::Split(lamports)) => {
+        Ok(StakeInstruction::Split(satomis)) => {
             let me = get_stake_account()?;
             instruction_context.check_number_of_instruction_accounts(2)?;
             drop(me);
@@ -195,7 +195,7 @@ declare_process_instruction!(process_instruction, 750, |invoke_context| {
                 transaction_context,
                 instruction_context,
                 0,
-                lamports,
+                satomis,
                 1,
                 &signers,
             )
@@ -222,7 +222,7 @@ declare_process_instruction!(process_instruction, 750, |invoke_context| {
                 &signers,
             )
         }
-        Ok(StakeInstruction::Withdraw(lamports)) => {
+        Ok(StakeInstruction::Withdraw(satomis)) => {
             let me = get_stake_account()?;
             instruction_context.check_number_of_instruction_accounts(2)?;
             let clock =
@@ -238,7 +238,7 @@ declare_process_instruction!(process_instruction, 750, |invoke_context| {
                 transaction_context,
                 instruction_context,
                 0,
-                lamports,
+                satomis,
                 1,
                 &clock,
                 &stake_history,
@@ -540,7 +540,7 @@ mod tests {
     }
 
     /// The "old old" behavior is both before the stake minimum delegation was raised *and* before
-    /// undelegated stake accounts could have zero lamports beyond rent
+    /// undelegated stake accounts could have zero satomis beyond rent
     fn feature_set_old_old_behavior() -> Arc<FeatureSet> {
         let mut feature_set = feature_set_old_behavior();
         Arc::get_mut(&mut feature_set)
@@ -1533,9 +1533,9 @@ mod tests {
     fn test_stake_initialize(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_lamports = rent_exempt_reserve;
+        let stake_satomis = rent_exempt_reserve;
         let stake_address = domichain_sdk::pubkey::new_rand();
-        let stake_account = AccountSharedData::new(stake_lamports, StakeState::size_of(), &id());
+        let stake_account = AccountSharedData::new(stake_satomis, StakeState::size_of(), &id());
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let lockup = Lockup {
             epoch: 1,
@@ -1597,7 +1597,7 @@ mod tests {
         transaction_accounts[1] = (
             rent::id(),
             create_account_shared_data_for_test(&Rent {
-                lamports_per_byte_year: rent.lamports_per_byte_year + 1,
+                satomis_per_byte_year: rent.satomis_per_byte_year + 1,
                 ..rent
             }),
         );
@@ -1611,7 +1611,7 @@ mod tests {
 
         // incorrect account sizes
         let stake_account =
-            AccountSharedData::new(stake_lamports, StakeState::size_of() + 1, &id());
+            AccountSharedData::new(stake_satomis, StakeState::size_of() + 1, &id());
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
             Arc::clone(&feature_set),
@@ -1622,7 +1622,7 @@ mod tests {
         );
 
         let stake_account =
-            AccountSharedData::new(stake_lamports, StakeState::size_of() - 1, &id());
+            AccountSharedData::new(stake_satomis, StakeState::size_of() - 1, &id());
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
             Arc::clone(&feature_set),
@@ -1639,9 +1639,9 @@ mod tests {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let authority_address_2 = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::default(),
             StakeState::size_of(),
             &id(),
@@ -1695,7 +1695,7 @@ mod tests {
 
         // should pass
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -1796,7 +1796,7 @@ mod tests {
         ];
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -1807,7 +1807,7 @@ mod tests {
         instruction_accounts[4].is_signer = false;
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(InstructionError::MissingRequiredSignature),
@@ -1820,9 +1820,9 @@ mod tests {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let mallory_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -1940,9 +1940,9 @@ mod tests {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let seed = "42";
         let stake_address = Pubkey::create_with_seed(&authority_base_address, seed, &id()).unwrap();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -2056,9 +2056,9 @@ mod tests {
         let authority_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
+        let stake_satomis = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -2262,10 +2262,10 @@ mod tests {
             .set_state(&VoteStateVersions::new_current(vote_state))
             .unwrap();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
+        let stake_satomis = minimum_delegation;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let mut stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta {
                 authorized: Authorized {
                     staker: stake_address,
@@ -2348,7 +2348,7 @@ mod tests {
             Stake {
                 delegation: Delegation {
                     voter_pubkey: vote_address,
-                    stake: stake_lamports,
+                    stake: stake_satomis,
                     activation_epoch: clock.epoch,
                     deactivation_epoch: std::u64::MAX,
                     ..Delegation::default()
@@ -2447,7 +2447,7 @@ mod tests {
             Stake {
                 delegation: Delegation {
                     voter_pubkey: vote_address_2,
-                    stake: stake_lamports,
+                    stake: stake_satomis,
                     activation_epoch: clock.epoch,
                     deactivation_epoch: std::u64::MAX,
                     ..Delegation::default()
@@ -2488,8 +2488,8 @@ mod tests {
         let mut clock = Clock::default();
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let initial_lamports = 4242424242;
-        let stake_lamports = rent_exempt_reserve + initial_lamports;
+        let initial_satomis = 4242424242;
+        let stake_satomis = rent_exempt_reserve + initial_satomis;
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let authority_address = domichain_sdk::pubkey::new_rand();
         let vote_address = domichain_sdk::pubkey::new_rand();
@@ -2497,7 +2497,7 @@ mod tests {
             vote_state::create_account(&vote_address, &domichain_sdk::pubkey::new_rand(), 0, 100);
         let stake_address = domichain_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta {
                 rent_exempt_reserve,
                 ..Meta::auto(&authority_address)
@@ -2597,10 +2597,10 @@ mod tests {
         // Once deactivated, we withdraw stake to new account
         clock.epoch += 1;
         transaction_accounts[2] = (clock::id(), create_account_shared_data_for_test(&clock));
-        let withdraw_lamports = initial_lamports / 2;
+        let withdraw_satomis = initial_satomis / 2;
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(withdraw_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(withdraw_satomis)).unwrap(),
             transaction_accounts.clone(),
             vec![
                 AccountMeta {
@@ -2631,8 +2631,8 @@ mod tests {
             ],
             Ok(()),
         );
-        let expected_balance = rent_exempt_reserve + initial_lamports - withdraw_lamports;
-        assert_eq!(accounts[0].lamports(), expected_balance);
+        let expected_balance = rent_exempt_reserve + initial_satomis - withdraw_satomis;
+        assert_eq!(accounts[0].satomis(), expected_balance);
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         clock.epoch += 1;
@@ -2646,7 +2646,7 @@ mod tests {
         );
         assert_eq!(
             stake_from(&accounts[0]).unwrap().delegation.stake,
-            accounts[0].lamports() - rent_exempt_reserve,
+            accounts[0].satomis() - rent_exempt_reserve,
         );
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
@@ -2664,7 +2664,7 @@ mod tests {
         // Out of band deposit
         transaction_accounts[0]
             .1
-            .checked_add_lamports(withdraw_lamports)
+            .checked_add_satomis(withdraw_satomis)
             .unwrap();
 
         clock.epoch += 1;
@@ -2678,7 +2678,7 @@ mod tests {
         );
         assert_eq!(
             stake_from(&accounts[0]).unwrap().delegation.stake,
-            accounts[0].lamports() - rent_exempt_reserve,
+            accounts[0].satomis() - rent_exempt_reserve,
         );
     }
 
@@ -2687,7 +2687,7 @@ mod tests {
     fn test_split(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation * 2;
+        let stake_satomis = minimum_delegation * 2;
         let split_to_address = domichain_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
@@ -2702,7 +2702,7 @@ mod tests {
             (
                 rent::id(),
                 create_account_shared_data_for_test(&Rent {
-                    lamports_per_byte_year: 0,
+                    satomis_per_byte_year: 0,
                     ..Rent::default()
                 }),
             ),
@@ -2724,10 +2724,10 @@ mod tests {
 
         for state in [
             StakeState::Initialized(Meta::auto(&stake_address)),
-            just_stake(Meta::auto(&stake_address), stake_lamports),
+            just_stake(Meta::auto(&stake_address), stake_satomis),
         ] {
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 &state,
                 StakeState::size_of(),
                 &id(),
@@ -2738,7 +2738,7 @@ mod tests {
             // should fail, split more than available
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::InsufficientFunds),
@@ -2747,15 +2747,15 @@ mod tests {
             // should pass
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
-            // no lamport leakage
+            // no satomi leakage
             assert_eq!(
-                accounts[0].lamports() + accounts[1].lamports(),
-                stake_lamports
+                accounts[0].satomis() + accounts[1].satomis(),
+                stake_satomis
             );
 
             assert_eq!(from(&accounts[0]).unwrap(), from(&accounts[1]).unwrap());
@@ -2765,7 +2765,7 @@ mod tests {
                 }
                 StakeState::Stake(_meta, _stake) => {
                     let stake_0 = from(&accounts[0]).unwrap().stake();
-                    assert_eq!(stake_0.unwrap().delegation.stake, stake_lamports / 2);
+                    assert_eq!(stake_0.unwrap().delegation.stake, stake_satomis / 2);
                 }
                 _ => unreachable!(),
             }
@@ -2782,7 +2782,7 @@ mod tests {
         transaction_accounts[1] = (split_to_address, split_to_account);
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+            &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(InstructionError::IncorrectProgramId),
@@ -2797,9 +2797,9 @@ mod tests {
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
+        let stake_satomis = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Uninitialized,
             StakeState::size_of(),
             &id(),
@@ -2869,7 +2869,7 @@ mod tests {
         instruction_accounts[4].is_signer = false;
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::MissingRequiredSignature),
@@ -2879,12 +2879,12 @@ mod tests {
         // should pass, signed keyed account and uninitialized
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
         );
-        assert_eq!(accounts[0].lamports(), 0);
+        assert_eq!(accounts[0].satomis(), 0);
         assert_eq!(from(&accounts[0]).unwrap(), StakeState::Uninitialized);
 
         // initialize stake
@@ -2920,13 +2920,13 @@ mod tests {
         // should fail, signed keyed account and locked up, more than available
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports + 1)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
         );
 
-        // Stake some lamports (available lamports for withdrawals will reduce to zero)
+        // Stake some satomis (available satomis for withdrawals will reduce to zero)
         let accounts = process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
@@ -2963,7 +2963,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, accounts[0].clone());
 
         // simulate rewards
-        transaction_accounts[0].1.checked_add_lamports(10).unwrap();
+        transaction_accounts[0].1.checked_add_satomis(10).unwrap();
 
         // withdrawal before deactivate works for rewards amount
         process_instruction(
@@ -3014,21 +3014,21 @@ mod tests {
         // Try to withdraw more than what's available
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports + 11)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis + 11)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
         );
 
-        // Try to withdraw all lamports
+        // Try to withdraw all satomis
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports + 10)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis + 10)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
         );
-        assert_eq!(accounts[0].lamports(), 0);
+        assert_eq!(accounts[0].satomis(), 0);
         assert_eq!(from(&accounts[0]).unwrap(), StakeState::Uninitialized);
 
         // overflow
@@ -3061,7 +3061,7 @@ mod tests {
 
         // should fail, invalid state
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::RewardsPool,
             StakeState::size_of(),
             &id(),
@@ -3070,7 +3070,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, stake_account);
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(InstructionError::InvalidAccountData),
@@ -3083,10 +3083,10 @@ mod tests {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
-        let total_lamports = stake_lamports + 33;
+        let stake_satomis = minimum_delegation;
+        let total_satomis = stake_satomis + 33;
         let stake_account = AccountSharedData::new_data_with_space(
-            total_lamports,
+            total_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -3144,7 +3144,7 @@ mod tests {
             },
         ];
 
-        // Stake some lamports (available lamports for withdrawals will reduce to zero)
+        // Stake some satomis (available satomis for withdrawals will reduce to zero)
         let accounts = process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
@@ -3195,7 +3195,7 @@ mod tests {
         process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(
-                total_lamports - stake_lamports + 1,
+                total_satomis - stake_satomis + 1,
             ))
             .unwrap(),
             transaction_accounts,
@@ -3210,7 +3210,7 @@ mod tests {
         let recipient_address = domichain_sdk::pubkey::new_rand();
         let custodian_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
-        let total_lamports = 100;
+        let total_satomis = 100;
         let mut meta = Meta {
             lockup: Lockup {
                 unix_timestamp: 0,
@@ -3220,7 +3220,7 @@ mod tests {
             ..Meta::auto(&stake_address)
         };
         let stake_account = AccountSharedData::new_data_with_space(
-            total_lamports,
+            total_satomis,
             &StakeState::Initialized(meta),
             StakeState::size_of(),
             &id(),
@@ -3268,7 +3268,7 @@ mod tests {
         // should fail, lockup is still in force
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(total_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(StakeError::LockupInForce.into()),
@@ -3282,7 +3282,7 @@ mod tests {
         });
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(total_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -3293,7 +3293,7 @@ mod tests {
         instruction_accounts[5].pubkey = stake_address;
         meta.lockup.custodian = stake_address;
         let stake_account_self_as_custodian = AccountSharedData::new_data_with_space(
-            total_lamports,
+            total_satomis,
             &StakeState::Initialized(meta),
             StakeState::size_of(),
             &id(),
@@ -3302,7 +3302,7 @@ mod tests {
         transaction_accounts[0] = (stake_address, stake_account_self_as_custodian);
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(total_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -3316,7 +3316,7 @@ mod tests {
         transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(total_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(total_satomis)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Ok(()),
@@ -3333,9 +3333,9 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = 7 * minimum_delegation;
+        let stake_satomis = 7 * minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports + rent_exempt_reserve,
+            stake_satomis + rent_exempt_reserve,
             &StakeState::Initialized(Meta {
                 rent_exempt_reserve,
                 ..Meta::auto(&stake_address)
@@ -3388,7 +3388,7 @@ mod tests {
         // should pass, withdrawing initialized account down to minimum balance
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
@@ -3397,7 +3397,7 @@ mod tests {
         // should fail, withdrawal that would leave less than rent-exempt reserve
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Withdraw(stake_lamports + 1)).unwrap(),
+            &serialize(&StakeInstruction::Withdraw(stake_satomis + 1)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Err(InstructionError::InsufficientFunds),
@@ -3407,7 +3407,7 @@ mod tests {
         process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(
-                stake_lamports + rent_exempt_reserve,
+                stake_satomis + rent_exempt_reserve,
             ))
             .unwrap(),
             transaction_accounts,
@@ -3421,9 +3421,9 @@ mod tests {
     fn test_deactivate(feature_set: Arc<FeatureSet>) {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
+        let stake_satomis = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Initialized(Meta::auto(&stake_address)),
             StakeState::size_of(),
             &id(),
@@ -3547,9 +3547,9 @@ mod tests {
         let authorized_address = domichain_sdk::pubkey::new_rand();
         let stake_address = domichain_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = minimum_delegation;
+        let stake_satomis = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Uninitialized,
             StakeState::size_of(),
             &id(),
@@ -3846,14 +3846,14 @@ mod tests {
                 is_writable: false,
             },
         ];
-        for (lamports, expected_result) in [
+        for (satomis, expected_result) in [
             (rent_exempt_reserve, Ok(())),
             (
                 rent_exempt_reserve - 1,
                 Err(InstructionError::InsufficientFunds),
             ),
         ] {
-            let stake_account = AccountSharedData::new(lamports, StakeState::size_of(), &id());
+            let stake_account = AccountSharedData::new(satomis, StakeState::size_of(), &id());
             process_instruction(
                 Arc::clone(&feature_set),
                 &instruction_data,
@@ -4119,7 +4119,7 @@ mod tests {
                 .unwrap();
                 process_instruction(
                     Arc::clone(&feature_set),
-                    &serialize(&StakeInstruction::Split(source_account.lamports())).unwrap(),
+                    &serialize(&StakeInstruction::Split(source_account.satomis())).unwrap(),
                     vec![
                         (source_address, source_account),
                         (dest_address, dest_account.clone()),
@@ -4163,9 +4163,9 @@ mod tests {
             ),
             // any split amount is OK when destination account is already fully funded
             (rent_exempt_reserve, 1, Ok(())),
-            // if destination is only short by 1 lamport, then split amount can be 1 lamport
+            // if destination is only short by 1 satomi, then split amount can be 1 satomi
             (rent_exempt_reserve - 1, 1, Ok(())),
-            // destination short by 2 lamports, then 1 isn't enough (non-zero split amount)
+            // destination short by 2 satomis, then 1 isn't enough (non-zero split amount)
             (
                 rent_exempt_reserve - 2,
                 1,
@@ -4181,9 +4181,9 @@ mod tests {
                 rent_exempt_reserve - 2,
                 Err(InstructionError::InsufficientFunds),
             ),
-            // destination has zero lamports, so split must be at least rent exempt reserve
+            // destination has zero satomis, so split must be at least rent exempt reserve
             (0, rent_exempt_reserve, Ok(())),
-            // destination has zero lamports, but split amount is less than rent exempt reserve
+            // destination has zero satomis, but split amount is less than rent exempt reserve
             (
                 0,
                 rent_exempt_reserve - 1,
@@ -4267,15 +4267,15 @@ mod tests {
                 1,
                 expected_results[0].clone(),
             ),
-            // if destination is only short by 1 lamport, then...
-            // - old behavior: split amount can be 1 lamport
+            // if destination is only short by 1 satomi, then...
+            // - old behavior: split amount can be 1 satomi
             // - new behavior: split amount must be at least the minimum delegation
             (
                 rent_exempt_reserve + minimum_delegation - 1,
                 1,
                 expected_results[1].clone(),
             ),
-            // destination short by 2 lamports, so 1 isn't enough (non-zero split amount)
+            // destination short by 2 satomis, so 1 isn't enough (non-zero split amount)
             (
                 rent_exempt_reserve + minimum_delegation - 2,
                 1,
@@ -4307,10 +4307,10 @@ mod tests {
                 rent_exempt_reserve + minimum_delegation - 2,
                 Err(InstructionError::InsufficientFunds),
             ),
-            // destination has zero lamports, so split must be at least rent exempt reserve plus
+            // destination has zero satomis, so split must be at least rent exempt reserve plus
             // minimum delegation
             (0, rent_exempt_reserve + minimum_delegation, Ok(())),
-            // destination has zero lamports, but split amount is less than rent exempt reserve
+            // destination has zero satomis, but split amount is less than rent exempt reserve
             // plus minimum delegation
             (
                 0,
@@ -4356,7 +4356,7 @@ mod tests {
             // check to ensure the destination's delegation amount is correct.  If the
             // destination is already rent exempt, then the destination's stake delegation
             // *must* equal the split amount. Otherwise, the split amount must first be used to
-            // make the destination rent exempt, and then the leftover lamports are delegated.
+            // make the destination rent exempt, and then the leftover satomis are delegated.
             if expected_result.is_ok() {
                 assert_matches!(accounts[0].state().unwrap(), StakeState::Stake(_, _));
                 if let StakeState::Stake(_, destination_stake) = accounts[1].state().unwrap() {
@@ -4614,7 +4614,7 @@ mod tests {
         clock.epoch += 1;
         transaction_accounts[3] = (clock::id(), create_account_shared_data_for_test(&clock));
         let withdraw_amount =
-            accounts[0].lamports() - (rent_exempt_reserve + minimum_delegation - 1);
+            accounts[0].satomis() - (rent_exempt_reserve + minimum_delegation - 1);
         let accounts = process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::Withdraw(withdraw_amount)).unwrap(),
@@ -4665,10 +4665,10 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
+        let stake_satomis = (rent_exempt_reserve + minimum_delegation) * 2;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Uninitialized,
             StakeState::size_of(),
             &id(),
@@ -4709,7 +4709,7 @@ mod tests {
             // and splitting should fail when the split amount is greater than the balance
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
@@ -4723,14 +4723,14 @@ mod tests {
             );
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::InsufficientFunds),
@@ -4741,18 +4741,18 @@ mod tests {
         instruction_accounts[1].pubkey = split_to_address;
         let accounts = process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+            &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
             Ok(()),
         );
-        assert_eq!(accounts[0].lamports(), accounts[1].lamports());
+        assert_eq!(accounts[0].satomis(), accounts[1].satomis());
 
         // no signers should fail
         instruction_accounts[0].is_signer = false;
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+            &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(InstructionError::MissingRequiredSignature),
@@ -4762,11 +4762,11 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_split_split_not_uninitialized(feature_set: Arc<FeatureSet>) {
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
-            &just_stake(Meta::auto(&stake_address), stake_lamports),
+            stake_satomis,
+            &just_stake(Meta::auto(&stake_address), stake_satomis),
             StakeState::size_of(),
             &id(),
         )
@@ -4799,7 +4799,7 @@ mod tests {
             .unwrap();
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
                 vec![
                     (stake_address, stake_account.clone()),
                     (split_to_address, split_to_account),
@@ -4816,16 +4816,16 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
+        let stake_satomis = (rent_exempt_reserve + minimum_delegation) * 2;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &just_stake(
                 Meta {
                     rent_exempt_reserve,
                     ..Meta::auto(&stake_address)
                 },
-                stake_lamports / 2 - 1,
+                stake_satomis / 2 - 1,
             ),
             StakeState::size_of(),
             &id(),
@@ -4859,7 +4859,7 @@ mod tests {
 
         process_instruction(
             Arc::clone(&feature_set),
-            &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+            &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
             Err(StakeError::InsufficientDelegation.into()),
@@ -4907,9 +4907,9 @@ mod tests {
                 just_stake(meta, minimum_delegation * 2 + rent_exempt_reserve),
             ),
         ] {
-            let stake_lamports = minimum_balance * 2;
+            let stake_satomis = minimum_balance * 2;
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 state,
                 StakeState::size_of(),
                 &id(),
@@ -4934,7 +4934,7 @@ mod tests {
             process_instruction(
                 Arc::clone(&feature_set),
                 &serialize(&StakeInstruction::Split(
-                    stake_lamports - minimum_balance + 1,
+                    stake_satomis - minimum_balance + 1,
                 ))
                 .unwrap(),
                 transaction_accounts.clone(),
@@ -4942,11 +4942,11 @@ mod tests {
                 Err(InstructionError::InsufficientFunds),
             );
 
-            // split account already has way enough lamports
-            transaction_accounts[1].1.set_lamports(*minimum_balance);
+            // split account already has way enough satomis
+            transaction_accounts[1].1.set_satomis(*minimum_balance);
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports - minimum_balance)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis - minimum_balance)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Ok(()),
@@ -4960,15 +4960,15 @@ mod tests {
                         *meta,
                         Stake {
                             delegation: Delegation {
-                                stake: stake_lamports - minimum_balance,
+                                stake: stake_satomis - minimum_balance,
                                 ..stake.delegation
                             },
                             ..*stake
                         }
                     ))
                 );
-                assert_eq!(accounts[0].lamports(), *minimum_balance,);
-                assert_eq!(accounts[1].lamports(), stake_lamports,);
+                assert_eq!(accounts[0].satomis(), *minimum_balance,);
+                assert_eq!(accounts[1].satomis(), stake_satomis,);
             }
         }
     }
@@ -4979,16 +4979,16 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
+        let stake_satomis = (rent_exempt_reserve + minimum_delegation) * 2;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve,
             ..Meta::default()
         };
-        let state = just_stake(meta, stake_lamports - rent_exempt_reserve);
+        let state = just_stake(meta, stake_satomis - rent_exempt_reserve);
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &state,
             StakeState::size_of(),
             &id(),
@@ -5011,14 +5011,14 @@ mod tests {
         // Test various account prefunding, including empty, less than rent_exempt_reserve, exactly
         // rent_exempt_reserve, and more than rent_exempt_reserve. The empty case is not covered in
         // test_split, since that test uses a Meta with rent_exempt_reserve = 0
-        let split_lamport_balances = vec![
+        let split_satomi_balances = vec![
             0,
             rent_exempt_reserve - 1,
             rent_exempt_reserve,
             rent_exempt_reserve + minimum_delegation - 1,
             rent_exempt_reserve + minimum_delegation,
         ];
-        for initial_balance in split_lamport_balances {
+        for initial_balance in split_satomi_balances {
             let split_to_account = AccountSharedData::new_data_with_space(
                 initial_balance,
                 &StakeState::Uninitialized,
@@ -5035,7 +5035,7 @@ mod tests {
             // split more than available fails
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::InsufficientFunds),
@@ -5044,26 +5044,26 @@ mod tests {
             // should work
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Ok(()),
             );
-            // no lamport leakage
+            // no satomi leakage
             assert_eq!(
-                accounts[0].lamports() + accounts[1].lamports(),
-                stake_lamports + initial_balance,
+                accounts[0].satomis() + accounts[1].satomis(),
+                stake_satomis + initial_balance,
             );
 
             if let StakeState::Stake(meta, stake) = state {
                 let expected_stake =
-                    stake_lamports / 2 - (rent_exempt_reserve.saturating_sub(initial_balance));
+                    stake_satomis / 2 - (rent_exempt_reserve.saturating_sub(initial_balance));
                 assert_eq!(
                     Ok(StakeState::Stake(
                         meta,
                         Stake {
                             delegation: Delegation {
-                                stake: stake_lamports / 2
+                                stake: stake_satomis / 2
                                     - (rent_exempt_reserve.saturating_sub(initial_balance)),
                                 ..stake.delegation
                             },
@@ -5073,7 +5073,7 @@ mod tests {
                     accounts[1].state(),
                 );
                 assert_eq!(
-                    accounts[1].lamports(),
+                    accounts[1].satomis(),
                     expected_stake
                         + rent_exempt_reserve
                         + initial_balance.saturating_sub(rent_exempt_reserve),
@@ -5083,7 +5083,7 @@ mod tests {
                         meta,
                         Stake {
                             delegation: Delegation {
-                                stake: stake_lamports / 2 - rent_exempt_reserve,
+                                stake: stake_satomis / 2 - rent_exempt_reserve,
                                 ..stake.delegation
                             },
                             ..stake
@@ -5102,16 +5102,16 @@ mod tests {
         let source_larger_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = (source_larger_rent_exempt_reserve + minimum_delegation) * 2;
+        let stake_satomis = (source_larger_rent_exempt_reserve + minimum_delegation) * 2;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve: source_larger_rent_exempt_reserve,
             ..Meta::default()
         };
-        let state = just_stake(meta, stake_lamports - source_larger_rent_exempt_reserve);
+        let state = just_stake(meta, stake_satomis - source_larger_rent_exempt_reserve);
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &state,
             StakeState::size_of() + 100,
             &id(),
@@ -5134,14 +5134,14 @@ mod tests {
         // Test various account prefunding, including empty, less than rent_exempt_reserve, exactly
         // rent_exempt_reserve, and more than rent_exempt_reserve. The empty case is not covered in
         // test_split, since that test uses a Meta with rent_exempt_reserve = 0
-        let split_lamport_balances = vec![
+        let split_satomi_balances = vec![
             0,
             split_rent_exempt_reserve - 1,
             split_rent_exempt_reserve,
             split_rent_exempt_reserve + minimum_delegation - 1,
             split_rent_exempt_reserve + minimum_delegation,
         ];
-        for initial_balance in split_lamport_balances {
+        for initial_balance in split_satomi_balances {
             let split_to_account = AccountSharedData::new_data_with_space(
                 initial_balance,
                 &StakeState::Uninitialized,
@@ -5158,7 +5158,7 @@ mod tests {
             // split more than available fails
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports + 1)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis + 1)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Err(InstructionError::InsufficientFunds),
@@ -5167,15 +5167,15 @@ mod tests {
             // should work
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis / 2)).unwrap(),
                 transaction_accounts.clone(),
                 instruction_accounts.clone(),
                 Ok(()),
             );
-            // no lamport leakage
+            // no satomi leakage
             assert_eq!(
-                accounts[0].lamports() + accounts[1].lamports(),
-                stake_lamports + initial_balance
+                accounts[0].satomis() + accounts[1].satomis(),
+                stake_satomis + initial_balance
             );
 
             if let StakeState::Stake(meta, stake) = state {
@@ -5184,7 +5184,7 @@ mod tests {
                     rent_exempt_reserve: split_rent_exempt_reserve,
                     ..Meta::default()
                 };
-                let expected_stake = stake_lamports / 2
+                let expected_stake = stake_satomis / 2
                     - (split_rent_exempt_reserve.saturating_sub(initial_balance));
 
                 assert_eq!(
@@ -5201,7 +5201,7 @@ mod tests {
                     accounts[1].state()
                 );
                 assert_eq!(
-                    accounts[1].lamports(),
+                    accounts[1].satomis(),
                     expected_stake
                         + split_rent_exempt_reserve
                         + initial_balance.saturating_sub(split_rent_exempt_reserve)
@@ -5211,7 +5211,7 @@ mod tests {
                         meta,
                         Stake {
                             delegation: Delegation {
-                                stake: stake_lamports / 2 - source_larger_rent_exempt_reserve,
+                                stake: stake_satomis / 2 - source_larger_rent_exempt_reserve,
                                 ..stake.delegation
                             },
                             ..stake
@@ -5229,16 +5229,16 @@ mod tests {
         let rent = Rent::default();
         let source_smaller_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
-        let stake_lamports = split_rent_exempt_reserve + 1;
+        let stake_satomis = split_rent_exempt_reserve + 1;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve: source_smaller_rent_exempt_reserve,
             ..Meta::default()
         };
-        let state = just_stake(meta, stake_lamports - source_smaller_rent_exempt_reserve);
+        let state = just_stake(meta, stake_satomis - source_smaller_rent_exempt_reserve);
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &state,
             StakeState::size_of(),
             &id(),
@@ -5258,14 +5258,14 @@ mod tests {
             },
         ];
 
-        let split_amount = stake_lamports - (source_smaller_rent_exempt_reserve + 1); // Enough so that split stake is > 0
-        let split_lamport_balances = vec![
+        let split_amount = stake_satomis - (source_smaller_rent_exempt_reserve + 1); // Enough so that split stake is > 0
+        let split_satomi_balances = vec![
             0,
             1,
             split_rent_exempt_reserve,
             split_rent_exempt_reserve + 1,
         ];
-        for initial_balance in split_lamport_balances {
+        for initial_balance in split_satomi_balances {
             let split_to_account = AccountSharedData::new_data_with_space(
                 initial_balance,
                 &StakeState::Uninitialized,
@@ -5291,7 +5291,7 @@ mod tests {
             // Splitting 100% of source should not make a difference
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Err(InstructionError::InvalidAccountData),
@@ -5305,7 +5305,7 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = rent_exempt_reserve + minimum_delegation;
+        let stake_satomis = rent_exempt_reserve + minimum_delegation;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
@@ -5336,10 +5336,10 @@ mod tests {
         // test splitting both an Initialized stake and a Staked stake
         for state in &[
             StakeState::Initialized(meta),
-            just_stake(meta, stake_lamports - rent_exempt_reserve),
+            just_stake(meta, stake_satomis - rent_exempt_reserve),
         ] {
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 &state,
                 StakeState::size_of(),
                 &id(),
@@ -5354,16 +5354,16 @@ mod tests {
             // split 100% over to dest
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Ok(()),
             );
 
-            // no lamport leakage
+            // no satomi leakage
             assert_eq!(
-                accounts[0].lamports() + accounts[1].lamports(),
-                stake_lamports
+                accounts[0].satomis() + accounts[1].satomis(),
+                stake_satomis
             );
 
             match state {
@@ -5377,7 +5377,7 @@ mod tests {
                             *meta,
                             Stake {
                                 delegation: Delegation {
-                                    stake: stake_lamports - rent_exempt_reserve,
+                                    stake: stake_satomis - rent_exempt_reserve,
                                     ..stake.delegation
                                 },
                                 ..*stake
@@ -5394,20 +5394,20 @@ mod tests {
 
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
-    fn test_split_100_percent_of_source_to_account_with_lamports(feature_set: Arc<FeatureSet>) {
+    fn test_split_100_percent_of_source_to_account_with_satomis(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = rent_exempt_reserve + minimum_delegation;
+        let stake_satomis = rent_exempt_reserve + minimum_delegation;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve,
             ..Meta::default()
         };
-        let state = just_stake(meta, stake_lamports - rent_exempt_reserve);
+        let state = just_stake(meta, stake_satomis - rent_exempt_reserve);
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &state,
             StakeState::size_of(),
             &id(),
@@ -5430,14 +5430,14 @@ mod tests {
         // Test various account prefunding, including empty, less than rent_exempt_reserve, exactly
         // rent_exempt_reserve, and more than rent_exempt_reserve. Technically, the empty case is
         // covered in test_split_100_percent_of_source, but included here as well for readability
-        let split_lamport_balances = vec![
+        let split_satomi_balances = vec![
             0,
             rent_exempt_reserve - 1,
             rent_exempt_reserve,
             rent_exempt_reserve + minimum_delegation - 1,
             rent_exempt_reserve + minimum_delegation,
         ];
-        for initial_balance in split_lamport_balances {
+        for initial_balance in split_satomi_balances {
             let split_to_account = AccountSharedData::new_data_with_space(
                 initial_balance,
                 &StakeState::Uninitialized,
@@ -5454,16 +5454,16 @@ mod tests {
             // split 100% over to dest
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Ok(()),
             );
 
-            // no lamport leakage
+            // no satomi leakage
             assert_eq!(
-                accounts[0].lamports() + accounts[1].lamports(),
-                stake_lamports + initial_balance
+                accounts[0].satomis() + accounts[1].satomis(),
+                stake_satomis + initial_balance
             );
 
             if let StakeState::Stake(meta, stake) = state {
@@ -5472,7 +5472,7 @@ mod tests {
                         meta,
                         Stake {
                             delegation: Delegation {
-                                stake: stake_lamports - rent_exempt_reserve,
+                                stake: stake_satomis - rent_exempt_reserve,
                                 ..stake.delegation
                             },
                             ..stake
@@ -5492,7 +5492,7 @@ mod tests {
         let source_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_lamports = source_rent_exempt_reserve + minimum_delegation;
+        let stake_satomis = source_rent_exempt_reserve + minimum_delegation;
         let stake_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
@@ -5515,11 +5515,11 @@ mod tests {
 
         for state in &[
             StakeState::Initialized(meta),
-            just_stake(meta, stake_lamports - source_rent_exempt_reserve),
+            just_stake(meta, stake_satomis - source_rent_exempt_reserve),
         ] {
             // Test that splitting to a larger account fails
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 &state,
                 StakeState::size_of(),
                 &id(),
@@ -5539,7 +5539,7 @@ mod tests {
             ];
             process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Err(InstructionError::InvalidAccountData),
@@ -5548,7 +5548,7 @@ mod tests {
             // Test that splitting from a larger account to a smaller one works.
             // Split amount should not matter, assuming other fund criteria are met
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 &state,
                 StakeState::size_of() + 100,
                 &id(),
@@ -5568,12 +5568,12 @@ mod tests {
             ];
             let accounts = process_instruction(
                 Arc::clone(&feature_set),
-                &serialize(&StakeInstruction::Split(stake_lamports)).unwrap(),
+                &serialize(&StakeInstruction::Split(stake_satomis)).unwrap(),
                 transaction_accounts,
                 instruction_accounts.clone(),
                 Ok(()),
             );
-            assert_eq!(accounts[1].lamports(), stake_lamports);
+            assert_eq!(accounts[1].satomis(), stake_satomis);
 
             let expected_split_meta = Meta {
                 authorized: Authorized::auto(&stake_address),
@@ -5589,9 +5589,9 @@ mod tests {
                     assert_eq!(Ok(StakeState::Uninitialized), accounts[0].state());
                 }
                 StakeState::Stake(_meta, stake) => {
-                    // Expected stake should reflect original stake amount so that extra lamports
+                    // Expected stake should reflect original stake amount so that extra satomis
                     // from the rent_exempt_reserve inequality do not magically activate
-                    let expected_stake = stake_lamports - source_rent_exempt_reserve;
+                    let expected_stake = stake_satomis - source_rent_exempt_reserve;
 
                     assert_eq!(
                         Ok(StakeState::Stake(
@@ -5607,7 +5607,7 @@ mod tests {
                         accounts[1].state()
                     );
                     assert_eq!(
-                        accounts[1].lamports(),
+                        accounts[1].satomis(),
                         expected_stake + source_rent_exempt_reserve,
                     );
                     assert_eq!(Ok(StakeState::Uninitialized), accounts[0].state());
@@ -5624,7 +5624,7 @@ mod tests {
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
         let meta = Meta::auto(&authorized_address);
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5655,10 +5655,10 @@ mod tests {
 
         for state in &[
             StakeState::Initialized(meta),
-            just_stake(meta, stake_lamports),
+            just_stake(meta, stake_satomis),
         ] {
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 state,
                 StakeState::size_of(),
                 &id(),
@@ -5666,10 +5666,10 @@ mod tests {
             .unwrap();
             for merge_from_state in &[
                 StakeState::Initialized(meta),
-                just_stake(meta, stake_lamports),
+                just_stake(meta, stake_satomis),
             ] {
                 let merge_from_account = AccountSharedData::new_data_with_space(
-                    stake_lamports,
+                    stake_satomis,
                     merge_from_state,
                     StakeState::size_of(),
                     &id(),
@@ -5708,9 +5708,9 @@ mod tests {
                     Ok(()),
                 );
 
-                // check lamports
-                assert_eq!(accounts[0].lamports(), stake_lamports * 2);
-                assert_eq!(accounts[1].lamports(), 0);
+                // check satomis
+                assert_eq!(accounts[0].satomis(), stake_satomis * 2);
+                assert_eq!(accounts[1].satomis(), 0);
 
                 // check state
                 match state {
@@ -5723,7 +5723,7 @@ mod tests {
                                 .stake()
                                 .map(|stake| stake.delegation.stake)
                                 .unwrap_or_else(|| {
-                                    stake_lamports
+                                    stake_satomis
                                         - merge_from_state.meta().unwrap().rent_exempt_reserve
                                 });
                         assert_eq!(
@@ -5755,7 +5755,7 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let stake_amount = 4242424242;
-        let stake_lamports = rent_exempt_reserve + stake_amount;
+        let stake_satomis = rent_exempt_reserve + stake_amount;
         let meta = Meta {
             rent_exempt_reserve,
             ..Meta::auto(&authorized_address)
@@ -5769,7 +5769,7 @@ mod tests {
             ..Stake::default()
         };
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Stake(meta, stake),
             StakeState::size_of(),
             &id(),
@@ -5831,7 +5831,7 @@ mod tests {
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
         let wrong_authorized_address = domichain_sdk::pubkey::new_rand();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let mut instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5862,10 +5862,10 @@ mod tests {
 
         for state in &[
             StakeState::Initialized(Meta::auto(&authorized_address)),
-            just_stake(Meta::auto(&authorized_address), stake_lamports),
+            just_stake(Meta::auto(&authorized_address), stake_satomis),
         ] {
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 state,
                 StakeState::size_of(),
                 &id(),
@@ -5873,10 +5873,10 @@ mod tests {
             .unwrap();
             for merge_from_state in &[
                 StakeState::Initialized(Meta::auto(&wrong_authorized_address)),
-                just_stake(Meta::auto(&wrong_authorized_address), stake_lamports),
+                just_stake(Meta::auto(&wrong_authorized_address), stake_satomis),
             ] {
                 let merge_from_account = AccountSharedData::new_data_with_space(
-                    stake_lamports,
+                    stake_satomis,
                     merge_from_state,
                     StakeState::size_of(),
                     &id(),
@@ -5924,7 +5924,7 @@ mod tests {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5957,10 +5957,10 @@ mod tests {
             StakeState::Uninitialized,
             StakeState::RewardsPool,
             StakeState::Initialized(Meta::auto(&authorized_address)),
-            just_stake(Meta::auto(&authorized_address), stake_lamports),
+            just_stake(Meta::auto(&authorized_address), stake_satomis),
         ] {
             let stake_account = AccountSharedData::new_data_with_space(
-                stake_lamports,
+                stake_satomis,
                 state,
                 StakeState::size_of(),
                 &id(),
@@ -5968,7 +5968,7 @@ mod tests {
             .unwrap();
             for merge_from_state in &[StakeState::Uninitialized, StakeState::RewardsPool] {
                 let merge_from_account = AccountSharedData::new_data_with_space(
-                    stake_lamports,
+                    stake_satomis,
                     merge_from_state,
                     StakeState::size_of(),
                     &id(),
@@ -6005,17 +6005,17 @@ mod tests {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
-        let stake_lamports = 42;
+        let stake_satomis = 42;
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
-            &just_stake(Meta::auto(&authorized_address), stake_lamports),
+            stake_satomis,
+            &just_stake(Meta::auto(&authorized_address), stake_satomis),
             StakeState::size_of(),
             &id(),
         )
         .unwrap();
         let merge_from_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
-            &just_stake(Meta::auto(&authorized_address), stake_lamports),
+            stake_satomis,
+            &just_stake(Meta::auto(&authorized_address), stake_satomis),
             StakeState::size_of(),
             &domichain_sdk::pubkey::new_rand(),
         )
@@ -6076,13 +6076,13 @@ mod tests {
         let stake_address = domichain_sdk::pubkey::new_rand();
         let merge_from_address = domichain_sdk::pubkey::new_rand();
         let authorized_address = domichain_sdk::pubkey::new_rand();
-        let base_lamports = 4242424242;
+        let base_satomis = 4242424242;
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_amount = base_lamports;
-        let stake_lamports = rent_exempt_reserve + stake_amount;
-        let merge_from_amount = base_lamports;
-        let merge_from_lamports = rent_exempt_reserve + merge_from_amount;
+        let stake_amount = base_satomis;
+        let stake_satomis = rent_exempt_reserve + stake_amount;
+        let merge_from_amount = base_satomis;
+        let merge_from_satomis = rent_exempt_reserve + merge_from_amount;
         let meta = Meta {
             rent_exempt_reserve,
             ..Meta::auto(&authorized_address)
@@ -6096,7 +6096,7 @@ mod tests {
             ..Stake::default()
         };
         let stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Stake(meta, stake),
             StakeState::size_of(),
             &id(),
@@ -6112,7 +6112,7 @@ mod tests {
             ..stake
         };
         let merge_from_account = AccountSharedData::new_data_with_space(
-            merge_from_lamports,
+            merge_from_satomis,
             &StakeState::Stake(meta, merge_from_stake),
             StakeState::size_of(),
             &id(),
@@ -6120,7 +6120,7 @@ mod tests {
         .unwrap();
         let mut clock = Clock::default();
         let mut stake_history = StakeHistory::default();
-        let mut effective = base_lamports;
+        let mut effective = base_satomis;
         let mut activating = stake_amount;
         let mut deactivating = 0;
         stake_history.add(
@@ -6497,7 +6497,7 @@ mod tests {
         );
 
         let stake_account = AccountSharedData::new_data_with_space(
-            1, /* lamports */
+            1, /* satomis */
             &initial_stake_state,
             StakeState::size_of(),
             &id(),
@@ -6505,7 +6505,7 @@ mod tests {
         .unwrap();
 
         let mut vote_account = AccountSharedData::new_data_with_space(
-            1, /* lamports */
+            1, /* satomis */
             &VoteStateVersions::new_current(VoteState::default()),
             VoteState::size_of(),
             &domichain_vote_program::id(),
@@ -6513,7 +6513,7 @@ mod tests {
         .unwrap();
 
         let mut reference_vote_account = AccountSharedData::new_data_with_space(
-            1, /* lamports */
+            1, /* satomis */
             &VoteStateVersions::new_current(VoteState::default()),
             VoteState::size_of(),
             &domichain_vote_program::id(),
@@ -6802,7 +6802,7 @@ mod tests {
             }
 
             AccountSharedData::new_data_with_space(
-                rent_exempt_reserve + initial_stake_delegation, /* lamports */
+                rent_exempt_reserve + initial_stake_delegation, /* satomis */
                 &initial_stake_state,
                 StakeState::size_of(),
                 &id(),
@@ -6811,7 +6811,7 @@ mod tests {
         };
 
         let new_vote_account = AccountSharedData::new_data_with_space(
-            1, /* lamports */
+            1, /* satomis */
             &VoteStateVersions::new_current(VoteState::default()),
             VoteState::size_of(),
             &domichain_vote_program::id(),
@@ -6891,7 +6891,7 @@ mod tests {
         //
         let stake_account = prepare_stake_account(0 /*activation_epoch*/, None);
         let uninitialized_stake_account =
-            AccountSharedData::new(0 /* lamports */, StakeState::size_of(), &id());
+            AccountSharedData::new(0 /* satomis */, StakeState::size_of(), &id());
 
         let _ = process_instruction_redelegate(
             &stake_address,
@@ -6918,7 +6918,7 @@ mod tests {
             Ok(()),
         );
 
-        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve);
+        assert_eq!(output_accounts[0].satomis(), rent_exempt_reserve);
         if let StakeState::Stake(meta, stake) =
             output_accounts[0].borrow().deserialize_data().unwrap()
         {
@@ -6933,7 +6933,7 @@ mod tests {
             panic!("Invalid output_accounts[0] data");
         }
         assert_eq!(
-            output_accounts[1].lamports(),
+            output_accounts[1].satomis(),
             minimum_delegation + rent_exempt_reserve
         );
         if let StakeState::Stake(meta, stake) =
@@ -6956,7 +6956,7 @@ mod tests {
                 {
                     let mut deactivated_stake_account = output_accounts[0].clone();
                     deactivated_stake_account
-                        .checked_add_lamports(minimum_delegation - 1)
+                        .checked_add_satomis(minimum_delegation - 1)
                         .unwrap();
                     deactivated_stake_account
                 },
@@ -6968,31 +6968,31 @@ mod tests {
                 {
                     let mut deactivated_stake_account = output_accounts[0].clone();
                     deactivated_stake_account
-                        .checked_add_lamports(minimum_delegation)
+                        .checked_add_satomis(minimum_delegation)
                         .unwrap();
                     deactivated_stake_account
                 },
                 Err(StakeError::TooSoonToRedelegate.into()),
             ),
             (
-                // Success: `stake_account` has been replenished with additional lamports to
+                // Success: `stake_account` has been replenished with additional satomis to
                 // fully realize its "virtual stake"
                 {
                     let mut deactivated_stake_account = output_accounts[0].clone();
                     deactivated_stake_account
-                        .checked_add_lamports(minimum_delegation + rent_exempt_reserve)
+                        .checked_add_satomis(minimum_delegation + rent_exempt_reserve)
                         .unwrap();
                     deactivated_stake_account
                 },
                 Ok(()),
             ),
             (
-                // Failure: `stake_account` has been replenished with 1 lamport less than what's
+                // Failure: `stake_account` has been replenished with 1 satomi less than what's
                 // necessary to fully realize its "virtual stake"
                 {
                     let mut deactivated_stake_account = output_accounts[0].clone();
                     deactivated_stake_account
-                        .checked_add_lamports(minimum_delegation + rent_exempt_reserve - 1)
+                        .checked_add_satomis(minimum_delegation + rent_exempt_reserve - 1)
                         .unwrap();
                     deactivated_stake_account
                 },
@@ -7061,10 +7061,10 @@ mod tests {
         }
 
         //
-        // Success: `uninitialized_stake_account` starts with 42 extra lamports
+        // Success: `uninitialized_stake_account` starts with 42 extra satomis
         //
-        let uninitialized_stake_account_with_extra_lamports =
-            AccountSharedData::new(42 /* lamports */, StakeState::size_of(), &id());
+        let uninitialized_stake_account_with_extra_satomis =
+            AccountSharedData::new(42 /* satomis */, StakeState::size_of(), &id());
         let output_accounts = process_instruction_redelegate(
             &stake_address,
             &stake_account,
@@ -7072,13 +7072,13 @@ mod tests {
             &new_vote_address,
             &new_vote_account,
             &uninitialized_stake_address,
-            &uninitialized_stake_account_with_extra_lamports,
+            &uninitialized_stake_account_with_extra_satomis,
             Ok(()),
         );
 
-        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve);
+        assert_eq!(output_accounts[0].satomis(), rent_exempt_reserve);
         assert_eq!(
-            output_accounts[1].lamports(),
+            output_accounts[1].satomis(),
             minimum_delegation + rent_exempt_reserve + 42
         );
         if let StakeState::Stake(meta, stake) =
@@ -7108,13 +7108,13 @@ mod tests {
                 .unwrap();
         }
         stake_account_over_allocated
-            .checked_add_lamports(42)
+            .checked_add_satomis(42)
             .unwrap();
         assert_eq!(
-            stake_account_over_allocated.lamports(),
+            stake_account_over_allocated.satomis(),
             (minimum_delegation + rent_exempt_reserve) + (rent_exempt_reserve + 42),
         );
-        assert_eq!(uninitialized_stake_account.lamports(), 0);
+        assert_eq!(uninitialized_stake_account.satomis(), 0);
         let output_accounts = process_instruction_redelegate(
             &stake_address,
             &stake_account_over_allocated,
@@ -7126,7 +7126,7 @@ mod tests {
             Ok(()),
         );
 
-        assert_eq!(output_accounts[0].lamports(), rent_exempt_reserve + 42);
+        assert_eq!(output_accounts[0].satomis(), rent_exempt_reserve + 42);
         if let StakeState::Stake(meta, _stake) =
             output_accounts[0].borrow().deserialize_data().unwrap()
         {
@@ -7135,7 +7135,7 @@ mod tests {
             panic!("Invalid output_accounts[0] data");
         }
         assert_eq!(
-            output_accounts[1].lamports(),
+            output_accounts[1].satomis(),
             minimum_delegation + rent_exempt_reserve,
         );
         if let StakeState::Stake(meta, stake) =
@@ -7158,7 +7158,7 @@ mod tests {
             &new_vote_account,
             &uninitialized_stake_address,
             &AccountSharedData::new(
-                0, /* lamports */
+                0, /* satomis */
                 StakeState::size_of(),
                 &Pubkey::new_unique(), // <-- Invalid program id
             ),
@@ -7175,7 +7175,7 @@ mod tests {
             &new_vote_address,
             &new_vote_account,
             &uninitialized_stake_address,
-            &AccountSharedData::new(0 /* lamports */, StakeState::size_of() - 1, &id()), // <-- size too small
+            &AccountSharedData::new(0 /* satomis */, StakeState::size_of() - 1, &id()), // <-- size too small
             Err(InstructionError::InvalidAccountData),
         );
 
@@ -7189,7 +7189,7 @@ mod tests {
             &new_vote_address,
             &new_vote_account,
             &uninitialized_stake_address,
-            &AccountSharedData::new(0 /* lamports */, StakeState::size_of() + 1, &id()), // <-- size too large
+            &AccountSharedData::new(0 /* satomis */, StakeState::size_of() + 1, &id()), // <-- size too large
             Err(InstructionError::InvalidAccountData),
         );
 
@@ -7314,8 +7314,8 @@ mod tests {
         // Failure: `stake_account` has insufficient stake
         //          (less than `minimum_delegation + rent_exempt_reserve`)
         //
-        let mut stake_account_too_few_lamports = stake_account.clone();
-        if let StakeState::Stake(meta, mut stake) = stake_account_too_few_lamports
+        let mut stake_account_too_few_satomis = stake_account.clone();
+        if let StakeState::Stake(meta, mut stake) = stake_account_too_few_satomis
             .borrow_mut()
             .deserialize_data()
             .unwrap()
@@ -7325,23 +7325,23 @@ mod tests {
                 stake.delegation.stake,
                 minimum_delegation + rent_exempt_reserve - 1
             );
-            stake_account_too_few_lamports
+            stake_account_too_few_satomis
                 .set_state(&StakeState::Stake(meta, stake))
                 .unwrap();
         } else {
             panic!("Invalid stake_account");
         }
-        stake_account_too_few_lamports
-            .checked_sub_lamports(1)
+        stake_account_too_few_satomis
+            .checked_sub_satomis(1)
             .unwrap();
         assert_eq!(
-            stake_account_too_few_lamports.lamports(),
+            stake_account_too_few_satomis.satomis(),
             minimum_delegation + 2 * rent_exempt_reserve - 1
         );
 
         let _ = process_instruction_redelegate(
             &stake_address,
-            &stake_account_too_few_lamports,
+            &stake_account_too_few_satomis,
             &authorized_staker,
             &new_vote_address,
             &new_vote_account,

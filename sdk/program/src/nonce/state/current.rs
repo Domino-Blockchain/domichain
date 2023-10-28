@@ -30,12 +30,12 @@ impl Data {
     pub fn new(
         authority: Pubkey,
         durable_nonce: DurableNonce,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
     ) -> Self {
         Data {
             authority,
             durable_nonce,
-            fee_calculator: FeeCalculator::new(lamports_per_signature),
+            fee_calculator: FeeCalculator::new(satomis_per_signature),
         }
     }
 
@@ -47,8 +47,8 @@ impl Data {
     }
 
     /// Get the cost per signature for the next transaction to use this nonce.
-    pub fn get_lamports_per_signature(&self) -> u64 {
-        self.fee_calculator.lamports_per_signature
+    pub fn get_satomis_per_signature(&self) -> u64 {
+        self.fee_calculator.satomis_per_signature
     }
 }
 
@@ -79,9 +79,9 @@ impl State {
     pub fn new_initialized(
         authority: &Pubkey,
         durable_nonce: DurableNonce,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
     ) -> Self {
-        Self::Initialized(Data::new(*authority, durable_nonce, lamports_per_signature))
+        Self::Initialized(Data::new(*authority, durable_nonce, satomis_per_signature))
     }
 
     /// Get the serialized size of the nonce state.

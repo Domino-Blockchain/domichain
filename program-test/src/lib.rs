@@ -30,11 +30,11 @@ use {
         clock::Slot,
         entrypoint::{deserialize, ProgramResult, SUCCESS},
         feature_set::FEATURE_NAMES,
-        fee_calculator::{FeeCalculator, FeeRateGovernor, DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE},
+        fee_calculator::{FeeCalculator, FeeRateGovernor, DEFAULT_TARGET_SATOMIS_PER_SIGNATURE},
         genesis_config::{ClusterType, GenesisConfig},
         hash::Hash,
         instruction::{Instruction, InstructionError},
-        native_token::domi_to_lamports,
+        native_token::domi_to_satomis,
         poh_config::PohConfig,
         program_error::{ProgramError, UNSUPPORTED_SYSVAR},
         pubkey::Pubkey,
@@ -152,8 +152,8 @@ pub fn builtin_process_instruction(
             instruction_context.try_borrow_instruction_account(transaction_context, i)?;
         if borrowed_account.is_writable() {
             if let Some(account_info) = account_info_map.get(borrowed_account.get_key()) {
-                if borrowed_account.get_lamports() != account_info.lamports() {
-                    borrowed_account.set_lamports(account_info.lamports())?;
+                if borrowed_account.get_satomis() != account_info.satomis() {
+                    borrowed_account.set_satomis(account_info.satomis())?;
                 }
 
                 if borrowed_account
@@ -270,9 +270,9 @@ impl domichain_sdk::program_stubs::SyscallStubs for SyscallStubs {
                     instruction_account.index_in_caller,
                 )
                 .unwrap();
-            if borrowed_account.get_lamports() != account_info.lamports() {
+            if borrowed_account.get_satomis() != account_info.satomis() {
                 borrowed_account
-                    .set_lamports(account_info.lamports())
+                    .set_satomis(account_info.satomis())
                     .unwrap();
             }
             let account_info_data = account_info.try_borrow_data().unwrap();
@@ -289,7 +289,7 @@ impl domichain_sdk::program_stubs::SyscallStubs for SyscallStubs {
                 }
                 _ => {}
             }
-            // Change the owner at the end so that we are allowed to change the lamports and data before
+            // Change the owner at the end so that we are allowed to change the satomis and data before
             if borrowed_account.get_owner() != account_info.owner {
                 borrowed_account
                     .set_owner(account_info.owner.as_ref())
@@ -321,7 +321,7 @@ impl domichain_sdk::program_stubs::SyscallStubs for SyscallStubs {
                 .try_borrow_instruction_account(transaction_context, index_in_caller)
                 .unwrap();
             let account_info = &account_infos[account_info_index];
-            **account_info.try_borrow_mut_lamports().unwrap() = borrowed_account.get_lamports();
+            **account_info.try_borrow_mut_satomis().unwrap() = borrowed_account.get_satomis();
             if account_info.owner != borrowed_account.get_owner() {
                 // TODO Figure out a better way to allow the System Program to set the account owner
                 #[allow(clippy::transmute_ptr_to_ptr)]
@@ -530,14 +530,14 @@ impl ProgramTest {
     pub fn add_account_with_file_data(
         &mut self,
         address: Pubkey,
-        lamports: u64,
+        satomis: u64,
         owner: Pubkey,
         filename: &str,
     ) {
         self.add_account(
             address,
             Account {
-                lamports,
+                satomis,
                 data: read_file(find_file(filename).unwrap_or_else(|| {
                     panic!("Unable to locate {filename}");
                 })),
@@ -553,14 +553,14 @@ impl ProgramTest {
     pub fn add_account_with_base64_data(
         &mut self,
         address: Pubkey,
-        lamports: u64,
+        satomis: u64,
         owner: Pubkey,
         data_base64: &str,
     ) {
         self.add_account(
             address,
             Account {
-                lamports,
+                satomis,
                 data: BASE64_STANDARD
                     .decode(data_base64)
                     .unwrap_or_else(|err| panic!("Failed to base64 decode: {err}")),
@@ -611,7 +611,7 @@ impl ProgramTest {
             this.add_account(
                 program_id,
                 Account {
-                    lamports: Rent::default().minimum_balance(data.len()).max(1),
+                    satomis: Rent::default().minimum_balance(data.len()).max(1),
                     data,
                     owner: domichain_sdk::bpf_loader::id(),
                     executable: true,
@@ -726,23 +726,23 @@ impl ProgramTest {
         let rent = Rent::default();
         let fee_rate_governor = FeeRateGovernor {
             // Initialize with a non-zero fee
-            lamports_per_signature: DEFAULT_TARGET_LAMPORTS_PER_SIGNATURE / 2,
+            satomis_per_signature: DEFAULT_TARGET_SATOMIS_PER_SIGNATURE / 2,
             ..FeeRateGovernor::default()
         };
         let bootstrap_validator_pubkey = Pubkey::new_unique();
-        let bootstrap_validator_stake_lamports =
-            rent.minimum_balance(VoteState::size_of()) + domi_to_lamports(1_000_000.0);
+        let bootstrap_validator_stake_satomis =
+            rent.minimum_balance(VoteState::size_of()) + domi_to_satomis(1_000_000.0);
 
         let mint_keypair = Keypair::new();
         let voting_keypair = Keypair::new();
 
         let mut genesis_config = create_genesis_config_with_leader_ex(
-            domi_to_lamports(1_000_000.0),
+            domi_to_satomis(1_000_000.0),
             &mint_keypair.pubkey(),
             &bootstrap_validator_pubkey,
             &voting_keypair.pubkey(),
             &Pubkey::new_unique(),
-            bootstrap_validator_stake_lamports,
+            bootstrap_validator_stake_satomis,
             42,
             fee_rate_governor,
             rent,

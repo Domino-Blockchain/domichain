@@ -79,7 +79,7 @@ The result will be a JSON object with `value` equal to an array of:
 
 - `<null>` - if the account at that Pubkey doesn't exist, or
 - `<object>` - a JSON object containing:
-  - `lamports: <u64>` - number of lamports assigned to this account, as a u64
+  - `satomis: <u64>` - number of satomis assigned to this account, as a u64
   - `owner: <string>` - base-58 encoded Pubkey of the program this account has been assigned to
   - `data: <[string, encoding]|object>` - data associated with the account, either as encoded binary data or JSON format `{<program>: <state>}` - depending on encoding parameter
   - `executable: <bool>` - boolean indicating if the account contains a program \(and is strictly read-only\)
@@ -124,7 +124,7 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
       {
         "data": ["", "base64"],
         "executable": false,
-        "lamports": 1000000000,
+        "satomis": 1000000000,
         "owner": "11111111111111111111111111111111",
         "rentEpoch": 2,
         "space": 16
@@ -132,7 +132,7 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '
       {
         "data": ["", "base64"],
         "executable": false,
-        "lamports": 5000000000,
+        "satomis": 5000000000,
         "owner": "11111111111111111111111111111111",
         "rentEpoch": 2,
         "space": 0

@@ -5,23 +5,23 @@ description: "Rent: the small fee Domichain accounts incur to store data on the 
 
 The fee for every Domichain Account to store data on the blockchain is called "_rent_". This _time and space_ based fee is required to keep an account, and therefore its data, alive on the blockchain since [clusters](../../cluster/overview.md) must actively maintain this data.
 
-All Domichain Accounts (and therefore Programs) are required to maintain a high enough LAMPORT balance to become [rent exempt](#rent-exempt) and remain on the Domichain blockchain.
+All Domichain Accounts (and therefore Programs) are required to maintain a high enough SATOMI balance to become [rent exempt](#rent-exempt) and remain on the Domichain blockchain.
 
-When an Account no longer has enough LAMPORTS to pay its rent, it will be removed from the network in a process known as [Garbage Collection](#garbage-collection).
+When an Account no longer has enough SATOMIS to pay its rent, it will be removed from the network in a process known as [Garbage Collection](#garbage-collection).
 
 > **Note:** Rent is different from [transactions fees](../../transaction_fees.md). Rent is paid (or held in an Account) to keep data stored on the Domichain blockchain. Whereas transaction fees are paid to process [instructions](../developing/../programming-model/transactions.md#instructions) on the network.
 
 ### Rent rate
 
-The Domichain rent rate is set on a network wide basis, primarily based on the set LAMPORTS _per_ byte _per_ year.
+The Domichain rent rate is set on a network wide basis, primarily based on the set SATOMIS _per_ byte _per_ year.
 
 Currently, the rent rate is a static amount and stored in the [Rent sysvar](../runtime-facilities/sysvars.md#rent).
 
 ## Rent exempt
 
-Accounts that maintain a minimum LAMPORT balance greater than 2 years worth of rent payments are considered "_rent exempt_" and will not incur a rent collection.
+Accounts that maintain a minimum SATOMI balance greater than 2 years worth of rent payments are considered "_rent exempt_" and will not incur a rent collection.
 
-> At the time of writing this, new Accounts and Programs **are required** to be initialized with enough LAMPORTS to become rent-exempt. The RPC endpoints have the ability to calculate this [estimated rent exempt balance](../../api/http#getminimumbalanceforrentexemption) and is recommended to be used.
+> At the time of writing this, new Accounts and Programs **are required** to be initialized with enough SATOMIS to become rent-exempt. The RPC endpoints have the ability to calculate this [estimated rent exempt balance](../../api/http#getminimumbalanceforrentexemption) and is recommended to be used.
 
 Every time an account's balance is reduced, a check is performed to see if the account is still rent exempt. Transactions that would cause an account's balance to drop below the rent exempt threshold will fail.
 

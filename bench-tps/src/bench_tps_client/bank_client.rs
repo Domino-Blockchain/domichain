@@ -77,7 +77,7 @@ impl BenchTpsClient for BankClient {
     fn request_airdrop_with_blockhash(
         &self,
         _pubkey: &Pubkey,
-        _lamports: u64,
+        _satomis: u64,
         _recent_blockhash: &Hash,
     ) -> Result<Signature> {
         // BankClient doesn't support airdrops

@@ -93,7 +93,7 @@ domichain balance 7cvkjYAkUYs4W8XcXsca7cBrEGFeSUjeZmKoNBvEwyri
 ```
 
 You can also view the balance of any account address on the Accounts tab in the
-[Explorer](https://explorer.domichain.com/accounts)
+[Explorer](https://explorer.domichain.io/accounts)
 and paste the address in the box to view the balance in you web browser.
 
 Note: Any address with a balance of 0 DOMI, such as a newly created one on your
@@ -146,7 +146,7 @@ transaction signature, and wait for the maximum number of confirmations (32)
 before returning. This only takes a few seconds, and then the transaction is
 finalized on the Domichain network. You can view details of this or any other
 transaction by going to the Transaction tab in the
-[Explorer](https://explorer.domichain.com/transactions)
+[Explorer](https://explorer.domichain.io/transactions)
 and paste in the transaction signature.
 
 ## Advanced Operations

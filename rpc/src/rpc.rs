@@ -591,7 +591,7 @@ impl JsonRpcRequestProcessor {
                     return Some(RpcInflationReward {
                         epoch,
                         effective_slot: first_confirmed_block_in_epoch,
-                        amount: reward.lamports.unsigned_abs(),
+                        amount: reward.satomis.unsigned_abs(),
                         post_balance: reward.post_balance,
                         commission: reward.commission,
                     });
@@ -646,14 +646,14 @@ impl JsonRpcRequestProcessor {
     ) -> Result<RpcResponse<RpcBlockhashFeeCalculator>> {
         let bank = self.bank(commitment);
         let blockhash = bank.confirmed_last_blockhash();
-        let lamports_per_signature = bank
-            .get_lamports_per_signature_for_blockhash(&blockhash)
+        let satomis_per_signature = bank
+            .get_satomis_per_signature_for_blockhash(&blockhash)
             .unwrap();
         Ok(new_response(
             &bank,
             RpcBlockhashFeeCalculator {
                 blockhash: blockhash.to_string(),
-                fee_calculator: FeeCalculator::new(lamports_per_signature),
+                fee_calculator: FeeCalculator::new(satomis_per_signature),
             },
         ))
     }
@@ -661,8 +661,8 @@ impl JsonRpcRequestProcessor {
     fn get_fees(&self, commitment: Option<CommitmentConfig>) -> Result<RpcResponse<RpcFees>> {
         let bank = self.bank(commitment);
         let blockhash = bank.confirmed_last_blockhash();
-        let lamports_per_signature = bank
-            .get_lamports_per_signature_for_blockhash(&blockhash)
+        let satomis_per_signature = bank
+            .get_satomis_per_signature_for_blockhash(&blockhash)
             .unwrap();
         #[allow(deprecated)]
         let last_valid_slot = bank
@@ -675,7 +675,7 @@ impl JsonRpcRequestProcessor {
             &bank,
             RpcFees {
                 blockhash: blockhash.to_string(),
-                fee_calculator: FeeCalculator::new(lamports_per_signature),
+                fee_calculator: FeeCalculator::new(satomis_per_signature),
                 last_valid_slot,
                 last_valid_block_height,
             },
@@ -688,11 +688,11 @@ impl JsonRpcRequestProcessor {
         commitment: Option<CommitmentConfig>,
     ) -> Result<RpcResponse<Option<RpcFeeCalculator>>> {
         let bank = self.bank(commitment);
-        let lamports_per_signature = bank.get_lamports_per_signature_for_blockhash(blockhash);
+        let satomis_per_signature = bank.get_satomis_per_signature_for_blockhash(blockhash);
         Ok(new_response(
             &bank,
-            lamports_per_signature.map(|lamports_per_signature| RpcFeeCalculator {
-                fee_calculator: FeeCalculator::new(lamports_per_signature),
+            satomis_per_signature.map(|satomis_per_signature| RpcFeeCalculator {
+                fee_calculator: FeeCalculator::new(satomis_per_signature),
             }),
         ))
     }
@@ -867,9 +867,9 @@ impl JsonRpcRequestProcessor {
                     message: e.to_string(),
                 })?
                 .into_iter()
-                .map(|(address, lamports)| RpcAccountBalance {
+                .map(|(address, satomis)| RpcAccountBalance {
                     address: address.to_string(),
-                    lamports,
+                    satomis,
                 })
                 .collect::<Vec<RpcAccountBalance>>();
 
@@ -903,8 +903,8 @@ impl JsonRpcRequestProcessor {
             &bank,
             RpcSupply {
                 total: total_supply,
-                circulating: total_supply - non_circulating_supply.lamports,
-                non_circulating: non_circulating_supply.lamports,
+                circulating: total_supply - non_circulating_supply.satomis,
+                non_circulating: non_circulating_supply.satomis,
                 non_circulating_accounts,
             },
         ))
@@ -1750,7 +1750,7 @@ impl JsonRpcRequestProcessor {
                 return Ok(RpcStakeActivation {
                     state: StakeActivationState::Inactive,
                     active: 0,
-                    inactive: stake_account.lamports().saturating_sub(rent_exempt_reserve),
+                    inactive: stake_account.satomis().saturating_sub(rent_exempt_reserve),
                 })
             }
             Some(delegation) => delegation,
@@ -1781,10 +1781,10 @@ impl JsonRpcRequestProcessor {
             StakeActivationState::Activating => activating,
             StakeActivationState::Active => 0,
             StakeActivationState::Deactivating => stake_account
-                .lamports()
+                .satomis()
                 .saturating_sub(effective + rent_exempt_reserve),
             StakeActivationState::Inactive => {
-                stake_account.lamports().saturating_sub(rent_exempt_reserve)
+                stake_account.satomis().saturating_sub(rent_exempt_reserve)
             }
         };
         Ok(RpcStakeActivation {
@@ -2009,7 +2009,7 @@ impl JsonRpcRequestProcessor {
                     |account| {
                         // The program-id account index checks for Account owner on inclusion. However, due
                         // to the current AccountsDb implementation, an account may remain in storage as a
-                        // zero-lamport AccountSharedData::Default() after being wiped and reinitialized in later
+                        // zero-satomi AccountSharedData::Default() after being wiped and reinitialized in later
                         // updates. We include the redundant filters here to avoid returning these
                         // accounts.
                         account.owner() == program_id && filter_closure(account)
@@ -2040,7 +2040,7 @@ impl JsonRpcRequestProcessor {
     ) -> RpcCustomResult<Vec<(Pubkey, AccountSharedData)>> {
         // The by-owner accounts index checks for Token Account state and Owner address on
         // inclusion. However, due to the current AccountsDb implementation, an account may remain
-        // in storage as a zero-lamport AccountSharedData::Default() after being wiped and reinitialized in
+        // in storage as a zero-satomi AccountSharedData::Default() after being wiped and reinitialized in
         // later updates. We include the redundant filters here to avoid returning these accounts.
         //
         // Filter on Token Account state
@@ -2091,7 +2091,7 @@ impl JsonRpcRequestProcessor {
     ) -> RpcCustomResult<Vec<(Pubkey, AccountSharedData)>> {
         // The by-mint accounts index checks for Token Account state and Mint address on inclusion.
         // However, due to the current AccountsDb implementation, an account may remain in storage
-        // as be zero-lamport AccountSharedData::Default() after being wiped and reinitialized in later
+        // as be zero-satomi AccountSharedData::Default() after being wiped and reinitialized in later
         // updates. We include the redundant filters here to avoid returning these accounts.
         //
         // Filter on Token Account state
@@ -3303,7 +3303,7 @@ pub mod rpc_full {
             &self,
             meta: Self::Metadata,
             pubkey_str: String,
-            lamports: u64,
+            satomis: u64,
             config: Option<RpcRequestAirdropConfig>,
         ) -> Result<String>;
 
@@ -3540,14 +3540,14 @@ pub mod rpc_full {
             &self,
             meta: Self::Metadata,
             pubkey_str: String,
-            lamports: u64,
+            satomis: u64,
             config: Option<RpcRequestAirdropConfig>,
         ) -> Result<String> {
             debug!("request_airdrop rpc request received");
             trace!(
-                "request_airdrop id={} lamports={} config: {:?}",
+                "request_airdrop id={} satomis={} config: {:?}",
                 pubkey_str,
-                lamports,
+                satomis,
                 &config
             );
 
@@ -3567,7 +3567,7 @@ pub mod rpc_full {
                 .unwrap_or(0);
 
             let transaction =
-                request_airdrop_transaction(&faucet_addr, &pubkey, lamports, blockhash).map_err(
+                request_airdrop_transaction(&faucet_addr, &pubkey, satomis, blockhash).map_err(
                     |err| {
                         info!("request_airdrop_transaction failed: {:?}", err);
                         Error::internal_error()
@@ -4698,7 +4698,7 @@ pub mod tests {
         std::{borrow::Cow, collections::HashMap, net::Ipv4Addr},
     };
 
-    const TEST_MINT_LAMPORTS: u64 = 1_000_000_000;
+    const TEST_MINT_SATOMIS: u64 = 1_000_000_000;
     const TEST_SIGNATURE_FEE: u64 = 5_000;
     const TEST_SLOTS_PER_EPOCH: u64 = DELINQUENT_VALIDATOR_SLOT_DISTANCE + 1;
 
@@ -4935,10 +4935,10 @@ pub mod tests {
                     addresses: Cow::Owned(vec![Pubkey::new_unique()]),
                 };
                 let address_table_data = address_table_state.serialize_for_tests().unwrap();
-                let min_balance_lamports =
+                let min_balance_satomis =
                     bank.get_minimum_balance_for_rent_exemption(address_table_data.len());
                 AccountSharedData::create(
-                    min_balance_lamports,
+                    min_balance_satomis,
                     address_table_data,
                     domichain_address_lookup_table_program::id(),
                     false,
@@ -5341,7 +5341,7 @@ pub mod tests {
             parse_success_result(rpc.handle_request_sync(request));
         assert!(largest_accounts_result.value.contains(&RpcAccountBalance {
             address: rpc.mint_keypair.pubkey().to_string(),
-            lamports: mint_balance_result.value,
+            satomis: mint_balance_result.value,
         }));
 
         // Get non-circulating account balance
@@ -5351,7 +5351,7 @@ pub mod tests {
             parse_success_result(rpc.handle_request_sync(request));
         assert!(largest_accounts_result.value.contains(&RpcAccountBalance {
             address: non_circulating_key.to_string(),
-            lamports: non_circulating_balance_result.value,
+            satomis: non_circulating_balance_result.value,
         }));
 
         // Test Circulating/NonCirculating Filter
@@ -5364,7 +5364,7 @@ pub mod tests {
         assert_eq!(largest_accounts_result.value.len(), 20);
         assert!(!largest_accounts_result.value.contains(&RpcAccountBalance {
             address: non_circulating_key.to_string(),
-            lamports: non_circulating_balance_result.value,
+            satomis: non_circulating_balance_result.value,
         }));
 
         let request = create_test_request(
@@ -5376,7 +5376,7 @@ pub mod tests {
         assert_eq!(largest_accounts_result.value.len(), 1);
         assert!(largest_accounts_result.value.contains(&RpcAccountBalance {
             address: non_circulating_key.to_string(),
-            lamports: non_circulating_balance_result.value,
+            satomis: non_circulating_balance_result.value,
         }));
     }
 
@@ -5518,7 +5518,7 @@ pub mod tests {
             "context": {"slot": 0, "apiVersion": RpcApiVersion::default()},
             "value":{
                 "owner": "11111111111111111111111111111111",
-                "lamports": TEST_MINT_LAMPORTS,
+                "satomis": TEST_MINT_SATOMIS,
                 "data": "",
                 "executable": false,
                 "rentEpoch": 0,
@@ -5599,7 +5599,7 @@ pub mod tests {
         let expected = json!([
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": TEST_MINT_LAMPORTS,
+                "satomis": TEST_MINT_SATOMIS,
                 "data": ["", "base64"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5608,7 +5608,7 @@ pub mod tests {
             null,
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": 42,
+                "satomis": 42,
                 "data": [BASE64_STANDARD.encode(&data), "base64"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5633,7 +5633,7 @@ pub mod tests {
         let expected = json!([
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": TEST_MINT_LAMPORTS,
+                "satomis": TEST_MINT_SATOMIS,
                 "data": ["", "base58"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5642,7 +5642,7 @@ pub mod tests {
             null,
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": 42,
+                "satomis": 42,
                 "data": [bs58::encode(&data).into_string(), "base58"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5666,7 +5666,7 @@ pub mod tests {
         let expected = json!([
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": TEST_MINT_LAMPORTS,
+                "satomis": TEST_MINT_SATOMIS,
                 "data": ["", "base64"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5675,7 +5675,7 @@ pub mod tests {
             null,
             {
                 "owner": "11111111111111111111111111111111",
-                "lamports": 42,
+                "satomis": 42,
                 "data": [BASE64_STANDARD.encode(&data[1..3]), "base64"],
                 "executable": false,
                 "rentEpoch": 0,
@@ -5900,7 +5900,7 @@ pub mod tests {
                             "data": ["", "base64"],
                             "executable": false,
                             "owner": "11111111111111111111111111111111",
-                            "lamports": rent_exempt_amount,
+                            "satomis": rent_exempt_amount,
                             "rentEpoch": u64::MAX,
                             "space": 0,
                         }
@@ -6234,7 +6234,7 @@ pub mod tests {
                 "value":{
                     "blockhash": recent_blockhash.to_string(),
                     "feeCalculator": {
-                        "lamportsPerSignature": TEST_SIGNATURE_FEE,
+                        "satomisPerSignature": TEST_SIGNATURE_FEE,
                     }
                 },
             },
@@ -6263,7 +6263,7 @@ pub mod tests {
                 "value": {
                     "blockhash": recent_blockhash.to_string(),
                     "feeCalculator": {
-                        "lamportsPerSignature": TEST_SIGNATURE_FEE,
+                        "satomisPerSignature": TEST_SIGNATURE_FEE,
                     },
                     "lastValidSlot": MAX_RECENT_BLOCKHASHES,
                     "lastValidBlockHeight": MAX_RECENT_BLOCKHASHES,
@@ -6285,9 +6285,9 @@ pub mod tests {
         let recent_blockhash = bank.confirmed_last_blockhash();
         let RpcHandler { meta, io, .. } = rpc;
 
-        let lamports_per_signature = bank.get_lamports_per_signature();
+        let satomis_per_signature = bank.get_satomis_per_signature();
         let fee_calculator = RpcFeeCalculator {
-            fee_calculator: FeeCalculator::new(lamports_per_signature),
+            fee_calculator: FeeCalculator::new(satomis_per_signature),
         };
 
         let req = format!(
@@ -6342,9 +6342,9 @@ pub mod tests {
                 "value":{
                     "feeRateGovernor": {
                         "burnPercent": DEFAULT_BURN_PERCENT,
-                        "maxLamportsPerSignature": TEST_SIGNATURE_FEE,
-                        "minLamportsPerSignature": TEST_SIGNATURE_FEE,
-                        "targetLamportsPerSignature": TEST_SIGNATURE_FEE,
+                        "maxSatomisPerSignature": TEST_SIGNATURE_FEE,
+                        "minSatomisPerSignature": TEST_SIGNATURE_FEE,
+                        "targetSatomisPerSignature": TEST_SIGNATURE_FEE,
                         "targetSignaturesPerSlot": 0
                     }
                 },
@@ -6614,9 +6614,9 @@ pub mod tests {
             mint_keypair,
             voting_keypair,
             ..
-        } = create_genesis_config(TEST_MINT_LAMPORTS);
+        } = create_genesis_config(TEST_MINT_SATOMIS);
 
-        genesis_config.rent.lamports_per_byte_year = 50;
+        genesis_config.rent.satomis_per_byte_year = 50;
         genesis_config.rent.exemption_threshold = 2.0;
         genesis_config.epoch_schedule =
             EpochSchedule::custom(TEST_SLOTS_PER_EPOCH, TEST_SLOTS_PER_EPOCH, false);
@@ -7463,7 +7463,7 @@ pub mod tests {
                 memo_transfer.require_incoming_transfer_memos = true.into();
 
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7494,7 +7494,7 @@ pub mod tests {
                     OptionalNonZeroPubkey::try_from(Some(owner)).unwrap();
 
                 let mint_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: mint_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7519,7 +7519,7 @@ pub mod tests {
                 };
                 TokenAccount::pack(token_account, &mut account_data).unwrap();
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7540,7 +7540,7 @@ pub mod tests {
                 };
                 TokenAccount::pack(token_account, &mut account_data).unwrap();
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7558,7 +7558,7 @@ pub mod tests {
                 };
                 Mint::pack(mint_state, &mut mint_data).unwrap();
                 let mint_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: mint_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7583,7 +7583,7 @@ pub mod tests {
                 };
                 TokenAccount::pack(token_account, &mut account_data).unwrap();
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7847,7 +7847,7 @@ pub mod tests {
             };
             Mint::pack(mint_state, &mut mint_data).unwrap();
             let mint_account = AccountSharedData::from(Account {
-                lamports: 111,
+                satomis: 111,
                 data: mint_data.to_vec(),
                 owner: program_id,
                 ..Account::default()
@@ -7869,7 +7869,7 @@ pub mod tests {
             };
             TokenAccount::pack(token_account, &mut account_data).unwrap();
             let token_account = AccountSharedData::from(Account {
-                lamports: 111,
+                satomis: 111,
                 data: account_data.to_vec(),
                 owner: program_id,
                 ..Account::default()
@@ -7955,7 +7955,7 @@ pub mod tests {
                 memo_transfer.require_incoming_transfer_memos = true.into();
 
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -7985,7 +7985,7 @@ pub mod tests {
                     OptionalNonZeroPubkey::try_from(Some(owner)).unwrap();
 
                 let mint_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: mint_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -8007,7 +8007,7 @@ pub mod tests {
                 };
                 TokenAccount::pack(token_account, &mut account_data).unwrap();
                 let token_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: account_data.to_vec(),
                     owner: program_id,
                     ..Account::default()
@@ -8026,7 +8026,7 @@ pub mod tests {
                 };
                 Mint::pack(mint_state, &mut mint_data).unwrap();
                 let mint_account = AccountSharedData::from(Account {
-                    lamports: 111,
+                    satomis: 111,
                     data: mint_data.to_vec(),
                     owner: program_id,
                     ..Account::default()

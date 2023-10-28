@@ -325,7 +325,7 @@ function StatusCard({
           <tr>
             <td>Fee (DOMI)</td>
             <td className="text-lg-end">
-              <SolBalance lamports={fee} />
+              <SolBalance satomis={fee} />
             </td>
           </tr>
         )}
@@ -405,7 +405,7 @@ function AccountsCard({ signature }: SignatureProps) {
           <BalanceDelta delta={delta} isSol />
         </td>
         <td>
-          <SolBalance lamports={post} />
+          <SolBalance satomis={post} />
         </td>
         <td>
           {index === 0 && (

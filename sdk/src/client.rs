@@ -48,11 +48,11 @@ pub trait SyncClient {
         instruction: Instruction,
     ) -> Result<Signature>;
 
-    /// Transfer lamports from `keypair` to `pubkey`, retrying until the
+    /// Transfer satomis from `keypair` to `pubkey`, retrying until the
     /// transfer completes or produces and error.
     fn transfer_and_confirm(
         &self,
-        lamports: u64,
+        satomis: u64,
         keypair: &Keypair,
         pubkey: &Pubkey,
     ) -> Result<Signature>;
@@ -226,16 +226,16 @@ pub trait AsyncClient {
         self.async_send_message(&[keypair], message, recent_blockhash)
     }
 
-    /// Attempt to transfer lamports from `keypair` to `pubkey`, but don't wait to confirm.
+    /// Attempt to transfer satomis from `keypair` to `pubkey`, but don't wait to confirm.
     fn async_transfer(
         &self,
-        lamports: u64,
+        satomis: u64,
         keypair: &Keypair,
         pubkey: &Pubkey,
         recent_blockhash: Hash,
     ) -> Result<Signature> {
         let transfer_instruction =
-            system_instruction::transfer(&keypair.pubkey(), pubkey, lamports);
+            system_instruction::transfer(&keypair.pubkey(), pubkey, satomis);
         self.async_send_instruction(keypair, transfer_instruction, recent_blockhash)
     }
 }

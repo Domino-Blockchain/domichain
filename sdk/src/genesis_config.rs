@@ -10,7 +10,7 @@ use {
         fee_calculator::FeeRateGovernor,
         hash::{hash, Hash},
         inflation::Inflation,
-        native_token::lamports_to_domi,
+        native_token::satomis_to_domi,
         poh_config::PohConfig,
         pubkey::Pubkey,
         rent::Rent,
@@ -98,13 +98,13 @@ pub struct GenesisConfig {
 }
 
 // useful for basic tests
-pub fn create_genesis_config(lamports: u64) -> (GenesisConfig, Keypair) {
+pub fn create_genesis_config(satomis: u64) -> (GenesisConfig, Keypair) {
     let faucet_keypair = Keypair::new();
     (
         GenesisConfig::new(
             &[(
                 faucet_keypair.pubkey(),
-                AccountSharedData::new(lamports, 0, &system_program::id()),
+                AccountSharedData::new(satomis, 0, &system_program::id()),
             )],
             &[],
         ),
@@ -237,6 +237,11 @@ impl GenesisConfig {
 
 impl fmt::Display for GenesisConfig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut genesis_accounts: Vec<_> = self.accounts.iter().map(|(pubkey, account)| {
+            assert!(account.satomis > 0, "{:?}", (pubkey, account));
+            (pubkey, account.satomis)
+        }).collect();
+        genesis_accounts.sort_by_key(|(_, satomis)| std::cmp::Reverse(*satomis));
         write!(
             f,
             "\
@@ -256,6 +261,7 @@ impl fmt::Display for GenesisConfig {
              Capitalization: {} DOMI in {} accounts\n\
              Native instruction processors: {:#?}\n\
              Rewards pool: {:#?}\n\
+             Accounts: {genesis_accounts:#?}\n\
              ",
             Utc.timestamp_opt(self.creation_time, 0)
                 .unwrap()
@@ -276,12 +282,12 @@ impl fmt::Display for GenesisConfig {
             self.inflation,
             self.rent,
             self.fee_rate_governor,
-            lamports_to_domi(
+            satomis_to_domi(
                 self.accounts
                     .iter()
                     .map(|(pubkey, account)| {
-                        assert!(account.lamports > 0, "{:?}", (pubkey, account));
-                        account.lamports
+                        assert!(account.satomis > 0, "{:?}", (pubkey, account));
+                        account.satomis
                     })
                     .sum::<u64>()
             ),
@@ -339,7 +345,7 @@ mod tests {
             .accounts
             .iter()
             .any(|(pubkey, account)| *pubkey == faucet_keypair.pubkey()
-                && account.lamports == 10_000));
+                && account.satomis == 10_000));
 
         let path = &make_tmp_path("genesis_config");
         config.write(path).expect("write");

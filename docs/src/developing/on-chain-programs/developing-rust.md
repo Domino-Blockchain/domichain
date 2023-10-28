@@ -153,7 +153,7 @@ Some programs may want to perform deserialization themselves and they can by
 providing their own implementation of the [raw entrypoint](#program-entrypoint).
 Take note that the provided deserialization functions retain references back to
 the serialized byte array for variables that the program is allowed to modify
-(lamports, account data). The reason for this is that upon return the loader
+(satomis, account data). The reason for this is that upon return the loader
 will read those modifications so they may be committed. If a program implements
 their own deserialization function they need to ensure that any modifications
 the program wishes to commit be written back into the input byte array.
@@ -178,10 +178,10 @@ The accounts is an ordered slice of the accounts referenced by the instruction
 and represented as an
 [AccountInfo](https://Domino-Blockchain/domichain/blob/d9b0fc0e3eec67dfe4a97d9298b15969b2804fab/sdk/program/src/account_info.rs#L12)
 structures. An account's place in the array signifies its meaning, for example,
-when transferring lamports an instruction may define the first account as the
+when transferring satomis an instruction may define the first account as the
 source and the second as the destination.
 
-The members of the `AccountInfo` structure are read-only except for `lamports`
+The members of the `AccountInfo` structure are read-only except for `satomis`
 and `data`. Both may be modified by the program in accordance with the [runtime
 enforcement policy](developing/programming-model/accounts.md#policy). Both of
 these members are protected by the Rust `RefCell` construct, so they must be

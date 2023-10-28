@@ -295,15 +295,15 @@ impl HashStats {
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct CalculateHashIntermediate {
     pub hash: Hash,
-    pub lamports: u64,
+    pub satomis: u64,
     pub pubkey: Pubkey,
 }
 
 impl CalculateHashIntermediate {
-    pub fn new(hash: Hash, lamports: u64, pubkey: Pubkey) -> Self {
+    pub fn new(hash: Hash, satomis: u64, pubkey: Pubkey) -> Self {
         Self {
             hash,
-            lamports,
+            satomis,
             pubkey,
         }
     }
@@ -474,7 +474,7 @@ impl CumulativeOffsets {
 #[derive(Debug)]
 pub struct AccountsHasher {
     pub filler_account_suffix: Option<Pubkey>,
-    pub zero_lamport_accounts: ZeroLamportAccounts,
+    pub zero_satomi_accounts: ZeroSatomiAccounts,
     /// The directory where temporary cache files are put
     pub dir_for_temp_cache_files: PathBuf,
 }
@@ -516,7 +516,7 @@ impl AccountsHasher {
         result
     }
 
-    // For the first iteration, there could be more items in the tuple than just hash and lamports.
+    // For the first iteration, there could be more items in the tuple than just hash and satomis.
     // Using extractor allows us to avoid an unnecessary array copy on the first iteration.
     pub fn compute_merkle_root_loop<T, F>(hashes: Vec<T>, fanout: usize, extractor: F) -> Hash
     where
@@ -847,43 +847,43 @@ impl AccountsHasher {
         stats: &mut HashStats,
         max_bin: usize,
     ) -> (Vec<AccountHashesFile>, u64) {
-        // 1. eliminate zero lamport accounts
+        // 1. eliminate zero satomi accounts
         // 2. pick the highest slot or (slot = and highest version) of each pubkey
         // 3. produce this output:
         // a. vec: PUBKEY_BINS_FOR_CALCULATING_HASHES in pubkey order
         //      vec: individual hashes in pubkey order, 1 hash per
-        // b. lamports
+        // b. satomis
         let mut zeros = Measure::start("eliminate zeros");
         let min_max_sum_entries_hashes = Mutex::new((usize::MAX, usize::MIN, 0u64, 0usize, 0usize));
         let hashes: Vec<_> = (0..max_bin)
             .into_par_iter()
             .map(|bin| {
-                let (hashes_file, lamports_bin, unreduced_entries_count) =
+                let (hashes_file, satomis_bin, unreduced_entries_count) =
                     self.de_dup_accounts_in_parallel(sorted_data_by_pubkey, bin);
                 {
                     let mut lock = min_max_sum_entries_hashes.lock().unwrap();
-                    let (mut min, mut max, mut lamports_sum, mut entries, mut hash_total) = *lock;
+                    let (mut min, mut max, mut satomis_sum, mut entries, mut hash_total) = *lock;
                     min = std::cmp::min(min, unreduced_entries_count);
                     max = std::cmp::max(max, unreduced_entries_count);
-                    lamports_sum = Self::checked_cast_for_capitalization(
-                        lamports_sum as u128 + lamports_bin as u128,
+                    satomis_sum = Self::checked_cast_for_capitalization(
+                        satomis_sum as u128 + satomis_bin as u128,
                     );
                     entries += unreduced_entries_count;
                     hash_total += hashes_file.count();
-                    *lock = (min, max, lamports_sum, entries, hash_total);
+                    *lock = (min, max, satomis_sum, entries, hash_total);
                 }
                 hashes_file
             })
             .collect();
         zeros.stop();
         stats.zeros_time_total_us += zeros.as_us();
-        let (min, max, lamports_sum, entries, hash_total) =
+        let (min, max, satomis_sum, entries, hash_total) =
             *min_max_sum_entries_hashes.lock().unwrap();
         stats.min_bin_size = min;
         stats.max_bin_size = max;
         stats.unreduced_entries += entries;
         stats.hash_total += hash_total;
-        (hashes, lamports_sum)
+        (hashes, satomis_sum)
     }
 
     // returns true if this vector was exhausted
@@ -924,14 +924,14 @@ impl AccountsHasher {
         &bin[index - 1]
     }
 
-    // go through: [..][pubkey_bin][..] and return hashes and lamport sum
+    // go through: [..][pubkey_bin][..] and return hashes and satomi sum
     //   slot groups^                ^accounts found in a slot group, sorted by pubkey, higher slot, write_version
-    // 1. handle zero lamport accounts
+    // 1. handle zero satomi accounts
     // 2. pick the highest slot or (slot = and highest version) of each pubkey
     // 3. produce this output:
     //   a. AccountHashesFile: individual account hashes in pubkey order
-    //   b. lamport sum
-    //   c. unreduced count (ie. including duplicates and zero lamport)
+    //   b. satomi sum
+    //   c. unreduced count (ie. including duplicates and zero satomi)
     fn de_dup_accounts_in_parallel<'a>(
         &self,
         pubkey_division: &'a [SortedDataByPubkey<'a>],
@@ -993,7 +993,7 @@ impl AccountsHasher {
                 // this is the new index of the min entry
                 min_index = first_item_index;
             }
-            // get the min item, add lamports, get hash
+            // get the min item, add satomis, get hash
             let item = Self::get_item(
                 min_index,
                 pubkey_bin,
@@ -1003,19 +1003,19 @@ impl AccountsHasher {
                 &mut first_item_to_pubkey_division,
             );
 
-            // add lamports and get hash
-            if item.lamports != 0 {
+            // add satomis and get hash
+            if item.satomis != 0 {
                 // do not include filler accounts in the hash
                 if !(filler_accounts_enabled && self.is_filler_account(&item.pubkey)) {
                     overall_sum = Self::checked_cast_for_capitalization(
-                        item.lamports as u128 + overall_sum as u128,
+                        item.satomis as u128 + overall_sum as u128,
                     );
                     hashes.write(&item.hash);
                 }
             } else {
-                // if lamports == 0, check if they should be included
-                if self.zero_lamport_accounts == ZeroLamportAccounts::Included {
-                    // For incremental accounts hash, the hash of a zero lamport account is
+                // if satomis == 0, check if they should be included
+                if self.zero_satomi_accounts == ZeroSatomiAccounts::Included {
+                    // For incremental accounts hash, the hash of a zero satomi account is
                     // the hash of its pubkey
                     let hash = blake3::hash(bytemuck::bytes_of(&item.pubkey));
                     let hash = Hash::new_from_array(hash.into());
@@ -1059,7 +1059,7 @@ impl AccountsHasher {
         data_sections_by_pubkey: Vec<SortedDataByPubkey<'_>>,
         stats: &mut HashStats,
     ) -> (Hash, u64) {
-        let (hashes, total_lamports) = self.de_dup_accounts(
+        let (hashes, total_satomis) = self.de_dup_accounts(
             &data_sections_by_pubkey,
             stats,
             PUBKEY_BINS_FOR_CALCULATING_HASHES,
@@ -1077,13 +1077,13 @@ impl AccountsHasher {
         );
         hash_time.stop();
         stats.hash_time_total_us += hash_time.as_us();
-        (hash, total_lamports)
+        (hash, total_satomis)
     }
 }
 
-/// How should zero-lamport accounts be treated by the accounts hasher?
+/// How should zero-satomi accounts be treated by the accounts hasher?
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ZeroLamportAccounts {
+pub enum ZeroSatomiAccounts {
     Excluded,
     Included,
 }
@@ -1116,7 +1116,7 @@ impl From<IncrementalAccountsHash> for AccountsHashEnum {
 /// Hash of accounts
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct AccountsHash(pub Hash);
-/// Hash of accounts that includes zero-lamport accounts
+/// Hash of accounts that includes zero-satomi accounts
 /// Used with incremental snapshots
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct IncrementalAccountsHash(pub Hash);
@@ -1133,7 +1133,7 @@ pub mod tests {
         fn new(dir_for_temp_cache_files: PathBuf) -> Self {
             Self {
                 filler_account_suffix: None,
-                zero_lamport_accounts: ZeroLamportAccounts::Excluded,
+                zero_satomi_accounts: ZeroSatomiAccounts::Excluded,
                 dir_for_temp_cache_files,
             }
         }
@@ -1271,7 +1271,7 @@ pub mod tests {
         let val = CalculateHashIntermediate::new(hash, 88, key);
         account_maps.push(val);
 
-        // 2nd key - zero lamports, so will be removed
+        // 2nd key - zero satomis, so will be removed
         let key = Pubkey::from([12u8; 32]);
         let hash = Hash::new(&[2u8; 32]);
         let val = CalculateHashIntermediate::new(hash, 0, key);
@@ -1318,16 +1318,16 @@ pub mod tests {
     #[test]
     fn test_accountsdb_de_dup_accounts_zero_chunks() {
         let vec = [vec![vec![CalculateHashIntermediate {
-            lamports: 1,
+            satomis: 1,
             ..CalculateHashIntermediate::default()
         }]]];
         let temp_vec = vec.to_vec();
         let slice = convert_to_slice2(&temp_vec);
         let dir_for_temp_cache_files = tempdir().unwrap();
         let accounts_hasher = AccountsHasher::new(dir_for_temp_cache_files.path().to_path_buf());
-        let (mut hashes, lamports, _) = accounts_hasher.de_dup_accounts_in_parallel(&slice, 0);
+        let (mut hashes, satomis, _) = accounts_hasher.de_dup_accounts_in_parallel(&slice, 0);
         assert_eq!(&[Hash::default()], hashes.get_reader().unwrap().1.read(0));
-        assert_eq!(lamports, 1);
+        assert_eq!(satomis, 1);
     }
 
     fn get_vec_vec(hashes: Vec<AccountHashesFile>) -> Vec<Vec<Hash>> {
@@ -1347,7 +1347,7 @@ pub mod tests {
         let accounts_hash = AccountsHasher::new(dir_for_temp_cache_files.path().to_path_buf());
 
         let vec = vec![vec![], vec![]];
-        let (hashes, lamports) =
+        let (hashes, satomis) =
             accounts_hash.de_dup_accounts(&vec, &mut HashStats::default(), one_range());
         assert_eq!(
             vec![Hash::default(); 0],
@@ -1356,21 +1356,21 @@ pub mod tests {
                 .flatten()
                 .collect::<Vec<_>>(),
         );
-        assert_eq!(lamports, 0);
+        assert_eq!(satomis, 0);
         let vec = vec![];
-        let (hashes, lamports) =
+        let (hashes, satomis) =
             accounts_hash.de_dup_accounts(&vec, &mut HashStats::default(), zero_range());
         let empty: Vec<Vec<Hash>> = Vec::default();
         assert_eq!(empty, get_vec_vec(hashes));
-        assert_eq!(lamports, 0);
+        assert_eq!(satomis, 0);
 
-        let (hashes, lamports, _) = accounts_hash.de_dup_accounts_in_parallel(&[], 1);
+        let (hashes, satomis, _) = accounts_hash.de_dup_accounts_in_parallel(&[], 1);
         assert_eq!(vec![Hash::default(); 0], get_vec(hashes));
-        assert_eq!(lamports, 0);
+        assert_eq!(satomis, 0);
 
-        let (hashes, lamports, _) = accounts_hash.de_dup_accounts_in_parallel(&[], 2);
+        let (hashes, satomis, _) = accounts_hash.de_dup_accounts_in_parallel(&[], 2);
         assert_eq!(vec![Hash::default(); 0], get_vec(hashes));
-        assert_eq!(lamports, 0);
+        assert_eq!(satomis, 0);
     }
 
     #[test]
@@ -1394,11 +1394,11 @@ pub mod tests {
 
         type ExpectedType = (String, bool, u64, String);
         let expected:Vec<ExpectedType> = vec![
-            // ("key/lamports key2/lamports ...",
+            // ("key/satomis key2/satomis ...",
             // is_last_slice
-            // result lamports
+            // result satomis
             // result hashes)
-            // "a5" = key_a, 5 lamports
+            // "a5" = key_a, 5 satomis
             ("a1", false, 1, "[11111111111111111111111111111111]"),
             ("a1b2", false, 3, "[11111111111111111111111111111111, 4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi]"),
             ("a1b2b3", false, 4, "[11111111111111111111111111111111, 8qbHbw2BbbTHBW1sbeqakYXVKRQM8Ne7pLK7m6CVfeR]"),
@@ -1452,20 +1452,20 @@ pub mod tests {
                     let slice2 = vec![vec![slice.to_vec()]];
                     let slice = &slice2[..];
                     let slice_temp = convert_to_slice2(&slice2);
-                    let (hashes2, lamports2, _) = hash.de_dup_accounts_in_parallel(&slice_temp, 0);
+                    let (hashes2, satomis2, _) = hash.de_dup_accounts_in_parallel(&slice_temp, 0);
                     let slice3 = convert_to_slice2(&slice2);
-                    let (hashes3, lamports3, _) = hash.de_dup_accounts_in_parallel(&slice3, 0);
+                    let (hashes3, satomis3, _) = hash.de_dup_accounts_in_parallel(&slice3, 0);
                     let vec = slice.to_vec();
                     let slice4 = convert_to_slice2(&vec);
-                    let (hashes4, lamports4) =
+                    let (hashes4, satomis4) =
                         hash.de_dup_accounts(&slice4, &mut HashStats::default(), end - start);
                     let vec = slice.to_vec();
                     let slice5 = convert_to_slice2(&vec);
-                    let (hashes5, lamports5) =
+                    let (hashes5, satomis5) =
                         hash.de_dup_accounts(&slice5, &mut HashStats::default(), end - start);
                     let vec = slice.to_vec();
                     let slice5 = convert_to_slice2(&vec);
-                    let (hashes6, lamports6) =
+                    let (hashes6, satomis6) =
                         hash.de_dup_accounts(&slice5, &mut HashStats::default(), end - start);
 
                     let hashes2 = get_vec(hashes2);
@@ -1490,10 +1490,10 @@ pub mod tests {
                         expected2.clone(),
                         hashes6.iter().flatten().copied().collect::<Vec<_>>()
                     );
-                    assert_eq!(lamports2, lamports3);
-                    assert_eq!(lamports2, lamports4);
-                    assert_eq!(lamports2, lamports5);
-                    assert_eq!(lamports2, lamports6);
+                    assert_eq!(satomis2, satomis3);
+                    assert_eq!(satomis2, satomis4);
+                    assert_eq!(satomis2, satomis5);
+                    assert_eq!(satomis2, satomis6);
 
                     let human_readable = slice[0][0]
                         .iter()
@@ -1507,7 +1507,7 @@ pub mod tests {
                             })
                             .to_string();
 
-                            s.push_str(&v.lamports.to_string());
+                            s.push_str(&v.satomis.to_string());
                             s
                         })
                         .collect::<String>();
@@ -1517,7 +1517,7 @@ pub mod tests {
                     let packaged_result: ExpectedType = (
                         human_readable,
                         is_last_slice,
-                        lamports2,
+                        satomis2,
                         hash_result_as_string,
                     );
                     assert_eq!(expected[expected_index], packaged_result);
@@ -1590,20 +1590,20 @@ pub mod tests {
 
         let vecs = vec![vec![account_maps.to_vec()]];
         let slice = convert_to_slice2(&vecs);
-        let (hashfile, lamports, count) = test_de_dup_accounts_in_parallel(&slice);
+        let (hashfile, satomis, count) = test_de_dup_accounts_in_parallel(&slice);
         assert_eq!(
-            (get_vec(hashfile), lamports, count),
-            (vec![val.hash], val.lamports, 1)
+            (get_vec(hashfile), satomis, count),
+            (vec![val.hash], val.satomis, 1)
         );
 
-        // zero original lamports, higher version
+        // zero original satomis, higher version
         let val = CalculateHashIntermediate::new(hash, 0, key);
         account_maps.push(val); // has to be after previous entry since account_maps are in slot order
 
         let vecs = vec![vec![account_maps.to_vec()]];
         let slice = convert_to_slice2(&vecs);
-        let (hashfile, lamports, count) = test_de_dup_accounts_in_parallel(&slice);
-        assert_eq!((get_vec(hashfile), lamports, count), (vec![], 0, 2));
+        let (hashfile, satomis, count) = test_de_dup_accounts_in_parallel(&slice);
+        assert_eq!((get_vec(hashfile), satomis, count), (vec![], 0, 2));
     }
 
     #[test]
@@ -1922,14 +1922,14 @@ pub mod tests {
                     assert_eq!(early_result, result);
                     result
                 };
-                // compare against captured, expected results for hash (and lamports)
+                // compare against captured, expected results for hash (and satomis)
                 assert_eq!(
                     (
                         pass,
                         count,
                         &*(result.to_string()),
                         expected_results[expected_index].3
-                    ), // we no longer calculate lamports
+                    ), // we no longer calculate satomis
                     expected_results[expected_index]
                 );
                 expected_index += 1;
@@ -1939,7 +1939,7 @@ pub mod tests {
 
     #[test]
     #[should_panic(expected = "overflow is detected while summing capitalization")]
-    fn test_accountsdb_lamport_overflow() {
+    fn test_accountsdb_satomi_overflow() {
         domichain_logger::setup();
 
         let offset = 2;
@@ -1973,7 +1973,7 @@ pub mod tests {
 
     #[test]
     #[should_panic(expected = "overflow is detected while summing capitalization")]
-    fn test_accountsdb_lamport_overflow2() {
+    fn test_accountsdb_satomi_overflow2() {
         domichain_logger::setup();
 
         let offset = 2;

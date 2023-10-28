@@ -22,9 +22,11 @@ pub struct Inflation {
     __unused: f64,
 }
 
-const DEFAULT_INITIAL: f64 = 0.08;
-const DEFAULT_TERMINAL: f64 = 0.015;
-const DEFAULT_TAPER: f64 = 0.15;
+// 750_000_000 - total target reward, total supply -> 1B
+// Total supply: 250_000_000, first 4 years 375_000_000 total => 375_000_000 / 4 / 250_000_000 == 0.375
+const DEFAULT_INITIAL: f64 = 0.375;
+const DEFAULT_TERMINAL: f64 = 0.0;
+const DEFAULT_TAPER: f64 = 0.12;
 const DEFAULT_FOUNDATION: f64 = 0.05;
 const DEFAULT_FOUNDATION_TERM: f64 = 7.0;
 
@@ -83,7 +85,8 @@ impl Inflation {
     /// inflation rate at year
     pub fn total(&self, year: f64) -> f64 {
         assert!(year >= 0.0);
-        let tapered = self.initial * ((1.0 - self.taper).powf(year));
+        let row_number = (year as u64) / 4;
+        let tapered = self.initial / 2f64.powf(row_number as f64);
 
         if tapered > self.terminal {
             tapered
@@ -129,6 +132,18 @@ mod tests {
             last = total;
         }
         assert_eq!(last, inflation.terminal);
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn test_inflation_4_years() {
+        let inflation = Inflation::default();
+
+        for year in 0..100 {
+            let last = inflation.total(year as f64);
+            println!("{year}: {last}");
+            // assert_eq!(last, DEFAULT_INITIAL);
+        }
     }
 
     #[test]

@@ -47,10 +47,10 @@ pub struct Entry {
     pub fee_calculator: FeeCalculator,
 }
 impl Entry {
-    pub fn new(blockhash: &Hash, lamports_per_signature: u64) -> Self {
+    pub fn new(blockhash: &Hash, satomis_per_signature: u64) -> Self {
         Self {
             blockhash: *blockhash,
-            fee_calculator: FeeCalculator::new(lamports_per_signature),
+            fee_calculator: FeeCalculator::new(satomis_per_signature),
         }
     }
 }

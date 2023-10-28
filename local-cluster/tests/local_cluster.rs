@@ -91,7 +91,7 @@ fn test_local_cluster_start_and_exit() {
     let num_nodes = 1;
     let cluster = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -108,7 +108,7 @@ fn test_local_cluster_start_and_exit_with_config() {
             NUM_NODES,
         ),
         node_stakes: vec![DEFAULT_NODE_STAKE; NUM_NODES],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         ticks_per_slot: 8,
         slots_per_epoch: MINIMUM_SLOTS_PER_EPOCH,
         stakers_slot_offset: MINIMUM_SLOTS_PER_EPOCH,
@@ -126,7 +126,7 @@ fn test_spend_and_verify_all_nodes_1() {
     let num_nodes = 1;
     let local = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -148,7 +148,7 @@ fn test_spend_and_verify_all_nodes_2() {
     let num_nodes = 2;
     let local = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -170,7 +170,7 @@ fn test_spend_and_verify_all_nodes_3() {
     let num_nodes = 3;
     let local = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -192,7 +192,7 @@ fn test_local_cluster_signature_subscribe() {
     let num_nodes = 2;
     let cluster = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -280,7 +280,7 @@ fn test_spend_and_verify_all_nodes_env_num_nodes() {
         .expect("could not parse NUM_NODES as a number");
     let local = LocalCluster::new_with_equal_stakes(
         num_nodes,
-        DEFAULT_CLUSTER_LAMPORTS,
+        DEFAULT_CLUSTER_SATOMIS,
         DEFAULT_NODE_STAKE,
         SocketAddrSpace::Unspecified,
     );
@@ -307,7 +307,7 @@ fn test_two_unbalanced_stakes() {
     let mut cluster = LocalCluster::new(
         &mut ClusterConfig {
             node_stakes: vec![DEFAULT_NODE_STAKE * 100, DEFAULT_NODE_STAKE],
-            cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + DEFAULT_NODE_STAKE * 100,
+            cluster_satomis: DEFAULT_CLUSTER_SATOMIS + DEFAULT_NODE_STAKE * 100,
             validator_configs: make_identical_validator_configs(&validator_config, 2),
             ticks_per_slot: num_ticks_per_slot,
             slots_per_epoch: num_slots_per_epoch,
@@ -338,7 +338,7 @@ fn test_forwarding() {
     // will be have to be forwarded in order to be confirmed
     let mut config = ClusterConfig {
         node_stakes: vec![DEFAULT_NODE_STAKE * 100, DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + DEFAULT_NODE_STAKE * 100,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + DEFAULT_NODE_STAKE * 100,
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
             2,
@@ -383,7 +383,7 @@ fn test_restart_node() {
     let mut cluster = LocalCluster::new(
         &mut ClusterConfig {
             node_stakes: vec![DEFAULT_NODE_STAKE],
-            cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+            cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
             validator_configs: vec![safe_clone_config(&validator_config)],
             ticks_per_slot,
             slots_per_epoch,
@@ -423,7 +423,7 @@ fn test_mainnet_beta_cluster_type() {
     let mut config = ClusterConfig {
         cluster_type: ClusterType::MainnetBeta,
         node_stakes: vec![DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
             1,
@@ -499,7 +499,7 @@ fn test_snapshot_download() {
     let stake = DEFAULT_NODE_STAKE;
     let mut config = ClusterConfig {
         node_stakes: vec![stake],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &leader_snapshot_test_config.validator_config,
             1,
@@ -585,7 +585,7 @@ fn test_incremental_snapshot_download() {
     let stake = DEFAULT_NODE_STAKE;
     let mut config = ClusterConfig {
         node_stakes: vec![stake],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &leader_snapshot_test_config.validator_config,
             1,
@@ -759,7 +759,7 @@ fn test_incremental_snapshot_download_with_crossing_full_snapshot_interval_at_st
     let stake = DEFAULT_NODE_STAKE;
     let mut config = ClusterConfig {
         node_stakes: vec![stake],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &leader_snapshot_test_config.validator_config,
             1,
@@ -1247,7 +1247,7 @@ fn test_snapshot_restart_tower() {
 
     let mut config = ClusterConfig {
         node_stakes: vec![DEFAULT_NODE_STAKE * 100, DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + DEFAULT_NODE_STAKE * 100,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + DEFAULT_NODE_STAKE * 100,
         validator_configs: vec![
             safe_clone_config(&leader_snapshot_test_config.validator_config),
             safe_clone_config(&validator_snapshot_test_config.validator_config),
@@ -1326,7 +1326,7 @@ fn test_snapshots_blockstore_floor() {
 
     let mut config = ClusterConfig {
         node_stakes: vec![DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &leader_snapshot_test_config.validator_config,
             1,
@@ -1430,7 +1430,7 @@ fn test_snapshots_restart_validity() {
     )];
     let mut config = ClusterConfig {
         node_stakes: vec![DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         validator_configs: make_identical_validator_configs(
             &snapshot_test_config.validator_config,
             1,
@@ -1537,7 +1537,7 @@ fn test_wait_for_max_stake() {
     domichain_logger::setup_with_default(RUST_LOG_FILTER);
     let validator_config = ValidatorConfig::default_for_test();
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         node_stakes: vec![DEFAULT_NODE_STAKE; 4],
         validator_configs: make_identical_validator_configs(&validator_config, 4),
         ..ClusterConfig::default()
@@ -1561,7 +1561,7 @@ fn test_no_voting() {
         ..ValidatorConfig::default_for_test()
     };
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         node_stakes: vec![DEFAULT_NODE_STAKE],
         validator_configs: vec![validator_config],
         ..ClusterConfig::default()
@@ -1614,7 +1614,7 @@ fn test_optimistic_confirmation_violation_detection() {
     let node_to_restart = validator_keys[1].0.pubkey();
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -1743,7 +1743,7 @@ fn test_validator_saves_tower() {
     let validator_identity_keypair = Arc::new(Keypair::new());
     let validator_id = validator_identity_keypair.pubkey();
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         node_stakes: vec![DEFAULT_NODE_STAKE],
         validator_configs: vec![validator_config],
         validator_keys: Some(vec![(validator_identity_keypair.clone(), true)]),
@@ -1905,7 +1905,7 @@ fn do_test_future_tower(cluster_mode: ClusterMode) {
     };
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + DEFAULT_NODE_STAKE * 100,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + DEFAULT_NODE_STAKE * 100,
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -2069,7 +2069,7 @@ fn test_hard_fork_invalidates_tower() {
     let validator_b_pubkey = validators[1];
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -2242,7 +2242,7 @@ fn test_hard_fork_with_gap_in_roots() {
         ..ValidatorConfig::default()
     };
     let mut config = ClusterConfig {
-        cluster_lamports: 100_000,
+        cluster_satomis: 100_000,
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(&validator_config, node_stakes.len()),
         validator_keys: Some(validator_keys),
@@ -2402,7 +2402,7 @@ fn test_restart_tower_rollback() {
     let b_pubkey = validator_keys[1].0.pubkey();
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + DEFAULT_NODE_STAKE * 100,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + DEFAULT_NODE_STAKE * 100,
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -2552,7 +2552,7 @@ fn test_rpc_block_subscribe() {
     .collect::<Vec<_>>();
 
     let mut config = ClusterConfig {
-        cluster_lamports: total_stake,
+        cluster_satomis: total_stake,
         node_stakes,
         validator_configs: vec![validator_config],
         validator_keys: Some(validator_keys),
@@ -2630,7 +2630,7 @@ fn test_oc_bad_signatures() {
 
     let our_id = validator_keys.last().unwrap().0.pubkey();
     let mut config = ClusterConfig {
-        cluster_lamports: total_stake,
+        cluster_satomis: total_stake,
         node_stakes,
         validator_configs: make_identical_validator_configs(&validator_config, 2),
         validator_keys: Some(validator_keys),
@@ -2946,7 +2946,7 @@ fn setup_transfer_scan_threads(
                             .into_iter()
                             .map(|(key, account)| {
                                 if tracked_pubkeys.contains(&key) {
-                                    account.lamports
+                                    account.satomis
                                 } else {
                                     0
                                 }
@@ -2992,7 +2992,7 @@ fn run_test_load_program_accounts(scan_commitment: CommitmentConfig) {
     );
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes: node_stakes.clone(),
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -3157,7 +3157,7 @@ fn do_test_optimistic_confirmation_violation_with_or_without_tower(with_tower: b
     validator_configs[3].voting_disabled = true;
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes,
         validator_configs,
         validator_keys: Some(validator_keys),
@@ -4109,7 +4109,7 @@ fn test_switch_threshold_uses_gossip_votes() {
 fn test_listener_startup() {
     let mut config = ClusterConfig {
         node_stakes: vec![DEFAULT_NODE_STAKE],
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         num_listeners: 3,
         validator_configs: make_identical_validator_configs(
             &ValidatorConfig::default_for_test(),
@@ -4219,7 +4219,7 @@ fn test_leader_failure_4() {
     let num_nodes = 4;
     let validator_config = ValidatorConfig::default_for_test();
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         node_stakes: vec![DEFAULT_NODE_STAKE; 4],
         validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
         ..ClusterConfig::default()
@@ -4253,7 +4253,7 @@ fn test_ledger_cleanup_service() {
         ..ValidatorConfig::default_for_test()
     };
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS,
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS,
         poh_config: PohConfig::new_sleep(Duration::from_millis(50)),
         node_stakes: vec![DEFAULT_NODE_STAKE; num_nodes],
         validator_configs: make_identical_validator_configs(&validator_config, num_nodes),
@@ -4343,7 +4343,7 @@ fn test_slot_hash_expiry() {
     validator_configs[1].voting_disabled = true;
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes,
         validator_configs,
         validator_keys: Some(validator_keys),
@@ -4582,7 +4582,7 @@ fn test_duplicate_with_pruned_ancestor() {
     });
 
     let mut config = ClusterConfig {
-        cluster_lamports: DEFAULT_CLUSTER_LAMPORTS + node_stakes.iter().sum::<u64>(),
+        cluster_satomis: DEFAULT_CLUSTER_SATOMIS + node_stakes.iter().sum::<u64>(),
         node_stakes,
         validator_configs,
         validator_keys: Some(validator_keys),

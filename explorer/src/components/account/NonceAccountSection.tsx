@@ -45,7 +45,7 @@ export function NonceAccountSection({
         <tr>
           <td>Fee</td>
           <td className="text-lg-end">
-            {nonceAccount.info.feeCalculator.lamportsPerSignature} lamports per
+            {nonceAccount.info.feeCalculator.satomisPerSignature} satomis per
             signature
           </td>
         </tr>

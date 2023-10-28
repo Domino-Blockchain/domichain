@@ -15,8 +15,8 @@ skipSetup="$6"
 failOnValidatorBootupFailure="$7"
 externalPrimordialAccountsFile="$8"
 maybeDisableAirdrops="$9"
-internalNodesStakeLamports="${10}"
-internalNodesLamports="${11}"
+internalNodesStakeSatomis="${10}"
+internalNodesSatomis="${11}"
 nodeIndex="${12}"
 numBenchTpsClients="${13}"
 benchTpsExtraArgs="${14}"
@@ -135,7 +135,7 @@ EOF
     if [[ $skipSetup != true ]]; then
       clear_config_dir "$DOMICHAIN_CONFIG_DIR"
 
-      if [[ -n $internalNodesLamports ]]; then
+      if [[ -n $internalNodesSatomis ]]; then
         echo "---" >> config/validator-balances.yml
       fi
 
@@ -158,12 +158,12 @@ EOF
             domichain-keygen new --no-passphrase -so config/"$name".json
           fi
         fi
-        if [[ -n $internalNodesLamports ]]; then
+        if [[ -n $internalNodesSatomis ]]; then
           declare pubkey
           pubkey="$(domichain-keygen pubkey config/"$name".json)"
           cat >> config/validator-balances.yml <<EOF
 $pubkey:
-  balance: $internalNodesLamports
+  balance: $internalNodesSatomis
   owner: 11111111111111111111111111111111
   data:
   executable: false
@@ -175,12 +175,12 @@ EOF
       done
       setupValidatorKeypair blockstreamer-identity
 
-      lamports_per_signature="42"
+      satomis_per_signature="42"
       # shellcheck disable=SC2206 # Do not want to quote $genesisOptions
       genesis_args=($genesisOptions)
       for i in "${!genesis_args[@]}"; do
-        if [[ "${genesis_args[$i]}" = --target-lamports-per-signature ]]; then
-          lamports_per_signature="${genesis_args[$((i+1))]}"
+        if [[ "${genesis_args[$i]}" = --target-satomis-per-signature ]]; then
+          satomis_per_signature="${genesis_args[$((i+1))]}"
           break
         fi
       done
@@ -188,7 +188,7 @@ EOF
       for i in $(seq 0 $((numBenchTpsClients-1))); do
         # shellcheck disable=SC2086 # Do not want to quote $benchTpsExtraArgs
         domichain-bench-tps --write-client-keys config/bench-tps"$i".yml \
-          --target-lamports-per-signature "$lamports_per_signature" $benchTpsExtraArgs
+          --target-satomis-per-signature "$satomis_per_signature" $benchTpsExtraArgs
         # Skip first line, as it contains header
         tail -n +2 -q config/bench-tps"$i".yml >> config/client-accounts.yml
         echo "" >> config/client-accounts.yml
@@ -203,11 +203,11 @@ EOF
         genesisOptions+=" --primordial-accounts-file config/client-accounts.yml"
       fi
 
-      if [[ -n $internalNodesStakeLamports ]]; then
-        args+=(--bootstrap-validator-stake-lamports "$internalNodesStakeLamports")
+      if [[ -n $internalNodesStakeSatomis ]]; then
+        args+=(--bootstrap-validator-stake-satomis "$internalNodesStakeSatomis")
       fi
-      if [[ -n $internalNodesLamports ]]; then
-        args+=(--bootstrap-validator-lamports "$internalNodesLamports")
+      if [[ -n $internalNodesSatomis ]]; then
+        args+=(--bootstrap-validator-satomis "$internalNodesSatomis")
       fi
       # shellcheck disable=SC2206 # Do not want to quote $genesisOptions
       args+=($genesisOptions)
@@ -356,8 +356,8 @@ EOF
         --enable-rpc-transaction-history
       )
     else
-      if [[ -n $internalNodesLamports ]]; then
-        args+=(--node-lamports "$internalNodesLamports")
+      if [[ -n $internalNodesSatomis ]]; then
+        args+=(--node-satomis "$internalNodesSatomis")
       fi
     fi
 
@@ -457,11 +457,11 @@ EOF
       fi
 
       if [[ ${extraPrimordialStakes} -eq 0 ]]; then
-        echo "0 Primordial stakes, staking with $internalNodesStakeLamports"
+        echo "0 Primordial stakes, staking with $internalNodesStakeSatomis"
         multinode-demo/delegate-stake.sh --vote-account "$DOMICHAIN_CONFIG_DIR"/vote-account.json \
                                          --stake-account "$DOMICHAIN_CONFIG_DIR"/stake-account.json \
                                          --force \
-                                         "${args[@]}" "$internalNodesStakeLamports"
+                                         "${args[@]}" "$internalNodesStakeSatomis"
       else
         echo "Skipping staking with extra stakes: ${extraPrimordialStakes}"
       fi

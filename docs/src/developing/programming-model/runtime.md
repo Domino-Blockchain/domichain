@@ -7,7 +7,7 @@ title: "Runtime"
 The runtime only permits the owner program to debit the account or modify its
 data. The program then defines additional rules for whether the client can
 modify accounts it owns. In the case of the System program, it allows users to
-transfer lamports by recognizing transaction signatures. If it sees the client
+transfer satomis by recognizing transaction signatures. If it sees the client
 signed the transaction using the keypair's _private key_, it knows the client
 authorized the token transfer.
 
@@ -121,7 +121,7 @@ As part of the Compute Budget, the runtime supports transactions including an
 [prioritization fee](./../../transaction_fees.md#prioritization-fee).
 
 This _prioritization fee_ is calculated by multiplying the number
-of _compute units_ by the _compute unit price_ (measured in micro-lamports).
+of _compute units_ by the _compute unit price_ (measured in micro-satomis).
 These values may be set via the Compute Budget instructions `SetComputeUnitLimit`
 and `SetComputeUnitPrice` once per transaction.
 

@@ -209,7 +209,7 @@ impl<'a> TypeContext<'a> for Context {
     {
         let ancestors = HashMap::from(&serializable_bank.bank.ancestors);
         let fields = serializable_bank.bank.get_fields_to_serialize(&ancestors);
-        let lamports_per_signature = fields.fee_rate_governor.lamports_per_signature;
+        let satomis_per_signature = fields.fee_rate_governor.satomis_per_signature;
         let epoch_reward_status = serializable_bank
             .bank
             .get_epoch_reward_status_to_serialize();
@@ -224,7 +224,7 @@ impl<'a> TypeContext<'a> for Context {
             // Additional fields, we manually store the lamps per signature here so that
             // we can grab it on restart.
             // TODO: if we do a snapshot version bump, consider moving this out.
-            lamports_per_signature,
+            satomis_per_signature,
             None::<BankIncrementalSnapshotPersistence>,
             serializable_bank
                 .bank
@@ -342,10 +342,10 @@ impl<'a> TypeContext<'a> for Context {
             deserialize_from::<_, DeserializableVersionedBank>(&mut stream)?.into();
         let accounts_db_fields = Self::deserialize_accounts_db_fields(stream)?;
         // Process extra fields
-        let lamports_per_signature = ignore_eof_error(deserialize_from(&mut stream))?;
+        let satomis_per_signature = ignore_eof_error(deserialize_from(&mut stream))?;
         bank_fields.fee_rate_governor = bank_fields
             .fee_rate_governor
-            .clone_with_lamports_per_signature(lamports_per_signature);
+            .clone_with_satomis_per_signature(satomis_per_signature);
 
         let incremental_snapshot_persistence = ignore_eof_error(deserialize_from(&mut stream))?;
         bank_fields.incremental_snapshot_persistence = incremental_snapshot_persistence;
@@ -387,7 +387,7 @@ impl<'a> TypeContext<'a> for Context {
         let mut rhs = bank_fields;
         let blockhash_queue = RwLock::new(std::mem::take(&mut rhs.blockhash_queue));
         let hard_forks = RwLock::new(std::mem::take(&mut rhs.hard_forks));
-        let lamports_per_signature = rhs.fee_rate_governor.lamports_per_signature;
+        let satomis_per_signature = rhs.fee_rate_governor.satomis_per_signature;
         let epoch_accounts_hash = rhs.epoch_accounts_hash.as_ref();
         let epoch_reward_status = rhs.epoch_reward_status;
 
@@ -431,7 +431,7 @@ impl<'a> TypeContext<'a> for Context {
         match get_serialize_bank_fields(
             bank,
             accounts_db_fields,
-            lamports_per_signature,
+            satomis_per_signature,
             incremental_snapshot_persistence.cloned(),
             epoch_accounts_hash.copied(),
             matches!(epoch_reward_status, EpochRewardStatus::Active(_))
@@ -478,7 +478,7 @@ enum BankFieldsToSerialize<'a, T: Serialize> {
 fn get_serialize_bank_fields<'a, T: Serialize>(
     bank: SerializableVersionedBank<'a>,
     accounts_db_fields: T,
-    lamports_per_signature: u64,
+    satomis_per_signature: u64,
     incremental_snapshot_persistence: Option<BankIncrementalSnapshotPersistence>,
     epoch_accounts_hash: Option<Hash>,
     epoch_reward_status: Option<&'a EpochRewardStatus>,
@@ -487,7 +487,7 @@ fn get_serialize_bank_fields<'a, T: Serialize>(
         Some(epoch_reward_status) => BankFieldsToSerialize::WithEpochRewardStatus((
             bank,
             accounts_db_fields,
-            lamports_per_signature,
+            satomis_per_signature,
             incremental_snapshot_persistence,
             epoch_accounts_hash,
             epoch_reward_status,
@@ -495,7 +495,7 @@ fn get_serialize_bank_fields<'a, T: Serialize>(
         None => BankFieldsToSerialize::WithoutEpochRewardStatus((
             bank,
             accounts_db_fields,
-            lamports_per_signature,
+            satomis_per_signature,
             incremental_snapshot_persistence,
             epoch_accounts_hash,
         )),

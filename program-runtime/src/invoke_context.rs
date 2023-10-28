@@ -167,7 +167,7 @@ pub struct InvokeContext<'a> {
     pub feature_set: Arc<FeatureSet>,
     pub timings: ExecuteDetailsTimings,
     pub blockhash: Hash,
-    pub lamports_per_signature: u64,
+    pub satomis_per_signature: u64,
     pub syscall_context: Vec<Option<SyscallContext>>,
     traces: Vec<Vec<[u64; 12]>>,
 }
@@ -185,7 +185,7 @@ impl<'a> InvokeContext<'a> {
         programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
         feature_set: Arc<FeatureSet>,
         blockhash: Hash,
-        lamports_per_signature: u64,
+        satomis_per_signature: u64,
         prev_accounts_data_len: u64,
     ) -> Self {
         Self {
@@ -204,7 +204,7 @@ impl<'a> InvokeContext<'a> {
             feature_set,
             timings: ExecuteDetailsTimings::default(),
             blockhash,
-            lamports_per_signature,
+            satomis_per_signature,
             syscall_context: Vec::new(),
             traces: Vec::new(),
         }
@@ -379,10 +379,10 @@ impl<'a> InvokeContext<'a> {
                     err
                 })?;
             pre_sum = pre_sum
-                .checked_add(u128::from(pre_account.lamports()))
+                .checked_add(u128::from(pre_account.satomis()))
                 .ok_or(InstructionError::UnbalancedInstruction)?;
             post_sum = post_sum
-                .checked_add(u128::from(account.lamports()))
+                .checked_add(u128::from(account.satomis()))
                 .ok_or(InstructionError::UnbalancedInstruction)?;
 
             let pre_data_len = pre_account.data().len() as i64;
@@ -392,7 +392,7 @@ impl<'a> InvokeContext<'a> {
                 .adjust_delta_unchecked(data_len_delta);
         }
 
-        // Verify that the total sum of all the lamports did not change
+        // Verify that the total sum of all the satomis did not change
         if pre_sum != post_sum {
             return Err(InstructionError::UnbalancedInstruction);
         }
@@ -464,10 +464,10 @@ impl<'a> InvokeContext<'a> {
                                 err
                             })?;
                         pre_sum = pre_sum
-                            .checked_add(u128::from(pre_account.lamports()))
+                            .checked_add(u128::from(pre_account.satomis()))
                             .ok_or(InstructionError::UnbalancedInstruction)?;
                         post_sum = post_sum
-                            .checked_add(u128::from(account.lamports()))
+                            .checked_add(u128::from(account.satomis()))
                             .ok_or(InstructionError::UnbalancedInstruction)?;
                         if is_writable && !pre_account.executable() {
                             pre_account.update(account.clone());
@@ -485,7 +485,7 @@ impl<'a> InvokeContext<'a> {
             }
         }
 
-        // Verify that the total sum of all the lamports did not change
+        // Verify that the total sum of all the satomis did not change
         if pre_sum != post_sum {
             return Err(InstructionError::UnbalancedInstruction);
         }
@@ -595,27 +595,14 @@ impl<'a> InvokeContext<'a> {
             if instruction_account.is_signer
                 && !(borrowed_account.is_signer() || signers.contains(borrowed_account.get_key()))
             {
-                dbg!(&instruction_account);
-                // dbg!(format_args!("{:?}", &borrowed_account));
-                dbg!(&signers);
-                dbg!(borrowed_account.get_key());
-
-                dbg!(instruction_account.is_signer);
-                dbg!(borrowed_account.is_signer());
-                dbg!(signers.contains(borrowed_account.get_key()));
-                dbg!(
-                    instruction_account.is_signer
-                        && !(borrowed_account.is_signer() || signers.contains(borrowed_account.get_key()))
-                );
                 ic_msg!(
                     self,
                     "{}'s signer privilege escalated",
                     borrowed_account.get_key()
                 );
-                dbg!(InstructionError::PrivilegeEscalation);
                 // panic!();
                 exit(1);
-                return dbg!(Err(InstructionError::PrivilegeEscalation));
+                return Err(InstructionError::PrivilegeEscalation);
             }
         }
         let instruction_accounts = duplicate_indicies
@@ -634,7 +621,7 @@ impl<'a> InvokeContext<'a> {
             .find_index_of_instruction_account(self.transaction_context, &callee_program_id)
             .ok_or_else(|| {
                 ic_msg!(self, "Unknown program {}", callee_program_id);
-                dbg!(InstructionError::MissingAccount)
+                InstructionError::MissingAccount
             })?;
         let borrowed_program_account = instruction_context
             .try_borrow_instruction_account(self.transaction_context, program_account_index)?;
@@ -739,24 +726,11 @@ impl<'a> InvokeContext<'a> {
                 *owner_id
             };
 
-            // if builtin_id.to_string().contains("Loader") {
-            //     // dbg!(&instruction_context);
-            //     // dbg!(&self.transaction_context);
-            //     dbg!(owner_id);
-            //     if dbg!(native_loader::check_id(owner_id)) {
-            //         dbg!(*borrowed_root_account.get_key());
-            //         dbg!(borrowed_root_account.get_index_in_transaction());
-            //     }
-            // }
-
             builtin_id
         };
 
         // The Murmur3 hash value (used by RBPF) of the string "entrypoint"
         const ENTRYPOINT_KEY: u32 = 0x71E3CF81;
-        // if builtin_id.to_string().contains("Loader") {
-        //     dbg!(builtin_id);
-        // }
         let entry = self
             .programs_loaded_for_tx_batch
             .find(&builtin_id)
@@ -771,14 +745,6 @@ impl<'a> InvokeContext<'a> {
         entry.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
 
         let program_id = *instruction_context.get_last_program_key(self.transaction_context)?;
-        // if builtin_id.to_string().contains("Loader") {
-
-        //     dbg!(program_id);
-        //     if program_id.to_string().contains("Token") {
-        //         dbg!(&instruction_context);
-        //         dbg!(&self.transaction_context);
-        //     }
-        // }
         self.transaction_context
             .set_return_data(program_id, Vec::new())?;
         let logger = self.get_log_collector();
@@ -836,7 +802,6 @@ impl<'a> InvokeContext<'a> {
 
         if builtin_id.to_string().contains("Loader") {
             timings.execute_accessories.process_instructions.process_executable_chain_us;
-            // dbg!(timings.execute_accessories.process_instructions.process_executable_chain_us);
         }
         result
     }
@@ -1135,7 +1100,7 @@ mod tests {
                     MockInstruction::UnbalancedPush => {
                         instruction_context
                             .try_borrow_instruction_account(transaction_context, 0)?
-                            .checked_add_lamports(1)?;
+                            .checked_add_satomis(1)?;
                         let program_id = *transaction_context.get_key_of_account_at_index(3)?;
                         let metas = vec![
                             AccountMeta::new_readonly(
@@ -1166,7 +1131,7 @@ mod tests {
                     }
                     MockInstruction::UnbalancedPop => instruction_context
                         .try_borrow_instruction_account(transaction_context, 0)?
-                        .checked_add_lamports(1)?,
+                        .checked_add_satomis(1)?,
                     MockInstruction::ConsumeComputeUnits {
                         compute_units_to_consume,
                         desired_result,

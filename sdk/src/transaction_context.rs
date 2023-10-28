@@ -346,18 +346,18 @@ impl TransactionContext {
             .instruction_trace
             .last()
             .ok_or(InstructionError::CallDepth)?;
-        let callee_instruction_accounts_lamport_sum =
-            self.instruction_accounts_lamport_sum(caller_instruction_context)?;
+        let callee_instruction_accounts_satomi_sum =
+            self.instruction_accounts_satomi_sum(caller_instruction_context)?;
         if !self.instruction_stack.is_empty()
             && self.is_early_verification_of_account_modifications_enabled()
         {
             let caller_instruction_context = self.get_current_instruction_context()?;
-            let original_caller_instruction_accounts_lamport_sum =
-                caller_instruction_context.instruction_accounts_lamport_sum;
-            let current_caller_instruction_accounts_lamport_sum =
-                self.instruction_accounts_lamport_sum(caller_instruction_context)?;
-            if original_caller_instruction_accounts_lamport_sum
-                != current_caller_instruction_accounts_lamport_sum
+            let original_caller_instruction_accounts_satomi_sum =
+                caller_instruction_context.instruction_accounts_satomi_sum;
+            let current_caller_instruction_accounts_satomi_sum =
+                self.instruction_accounts_satomi_sum(caller_instruction_context)?;
+            if original_caller_instruction_accounts_satomi_sum
+                != current_caller_instruction_accounts_satomi_sum
             {
                 return Err(InstructionError::UnbalancedInstruction);
             }
@@ -365,8 +365,8 @@ impl TransactionContext {
         {
             let mut instruction_context = self.get_next_instruction_context()?;
             instruction_context.nesting_level = nesting_level;
-            instruction_context.instruction_accounts_lamport_sum =
-                callee_instruction_accounts_lamport_sum;
+            instruction_context.instruction_accounts_satomi_sum =
+                callee_instruction_accounts_satomi_sum;
         }
         let index_in_trace = self.get_instruction_trace_length();
         if index_in_trace >= self.instruction_trace_capacity {
@@ -386,7 +386,7 @@ impl TransactionContext {
         if self.instruction_stack.is_empty() {
             return Err(InstructionError::CallDepth);
         }
-        // Verify (before we pop) that the total sum of all lamports in this instruction did not change
+        // Verify (before we pop) that the total sum of all satomis in this instruction did not change
         let detected_an_unbalanced_instruction =
             if self.is_early_verification_of_account_modifications_enabled() {
                 self.get_current_instruction_context()
@@ -397,10 +397,10 @@ impl TransactionContext {
                                 .try_borrow_mut()
                                 .map_err(|_| InstructionError::AccountBorrowOutstanding)?;
                         }
-                        self.instruction_accounts_lamport_sum(instruction_context)
-                            .map(|instruction_accounts_lamport_sum| {
-                                instruction_context.instruction_accounts_lamport_sum
-                                    != instruction_accounts_lamport_sum
+                        self.instruction_accounts_satomi_sum(instruction_context)
+                            .map(|instruction_accounts_satomi_sum| {
+                                instruction_context.instruction_accounts_satomi_sum
+                                    != instruction_accounts_satomi_sum
                             })
                     })
             } else {
@@ -430,16 +430,16 @@ impl TransactionContext {
         Ok(())
     }
 
-    /// Calculates the sum of all lamports within an instruction
+    /// Calculates the sum of all satomis within an instruction
     #[cfg(not(target_os = "wasi"))]
-    fn instruction_accounts_lamport_sum(
+    fn instruction_accounts_satomi_sum(
         &self,
         instruction_context: &InstructionContext,
     ) -> Result<u128, InstructionError> {
         if !self.is_early_verification_of_account_modifications_enabled() {
             return Ok(0);
         }
-        let mut instruction_accounts_lamport_sum: u128 = 0;
+        let mut instruction_accounts_satomi_sum: u128 = 0;
         for instruction_account_index in 0..instruction_context.get_number_of_instruction_accounts()
         {
             if instruction_context
@@ -450,15 +450,15 @@ impl TransactionContext {
             }
             let index_in_transaction = instruction_context
                 .get_index_of_instruction_account_in_transaction(instruction_account_index)?;
-            instruction_accounts_lamport_sum = (self
+            instruction_accounts_satomi_sum = (self
                 .get_account_at_index(index_in_transaction)?
                 .try_borrow()
                 .map_err(|_| InstructionError::AccountBorrowOutstanding)?
-                .lamports() as u128)
-                .checked_add(instruction_accounts_lamport_sum)
+                .satomis() as u128)
+                .checked_add(instruction_accounts_satomi_sum)
                 .ok_or(InstructionError::ArithmeticOverflow)?;
         }
-        Ok(instruction_accounts_lamport_sum)
+        Ok(instruction_accounts_satomi_sum)
     }
 
     /// Returns the accounts resize delta
@@ -489,7 +489,7 @@ pub struct TransactionReturnData {
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub struct InstructionContext {
     nesting_level: usize,
-    instruction_accounts_lamport_sum: u128,
+    instruction_accounts_satomi_sum: u128,
     program_accounts: Vec<IndexOfAccount>,
     instruction_accounts: Vec<InstructionAccount>,
     instruction_data: Vec<u8>,
@@ -516,9 +516,9 @@ impl InstructionContext {
         self.nesting_level.saturating_add(1)
     }
 
-    /// Returns the sum of lamports of the instruction accounts in this Instruction
-    pub fn get_instruction_accounts_lamport_sum(&self) -> u128 {
-        self.instruction_accounts_lamport_sum
+    /// Returns the sum of satomis of the instruction accounts in this Instruction
+    pub fn get_instruction_accounts_satomi_sum(&self) -> u128 {
+        self.instruction_accounts_satomi_sum
     }
 
     /// Number of program accounts
@@ -813,57 +813,57 @@ impl<'a> BorrowedAccount<'a> {
         Ok(())
     }
 
-    /// Returns the number of lamports of this account (transaction wide)
+    /// Returns the number of satomis of this account (transaction wide)
     #[inline]
-    pub fn get_lamports(&self) -> u64 {
-        self.account.lamports()
+    pub fn get_satomis(&self) -> u64 {
+        self.account.satomis()
     }
 
-    /// Overwrites the number of lamports of this account (transaction wide)
+    /// Overwrites the number of satomis of this account (transaction wide)
     #[cfg(not(target_os = "wasi"))]
-    pub fn set_lamports(&mut self, lamports: u64) -> Result<(), InstructionError> {
+    pub fn set_satomis(&mut self, satomis: u64) -> Result<(), InstructionError> {
         if self
             .transaction_context
             .is_early_verification_of_account_modifications_enabled()
         {
             // An account not owned by the program cannot have its balance decrease
-            if !self.is_owned_by_current_program() && lamports < self.get_lamports() {
-                return Err(InstructionError::ExternalAccountLamportSpend);
+            if !self.is_owned_by_current_program() && satomis < self.get_satomis() {
+                return Err(InstructionError::ExternalAccountSatomiSpend);
             }
             // The balance of read-only may not change
             if !self.is_writable() {
-                return Err(InstructionError::ReadonlyLamportChange);
+                return Err(InstructionError::ReadonlySatomiChange);
             }
             // The balance of executable accounts may not change
             if self.is_executable() {
-                return Err(InstructionError::ExecutableLamportChange);
+                return Err(InstructionError::ExecutableSatomiChange);
             }
-            // don't touch the account if the lamports do not change
-            if self.get_lamports() == lamports {
+            // don't touch the account if the satomis do not change
+            if self.get_satomis() == satomis {
                 return Ok(());
             }
             self.touch()?;
         }
-        self.account.set_lamports(lamports);
+        self.account.set_satomis(satomis);
         Ok(())
     }
 
-    /// Adds lamports to this account (transaction wide)
+    /// Adds satomis to this account (transaction wide)
     #[cfg(not(target_os = "wasi"))]
-    pub fn checked_add_lamports(&mut self, lamports: u64) -> Result<(), InstructionError> {
-        self.set_lamports(
-            self.get_lamports()
-                .checked_add(lamports)
+    pub fn checked_add_satomis(&mut self, satomis: u64) -> Result<(), InstructionError> {
+        self.set_satomis(
+            self.get_satomis()
+                .checked_add(satomis)
                 .ok_or(InstructionError::ArithmeticOverflow)?,
         )
     }
 
-    /// Subtracts lamports from this account (transaction wide)
+    /// Subtracts satomis from this account (transaction wide)
     #[cfg(not(target_os = "wasi"))]
-    pub fn checked_sub_lamports(&mut self, lamports: u64) -> Result<(), InstructionError> {
-        self.set_lamports(
-            self.get_lamports()
-                .checked_sub(lamports)
+    pub fn checked_sub_satomis(&mut self, satomis: u64) -> Result<(), InstructionError> {
+        self.set_satomis(
+            self.get_satomis()
+                .checked_sub(satomis)
                 .ok_or(InstructionError::ArithmeticOverflow)?,
         )
     }
@@ -1036,14 +1036,14 @@ impl<'a> BorrowedAccount<'a> {
         Ok(())
     }
 
-    // Returns whether or the lamports currently in the account is sufficient for rent exemption should the
+    // Returns whether or the satomis currently in the account is sufficient for rent exemption should the
     // data be resized to the given size
     #[cfg(not(target_os = "wasi"))]
     pub fn is_rent_exempt_at_data_length(&self, data_length: usize) -> bool {
         self.transaction_context
             .rent
             .unwrap_or_default()
-            .is_exempt(self.get_lamports(), data_length)
+            .is_exempt(self.get_satomis(), data_length)
     }
 
     /// Returns whether this account is executable (transaction wide)
@@ -1057,7 +1057,7 @@ impl<'a> BorrowedAccount<'a> {
     pub fn set_executable(&mut self, is_executable: bool) -> Result<(), InstructionError> {
         if let Some(rent) = self.transaction_context.rent {
             // To become executable an account must be rent exempt
-            if !rent.is_exempt(self.get_lamports(), self.get_data().len()) {
+            if !rent.is_exempt(self.get_satomis(), self.get_data().len()) {
                 return Err(InstructionError::ExecutableAccountNotRentExempt);
             }
             // Only the owner can set the executable flag

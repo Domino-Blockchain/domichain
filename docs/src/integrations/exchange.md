@@ -337,10 +337,10 @@ curl https://api.devnet.solana.com -X POST -H 'Content-Type: application/json' -
 The `preBalances` and `postBalances` fields allow you to track the balance
 changes in every account without having to parse the entire transaction. They
 list the starting and ending balances of each account in
-[lamports](../terminology.md#lamport), indexed to the `accountKeys` list. For
+[satomis](../terminology.md#satomi), indexed to the `accountKeys` list. For
 example, if the deposit address of interest is
 `G1wZ113tiUHdSpQEBcid8n1x8BAvcWZoZgxPKxgE5B7o`, this transaction represents a
-transfer of 1040000000 - 1030000000 = 10,000,000 lamports = 0.01 DOMI
+transfer of 1040000000 - 1030000000 = 10,000,000 satomis = 0.01 DOMI
 
 If you need more information about the transaction type or other specifics, you
 can request the block from RPC in binary format, and parse it using either our
@@ -487,7 +487,7 @@ curl https://api.devnet.solana.com -X POST -H 'Content-Type: application/json' -
             "parsed": {
               "info": {
                 "destination": "G1wZ113tiUHdSpQEBcid8n1x8BAvcWZoZgxPKxgE5B7o",
-                "lamports": 10000000,
+                "satomis": 10000000,
                 "source": "9aE476sH92Vz7DMPyq5WLPkrKWivxeuTKEFKd2sZZcde"
               },
               "type": "transfer"
@@ -787,7 +787,7 @@ accounts do not:
 1. SPL Token accounts must remain [rent-exempt](developing/programming-model/accounts.md#rent-exemption)
    for the duration of their existence and therefore require a small amount of
    native DOMI tokens be deposited at account creation. For SPL Token v2 accounts,
-   this amount is 0.00203928 DOMI (2,039,280 lamports).
+   this amount is 0.00203928 DOMI (2,039,280 satomis).
 
 #### Command Line
 
@@ -896,7 +896,7 @@ From the withdrawal address, the [Associated Token Account](https://spl.domichai
 instruction. Note that it is possible that the ATA address does not yet exist, at which point the
 exchange should fund the account on behalf of the user. For SPL Token v2
 accounts, funding the withdrawal account will require 0.00203928 DOMI (2,039,280
-lamports).
+satomis).
 
 Template `spl-token transfer` command for a withdrawal:
 

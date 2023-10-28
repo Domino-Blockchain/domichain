@@ -54,19 +54,19 @@ impl PreAccount {
 
         // An account not assigned to the program cannot have its balance decrease.
         if program_id != pre.owner() // line coverage used to get branch coverage
-         && pre.lamports() > post.lamports()
+         && pre.satomis() > post.satomis()
         {
-            return Err(InstructionError::ExternalAccountLamportSpend);
+            return Err(InstructionError::ExternalAccountSatomiSpend);
         }
 
         // The balance of read-only and executable accounts may not change
-        let lamports_changed = pre.lamports() != post.lamports();
-        if lamports_changed {
+        let satomis_changed = pre.satomis() != post.satomis();
+        if satomis_changed {
             if !is_writable {
-                return Err(InstructionError::ReadonlyLamportChange);
+                return Err(InstructionError::ReadonlySatomiChange);
             }
             if pre.executable() {
-                return Err(InstructionError::ExecutableLamportChange);
+                return Err(InstructionError::ExecutableSatomiChange);
             }
         }
 
@@ -101,7 +101,7 @@ impl PreAccount {
         // executable is one-way (false->true) and only the account owner may set it.
         let executable_changed = pre.executable() != post.executable();
         if executable_changed {
-            if !rent.is_exempt(post.lamports(), post.data().len()) {
+            if !rent.is_exempt(post.satomis(), post.data().len()) {
                 return Err(InstructionError::ExecutableAccountNotRentExempt);
             }
             if !is_writable // line coverage used to get branch coverage
@@ -121,7 +121,7 @@ impl PreAccount {
         if outermost_call {
             timings.total_account_count = timings.total_account_count.saturating_add(1);
             if owner_changed
-                || lamports_changed
+                || satomis_changed
                 || data_len_changed
                 || executable_changed
                 || rent_epoch_changed
@@ -150,8 +150,8 @@ impl PreAccount {
         self.account.data()
     }
 
-    pub fn lamports(&self) -> u64 {
-        self.account.lamports()
+    pub fn satomis(&self) -> u64 {
+        self.account.satomis()
     }
 
     pub fn executable(&self) -> bool {
@@ -217,13 +217,13 @@ mod tests {
                     &domichain_sdk::pubkey::new_rand(),
                     AccountSharedData::from(Account {
                         owner: *owner,
-                        lamports: std::u64::MAX,
+                        satomis: std::u64::MAX,
                         ..Account::default()
                     }),
                 ),
                 post: AccountSharedData::from(Account {
                     owner: *owner,
-                    lamports: std::u64::MAX,
+                    satomis: std::u64::MAX,
                     ..Account::default()
                 }),
             }
@@ -237,9 +237,9 @@ mod tests {
             self.post.set_executable(post);
             self
         }
-        pub fn lamports(mut self, pre: u64, post: u64) -> Self {
-            self.pre.account.set_lamports(pre);
-            self.post.set_lamports(post);
+        pub fn satomis(mut self, pre: u64, post: u64) -> Self {
+            self.pre.account.set_satomis(pre);
+            self.post.set_satomis(post);
             self
         }
         pub fn owner(mut self, post: &Pubkey) -> Self {
@@ -395,33 +395,33 @@ mod tests {
         assert_eq!(
             Change::new(&owner, &owner)
                 .executable(true, true)
-                .lamports(1, 2)
+                .satomis(1, 2)
                 .verify(),
-            Err(InstructionError::ExecutableLamportChange),
-            "owner should not be able to add lamports once marked executable"
+            Err(InstructionError::ExecutableSatomiChange),
+            "owner should not be able to add satomis once marked executable"
         );
         assert_eq!(
             Change::new(&owner, &owner)
                 .executable(true, true)
-                .lamports(1, 2)
+                .satomis(1, 2)
                 .verify(),
-            Err(InstructionError::ExecutableLamportChange),
-            "owner should not be able to add lamports once marked executable"
+            Err(InstructionError::ExecutableSatomiChange),
+            "owner should not be able to add satomis once marked executable"
         );
         assert_eq!(
             Change::new(&owner, &owner)
                 .executable(true, true)
-                .lamports(2, 1)
+                .satomis(2, 1)
                 .verify(),
-            Err(InstructionError::ExecutableLamportChange),
-            "owner should not be able to subtract lamports once marked executable"
+            Err(InstructionError::ExecutableSatomiChange),
+            "owner should not be able to subtract satomis once marked executable"
         );
         let data = vec![1; 100];
-        let min_lamports = Rent::default().minimum_balance(data.len());
+        let min_satomis = Rent::default().minimum_balance(data.len());
         assert_eq!(
             Change::new(&owner, &owner)
                 .executable(false, true)
-                .lamports(0, min_lamports)
+                .satomis(0, min_satomis)
                 .data(data.clone(), data.clone())
                 .verify(),
             Ok(()),
@@ -429,7 +429,7 @@ mod tests {
         assert_eq!(
             Change::new(&owner, &owner)
                 .executable(false, true)
-                .lamports(0, min_lamports - 1)
+                .satomis(0, min_satomis - 1)
                 .data(data.clone(), data)
                 .verify(),
             Err(InstructionError::ExecutableAccountNotRentExempt),
@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn test_verify_account_changes_deduct_lamports_and_reassign_account() {
+    fn test_verify_account_changes_deduct_satomis_and_reassign_account() {
         let alice_program_id = domichain_sdk::pubkey::new_rand();
         let bob_program_id = domichain_sdk::pubkey::new_rand();
 
@@ -513,37 +513,37 @@ mod tests {
         assert_eq!(
             Change::new(&alice_program_id, &alice_program_id)
             .owner(&bob_program_id)
-            .lamports(42, 1)
+            .satomis(42, 1)
             .data(vec![42], vec![0])
             .verify(),
         Ok(()),
-        "alice should be able to deduct lamports and give the account to bob if the data is zeroed",
+        "alice should be able to deduct satomis and give the account to bob if the data is zeroed",
     );
     }
 
     #[test]
-    fn test_verify_account_changes_lamports() {
+    fn test_verify_account_changes_satomis() {
         let alice_program_id = domichain_sdk::pubkey::new_rand();
 
         assert_eq!(
             Change::new(&alice_program_id, &system_program::id())
-                .lamports(42, 0)
+                .satomis(42, 0)
                 .read_only()
                 .verify(),
-            Err(InstructionError::ExternalAccountLamportSpend),
+            Err(InstructionError::ExternalAccountSatomiSpend),
             "debit should fail, even if system program"
         );
         assert_eq!(
             Change::new(&alice_program_id, &alice_program_id)
-                .lamports(42, 0)
+                .satomis(42, 0)
                 .read_only()
                 .verify(),
-            Err(InstructionError::ReadonlyLamportChange),
+            Err(InstructionError::ReadonlySatomiChange),
             "debit should fail, even if owning program"
         );
         assert_eq!(
             Change::new(&alice_program_id, &system_program::id())
-                .lamports(42, 0)
+                .satomis(42, 0)
                 .owner(&system_program::id())
                 .verify(),
             Err(InstructionError::ModifiedProgramId),
@@ -551,7 +551,7 @@ mod tests {
         );
         assert_eq!(
             Change::new(&system_program::id(), &system_program::id())
-                .lamports(42, 0)
+                .satomis(42, 0)
                 .owner(&alice_program_id)
                 .verify(),
             Ok(()),

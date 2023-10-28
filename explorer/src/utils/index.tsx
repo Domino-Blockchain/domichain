@@ -6,8 +6,8 @@ import {
 import { PublicKey } from "@domichain/web3.js";
 
 // Switch to web3 constant when web3 updates superstruct
-export const LAMPORTS_PER_DOMI = 1_000_000_000;
-export const MICRO_LAMPORTS_PER_LAMPORT = 1_000_000;
+export const SATOMIS_PER_DOMI = 1_000_000_000;
+export const MICRO_SATOMIS_PER_SATOMI = 1_000_000;
 
 export const NUM_TICKS_PER_SECOND = 160;
 export const DEFAULT_TICKS_PER_SLOT = 64;
@@ -29,58 +29,58 @@ export function normalizeTokenAmount(
   return rawTokens / Math.pow(10, decimals);
 }
 
-export function microLamportsToLamports(
-  microLamports: number | bigint
+export function microSatomisToSatomis(
+  microSatomis: number | bigint
 ): number {
-  if (typeof microLamports === "number") {
-    return microLamports / MICRO_LAMPORTS_PER_LAMPORT;
+  if (typeof microSatomis === "number") {
+    return microSatomis / MICRO_SATOMIS_PER_SATOMI;
   }
 
-  console.log(microLamports);
-  const microLamportsString = microLamports.toString().padStart(7, "0");
-  const splitIndex = microLamportsString.length - 6;
-  const lamportString =
-    microLamportsString.slice(0, splitIndex) +
+  console.log(microSatomis);
+  const microSatomisString = microSatomis.toString().padStart(7, "0");
+  const splitIndex = microSatomisString.length - 6;
+  const satomiString =
+    microSatomisString.slice(0, splitIndex) +
     "." +
-    microLamportsString.slice(splitIndex);
-  return parseFloat(lamportString);
+    microSatomisString.slice(splitIndex);
+  return parseFloat(satomiString);
 }
 
-export function microLamportsToLamportsString(
-  microLamports: number | bigint,
+export function microSatomisToSatomisString(
+  microSatomis: number | bigint,
   maximumFractionDigits: number = 6
 ): string {
-  const lamports = microLamportsToLamports(microLamports);
+  const satomis = microSatomisToSatomis(microSatomis);
   return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(
-    lamports
+    satomis
   );
 }
 
-export function lamportsToSol(lamports: number | BN): number {
-  if (typeof lamports === "number") {
-    return Math.abs(lamports) / LAMPORTS_PER_DOMI;
+export function satomisToSol(satomis: number | BN): number {
+  if (typeof satomis === "number") {
+    return Math.abs(satomis) / SATOMIS_PER_DOMI;
   }
 
   let signMultiplier = 1;
-  if (lamports.isNeg()) {
+  if (satomis.isNeg()) {
     signMultiplier = -1;
   }
 
-  const absLamports = lamports.abs();
-  const lamportsString = absLamports.toString(10).padStart(10, "0");
-  const splitIndex = lamportsString.length - 9;
+  const absSatomis = satomis.abs();
+  const satomisString = absSatomis.toString(10).padStart(10, "0");
+  const splitIndex = satomisString.length - 9;
   const solString =
-    lamportsString.slice(0, splitIndex) +
+    satomisString.slice(0, splitIndex) +
     "." +
-    lamportsString.slice(splitIndex);
+    satomisString.slice(splitIndex);
   return signMultiplier * parseFloat(solString);
 }
 
-export function lamportsToSolString(
-  lamports: number | BN,
+export function satomisToSolString(
+  satomis: number | BN,
   maximumFractionDigits: number = 9
 ): string {
-  const domi = lamportsToSol(lamports);
+  const domi = satomisToSol(satomis);
   return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(domi);
 }
 
@@ -89,17 +89,17 @@ export function numberWithSeparator(s: string) {
 }
 
 export function SolBalance({
-  lamports,
+  satomis,
   maximumFractionDigits = 9,
 }: {
-  lamports: number | BN;
+  satomis: number | BN;
   maximumFractionDigits?: number;
 }) {
   return (
     <span>
       ◎
       <span className="font-monospace">
-        {lamportsToSolString(lamports, maximumFractionDigits)}
+        {satomisToSolString(satomis, maximumFractionDigits)}
       </span>
     </span>
   );

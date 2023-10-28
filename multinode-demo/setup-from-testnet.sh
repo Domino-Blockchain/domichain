@@ -51,7 +51,7 @@ $domichain_keygen new --no-passphrase -so "$DOMICHAIN_CONFIG_DIR"/bootstrap-vali
 $domichain_ledger_tool create-snapshot \
   --ledger "$DOMICHAIN_CONFIG_DIR"/latest-testnet-snapshot \
   --faucet-pubkey "$DOMICHAIN_CONFIG_DIR"/faucet.json \
-  --faucet-lamports 500000000000000000 \
+  --faucet-satomis 500000000000000000 \
   --bootstrap-validator "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/identity.json \
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/vote-account.json \
                         "$DOMICHAIN_CONFIG_DIR"/bootstrap-validator/stake-account.json \

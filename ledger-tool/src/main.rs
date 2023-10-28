@@ -69,7 +69,7 @@ use {
         genesis_config::ClusterType,
         hash::Hash,
         inflation::Inflation,
-        native_token::{lamports_to_domi, domi_to_lamports, Domi},
+        native_token::{satomis_to_domi, domi_to_satomis, Domi},
         pubkey::Pubkey,
         rent::Rent,
         shred_version::compute_shred_version,
@@ -145,7 +145,7 @@ fn output_slot_rewards(blockstore: &Blockstore, slot: Slot, method: &LedgerOutpu
                 );
 
                 for reward in rewards {
-                    let sign = if reward.lamports < 0 { "-" } else { "" };
+                    let sign = if reward.satomis < 0 { "-" } else { "" };
                     println!(
                         "    {:<44}  {:^15}  {}◎{:<14.9}  ◎{:<18.9}   {}",
                         reward.pubkey,
@@ -155,8 +155,8 @@ fn output_slot_rewards(blockstore: &Blockstore, slot: Slot, method: &LedgerOutpu
                             "-".to_string()
                         },
                         sign,
-                        lamports_to_domi(reward.lamports.unsigned_abs()),
-                        lamports_to_domi(reward.post_balance),
+                        satomis_to_domi(reward.satomis.unsigned_abs()),
+                        satomis_to_domi(reward.post_balance),
                         reward
                             .commission
                             .map(|commission| format!("{commission:>9}%"))
@@ -373,7 +373,7 @@ fn output_account(
     encoding: UiAccountEncoding,
 ) {
     println!("{pubkey}:");
-    println!("  balance: {} DOMI", lamports_to_domi(account.lamports()));
+    println!("  balance: {} DOMI", satomis_to_domi(account.satomis()));
     println!("  owner: '{}'", account.owner());
     println!("  executable: {}", account.executable());
     if let Some(slot) = modified_slot {
@@ -575,7 +575,7 @@ fn graph_forks(bank_forks: &BankForks, config: &GraphConfig) -> String {
                         format!(
                             "\nvotes: {}, stake: {:.1} DOMI ({:.1}%)",
                             votes,
-                            lamports_to_domi(*stake),
+                            satomis_to_domi(*stake),
                             *stake as f64 / *total_stake as f64 * 100.,
                         )
                     } else {
@@ -673,7 +673,7 @@ fn graph_forks(bank_forks: &BankForks, config: &GraphConfig) -> String {
                 r#"  "last vote {}"[shape=box,label="Latest validator vote: {}\nstake: {} DOMI\nroot slot: {}\n{}"];"#,
                 node_pubkey,
                 node_pubkey,
-                lamports_to_domi(*stake),
+                satomis_to_domi(*stake),
                 vote_state.root_slot.unwrap_or(0),
                 vote_history,
             ));
@@ -695,7 +695,7 @@ fn graph_forks(bank_forks: &BankForks, config: &GraphConfig) -> String {
         dot.push(format!(
             r#"    "..."[label="...\nvotes: {}, stake: {:.1} DOMI {:.1}%"];"#,
             absent_votes,
-            lamports_to_domi(absent_stake),
+            satomis_to_domi(absent_stake),
             absent_stake as f64 / lowest_total_stake as f64 * 100.,
         ));
     }
@@ -1203,10 +1203,10 @@ fn main() {
         .help("Print account data in specified format when printing account contents.");
 
     let rent = Rent::default();
-    let default_bootstrap_validator_lamports = &domi_to_lamports(500.0)
+    let default_bootstrap_validator_satomis = &domi_to_satomis(500.0)
         .max(VoteState::get_rent_exempt_reserve(&rent))
         .to_string();
-    let default_bootstrap_validator_stake_lamports = &domi_to_lamports(0.5)
+    let default_bootstrap_validator_stake_satomis = &domi_to_satomis(0.5)
         .max(rent.minimum_balance(StakeState::size_of()))
         .to_string();
     let default_graph_vote_account_mode = GraphVoteAccountMode::default();
@@ -1649,13 +1649,13 @@ fn main() {
                            which could be a slot in a galaxy far far away"),
             )
             .arg(
-                Arg::with_name("faucet_lamports")
+                Arg::with_name("faucet_satomis")
                     .short("t")
-                    .long("faucet-lamports")
-                    .value_name("LAMPORTS")
+                    .long("faucet-satomis")
+                    .value_name("SATOMIS")
                     .takes_value(true)
                     .requires("faucet_pubkey")
-                    .help("Number of lamports to assign to the faucet"),
+                    .help("Number of satomis to assign to the faucet"),
             )
             .arg(
                 Arg::with_name("faucet_pubkey")
@@ -1664,7 +1664,7 @@ fn main() {
                     .value_name("PUBKEY")
                     .takes_value(true)
                     .validator(is_pubkey_or_keypair)
-                    .requires("faucet_lamports")
+                    .requires("faucet_satomis")
                     .help("Path to file containing the faucet's pubkey"),
             )
             .arg(
@@ -1690,20 +1690,20 @@ fn main() {
                     ),
             )
             .arg(
-                Arg::with_name("bootstrap_validator_lamports")
-                    .long("bootstrap-validator-lamports")
-                    .value_name("LAMPORTS")
+                Arg::with_name("bootstrap_validator_satomis")
+                    .long("bootstrap-validator-satomis")
+                    .value_name("SATOMIS")
                     .takes_value(true)
-                    .default_value(default_bootstrap_validator_lamports)
-                    .help("Number of lamports to assign to the bootstrap validator"),
+                    .default_value(default_bootstrap_validator_satomis)
+                    .help("Number of satomis to assign to the bootstrap validator"),
             )
             .arg(
-                Arg::with_name("bootstrap_validator_stake_lamports")
-                    .long("bootstrap-validator-stake-lamports")
-                    .value_name("LAMPORTS")
+                Arg::with_name("bootstrap_validator_stake_satomis")
+                    .long("bootstrap-validator-stake-satomis")
+                    .value_name("SATOMIS")
                     .takes_value(true)
-                    .default_value(default_bootstrap_validator_stake_lamports)
-                    .help("Number of lamports to assign to the bootstrap validator's stake account"),
+                    .default_value(default_bootstrap_validator_stake_satomis)
+                    .help("Number of satomis to assign to the bootstrap validator's stake account"),
             )
             .arg(
                 Arg::with_name("rent_burn_percentage")
@@ -2629,22 +2629,22 @@ fn main() {
                 let new_hard_forks = hardforks_of(arg_matches, "hard_forks");
 
                 let faucet_pubkey = pubkey_of(arg_matches, "faucet_pubkey");
-                let faucet_lamports = value_t!(arg_matches, "faucet_lamports", u64).unwrap_or(0);
+                let faucet_satomis = value_t!(arg_matches, "faucet_satomis", u64).unwrap_or(0);
 
                 let rent_burn_percentage = value_t!(arg_matches, "rent_burn_percentage", u8);
                 let hashes_per_tick = arg_matches.value_of("hashes_per_tick");
 
                 let bootstrap_stake_authorized_pubkey =
                     pubkey_of(arg_matches, "bootstrap_stake_authorized_pubkey");
-                let bootstrap_validator_lamports =
-                    value_t_or_exit!(arg_matches, "bootstrap_validator_lamports", u64);
-                let bootstrap_validator_stake_lamports =
-                    value_t_or_exit!(arg_matches, "bootstrap_validator_stake_lamports", u64);
-                let minimum_stake_lamports = rent.minimum_balance(StakeState::size_of());
-                if bootstrap_validator_stake_lamports < minimum_stake_lamports {
+                let bootstrap_validator_satomis =
+                    value_t_or_exit!(arg_matches, "bootstrap_validator_satomis", u64);
+                let bootstrap_validator_stake_satomis =
+                    value_t_or_exit!(arg_matches, "bootstrap_validator_stake_satomis", u64);
+                let minimum_stake_satomis = rent.minimum_balance(StakeState::size_of());
+                if bootstrap_validator_stake_satomis < minimum_stake_satomis {
                     eprintln!(
-                        "Error: insufficient --bootstrap-validator-stake-lamports. \
-                           Minimum amount is {minimum_stake_lamports}"
+                        "Error: insufficient --bootstrap-validator-stake-satomis. \
+                           Minimum amount is {minimum_stake_satomis}"
                     );
                     exit(1);
                 }
@@ -2802,7 +2802,7 @@ fn main() {
                         if let Some(faucet_pubkey) = faucet_pubkey {
                             bank.store_account(
                                 &faucet_pubkey,
-                                &AccountSharedData::new(faucet_lamports, 0, &system_program::id()),
+                                &AccountSharedData::new(faucet_satomis, 0, &system_program::id()),
                             );
                         }
 
@@ -2812,7 +2812,7 @@ fn main() {
                                 .unwrap()
                                 .into_iter()
                             {
-                                account.set_lamports(0);
+                                account.set_satomis(0);
                                 bank.store_account(&address, &account);
                             }
                         }
@@ -2825,7 +2825,7 @@ fn main() {
                                 exit(1);
                             });
 
-                            account.set_lamports(0);
+                            account.set_satomis(0);
                             bank.store_account(&address, &account);
                             debug!("Account removed: {address}");
                         }
@@ -2850,7 +2850,7 @@ fn main() {
                                 }
                             }
 
-                            account.set_lamports(0);
+                            account.set_satomis(0);
                             bank.store_account(&address, &account);
                             debug!("Feature gate deactivated: {address}");
                         }
@@ -2903,7 +2903,7 @@ fn main() {
                                 .unwrap()
                                 .into_iter()
                             {
-                                account.set_lamports(0);
+                                account.set_satomis(0);
                                 bank.store_account(&address, &account);
                             }
 
@@ -2923,7 +2923,7 @@ fn main() {
                                 bank.store_account(
                                     identity_pubkey,
                                     &AccountSharedData::new(
-                                        bootstrap_validator_lamports,
+                                        bootstrap_validator_satomis,
                                         0,
                                         &system_program::id(),
                                     ),
@@ -2946,7 +2946,7 @@ fn main() {
                                         vote_pubkey,
                                         &vote_account,
                                         &rent,
-                                        bootstrap_validator_stake_lamports,
+                                        bootstrap_validator_stake_satomis,
                                     ),
                                 );
                                 bank.store_account(vote_pubkey, &vote_account);
@@ -3149,7 +3149,7 @@ fn main() {
                 };
                 let scan_func = |some_account_tuple: Option<(&Pubkey, AccountSharedData, Slot)>| {
                     if let Some((pubkey, account, slot)) = some_account_tuple
-                        .filter(|(_, account, _)| Accounts::is_loadable(account.lamports()))
+                        .filter(|(_, account, _)| Accounts::is_loadable(account.satomis()))
                     {
                         if !include_sysvars && domichain_sdk::sysvar::is_sysvar_id(pubkey) {
                             return;
@@ -3307,7 +3307,7 @@ fn main() {
                                         .get_account(&feature_set::deprecate_rewards_sysvar::id())
                                         .is_some()
                                     {
-                                        // steal some lamports from the pretty old feature not to affect
+                                        // steal some satomis from the pretty old feature not to affect
                                         // capitalizaion, which doesn't affect inflation behavior!
                                         base_bank.store_account(
                                             &feature_set::deprecate_rewards_sysvar::id(),
@@ -3493,17 +3493,17 @@ fn main() {
                                         account,
                                         base_bank
                                             .get_account(pubkey)
-                                            .map(|a| a.lamports())
+                                            .map(|a| a.satomis())
                                             .unwrap_or_default(),
                                     )
                                 })
                                 .collect::<Vec<_>>();
                             rewarded_accounts.sort_unstable_by_key(
-                                |(pubkey, account, base_lamports)| {
+                                |(pubkey, account, base_satomis)| {
                                     (
                                         *account.owner(),
-                                        *base_lamports,
-                                        account.lamports() - base_lamports,
+                                        *base_satomis,
+                                        account.satomis() - base_satomis,
                                         *pubkey,
                                     )
                                 },
@@ -3522,7 +3522,7 @@ fn main() {
                                 .map(|pubkey| (*pubkey, warped_bank.get_account(pubkey).unwrap()))
                                 .collect::<Vec<_>>();
                             unchanged_accounts.sort_unstable_by_key(|(pubkey, account)| {
-                                (*account.owner(), account.lamports(), *pubkey)
+                                (*account.owner(), account.satomis(), *pubkey)
                             });
                             let unchanged_accounts = unchanged_accounts.into_iter();
 
@@ -3539,7 +3539,7 @@ fn main() {
                                 }
 
                                 if let Some(base_account) = base_bank.get_account(&pubkey) {
-                                    let delta = warped_account.lamports() - base_account.lamports();
+                                    let delta = warped_account.satomis() - base_account.satomis();
                                     let detail_ref = stake_calculation_details.get(&pubkey);
                                     let detail: Option<&CalculationDetail> =
                                         detail_ref.as_ref().map(|detail_ref| detail_ref.value());
@@ -3547,11 +3547,11 @@ fn main() {
                                         "{:<45}({}): {} => {} (+{} {:>4.9}%) {:?}",
                                         format!("{pubkey}"), // format! is needed to pad/justify correctly.
                                         base_account.owner(),
-                                        Domi(base_account.lamports()),
-                                        Domi(warped_account.lamports()),
+                                        Domi(base_account.satomis()),
+                                        Domi(warped_account.satomis()),
                                         Domi(delta),
-                                        ((warped_account.lamports() as f64)
-                                            / (base_account.lamports() as f64)
+                                        ((warped_account.satomis() as f64)
+                                            / (base_account.satomis() as f64)
                                             * 100_f64)
                                             - 100_f64,
                                         detail,
@@ -3621,8 +3621,8 @@ fn main() {
                                                 rewarded_epoch: base_bank.epoch(),
                                                 account: format!("{pubkey}"),
                                                 owner: format!("{}", base_account.owner()),
-                                                old_balance: base_account.lamports(),
-                                                new_balance: warped_account.lamports(),
+                                                old_balance: base_account.satomis(),
+                                                new_balance: warped_account.satomis(),
                                                 data_size: base_account.data().len(),
                                                 delegation: format_or_na(detail.map(|d| d.voter)),
                                                 delegation_owner: format_or_na(
@@ -3693,7 +3693,7 @@ fn main() {
                                 }
                             }
                             if overall_delta > 0 {
-                                println!("Sum of lamports changes: {}", Domi(overall_delta));
+                                println!("Sum of satomis changes: {}", Domi(overall_delta));
                             }
                         } else {
                             if arg_matches.is_present("recalculate_capitalization") {

@@ -195,14 +195,14 @@ impl CostModel {
     ) -> u64 {
         match instruction {
             SystemInstruction::CreateAccount {
-                lamports: _lamports,
+                satomis: _satomis,
                 space,
                 owner: _owner,
             } => space,
             SystemInstruction::CreateAccountWithSeed {
                 base: _base,
                 seed: _seed,
-                lamports: _lamports,
+                satomis: _satomis,
                 space,
                 owner: _owner,
             } => space,
@@ -280,21 +280,21 @@ mod tests {
 
     #[test]
     fn test_cost_model_data_len_cost() {
-        let lamports = 0;
+        let satomis = 0;
         let owner = Pubkey::default();
         let seed = String::default();
         let space = 100;
         let base = Pubkey::default();
         for instruction in [
             SystemInstruction::CreateAccount {
-                lamports,
+                satomis,
                 space,
                 owner,
             },
             SystemInstruction::CreateAccountWithSeed {
                 base,
                 seed: seed.clone(),
-                lamports,
+                satomis,
                 space,
                 owner,
             },
@@ -317,7 +317,7 @@ mod tests {
             0,
             CostModel::calculate_account_data_size_on_deserialized_system_instruction(
                 SystemInstruction::TransferWithSeed {
-                    lamports,
+                    satomis,
                     from_seed: String::default(),
                     from_owner: Pubkey::default(),
                 }

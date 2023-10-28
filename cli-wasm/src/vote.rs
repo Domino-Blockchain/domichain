@@ -32,7 +32,7 @@ use {
     domichain_rpc_client_nonce_utils::blockhash_query::BlockhashQuery,
     domichain_sdk::{
         account::Account, commitment_config::CommitmentConfig, feature, message::Message,
-        native_token::lamports_to_domi, pubkey::Pubkey, system_instruction::SystemError,
+        native_token::satomis_to_domi, pubkey::Pubkey, system_instruction::SystemError,
         transaction::Transaction,
     },
     domichain_vote_program::{
@@ -322,10 +322,10 @@ impl VoteSubCommands for App<'_, '_> {
                         "Vote account pubkey. "),
                 )
                 .arg(
-                    Arg::with_name("lamports")
-                        .long("lamports")
+                    Arg::with_name("satomis")
+                        .long("satomis")
                         .takes_value(false)
-                        .help("Display balance in lamports instead of DOMI"),
+                        .help("Display balance in satomis instead of DOMI"),
                 )
                 .arg(
                     Arg::with_name("with_rewards")
@@ -346,7 +346,7 @@ impl VoteSubCommands for App<'_, '_> {
         )
         .subcommand(
             SubCommand::with_name("withdraw-from-vote-account")
-                .about("Withdraw lamports from a vote account into a specified account")
+                .about("Withdraw satomis from a vote account into a specified account")
                 .arg(
                     pubkey!(Arg::with_name("vote_account_pubkey")
                         .index(1)
@@ -647,7 +647,7 @@ pub fn parse_vote_get_account_command(
 ) -> Result<CliCommandInfo, CliError> {
     let vote_account_pubkey =
         pubkey_of_signer(matches, "vote_account_pubkey", wallet_manager)?.unwrap();
-    let use_lamports_unit = matches.is_present("lamports");
+    let use_satomis_unit = matches.is_present("satomis");
     let with_rewards = if matches.is_present("with_rewards") {
         Some(value_of(matches, "num_rewards_epochs").unwrap())
     } else {
@@ -656,7 +656,7 @@ pub fn parse_vote_get_account_command(
     Ok(CliCommandInfo {
         command: CliCommand::ShowVoteAccount {
             pubkey: vote_account_pubkey,
-            use_lamports_unit,
+            use_satomis_unit,
             with_rewards,
         },
         signers: vec![],
@@ -807,7 +807,7 @@ pub fn process_create_vote_account(
         .map_or(false, |feature| feature.activated_at.is_some());
     let space = VoteStateVersions::vote_state_size_of(is_feature_active) as u64;
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let vote_init = VoteInit {
             node_pubkey: identity_pubkey,
             authorized_voter: authorized_voter.unwrap_or(identity_pubkey),
@@ -829,7 +829,7 @@ pub fn process_create_vote_account(
             &config.signers[0].pubkey(),
             to,
             &vote_init,
-            lamports,
+            satomis,
             create_vote_account_config,
         )
         .with_memo(memo)
@@ -1207,7 +1207,7 @@ pub fn process_show_vote_account(
     rpc_client: &RpcClient,
     config: &CliConfig,
     vote_account_address: &Pubkey,
-    use_lamports_unit: bool,
+    use_satomis_unit: bool,
     with_rewards: Option<usize>,
 ) -> ProcessResult {
     let (vote_account, vote_state) =
@@ -1246,7 +1246,7 @@ pub fn process_show_vote_account(
         });
 
     let vote_account_data = CliVoteAccount {
-        account_balance: vote_account.lamports,
+        account_balance: vote_account.satomis,
         validator_identity: vote_state.node_pubkey.to_string(),
         authorized_voters: vote_state.authorized_voters().into(),
         authorized_withdrawer: vote_state.authorized_withdrawer.to_string(),
@@ -1256,7 +1256,7 @@ pub fn process_show_vote_account(
         recent_timestamp: vote_state.last_timestamp.clone(),
         votes,
         epoch_voting_history,
-        use_lamports_unit,
+        use_satomis_unit,
         epoch_rewards,
     };
 
@@ -1286,11 +1286,11 @@ pub fn process_withdraw_from_vote_account(
     let fee_payer = config.signers[fee_payer];
     let nonce_authority = config.signers[nonce_authority];
 
-    let build_message = |lamports| {
+    let build_message = |satomis| {
         let ixs = vec![withdraw(
             vote_account_pubkey,
             &withdraw_authority.pubkey(),
-            lamports,
+            satomis,
             destination_account_pubkey,
         )]
         .with_memo(memo)
@@ -1327,7 +1327,7 @@ pub fn process_withdraw_from_vote_account(
             let balance_remaining = current_balance.saturating_sub(withdraw_amount);
             if balance_remaining < minimum_balance && balance_remaining != 0 {
                 return Err(CliError::BadParameter(format!(
-                    "Withdraw amount too large. The vote account balance must be at least {} DOMI to remain rent exempt", lamports_to_domi(minimum_balance)
+                    "Withdraw amount too large. The vote account balance must be at least {} DOMI to remain rent exempt", satomis_to_domi(minimum_balance)
                 ))
                 .into());
             }

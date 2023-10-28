@@ -26,7 +26,7 @@
 //! #
 //! fn print_sysvar_slot_hashes(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(slot_hashes::ID, Account {
-//! #       lamports: 1009200,
+//! #       satomis: 1009200,
 //! #       data: vec![1, 0, 0, 0, 0, 0, 0, 0, 86, 190, 235, 7, 0, 0, 0, 0, 133, 242, 94, 158, 223, 253, 207, 184, 227, 194, 235, 27, 176, 98, 73, 3, 175, 201, 224, 111, 21, 65, 73, 27, 137, 73, 229, 19, 255, 192, 193, 126],
 //! #       owner: domichain_sdk::system_program::ID,
 //! #       executable: false,

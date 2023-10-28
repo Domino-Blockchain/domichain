@@ -97,7 +97,7 @@ Some programs may want to perform deserialization themselves, and they can by
 providing their own implementation of the [raw entrypoint](#program-entrypoint).
 Take note that the provided deserialization functions retain references back to
 the serialized byte array for variables that the program is allowed to modify
-(lamports, account data). The reason for this is that upon return the loader
+(satomis, account data). The reason for this is that upon return the loader
 will read those modifications so they may be committed. If a program implements
 their own deserialization function they need to ensure that any modifications
 the program wishes to commit must be written back into the input byte array.
@@ -129,11 +129,11 @@ typedef struct {
 represented as a
 [DomiAccountInfo](https://Domino-Blockchain/domichain/blob/8415c22b593f164020adc7afe782e8041d756ddf/sdk/sbf/c/inc/domichain_sdk.h#L173)
 structures. An account's place in the array signifies its meaning, for example,
-when transferring lamports an instruction may define the first account as the
+when transferring satomis an instruction may define the first account as the
 source and the second as the destination.
 
 The members of the `DomiAccountInfo` structure are read-only except for
-`lamports` and `data`. Both may be modified by the program in accordance with
+`satomis` and `data`. Both may be modified by the program in accordance with
 the [runtime enforcement
 policy](developing/programming-model/accounts.md#policy). When an instruction
 reference the same account multiple times there may be duplicate

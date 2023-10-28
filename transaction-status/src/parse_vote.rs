@@ -173,7 +173,7 @@ pub fn parse_vote(
                 }),
             })
         }
-        VoteInstruction::Withdraw(lamports) => {
+        VoteInstruction::Withdraw(satomis) => {
             check_num_vote_accounts(&instruction.accounts, 3)?;
             Ok(ParsedInstructionEnum {
                 instruction_type: "withdraw".to_string(),
@@ -181,7 +181,7 @@ pub fn parse_vote(
                     "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[1] as usize].to_string(),
                     "withdrawAuthority": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             })
         }
@@ -265,7 +265,7 @@ mod test {
 
     #[test]
     fn test_parse_vote_initialize_ix() {
-        let lamports = 55;
+        let satomis = 55;
 
         let commission = 10;
         let node_pubkey = Pubkey::new_unique();
@@ -283,7 +283,7 @@ mod test {
             &Pubkey::new_unique(),
             &vote_pubkey,
             &vote_init,
-            lamports,
+            satomis,
             vote_instruction::CreateVoteAccountConfig {
                 space: VoteStateVersions::vote_state_size_of(true) as u64,
                 ..vote_instruction::CreateVoteAccountConfig::default()
@@ -492,14 +492,14 @@ mod test {
 
     #[test]
     fn test_parse_vote_withdraw_ix() {
-        let lamports = 55;
+        let satomis = 55;
         let vote_pubkey = Pubkey::new_unique();
         let authorized_withdrawer_pubkey = Pubkey::new_unique();
         let to_pubkey = Pubkey::new_unique();
         let instruction = vote_instruction::withdraw(
             &vote_pubkey,
             &authorized_withdrawer_pubkey,
-            lamports,
+            satomis,
             &to_pubkey,
         );
         let mut message = Message::new(&[instruction], None);
@@ -515,7 +515,7 @@ mod test {
                     "voteAccount": vote_pubkey.to_string(),
                     "destination": to_pubkey.to_string(),
                     "withdrawAuthority": authorized_withdrawer_pubkey.to_string(),
-                    "lamports": lamports,
+                    "satomis": satomis,
                 }),
             }
         );

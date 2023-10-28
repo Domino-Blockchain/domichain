@@ -150,7 +150,7 @@ mod test {
         Mint::pack(mint_data, &mut data).unwrap();
         let mint_pubkey = Pubkey::new_unique();
         let mint = Account {
-            lamports: 100,
+            satomis: 100,
             data: data.to_vec(),
             owner: spl_token::id(),
             executable: false,
@@ -158,7 +158,7 @@ mod test {
         };
         let other_mint_pubkey = Pubkey::new_unique();
         let other_mint = Account {
-            lamports: 100,
+            satomis: 100,
             data: data.to_vec(),
             owner: Pubkey::new_unique(), // !is_known_spl_token_id
             executable: false,
@@ -180,14 +180,14 @@ mod test {
         TokenAccount::pack(token_data, &mut data).unwrap();
 
         let spl_token_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: data.to_vec(),
             owner: spl_token::id(),
             executable: false,
             rent_epoch: 0,
         };
         let other_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: data.to_vec(),
             owner: Pubkey::new_unique(), // !is_known_spl_token_id
             executable: false,
@@ -208,7 +208,7 @@ mod test {
         TokenAccount::pack(other_mint_data, &mut data).unwrap();
 
         let other_mint_token_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: data.to_vec(),
             owner: spl_token::id(),
             executable: false,
@@ -313,7 +313,7 @@ mod test {
 
         let mint_pubkey = Pubkey::new_unique();
         let mint = Account {
-            lamports: 100,
+            satomis: 100,
             data: mint_data.to_vec(),
             owner: spl_token_2022::id(),
             executable: false,
@@ -321,7 +321,7 @@ mod test {
         };
         let other_mint_pubkey = Pubkey::new_unique();
         let other_mint = Account {
-            lamports: 100,
+            satomis: 100,
             data: mint_data.to_vec(),
             owner: Pubkey::new_unique(),
             executable: false,
@@ -357,14 +357,14 @@ mod test {
         memo_transfer.require_incoming_transfer_memos = true.into();
 
         let spl_token_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: account_data.to_vec(),
             owner: spl_token_2022::id(),
             executable: false,
             rent_epoch: 0,
         };
         let other_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: account_data.to_vec(),
             owner: Pubkey::new_unique(),
             executable: false,
@@ -399,7 +399,7 @@ mod test {
         memo_transfer.require_incoming_transfer_memos = true.into();
 
         let other_mint_token_account = Account {
-            lamports: 100,
+            satomis: 100,
             data: account_data.to_vec(),
             owner: spl_token_2022::id(),
             executable: false,

@@ -126,13 +126,13 @@ function OverviewCard({
         <tr>
           <td>Balance (DOMI)</td>
           <td className="text-lg-end text-uppercase">
-            <SolBalance lamports={account.lamports || 0} />
+            <SolBalance satomis={account.satomis || 0} />
           </td>
         </tr>
         <tr>
           <td>Rent Reserve (DOMI)</td>
           <td className="text-lg-end">
-            <SolBalance lamports={stakeAccount.meta.rentExemptReserve} />
+            <SolBalance satomis={stakeAccount.meta.rentExemptReserve} />
           </td>
         </tr>
         {hideDelegation && (
@@ -191,7 +191,7 @@ function DelegationCard({
             <tr>
               <td>Delegated Stake (DOMI)</td>
               <td className="text-lg-end">
-                <SolBalance lamports={stake.delegation.stake} />
+                <SolBalance satomis={stake.delegation.stake} />
               </td>
             </tr>
 
@@ -200,14 +200,14 @@ function DelegationCard({
                 <tr>
                   <td>Active Stake (DOMI)</td>
                   <td className="text-lg-end">
-                    <SolBalance lamports={activation.active} />
+                    <SolBalance satomis={activation.active} />
                   </td>
                 </tr>
 
                 <tr>
                   <td>Inactive Stake (DOMI)</td>
                   <td className="text-lg-end">
-                    <SolBalance lamports={activation.inactive} />
+                    <SolBalance satomis={activation.inactive} />
                   </td>
                 </tr>
               </>

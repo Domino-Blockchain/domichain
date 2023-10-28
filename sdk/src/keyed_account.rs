@@ -42,8 +42,8 @@ impl<'a> KeyedAccount<'a> {
         self.is_writable
     }
 
-    pub fn lamports(&self) -> Result<u64, InstructionError> {
-        Ok(self.try_borrow()?.lamports())
+    pub fn satomis(&self) -> Result<u64, InstructionError> {
+        Ok(self.try_borrow()?.satomis())
     }
 
     pub fn data_len(&self) -> Result<usize, InstructionError> {

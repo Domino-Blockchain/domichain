@@ -99,7 +99,7 @@ pub fn meta_from(account: &AccountSharedData) -> Option<Meta> {
 fn redelegate_stake(
     invoke_context: &InvokeContext,
     stake: &mut Stake,
-    stake_lamports: u64,
+    stake_satomis: u64,
     voter_pubkey: &Pubkey,
     vote_state: &VoteState,
     clock: &Clock,
@@ -108,15 +108,15 @@ fn redelegate_stake(
 ) -> Result<(), StakeError> {
     // If stake is currently active:
     if stake.stake(clock.epoch, Some(stake_history)) != 0 {
-        let stake_lamports_ok = if invoke_context
+        let stake_satomis_ok = if invoke_context
             .feature_set
             .is_active(&feature_set::stake_redelegate_instruction::id())
         {
-            // When a stake account is redelegated, the delegated lamports from the source stake
+            // When a stake account is redelegated, the delegated satomis from the source stake
             // account are transferred to a new stake account. Do not permit the deactivation of
             // the source stake account to be rescinded, by more generally requiring the delegation
-            // be configured with the expected amount of stake lamports before rescinding.
-            stake_lamports >= stake.delegation.stake
+            // be configured with the expected amount of stake satomis before rescinding.
+            stake_satomis >= stake.delegation.stake
         } else {
             true
         };
@@ -126,7 +126,7 @@ fn redelegate_stake(
         // we rescind deactivation
         if stake.delegation.voter_pubkey == *voter_pubkey
             && clock.epoch == stake.delegation.deactivation_epoch
-            && stake_lamports_ok
+            && stake_satomis_ok
         {
             stake.delegation.deactivation_epoch = std::u64::MAX;
             return Ok(());
@@ -139,7 +139,7 @@ fn redelegate_stake(
     // deactivated this epoch, or has fully de-activated.
     // Redelegation implies either re-activation or un-deactivation
 
-    stake.delegation.stake = stake_lamports;
+    stake.delegation.stake = stake_satomis;
     stake.delegation.activation_epoch = clock.epoch;
     stake.delegation.deactivation_epoch = std::u64::MAX;
     stake.delegation.voter_pubkey = *voter_pubkey;
@@ -166,13 +166,13 @@ pub(crate) fn new_stake(
     }
 }
 
-/// captures a rewards round as lamports to be awarded
-///  and the total points over which those lamports
+/// captures a rewards round as satomis to be awarded
+///  and the total points over which those satomis
 ///  are to be distributed
 //  basically read as rewards/points, but in integers instead of as an f64
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PointValue {
-    pub rewards: u64, // lamports to split
+    pub rewards: u64, // satomis to split
     pub points: u128, // over these points
 }
 
@@ -358,7 +358,7 @@ struct CalculatedStakeRewards {
 ///   * staker_rewards to be distributed
 ///   * voter_rewards to be distributed
 ///   * new value for credits_observed in the stake
-/// returns None if there's no payout or if any deserved payout is < 1 lamport
+/// returns None if there's no payout or if any deserved payout is < 1 satomi
 fn calculate_stake_rewards(
     rewarded_epoch: Epoch,
     stake: &Stake,
@@ -425,7 +425,7 @@ fn calculate_stake_rewards(
 
     let rewards = u64::try_from(rewards).unwrap();
 
-    // don't bother trying to split if fractional lamports got truncated
+    // don't bother trying to split if fractional satomis got truncated
     if rewards == 0 {
         if let Some(inflation_point_calc_tracer) = inflation_point_calc_tracer.as_ref() {
             inflation_point_calc_tracer(&SkippedReason::ZeroReward.into());
@@ -443,7 +443,7 @@ fn calculate_stake_rewards(
     }
 
     if (voter_rewards == 0 || staker_rewards == 0) && is_split {
-        // don't collect if we lose a whole lamport somewhere
+        // don't collect if we lose a whole satomi somewhere
         //  is_split means there should be tokens on both sides,
         //  uncool to move credits_observed if one side didn't get paid
         if let Some(inflation_point_calc_tracer) = inflation_point_calc_tracer.as_ref() {
@@ -467,7 +467,7 @@ pub fn initialize(
     feature_set: &FeatureSet,
 ) -> Result<(), InstructionError> {
     if stake_account.get_data().len() != StakeState::size_of() {
-        return Err(dbg!(InstructionError::InvalidAccountData));
+        return Err(InstructionError::InvalidAccountData);
     }
     if let StakeState::Uninitialized = stake_account.get_state()? {
         let rent_exempt_reserve = rent.minimum_balance(stake_account.get_data().len());
@@ -479,7 +479,7 @@ pub fn initialize(
             rent_exempt_reserve + minimum_delegation
         };
 
-        if stake_account.get_lamports() >= minimum_balance {
+        if stake_account.get_satomis() >= minimum_balance {
             stake_account.set_state(&StakeState::Initialized(Meta {
                 rent_exempt_reserve,
                 authorized: *authorized,
@@ -489,7 +489,7 @@ pub fn initialize(
             Err(InstructionError::InsufficientFunds)
         }
     } else {
-        Err(dbg!(InstructionError::InvalidAccountData))
+        Err(InstructionError::InvalidAccountData)
     }
 }
 
@@ -532,7 +532,7 @@ pub fn authorize(
             )?;
             stake_account.set_state(&StakeState::Initialized(meta))
         }
-        _ => Err(dbg!(InstructionError::InvalidAccountData)),
+        _ => Err(InstructionError::InvalidAccountData),
     }
 }
 
@@ -627,7 +627,7 @@ pub fn delegate(
             )?;
             stake_account.set_state(&StakeState::Stake(meta, stake))
         }
-        _ => Err(dbg!(InstructionError::InvalidAccountData)),
+        _ => Err(InstructionError::InvalidAccountData),
     }
 }
 
@@ -642,7 +642,7 @@ pub fn deactivate(
 
         stake_account.set_state(&StakeState::Stake(meta, stake))
     } else {
-        Err(dbg!(InstructionError::InvalidAccountData))
+        Err(InstructionError::InvalidAccountData)
     }
 }
 
@@ -661,7 +661,7 @@ pub fn set_lockup(
             meta.set_lockup(lockup, signers, clock)?;
             stake_account.set_state(&StakeState::Stake(meta, stake))
         }
-        _ => Err(dbg!(InstructionError::InvalidAccountData)),
+        _ => Err(InstructionError::InvalidAccountData),
     }
 }
 
@@ -670,7 +670,7 @@ pub fn split(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     stake_account_index: IndexOfAccount,
-    lamports: u64,
+    satomis: u64,
     split_index: IndexOfAccount,
     signers: &HashSet<Pubkey>,
 ) -> Result<(), InstructionError> {
@@ -680,16 +680,16 @@ pub fn split(
         return Err(InstructionError::IncorrectProgramId);
     }
     if split.get_data().len() != StakeState::size_of() {
-        return Err(dbg!(InstructionError::InvalidAccountData));
+        return Err(InstructionError::InvalidAccountData);
     }
     if !matches!(split.get_state()?, StakeState::Uninitialized) {
-        return Err(dbg!(InstructionError::InvalidAccountData));
+        return Err(InstructionError::InvalidAccountData);
     }
-    let split_lamport_balance = split.get_lamports();
+    let split_satomi_balance = split.get_satomis();
     drop(split);
     let stake_account = instruction_context
         .try_borrow_instruction_account(transaction_context, stake_account_index)?;
-    if lamports > stake_account.get_lamports() {
+    if satomis > stake_account.get_satomis() {
         return Err(InstructionError::InsufficientFunds);
     }
     let stake_state = stake_account.get_state()?;
@@ -705,22 +705,22 @@ pub fn split(
                 instruction_context,
                 stake_account_index,
                 split_index,
-                lamports,
+                satomis,
                 &meta,
                 Some(&stake),
                 minimum_delegation,
             )?;
 
             // split the stake, subtract rent_exempt_balance unless
-            // the destination account already has those lamports
+            // the destination account already has those satomis
             // in place.
             // this means that the new stake account will have a stake equivalent to
-            // lamports minus rent_exempt_reserve if it starts out with a zero balance
+            // satomis minus rent_exempt_reserve if it starts out with a zero balance
             let (remaining_stake_delta, split_stake_amount) =
                 if validated_split_info.source_remaining_balance == 0 {
                     // If split amount equals the full source stake (as implied by 0
                     // source_remaining_balance), the new split stake must equal the same
-                    // amount, regardless of any current lamport balance in the split account.
+                    // amount, regardless of any current satomi balance in the split account.
                     // Since split accounts retain the state of their source account, this
                     // prevents any magic activation of stake by prefunding the split account.
                     //
@@ -728,26 +728,26 @@ pub fn split(
                     // original rent_exempt_reserve and the split_rent_exempt_reserve, in order
                     // to prevent magic activation of stake by splitting between accounts of
                     // different sizes.
-                    let remaining_stake_delta = lamports.saturating_sub(meta.rent_exempt_reserve);
+                    let remaining_stake_delta = satomis.saturating_sub(meta.rent_exempt_reserve);
                     (remaining_stake_delta, remaining_stake_delta)
                 } else {
                     // Otherwise, the new split stake should reflect the entire split
-                    // requested, less any lamports needed to cover the split_rent_exempt_reserve.
+                    // requested, less any satomis needed to cover the split_rent_exempt_reserve.
 
                     if invoke_context
                         .feature_set
                         .is_active(&clean_up_delegation_errors::id())
-                        && stake.delegation.stake.saturating_sub(lamports) < minimum_delegation
+                        && stake.delegation.stake.saturating_sub(satomis) < minimum_delegation
                     {
                         return Err(StakeError::InsufficientDelegation.into());
                     }
 
                     (
-                        lamports,
-                        lamports.saturating_sub(
+                        satomis,
+                        satomis.saturating_sub(
                             validated_split_info
                                 .destination_rent_exempt_reserve
-                                .saturating_sub(split_lamport_balance),
+                                .saturating_sub(split_satomi_balance),
                         ),
                     )
                 };
@@ -774,7 +774,7 @@ pub fn split(
         }
         StakeState::Initialized(meta) => {
             meta.authorized.check(signers, StakeAuthorize::Staker)?;
-            let additional_required_lamports = if invoke_context
+            let additional_required_satomis = if invoke_context
                 .feature_set
                 .is_active(&stake_allow_zero_undelegated_amount::id())
             {
@@ -788,10 +788,10 @@ pub fn split(
                 instruction_context,
                 stake_account_index,
                 split_index,
-                lamports,
+                satomis,
                 &meta,
                 None,
-                additional_required_lamports,
+                additional_required_satomis,
             )?;
             let mut split_meta = meta;
             split_meta.rent_exempt_reserve = validated_split_info.destination_rent_exempt_reserve;
@@ -808,24 +808,24 @@ pub fn split(
                 return Err(InstructionError::MissingRequiredSignature);
             }
         }
-        _ => return Err(dbg!(InstructionError::InvalidAccountData)),
+        _ => return Err(InstructionError::InvalidAccountData),
     }
 
     // Deinitialize state upon zero balance
     let mut stake_account = instruction_context
         .try_borrow_instruction_account(transaction_context, stake_account_index)?;
-    if lamports == stake_account.get_lamports() {
+    if satomis == stake_account.get_satomis() {
         stake_account.set_state(&StakeState::Uninitialized)?;
     }
     drop(stake_account);
 
     let mut split =
         instruction_context.try_borrow_instruction_account(transaction_context, split_index)?;
-    split.checked_add_lamports(lamports)?;
+    split.checked_add_satomis(satomis)?;
     drop(split);
     let mut stake_account = instruction_context
         .try_borrow_instruction_account(transaction_context, stake_account_index)?;
-    stake_account.checked_sub_lamports(lamports)?;
+    stake_account.checked_sub_satomis(satomis)?;
     Ok(())
 }
 
@@ -859,7 +859,7 @@ pub fn merge(
     let stake_merge_kind = MergeKind::get_if_mergeable(
         invoke_context,
         &stake_account.get_state()?,
-        stake_account.get_lamports(),
+        stake_account.get_satomis(),
         clock,
         stake_history,
     )?;
@@ -874,7 +874,7 @@ pub fn merge(
     let source_merge_kind = MergeKind::get_if_mergeable(
         invoke_context,
         &source_account.get_state()?,
-        source_account.get_lamports(),
+        source_account.get_satomis(),
         clock,
         stake_history,
     )?;
@@ -888,9 +888,9 @@ pub fn merge(
     source_account.set_state(&StakeState::Uninitialized)?;
 
     // Drain the source stake account
-    let lamports = source_account.get_lamports();
-    source_account.checked_sub_lamports(lamports)?;
-    stake_account.checked_add_lamports(lamports)?;
+    let satomis = source_account.get_satomis();
+    source_account.checked_sub_satomis(satomis)?;
+    stake_account.checked_add_satomis(satomis)?;
     Ok(())
 }
 
@@ -925,7 +925,7 @@ pub fn redelegate(
             StakeState::size_of(),
             uninitialized_stake_account.get_data().len()
         );
-        return Err(dbg!(InstructionError::InvalidAccountData));
+        return Err(InstructionError::InvalidAccountData);
     }
     if !matches!(
         uninitialized_stake_account.get_state()?,
@@ -977,7 +977,7 @@ pub fn redelegate(
             (meta, status.effective)
         } else {
             ic_msg!(invoke_context, "invalid stake account data",);
-            return Err(dbg!(InstructionError::InvalidAccountData));
+            return Err(InstructionError::InvalidAccountData);
         };
 
     // deactivate `stake_account`
@@ -986,8 +986,8 @@ pub fn redelegate(
     deactivate(stake_account, &clock, signers)?;
 
     // transfer the effective stake to the uninitialized stake account
-    stake_account.checked_sub_lamports(effective_stake)?;
-    uninitialized_stake_account.checked_add_lamports(effective_stake)?;
+    stake_account.checked_sub_satomis(effective_stake)?;
+    uninitialized_stake_account.checked_add_satomis(effective_stake)?;
 
     // initialize and schedule `uninitialized_stake_account` for activation
     let sysvar_cache = invoke_context.get_sysvar_cache();
@@ -1020,7 +1020,7 @@ pub fn withdraw(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     stake_account_index: IndexOfAccount,
-    lamports: u64,
+    satomis: u64,
     to_index: IndexOfAccount,
     clock: &Clock,
     stake_history: &StakeHistory,
@@ -1078,7 +1078,7 @@ pub fn withdraw(
             }
             (Lockup::default(), 0, false) // no lockup, no restrictions
         }
-        _ => return Err(dbg!(InstructionError::InvalidAccountData)),
+        _ => return Err(InstructionError::InvalidAccountData),
     };
 
     // verify that lockup has expired or that the withdrawal is signed by
@@ -1101,31 +1101,31 @@ pub fn withdraw(
         return Err(StakeError::LockupInForce.into());
     }
 
-    let lamports_and_reserve = checked_add(lamports, reserve)?;
+    let satomis_and_reserve = checked_add(satomis, reserve)?;
     // if the stake is active, we mustn't allow the account to go away
     if is_staked // line coverage for branch coverage
-            && lamports_and_reserve > stake_account.get_lamports()
+            && satomis_and_reserve > stake_account.get_satomis()
     {
         return Err(InstructionError::InsufficientFunds);
     }
 
-    if lamports != stake_account.get_lamports() // not a full withdrawal
-            && lamports_and_reserve > stake_account.get_lamports()
+    if satomis != stake_account.get_satomis() // not a full withdrawal
+            && satomis_and_reserve > stake_account.get_satomis()
     {
         assert!(!is_staked);
         return Err(InstructionError::InsufficientFunds);
     }
 
     // Deinitialize state upon zero balance
-    if lamports == stake_account.get_lamports() {
+    if satomis == stake_account.get_satomis() {
         stake_account.set_state(&StakeState::Uninitialized)?;
     }
 
-    stake_account.checked_sub_lamports(lamports)?;
+    stake_account.checked_sub_satomis(satomis)?;
     drop(stake_account);
     let mut to =
         instruction_context.try_borrow_instruction_account(transaction_context, to_index)?;
-    to.checked_add_lamports(lamports)?;
+    to.checked_add_satomis(satomis)?;
     Ok(())
 }
 
@@ -1177,7 +1177,7 @@ pub(crate) fn deactivate_delinquent(
             Err(StakeError::MinimumDelinquentEpochsForDeactivationNotMet.into())
         }
     } else {
-        Err(dbg!(InstructionError::InvalidAccountData))
+        Err(InstructionError::InvalidAccountData)
     }
 }
 
@@ -1195,7 +1195,7 @@ fn validate_delegated_amount(
     feature_set: &FeatureSet,
 ) -> Result<ValidatedDelegatedInfo, InstructionError> {
     let stake_amount = account
-        .get_lamports()
+        .get_satomis()
         .saturating_sub(meta.rent_exempt_reserve); // can't stake the rent
 
     // Stake accounts may be initialized with a stake amount below the minimum delegation so check
@@ -1219,7 +1219,7 @@ struct ValidatedSplitInfo {
 
 /// Ensure the split amount is valid.  This checks the source and destination accounts meet the
 /// minimum balance requirements, which is the rent exempt reserve plus the minimum stake
-/// delegation, and that the source account has enough lamports for the request split amount.  If
+/// delegation, and that the source account has enough satomis for the request split amount.  If
 /// not, return an error.
 fn validate_split_amount(
     invoke_context: &InvokeContext,
@@ -1227,40 +1227,40 @@ fn validate_split_amount(
     instruction_context: &InstructionContext,
     source_account_index: IndexOfAccount,
     destination_account_index: IndexOfAccount,
-    lamports: u64,
+    satomis: u64,
     source_meta: &Meta,
     source_stake: Option<&Stake>,
-    additional_required_lamports: u64,
+    additional_required_satomis: u64,
 ) -> Result<ValidatedSplitInfo, InstructionError> {
     let source_account = instruction_context
         .try_borrow_instruction_account(transaction_context, source_account_index)?;
-    let source_lamports = source_account.get_lamports();
+    let source_satomis = source_account.get_satomis();
     let source_data_len = source_account.get_data().len();
     drop(source_account);
     let destination_account = instruction_context
         .try_borrow_instruction_account(transaction_context, destination_account_index)?;
-    let destination_lamports = destination_account.get_lamports();
+    let destination_satomis = destination_account.get_satomis();
     let destination_data_len = destination_account.get_data().len();
     drop(destination_account);
 
     // Split amount has to be something
-    if lamports == 0 {
+    if satomis == 0 {
         return Err(InstructionError::InsufficientFunds);
     }
 
     // Obviously cannot split more than what the source account has
-    if lamports > source_lamports {
+    if satomis > source_satomis {
         return Err(InstructionError::InsufficientFunds);
     }
 
-    // Verify that the source account still has enough lamports left after splitting:
+    // Verify that the source account still has enough satomis left after splitting:
     // EITHER at least the minimum balance, OR zero (in this case the source
-    // account is transferring all lamports to new destination account, and the source
+    // account is transferring all satomis to new destination account, and the source
     // account will be closed)
     let source_minimum_balance = source_meta
         .rent_exempt_reserve
-        .saturating_add(additional_required_lamports);
-    let source_remaining_balance = source_lamports.saturating_sub(lamports);
+        .saturating_add(additional_required_satomis);
+    let source_remaining_balance = source_satomis.saturating_sub(satomis);
     if source_remaining_balance == 0 {
         // full amount is a withdrawal
         // nothing to do here
@@ -1290,10 +1290,10 @@ fn validate_split_amount(
         )
     };
     let destination_minimum_balance =
-        destination_rent_exempt_reserve.saturating_add(additional_required_lamports);
+        destination_rent_exempt_reserve.saturating_add(additional_required_satomis);
     let destination_balance_deficit =
-        destination_minimum_balance.saturating_sub(destination_lamports);
-    if lamports < destination_balance_deficit {
+        destination_minimum_balance.saturating_sub(destination_satomis);
+    if satomis < destination_balance_deficit {
         return Err(InstructionError::InsufficientFunds);
     }
 
@@ -1303,15 +1303,15 @@ fn validate_split_amount(
     // The *delegation* requirements are different than the *balance* requirements.  If the
     // destination account is prefunded with a balance of `rent exempt reserve + minimum stake
     // delegation - 1`, the minimum split amount to satisfy the *balance* requirements is 1
-    // lamport.  And since *only* the split amount is immediately staked in the destination
+    // satomi.  And since *only* the split amount is immediately staked in the destination
     // account, the split amount must be at least the minimum stake delegation.  So if the minimum
-    // stake delegation was 10 lamports, then a split amount of 1 lamport would not meet the
+    // stake delegation was 10 satomis, then a split amount of 1 satomi would not meet the
     // *delegation* requirements.
     if !invoke_context
         .feature_set
         .is_active(&clean_up_delegation_errors::id())
         && source_stake.is_some()
-        && lamports < additional_required_lamports
+        && satomis < additional_required_satomis
     {
         return Err(InstructionError::InsufficientFunds);
     }
@@ -1349,7 +1349,7 @@ impl MergeKind {
     fn get_if_mergeable(
         invoke_context: &InvokeContext,
         stake_state: &StakeState,
-        stake_lamports: u64,
+        stake_satomis: u64,
         clock: &Clock,
         stake_history: &StakeHistory,
     ) -> Result<Self, InstructionError> {
@@ -1362,7 +1362,7 @@ impl MergeKind {
                     .stake_activating_and_deactivating(clock.epoch, Some(stake_history));
 
                 match (status.effective, status.activating, status.deactivating) {
-                    (0, 0, 0) => Ok(Self::Inactive(*meta, stake_lamports)),
+                    (0, 0, 0) => Ok(Self::Inactive(*meta, stake_satomis)),
                     (0, _, _) => Ok(Self::ActivationEpoch(*meta, *stake)),
                     (_, 0, 0) => Ok(Self::FullyActive(*meta, *stake)),
                     _ => {
@@ -1372,8 +1372,8 @@ impl MergeKind {
                     }
                 }
             }
-            StakeState::Initialized(meta) => Ok(Self::Inactive(*meta, stake_lamports)),
-            _ => Err(dbg!(InstructionError::InvalidAccountData)),
+            StakeState::Initialized(meta) => Ok(Self::Inactive(*meta, stake_satomis)),
+            _ => Err(InstructionError::InvalidAccountData),
         }
     }
 
@@ -1468,22 +1468,22 @@ impl MergeKind {
         let merged_state = match (self, source) {
             (Self::Inactive(_, _), Self::Inactive(_, _)) => None,
             (Self::Inactive(_, _), Self::ActivationEpoch(_, _)) => None,
-            (Self::ActivationEpoch(meta, mut stake), Self::Inactive(_, source_lamports)) => {
-                stake.delegation.stake = checked_add(stake.delegation.stake, source_lamports)?;
+            (Self::ActivationEpoch(meta, mut stake), Self::Inactive(_, source_satomis)) => {
+                stake.delegation.stake = checked_add(stake.delegation.stake, source_satomis)?;
                 Some(StakeState::Stake(meta, stake))
             }
             (
                 Self::ActivationEpoch(meta, mut stake),
                 Self::ActivationEpoch(source_meta, source_stake),
             ) => {
-                let source_lamports = checked_add(
+                let source_satomis = checked_add(
                     source_meta.rent_exempt_reserve,
                     source_stake.delegation.stake,
                 )?;
                 merge_delegation_stake_and_credits_observed(
                     invoke_context,
                     &mut stake,
-                    source_lamports,
+                    source_satomis,
                     source_stake.credits_observed,
                 )?;
                 Some(StakeState::Stake(meta, stake))
@@ -1492,7 +1492,7 @@ impl MergeKind {
                 // Don't stake the source account's `rent_exempt_reserve` to
                 // protect against the magic activation loophole. It will
                 // instead be moved into the destination account as extra,
-                // withdrawable `lamports`
+                // withdrawable `satomis`
                 merge_delegation_stake_and_credits_observed(
                     invoke_context,
                     &mut stake,
@@ -1510,7 +1510,7 @@ impl MergeKind {
 fn merge_delegation_stake_and_credits_observed(
     invoke_context: &InvokeContext,
     stake: &mut Stake,
-    absorbed_lamports: u64,
+    absorbed_satomis: u64,
     absorbed_credits_observed: u64,
 ) -> Result<(), InstructionError> {
     if invoke_context
@@ -1518,10 +1518,10 @@ fn merge_delegation_stake_and_credits_observed(
         .is_active(&stake_merge_with_unmatched_credits_observed::id())
     {
         stake.credits_observed =
-            stake_weighted_credits_observed(stake, absorbed_lamports, absorbed_credits_observed)
+            stake_weighted_credits_observed(stake, absorbed_satomis, absorbed_credits_observed)
                 .ok_or(InstructionError::ArithmeticOverflow)?;
     }
-    stake.delegation.stake = checked_add(stake.delegation.stake, absorbed_lamports)?;
+    stake.delegation.stake = checked_add(stake.delegation.stake, absorbed_satomis)?;
     Ok(())
 }
 
@@ -1552,17 +1552,17 @@ fn merge_delegation_stake_and_credits_observed(
 ///  calculation against vote_account and point indirection.)
 fn stake_weighted_credits_observed(
     stake: &Stake,
-    absorbed_lamports: u64,
+    absorbed_satomis: u64,
     absorbed_credits_observed: u64,
 ) -> Option<u64> {
     if stake.credits_observed == absorbed_credits_observed {
         Some(stake.credits_observed)
     } else {
-        let total_stake = u128::from(stake.delegation.stake.checked_add(absorbed_lamports)?);
+        let total_stake = u128::from(stake.delegation.stake.checked_add(absorbed_satomis)?);
         let stake_weighted_credits =
             u128::from(stake.credits_observed).checked_mul(u128::from(stake.delegation.stake))?;
         let absorbed_weighted_credits =
-            u128::from(absorbed_credits_observed).checked_mul(u128::from(absorbed_lamports))?;
+            u128::from(absorbed_credits_observed).checked_mul(u128::from(absorbed_satomis))?;
         // Discard fractional credits as a merge side-effect friction by taking
         // the ceiling, done by adding `denominator - 1` to the numerator.
         let total_weighted_credits = stake_weighted_credits
@@ -1610,7 +1610,7 @@ pub fn redeem_rewards(
             inflation_point_calc_tracer,
             credits_auto_rewind,
         ) {
-            stake_account.checked_add_lamports(stakers_reward)?;
+            stake_account.checked_add_satomis(stakers_reward)?;
             stake_account.set_state(&StakeState::Stake(meta, stake))?;
 
             Ok((stakers_reward, voters_reward))
@@ -1618,7 +1618,7 @@ pub fn redeem_rewards(
             Err(StakeError::NoCreditsToRedeem.into())
         }
     } else {
-        Err(dbg!(InstructionError::InvalidAccountData))
+        Err(InstructionError::InvalidAccountData)
     }
 }
 
@@ -1637,7 +1637,7 @@ pub fn calculate_points(
             null_tracer(),
         ))
     } else {
-        Err(dbg!(InstructionError::InvalidAccountData))
+        Err(InstructionError::InvalidAccountData)
     }
 }
 
@@ -1649,9 +1649,9 @@ fn calculate_split_rent_exempt_reserve(
     source_data_len: u64,
     split_data_len: u64,
 ) -> u64 {
-    let lamports_per_byte_year =
+    let satomis_per_byte_year =
         source_rent_exempt_reserve / (source_data_len + ACCOUNT_STORAGE_OVERHEAD);
-    lamports_per_byte_year * (split_data_len + ACCOUNT_STORAGE_OVERHEAD)
+    satomis_per_byte_year * (split_data_len + ACCOUNT_STORAGE_OVERHEAD)
 }
 
 pub type RewriteStakeStatus = (&'static str, (u64, u64), (u64, u64));
@@ -1705,14 +1705,14 @@ pub fn create_lockup_stake_account(
     authorized: &Authorized,
     lockup: &Lockup,
     rent: &Rent,
-    lamports: u64,
+    satomis: u64,
 ) -> AccountSharedData {
-    let mut stake_account = AccountSharedData::new(lamports, StakeState::size_of(), &id());
+    let mut stake_account = AccountSharedData::new(satomis, StakeState::size_of(), &id());
 
     let rent_exempt_reserve = rent.minimum_balance(stake_account.data().len());
     assert!(
-        lamports >= rent_exempt_reserve,
-        "lamports: {lamports} is less than rent_exempt_reserve {rent_exempt_reserve}"
+        satomis >= rent_exempt_reserve,
+        "satomis: {satomis} is less than rent_exempt_reserve {rent_exempt_reserve}"
     );
 
     stake_account
@@ -1732,14 +1732,14 @@ pub fn create_account(
     voter_pubkey: &Pubkey,
     vote_account: &AccountSharedData,
     rent: &Rent,
-    lamports: u64,
+    satomis: u64,
 ) -> AccountSharedData {
     do_create_account(
         authorized,
         voter_pubkey,
         vote_account,
         rent,
-        lamports,
+        satomis,
         Epoch::MAX,
     )
 }
@@ -1750,7 +1750,7 @@ pub fn create_account_with_activation_epoch(
     voter_pubkey: &Pubkey,
     vote_account: &AccountSharedData,
     rent: &Rent,
-    lamports: u64,
+    satomis: u64,
     activation_epoch: Epoch,
 ) -> AccountSharedData {
     do_create_account(
@@ -1758,7 +1758,7 @@ pub fn create_account_with_activation_epoch(
         voter_pubkey,
         vote_account,
         rent,
-        lamports,
+        satomis,
         activation_epoch,
     )
 }
@@ -1768,10 +1768,10 @@ fn do_create_account(
     voter_pubkey: &Pubkey,
     vote_account: &AccountSharedData,
     rent: &Rent,
-    lamports: u64,
+    satomis: u64,
     activation_epoch: Epoch,
 ) -> AccountSharedData {
-    let mut stake_account = AccountSharedData::new(lamports, StakeState::size_of(), &id());
+    let mut stake_account = AccountSharedData::new(satomis, StakeState::size_of(), &id());
 
     let vote_state = vote_state::from(vote_account).expect("vote_state");
 
@@ -1785,7 +1785,7 @@ fn do_create_account(
                 ..Meta::default()
             },
             new_stake(
-                lamports - rent_exempt_reserve, // underflow is an error, is basically: assert!(lamports > rent_exempt_reserve);
+                satomis - rent_exempt_reserve, // underflow is an error, is basically: assert!(satomis > rent_exempt_reserve);
                 voter_pubkey,
                 &vote_state,
                 activation_epoch,
@@ -2518,9 +2518,9 @@ mod tests {
         let mut vote_state = VoteState::default();
         // assume stake.stake() is right
         // bootstrap means fully-vested stake at epoch 0
-        let stake_lamports = 1;
+        let stake_satomis = 1;
         let mut stake = new_stake(
-            stake_lamports,
+            stake_satomis,
             &Pubkey::default(),
             &vote_state,
             std::u64::MAX,
@@ -2550,7 +2550,7 @@ mod tests {
 
         // this one should be able to collect exactly 2
         assert_eq!(
-            Some((stake_lamports * 2, 0)),
+            Some((stake_satomis * 2, 0)),
             redeem_stake_rewards(
                 0,
                 &mut stake,
@@ -2567,7 +2567,7 @@ mod tests {
 
         assert_eq!(
             stake.delegation.stake,
-            stake_lamports + (stake_lamports * 2)
+            stake_satomis + (stake_satomis * 2)
         );
         assert_eq!(stake.credits_observed, 2);
     }
@@ -2579,7 +2579,7 @@ mod tests {
         // bootstrap means fully-vested stake at epoch 0 with
         //  10_000_000 DOMI is a big but not unreasaonable stake
         let stake = new_stake(
-            native_token::domi_to_lamports(10_000_000f64),
+            native_token::domi_to_satomis(10_000_000f64),
             &Pubkey::default(),
             &vote_state,
             std::u64::MAX,
@@ -2999,14 +2999,14 @@ mod tests {
     fn test_dbg_stake_minimum_balance() {
         let minimum_balance = Rent::default().minimum_balance(StakeState::size_of());
         panic!(
-            "stake minimum_balance: {} lamports, {} DOMI",
+            "stake minimum_balance: {} satomis, {} DOMI",
             minimum_balance,
-            minimum_balance as f64 / domichain_sdk::native_token::LAMPORTS_PER_DOMI as f64
+            minimum_balance as f64 / domichain_sdk::native_token::SATOMIS_PER_DOMI as f64
         );
     }
 
     #[test]
-    fn test_calculate_lamports_per_byte_year() {
+    fn test_calculate_satomis_per_byte_year() {
         let rent = Rent::default();
         let data_len = 200u64;
         let rent_exempt_reserve = rent.minimum_balance(data_len as usize);
@@ -3290,17 +3290,17 @@ mod tests {
     fn test_merge_kind_get_if_mergeable() {
         with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
         let authority_pubkey = Pubkey::new_unique();
-        let initial_lamports = 4242424242;
+        let initial_satomis = 4242424242;
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_lamports = rent_exempt_reserve + initial_lamports;
+        let stake_satomis = rent_exempt_reserve + initial_satomis;
 
         let meta = Meta {
             rent_exempt_reserve,
             ..Meta::auto(&authority_pubkey)
         };
         let mut stake_account = AccountSharedData::new_data_with_space(
-            stake_lamports,
+            stake_satomis,
             &StakeState::Uninitialized,
             StakeState::size_of(),
             &id(),
@@ -3314,12 +3314,12 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
             .unwrap_err(),
-            dbg!(InstructionError::InvalidAccountData)
+            InstructionError::InvalidAccountData
         );
 
         // RewardsPool state fails
@@ -3328,12 +3328,12 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
             .unwrap_err(),
-            dbg!(InstructionError::InvalidAccountData)
+            InstructionError::InvalidAccountData
         );
 
         // Initialized state succeeds
@@ -3344,16 +3344,16 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
             .unwrap(),
-            MergeKind::Inactive(meta, stake_lamports)
+            MergeKind::Inactive(meta, stake_satomis)
         );
 
         clock.epoch = 0;
-        let mut effective = 2 * initial_lamports;
+        let mut effective = 2 * initial_satomis;
         let mut activating = 0;
         let mut deactivating = 0;
         stake_history.add(
@@ -3366,7 +3366,7 @@ mod tests {
         );
 
         clock.epoch += 1;
-        activating = initial_lamports;
+        activating = initial_satomis;
         stake_history.add(
             clock.epoch,
             StakeHistoryEntry {
@@ -3378,7 +3378,7 @@ mod tests {
 
         let stake = Stake {
             delegation: Delegation {
-                stake: initial_lamports,
+                stake: initial_satomis,
                 activation_epoch: 1,
                 deactivation_epoch: 5,
                 ..Delegation::default()
@@ -3393,7 +3393,7 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
@@ -3423,7 +3423,7 @@ mod tests {
                 MergeKind::get_if_mergeable(
                     &invoke_context,
                     &stake_account.state().unwrap(),
-                    stake_account.lamports(),
+                    stake_account.satomis(),
                     &clock,
                     &stake_history
                 )
@@ -3447,7 +3447,7 @@ mod tests {
                 MergeKind::get_if_mergeable(
                     &invoke_context,
                     &stake_account.state().unwrap(),
-                    stake_account.lamports(),
+                    stake_account.satomis(),
                     &clock,
                     &stake_history
                 )
@@ -3471,7 +3471,7 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
@@ -3501,7 +3501,7 @@ mod tests {
                 MergeKind::get_if_mergeable(
                     &invoke_context,
                     &stake_account.state().unwrap(),
-                    stake_account.lamports(),
+                    stake_account.satomis(),
                     &clock,
                     &stake_history
                 )
@@ -3515,12 +3515,12 @@ mod tests {
             MergeKind::get_if_mergeable(
                 &invoke_context,
                 &stake_account.state().unwrap(),
-                stake_account.lamports(),
+                stake_account.satomis(),
                 &clock,
                 &stake_history
             )
             .unwrap(),
-            MergeKind::Inactive(meta, stake_lamports),
+            MergeKind::Inactive(meta, stake_satomis),
         );
     }
 
@@ -3528,7 +3528,7 @@ mod tests {
     fn test_merge_kind_merge() {
         with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
         let clock = Clock::default();
-        let lamports = 424242;
+        let satomis = 424242;
         let meta = Meta {
             rent_exempt_reserve: 42,
             ..Meta::default()
@@ -3540,7 +3540,7 @@ mod tests {
             },
             ..Stake::default()
         };
-        let inactive = MergeKind::Inactive(Meta::default(), lamports);
+        let inactive = MergeKind::Inactive(Meta::default(), satomis);
         let activation_epoch = MergeKind::ActivationEpoch(meta, stake);
         let fully_active = MergeKind::FullyActive(meta, stake);
 
@@ -3581,7 +3581,7 @@ mod tests {
             .unwrap()
             .unwrap();
         let delegation = new_state.delegation().unwrap();
-        assert_eq!(delegation.stake, stake.delegation.stake + lamports);
+        assert_eq!(delegation.stake, stake.delegation.stake + satomis);
 
         let new_state = activation_epoch
             .clone()

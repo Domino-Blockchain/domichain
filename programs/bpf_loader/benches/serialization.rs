@@ -20,7 +20,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             program_id,
             AccountSharedData::from(Account {
-                lamports: 0,
+                satomis: 0,
                 data: vec![],
                 owner,
                 executable: true,
@@ -30,7 +30,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 1,
+                satomis: 1,
                 data: vec![1u8; 100000],
                 owner,
                 executable: false,
@@ -40,7 +40,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 2,
+                satomis: 2,
                 data: vec![11u8; 100000],
                 owner,
                 executable: true,
@@ -50,7 +50,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 3,
+                satomis: 3,
                 data: vec![],
                 owner,
                 executable: false,
@@ -60,7 +60,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 4,
+                satomis: 4,
                 data: vec![1u8; 100000],
                 owner,
                 executable: false,
@@ -70,7 +70,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 5,
+                satomis: 5,
                 data: vec![11u8; 10000],
                 owner,
                 executable: true,
@@ -80,7 +80,7 @@ fn create_inputs(owner: Pubkey, num_instruction_accounts: usize) -> TransactionC
         (
             domichain_sdk::pubkey::new_rand(),
             AccountSharedData::from(Account {
-                lamports: 6,
+                satomis: 6,
                 data: vec![],
                 owner,
                 executable: false,

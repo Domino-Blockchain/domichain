@@ -924,7 +924,7 @@ pub fn withdraw<S: std::hash::BuildHasher>(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     vote_account_index: IndexOfAccount,
-    lamports: u64,
+    satomis: u64,
     to_account_index: IndexOfAccount,
     signers: &HashSet<Pubkey, S>,
     rent_sysvar: &Rent,
@@ -940,8 +940,8 @@ pub fn withdraw<S: std::hash::BuildHasher>(
     verify_authorized_signer(&vote_state.authorized_withdrawer, signers)?;
 
     let remaining_balance = vote_account
-        .get_lamports()
-        .checked_sub(lamports)
+        .get_satomis()
+        .checked_sub(satomis)
         .ok_or(InstructionError::InsufficientFunds)?;
 
     if remaining_balance == 0 {
@@ -972,11 +972,11 @@ pub fn withdraw<S: std::hash::BuildHasher>(
         }
     }
 
-    vote_account.checked_sub_lamports(lamports)?;
+    vote_account.checked_sub_satomis(satomis)?;
     drop(vote_account);
     let mut to_account = instruction_context
         .try_borrow_instruction_account(transaction_context, to_account_index)?;
-    to_account.checked_add_lamports(lamports)?;
+    to_account.checked_add_satomis(satomis)?;
     Ok(())
 }
 
@@ -1107,9 +1107,9 @@ pub fn create_account_with_authorized(
     authorized_voter: &Pubkey,
     authorized_withdrawer: &Pubkey,
     commission: u8,
-    lamports: u64,
+    satomis: u64,
 ) -> AccountSharedData {
-    let mut vote_account = AccountSharedData::new(lamports, VoteState1_14_11::size_of(), &id());
+    let mut vote_account = AccountSharedData::new(satomis, VoteState1_14_11::size_of(), &id());
 
     let vote_state = VoteState::new(
         &VoteInit {
@@ -1132,9 +1132,9 @@ pub fn create_account(
     vote_pubkey: &Pubkey,
     node_pubkey: &Pubkey,
     commission: u8,
-    lamports: u64,
+    satomis: u64,
 ) -> AccountSharedData {
-    create_account_with_authorized(node_pubkey, vote_pubkey, vote_pubkey, commission, lamports)
+    create_account_with_authorized(node_pubkey, vote_pubkey, vote_pubkey, commission, satomis)
 }
 
 #[cfg(test)]
@@ -1184,7 +1184,7 @@ mod tests {
         let mut feature_set = FeatureSet::default();
 
         // Create an initial vote account that is sized for the 1_14_11 version of vote state, and has only the
-        // required lamports for rent exempt minimum at that size
+        // required satomis for rent exempt minimum at that size
         let node_pubkey = domichain_sdk::pubkey::new_rand();
         let withdrawer_pubkey = domichain_sdk::pubkey::new_rand();
         let mut vote_state = VoteState::new(
@@ -1231,9 +1231,9 @@ mod tests {
 
         let version1_14_11_serialized_len = version1_14_11_serialized.len();
         let rent = Rent::default();
-        let lamports = rent.minimum_balance(version1_14_11_serialized_len);
+        let satomis = rent.minimum_balance(version1_14_11_serialized_len);
         let mut vote_account =
-            AccountSharedData::new(lamports, version1_14_11_serialized_len, &id());
+            AccountSharedData::new(satomis, version1_14_11_serialized_len, &id());
         vote_account.set_data(version1_14_11_serialized);
 
         // Create a fake TransactionContext with a fake InstructionContext with a single account which is the
@@ -1288,7 +1288,7 @@ mod tests {
 
         let vote_state = converted_vote_state;
 
-        // Test that when the feature is enabled, if the vote account does not have sufficient lamports to realloc,
+        // Test that when the feature is enabled, if the vote account does not have sufficient satomis to realloc,
         // the old vote state is written out
         feature_set.activate(&feature_set::vote_state_add_vote_latency::id(), 1);
         assert_eq!(
@@ -1306,10 +1306,10 @@ mod tests {
 
         let vote_state = converted_vote_state;
 
-        // Test that when the feature is enabled, if the vote account does have sufficient lamports, the
+        // Test that when the feature is enabled, if the vote account does have sufficient satomis, the
         // new vote state is written out
         assert_eq!(
-            borrowed_account.set_lamports(rent.minimum_balance(VoteState::size_of())),
+            borrowed_account.set_satomis(rent.minimum_balance(VoteState::size_of())),
             Ok(())
         );
         assert_eq!(

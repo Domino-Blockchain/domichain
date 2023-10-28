@@ -8,7 +8,7 @@ import { ErrorCard } from "components/common/ErrorCard";
 import { useAnchorProgram } from "providers/anchor";
 
 export function AnchorAccountCard({ account }: { account: Account }) {
-  const { lamports } = account;
+  const { satomis } = account;
   const { url } = useCluster();
   const anchorProgram = useAnchorProgram(
     account.details?.owner.toString() || "",
@@ -40,7 +40,7 @@ export function AnchorAccountCard({ account }: { account: Account }) {
     };
   }, [anchorProgram, rawData]);
 
-  if (lamports === undefined) return null;
+  if (satomis === undefined) return null;
   if (!anchorProgram) return <ErrorCard text="No Anchor IDL found" />;
   if (!decodedAccountData || !accountDef) {
     return (

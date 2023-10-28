@@ -64,7 +64,7 @@ pub fn fund_keys<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
     dests: &[Keypair],
     total: u64,
     max_fee: u64,
-    lamports_per_account: u64,
+    satomis_per_account: u64,
 ) {
     let mut funded: Vec<&Keypair> = vec![source];
     let mut funded_funds = total;
@@ -73,11 +73,11 @@ pub fn fund_keys<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
         // Build to fund list and prepare funding sources for next iteration
         let mut new_funded: Vec<&Keypair> = vec![];
         let mut to_fund: Vec<(&Keypair, Vec<(Pubkey, u64)>)> = vec![];
-        let to_lamports = (funded_funds - lamports_per_account - max_fee) / MAX_SPENDS_PER_TX;
+        let to_satomis = (funded_funds - satomis_per_account - max_fee) / MAX_SPENDS_PER_TX;
         for f in funded {
             let start = not_funded.len() - MAX_SPENDS_PER_TX as usize;
             let dests: Vec<_> = not_funded.drain(start..).collect();
-            let spends: Vec<_> = dests.iter().map(|k| (k.pubkey(), to_lamports)).collect();
+            let spends: Vec<_> = dests.iter().map(|k| (k.pubkey(), to_satomis)).collect();
             to_fund.push((f, spends));
             new_funded.extend(dests.into_iter());
         }
@@ -86,13 +86,13 @@ pub fn fund_keys<T: 'static + BenchTpsClient + Send + Sync + ?Sized>(
             Vec::<(&Keypair, Transaction)>::with_capacity(chunk.len()).fund(
                 &client,
                 chunk,
-                to_lamports,
+                to_satomis,
             );
         });
 
         info!("funded: {} left: {}", new_funded.len(), not_funded.len());
         funded = new_funded;
-        funded_funds = to_lamports;
+        funded_funds = to_satomis;
     }
 }
 
@@ -168,7 +168,7 @@ trait SendBatchTransactions<'a, T: Sliceable + Send + Sync> {
         chunk: &[V],
         create_transaction: F,
     );
-    fn send_transactions<C, F>(&mut self, client: &Arc<C>, to_lamports: u64, log_progress: F)
+    fn send_transactions<C, F>(&mut self, client: &Arc<C>, to_satomis: u64, log_progress: F)
     where
         C: 'static + BenchTpsClient + Send + Sync + ?Sized,
         F: Fn(usize, usize);
@@ -177,7 +177,7 @@ trait SendBatchTransactions<'a, T: Sliceable + Send + Sync> {
     fn verify<C: 'static + BenchTpsClient + Send + Sync + ?Sized>(
         &mut self,
         client: &Arc<C>,
-        to_lamports: u64,
+        to_satomis: u64,
     );
 }
 
@@ -206,7 +206,7 @@ where
         self.extend(txs);
     }
 
-    fn send_transactions<C, F>(&mut self, client: &Arc<C>, to_lamports: u64, log_progress: F)
+    fn send_transactions<C, F>(&mut self, client: &Arc<C>, to_satomis: u64, log_progress: F)
     where
         C: 'static + BenchTpsClient + Send + Sync + ?Sized,
         F: Fn(usize, usize),
@@ -223,7 +223,7 @@ where
             // Sleep a few slots to allow transactions to process
             sleep(Duration::from_secs(1));
 
-            self.verify(client, to_lamports);
+            self.verify(client, to_satomis);
 
             // retry anything that seems to have dropped through cracks
             //  again since these txs are all or nothing, they're fine to
@@ -253,7 +253,7 @@ where
     fn verify<C: 'static + BenchTpsClient + Send + Sync + ?Sized>(
         &mut self,
         client: &Arc<C>,
-        to_lamports: u64,
+        to_satomis: u64,
     ) {
         let starting_txs = self.len();
         let verified_txs = Arc::new(AtomicUsize::new(0));
@@ -276,7 +276,7 @@ where
                         return None;
                     }
 
-                    let verified = if verify_funding_transfer(&client, tx, to_lamports) {
+                    let verified = if verify_funding_transfer(&client, tx, to_satomis) {
                         verified_txs.fetch_add(1, Ordering::Relaxed);
                         Some(pubkey)
                     } else {
@@ -346,7 +346,7 @@ trait FundingTransactions<'a>: SendBatchTransactions<'a, FundingSigners<'a>> {
         &mut self,
         client: &Arc<T>,
         to_fund: &FundingChunk<'a>,
-        to_lamports: u64,
+        to_satomis: u64,
     );
 }
 
@@ -355,7 +355,7 @@ impl<'a> FundingTransactions<'a> for FundingContainer<'a> {
         &mut self,
         client: &Arc<T>,
         to_fund: &FundingChunk<'a>,
-        to_lamports: u64,
+        to_satomis: u64,
     ) {
         self.make(to_fund, |(k, t)| -> (FundingSigners<'a>, Transaction) {
             let instructions = system_instruction::transfer_many(&k.pubkey(), t);
@@ -371,12 +371,12 @@ impl<'a> FundingTransactions<'a> for FundingContainer<'a> {
                 } else {
                     " retrying"
                 },
-                to_lamports,
+                to_satomis,
                 batch_len * MAX_SPENDS_PER_TX as usize,
                 batch_len,
             );
         };
-        self.send_transactions(client, to_lamports, log_progress);
+        self.send_transactions(client, to_satomis, log_progress);
     }
 }
 

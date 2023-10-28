@@ -216,7 +216,7 @@ impl Message {
     ///     payer: &Keypair,
     /// ) -> Result<VersionedTransaction> {
     ///     # client.set_get_account_response(address_lookup_table_key, Account {
-    ///     #   lamports: 1,
+    ///     #   satomis: 1,
     ///     #   data: AddressLookupTable {
     ///     #     addresses: Cow::Owned(instruction.accounts.iter().map(|meta| meta.pubkey).collect()),
     ///     #   }.serialize_for_tests().unwrap(),

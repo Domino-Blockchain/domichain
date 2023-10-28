@@ -8,7 +8,7 @@ Stakers are rewarded for helping to validate the ledger. They do this by delegat
 
 The general idea is that the validator owns a Vote account. The Vote account tracks validator votes, counts validator generated credits, and provides any additional validator specific state. The Vote account is not aware of any stakes delegated to it and has no staking weight.
 
-A separate Stake account \(created by a staker\) names a Vote account to which the stake is delegated. Rewards generated are proportional to the amount of lamports staked. The Stake account is owned by the staker only. Some portion of the lamports stored in this account are the stake.
+A separate Stake account \(created by a staker\) names a Vote account to which the stake is delegated. Rewards generated are proportional to the amount of satomis staked. The Stake account is owned by the staker only. Some portion of the satomis stored in this account are the stake.
 
 ## Passive Delegation
 
@@ -28,10 +28,10 @@ VoteState is the current state of all the votes the validator has submitted to t
 - `credits` - The total number of rewards this Vote program has generated over its lifetime.
 - `root_slot` - The last slot to reach the full lockout commitment necessary for rewards.
 - `commission` - The commission taken by this VoteState for any rewards claimed by staker's Stake accounts. This is the percentage ceiling of the reward.
-- Account::lamports - The accumulated lamports from the commission. These do not count as stakes.
+- Account::satomis - The accumulated satomis from the commission. These do not count as stakes.
 - `authorized_voter` - Only this identity is authorized to submit votes. This field can only modified by this identity.
 - `node_pubkey` - The Domichain node that votes in this account.
-- `authorized_withdrawer` - the identity of the entity in charge of the lamports of this account, separate from the account's address and the authorized vote signer.
+- `authorized_withdrawer` - the identity of the entity in charge of the satomis of this account, separate from the account's address and the authorized vote signer.
 
 ### VoteInstruction::Initialize\(VoteInit\)
 
@@ -70,14 +70,14 @@ A StakeState takes one of four forms, StakeState::Uninitialized, StakeState::Ini
 
 StakeState::Stake is the current delegation preference of the **staker** and contains the following state information:
 
-- Account::lamports - The lamports available for staking.
-- `stake` - the staked amount \(subject to warmup and cooldown\) for generating rewards, always less than or equal to Account::lamports.
-- `voter_pubkey` - The pubkey of the VoteState instance the lamports are delegated to.
+- Account::satomis - The satomis available for staking.
+- `stake` - the staked amount \(subject to warmup and cooldown\) for generating rewards, always less than or equal to Account::satomis.
+- `voter_pubkey` - The pubkey of the VoteState instance the satomis are delegated to.
 - `credits_observed` - The total credits claimed over the lifetime of the program.
 - `activated` - the epoch at which this stake was activated/delegated. The full stake will be counted after warmup.
 - `deactivated` - the epoch at which this stake was de-activated, some cooldown epochs are required before the account is fully deactivated, and the stake available for withdrawal.
 - `authorized_staker` - the pubkey of the entity that must sign delegation, activation, and deactivation transactions.
-- `authorized_withdrawer` - the identity of the entity in charge of the lamports of this account, separate from the account's address, and the authorized staker.
+- `authorized_withdrawer` - the identity of the entity in charge of the satomis of this account, separate from the account's address, and the authorized staker.
 
 ### StakeState::RewardsPool
 
@@ -87,9 +87,9 @@ The Stakes and the RewardsPool are accounts that are owned by the same `Stake` p
 
 ### StakeInstruction::DelegateStake
 
-The Stake account is moved from Initialized to StakeState::Stake form, or from a deactivated (i.e. fully cooled-down) StakeState::Stake to activated StakeState::Stake. This is how stakers choose the vote account and validator node to which their stake account lamports are delegated. The transaction must be signed by the stake's `authorized_staker`.
+The Stake account is moved from Initialized to StakeState::Stake form, or from a deactivated (i.e. fully cooled-down) StakeState::Stake to activated StakeState::Stake. This is how stakers choose the vote account and validator node to which their stake account satomis are delegated. The transaction must be signed by the stake's `authorized_staker`.
 
-- `account[0]` - RW - The StakeState::Stake instance. `StakeState::Stake::credits_observed` is initialized to `VoteState::credits`, `StakeState::Stake::voter_pubkey` is initialized to `account[1]`. If this is the initial delegation of stake, `StakeState::Stake::stake` is initialized to the account's balance in lamports, `StakeState::Stake::activated` is initialized to the current Bank epoch, and `StakeState::Stake::deactivated` is initialized to std::u64::MAX
+- `account[0]` - RW - The StakeState::Stake instance. `StakeState::Stake::credits_observed` is initialized to `VoteState::credits`, `StakeState::Stake::voter_pubkey` is initialized to `account[1]`. If this is the initial delegation of stake, `StakeState::Stake::stake` is initialized to the account's balance in satomis, `StakeState::Stake::activated` is initialized to the current Bank epoch, and `StakeState::Stake::deactivated` is initialized to std::u64::MAX
 - `account[1]` - R - The VoteState instance.
 - `account[2]` - R - sysvar::clock account, carries information about current Bank epoch.
 - `account[3]` - R - sysvar::stakehistory account, carries information about stake history.
@@ -111,14 +111,14 @@ The transaction must be signed by the stake's `authorized_staker`.
 - `account[0]` - RW - The StakeState::Stake instance that is deactivating.
 - `account[1]` - R - sysvar::clock account from the Bank that carries current epoch.
 
-StakeState::Stake::deactivated is set to the current epoch + cooldown. The account's stake will ramp down to zero by that epoch, and Account::lamports will be available for withdrawal.
+StakeState::Stake::deactivated is set to the current epoch + cooldown. The account's stake will ramp down to zero by that epoch, and Account::satomis will be available for withdrawal.
 
 ### StakeInstruction::Withdraw\(u64\)
 
-Lamports build up over time in a Stake account and any excess over activated stake can be withdrawn. The transaction must be signed by the stake's `authorized_withdrawer`.
+Satomis build up over time in a Stake account and any excess over activated stake can be withdrawn. The transaction must be signed by the stake's `authorized_withdrawer`.
 
 - `account[0]` - RW - The StakeState::Stake from which to withdraw.
-- `account[1]` - RW - Account that should be credited with the withdrawn lamports.
+- `account[1]` - RW - Account that should be credited with the withdrawn satomis.
 - `account[2]` - R - sysvar::clock account from the Bank that carries current epoch, to calculate stake.
 - `account[3]` - R - sysvar::stake_history account from the Bank that carries stake warmup/cooldown history.
 
@@ -139,13 +139,13 @@ The specific mechanics and rules of the validator rewards regime is outlined her
 
 ### Basics
 
-The network pays rewards from a portion of network [inflation](../terminology.md#inflation). The number of lamports available to pay rewards for an epoch is fixed and must be evenly divided among all staked nodes according to their relative stake weight and participation. The weighting unit is called a [point](../terminology.md#point).
+The network pays rewards from a portion of network [inflation](../terminology.md#inflation). The number of satomis available to pay rewards for an epoch is fixed and must be evenly divided among all staked nodes according to their relative stake weight and participation. The weighting unit is called a [point](../terminology.md#point).
 
 Rewards for an epoch are not available until the end of that epoch.
 
 At the end of each epoch, the total number of points earned during the epoch is summed and used to divide the rewards portion of epoch inflation to arrive at a point value. This value is recorded in the bank in a [sysvar](../terminology.md#sysvar) that maps epochs to point values.
 
-During redemption, the stake program counts the points earned by the stake for each epoch, multiplies that by the epoch's point value, and transfers lamports in that amount from a rewards account into the stake and vote accounts according to the vote account's commission setting.
+During redemption, the stake program counts the points earned by the stake for each epoch, multiplies that by the epoch's point value, and transfers satomis in that amount from a rewards account into the stake and vote accounts according to the vote account's commission setting.
 
 ### Economics
 
@@ -197,7 +197,7 @@ Were 2 stakes \(X and Y\) to activate at epoch N, they would be awarded a portio
 
 ### Withdrawal
 
-Only lamports in excess of effective+activating stake may be withdrawn at any time. This means that during warmup, effectively no stake can be withdrawn. During cooldown, any tokens in excess of effective stake may be withdrawn \(activating == 0\). Because earned rewards are automatically added to stake, withdrawal is generally only possible after deactivation.
+Only satomis in excess of effective+activating stake may be withdrawn at any time. This means that during warmup, effectively no stake can be withdrawn. During cooldown, any tokens in excess of effective stake may be withdrawn \(activating == 0\). Because earned rewards are automatically added to stake, withdrawal is generally only possible after deactivation.
 
 ### Lock-up
 
