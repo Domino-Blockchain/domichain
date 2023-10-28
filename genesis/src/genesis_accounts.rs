@@ -12,7 +12,7 @@ const UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS: UnlockInfo = UnlockInfo {
     cliff_years: 3.0,
     unlocks: 19,
     unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
-    custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
+    custodian: "9DJa2pT1Q6hrMsHrXo2S7ZEANYJeUsB9Kz9FAjbT3dma",
 };
 
 // 1 years schedule, then monthly for 20 months (by 5%)
@@ -21,7 +21,7 @@ const UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR: UnlockInfo = UnlockInfo {
     cliff_years: 1.0,
     unlocks: 19,
     unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
-    custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
+    custodian: "9DJa2pT1Q6hrMsHrXo2S7ZEANYJeUsB9Kz9FAjbT3dma",
 };
 
 // no lockups
@@ -30,46 +30,46 @@ const UNLOCKS_ALL_DAY_ZERO: UnlockInfo = UnlockInfo {
     cliff_years: 0.0,
     unlocks: 0,
     unlock_years: 0.0,
-    custodian: "Mc5XB47H3DKJHym5RLa9mPzWv5snERsF3KNv5AauXK8",
+    custodian: "9DJa2pT1Q6hrMsHrXo2S7ZEANYJeUsB9Kz9FAjbT3dma",
 };
 
 pub const INVESTORS_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "shrill charity",
-        staker: "3Y8Gfv4bpqVh15Y71Zy6a1ezvKfLkoDHYJZ8CKac74gy",
+        name: "investor one",
+        staker: "3133crZgMiahrNTPb59buLg4m1Np8qpSzMUiDAXscAmc",
         satomis: 50_000_000 * SATOMIS_PER_DOMI,
-        withdrawer: Some("ACkRSLK6xsHXbXT2Zr5DnyhmCLEjg1aXwKjc6GMExy77"),
+        withdrawer: Some("52ZGBKLkVBjHzaJczUxzBWEiX2XyWFMzK3KtJC4ZLRhm"),
     },
     StakerInfo {
-        name: "legal gate",
-        staker: "FDSASFuLNtjxk5cEpNvcDnKa8VijjpFYppGsK4GDQoaZ",
+        name: "investor two",
+        staker: "Bq91HHt2wdAjfb1ZgjE6KvfH92vjnCsCJfqhakP5LmKw",
         satomis: 50_000_000 * SATOMIS_PER_DOMI,
-        withdrawer: Some("EMJjT9WuT2mzEuVGQhamzZskF7P12BV8a2Qghssa3byc"),
+        withdrawer: Some("GAJrsn2XbWpZ2gQMC6UeZPQrcTJQD1hkMqNkPAPWPU8T"),
     },
     StakerInfo {
-        name: "cluttered complaint",
-        staker: "A4bpL66yo47EXs5civo1o2Kn5ohQfVCM4oK1FdzA77L5",
+        name: "investor three",
+        staker: "5yRBR5wWvAe3ztJa3BUYsBfrFtqYTv8Xc69dDAULuKQ1",
         satomis: 50_000_000 * SATOMIS_PER_DOMI,
-        withdrawer: Some("9i11wBcKUNui9bq188s7NedF4dc9bNmheT8X7GyoPEkV"),
+        withdrawer: Some("3PGU6uPCYFBry8MFqqZCUkezDi738pW3otbWdMcdwEry"),
     },
 ];
 
 // ./target/release/domichain-keygen new --silent --no-bip39-passphrase --outfile - | ./target/release/domichain-keygen pubkey -
 pub const MAINTANACE_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "unbecoming silver",
-        staker: "4jyUPfUU4nA59E7pkran1vkcLkN6dRAJTNmSPbEuD6GL",
+        name: "maintanance one",
+        staker: "A8AHHDe2imEDPoiRiL962d8VTZfrNPgzvXXhosEpnnBp",
         satomis: 40_000_000 * SATOMIS_PER_DOMI,
-        withdrawer: Some("2Mk89SdDymFcxEDFZVwU2zMgz1wP2vri8iuFeAieN3ET"),
+        withdrawer: Some("Gyz2yS5MzF4PF8RYMszDAaEF7Lfs7zDAeCGvw4r238cJ"),
     },
 ];
 
 pub const FOUNDATION_STAKER_INFOS: &[StakerInfo] = &[
     StakerInfo {
-        name: "shrill charity",
-        staker: "JBPTHdeVwbZsx4yZ9RMcPkojjAnd318HvmW2WVriehkW",
+        name: "foundation one",
+        staker: "3KAqEmLwmfm6YMxJ8qk4Kr5jrQHZxRiXBcmWfbuypez3",
         satomis: 50_000_000 * SATOMIS_PER_DOMI,
-        withdrawer: Some("CUpX8BoNMoHfTJGsPaFjiGExMhShwD8ALtefVFfC3tPr"),
+        withdrawer: Some("6q45U7aQhEkouWj8yajL7YxZHuqWFE8ALuJ5Z5JWJP4z"),
     },
 ];
 
@@ -106,10 +106,10 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_satom
     create_and_add_stakes(
         genesis_config,
         &StakerInfo {
-            name: "one thanks",
-            staker: "Ay9XxmEc3YZy5PMxWTuNqRCyu9HiJ6QKqp2rAfqBrtiH",
+            name: "maintanance two",
+            staker: "CSk9RCJHL8CEEphRcZyzCKCCkGza1vmLBAJvbAMJuzL8",
             satomis: (250_000_000 * SATOMIS_PER_DOMI).saturating_sub(issued_satomis),
-            withdrawer: Some("9He2rQZWGobpx65LdaUuU2u6Dkb5y4EoC5oV16P5B3Go"),
+            withdrawer: Some("5kmYkMNcburjiihYgbb5AwLh4PXzp4r8zDo8QH9pc8Mc"),
         },
         &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
         None,
