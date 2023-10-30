@@ -769,7 +769,7 @@ impl ClusterInfoVoteListener {
                             total_weight as f64,
                             h,
                         );
-                        warn!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={total_weight} weight={weight}");
+                        info!("TPU: sortition::select: stake={stake} total_stake={total_stake} selection_size={total_weight} weight={weight}");
                         weight
                     }
                     Some((authorized_voter, Err(e))) => {
