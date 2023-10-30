@@ -27,7 +27,7 @@ pub struct Inflation {
 const DEFAULT_INITIAL: f64 = 0.375;
 const DEFAULT_TERMINAL: f64 = 0.0;
 const DEFAULT_TAPER: f64 = 0.12;
-const DEFAULT_FOUNDATION: f64 = 0.05;
+const DEFAULT_FOUNDATION: f64 = 0.0; // JDING change foundation rate to 0 since it is not paid anyway
 const DEFAULT_FOUNDATION_TERM: f64 = 7.0;
 
 impl Default for Inflation {
