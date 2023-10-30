@@ -6,21 +6,21 @@ use {
     domichain_sdk::{genesis_config::GenesisConfig, native_token::SATOMIS_PER_DOMI},
 };
 
-// 3 years schedule, then monthly for 20 months (by 5%)
-const UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS: UnlockInfo = UnlockInfo {
-    cliff_fraction: 0.05, // 1.0 / 20.0
-    cliff_years: 3.0,
-    unlocks: 19,
-    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
+// 12 month schedule is 100% after 12 months
+const UNLOCKS_ALL_AT_12_MONTHS: UnlockInfo = UnlockInfo {
+    cliff_fraction: 1.0,
+    cliff_years: 1.0,
+    unlocks: 0,
+    unlock_years: 0.0,
     custodian: "9DJa2pT1Q6hrMsHrXo2S7ZEANYJeUsB9Kz9FAjbT3dma",
 };
 
-// 1 years schedule, then monthly for 20 months (by 5%)
-const UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR: UnlockInfo = UnlockInfo {
-    cliff_fraction: 0.05, // 1.0 / 20.0
-    cliff_years: 1.0,
-    unlocks: 19,
-    unlock_years: 1.5833333333333333, // 1.0 / 12.0 * 19.0
+// 36 month schedule is 100% after 36 months
+const UNLOCKS_ALL_AT_36_MONTHS: UnlockInfo = UnlockInfo {
+    cliff_fraction: 1.0,
+    cliff_years: 3.0,
+    unlocks: 0,
+    unlock_years: 0.0,
     custodian: "9DJa2pT1Q6hrMsHrXo2S7ZEANYJeUsB9Kz9FAjbT3dma",
 };
 
@@ -95,11 +95,11 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_satom
         ) + add_stakes(
             genesis_config,
             MAINTANACE_STAKER_INFOS,
-            &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
+            &UNLOCKS_ALL_AT_36_MONTHS,
         ) + add_stakes(
             genesis_config,
             FOUNDATION_STAKER_INFOS,
-            &UNLOCKS_BY_5_PERCENT_AFTER_1_YEAR,
+            &UNLOCKS_ALL_AT_12_MONTHS,
         );
 
     // "one thanks" (maintanance pool) gets 10_000_000 DOMI - above distributions
@@ -111,7 +111,7 @@ pub fn add_genesis_accounts(genesis_config: &mut GenesisConfig, mut issued_satom
             satomis: (250_000_000 * SATOMIS_PER_DOMI).saturating_sub(issued_satomis),
             withdrawer: Some("5kmYkMNcburjiihYgbb5AwLh4PXzp4r8zDo8QH9pc8Mc"),
         },
-        &UNLOCKS_BY_5_PERCENT_AFTER_3_YEARS,
+        &UNLOCKS_ALL_AT_36_MONTHS,
         None,
     );
 }
