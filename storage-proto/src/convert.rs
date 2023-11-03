@@ -700,7 +700,7 @@ impl TryFrom<tx_by_addr::TransactionError> for TransactionError {
                     0 => InstructionError::GenericError,
                     1 => InstructionError::InvalidArgument,
                     2 => InstructionError::InvalidInstructionData,
-                    3 => dbg!(InstructionError::InvalidAccountData),
+                    3 => InstructionError::InvalidAccountData,
                     4 => InstructionError::AccountDataTooSmall,
                     5 => InstructionError::InsufficientFunds,
                     6 => InstructionError::IncorrectProgramId,

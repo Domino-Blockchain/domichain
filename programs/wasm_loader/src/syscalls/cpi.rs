@@ -475,7 +475,6 @@ declare_syscall!(
         signers_seeds_len: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        dbg!("cpi_common");
         // dbg!("cpi_common",
         //     instruction_addr as *mut Self,
         //     account_infos_addr as *mut Self,
