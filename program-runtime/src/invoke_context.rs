@@ -600,8 +600,6 @@ impl<'a> InvokeContext<'a> {
                     "{}'s signer privilege escalated",
                     borrowed_account.get_key()
                 );
-                // panic!();
-                exit(1);
                 return Err(InstructionError::PrivilegeEscalation);
             }
         }
