@@ -172,11 +172,6 @@ impl TransactionContext {
             .into_iter()
             .map(|(key, account)| (key, RefCell::new(account)))
             .unzip();
-        if let Some(key) = account_keys.iter().find(|k| &k.to_string() == "BPFLoader2111111111111111111111111111111111") {
-            dbg!(key);
-            dbg!(&account_keys);
-            panic!();
-        }
         Self {
             account_keys: Pin::new(account_keys.into_boxed_slice()),
             accounts: Arc::new(TransactionAccounts::new(accounts, rent.is_some())),
@@ -628,7 +623,6 @@ impl InstructionContext {
         &'a self,
         transaction_context: &'b TransactionContext,
     ) -> Result<&'b Pubkey, InstructionError> {
-        // dbg!(&self.program_accounts);
         self.get_index_of_program_account_in_transaction(
             self.get_number_of_program_accounts().saturating_sub(1),
         )
@@ -1020,7 +1014,7 @@ impl<'a> BorrowedAccount<'a> {
     pub fn get_state<T: serde::de::DeserializeOwned>(&self) -> Result<T, InstructionError> {
         self.account
             .deserialize_data()
-            .map_err(|_| dbg!(InstructionError::InvalidAccountData))
+            .map_err(|_| InstructionError::InvalidAccountData)
     }
 
     /// Serializes a state into the account data
@@ -1126,8 +1120,6 @@ impl<'a> BorrowedAccount<'a> {
     /// Returns an error if the account data can not be mutated by the current program
     #[cfg(not(target_os = "wasi"))]
     pub fn can_data_be_changed(&self) -> Result<(), InstructionError> {
-        use std::backtrace::Backtrace;
-
         if !self
             .transaction_context
             .is_early_verification_of_account_modifications_enabled()
@@ -1144,20 +1136,8 @@ impl<'a> BorrowedAccount<'a> {
         }
         // and only if we are the owner
         if !self.is_owned_by_current_program() {
-            if self.get_owner().to_string() == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" {
-                dbg!(&self.instruction_context.program_accounts);
-                let _ = dbg!(self.instruction_context
-                    .get_last_program_key(self.transaction_context));
-                dbg!(&self.transaction_context.account_keys);
-                dbg!(self.get_owner());
-                dbg!(self.get_key());
-                // let backtrace = format!("{}", Backtrace::force_capture());
-                // let backtrace: Vec<_> = backtrace.lines().take(5).collect();
-                // dbg!(backtrace);
-            }
-            dbg!();
             // FIXME(Dev): keys should be equal
-            return dbg!(Err(InstructionError::ExternalAccountDataModified));
+            return Err(InstructionError::ExternalAccountDataModified);
         }
         Ok(())
     }
