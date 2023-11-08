@@ -173,7 +173,8 @@ impl FeeRateGovernor {
 
     /// calculate unburned fee from a fee total, returns (unburned, burned)
     pub fn burn(&self, fees: u64) -> (u64, u64) {
-        let burned = fees * u64::from(self.burn_percent) / 100;
+        // let burned = fees * u64::from(self.burn_percent) / 100;
+        let burned = 0; // JD set burn to 0 to encourage small validators
         (fees - burned, burned)
     }
 
