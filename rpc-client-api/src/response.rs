@@ -437,6 +437,7 @@ pub struct RpcStorageTurn {
 pub struct RpcAccountBalance {
     pub address: String,
     pub satomis: u64,
+    pub lamports: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

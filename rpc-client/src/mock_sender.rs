@@ -309,6 +309,7 @@ impl RpcSender for MockSender {
                 let rpc_account_balance = RpcAccountBalance {
                     address: PUBKEY.to_string(),
                     satomis: 10000,
+                    lamports: 10000,
                 };
 
                 json!(Response {

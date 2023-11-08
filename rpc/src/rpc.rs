@@ -870,6 +870,7 @@ impl JsonRpcRequestProcessor {
                 .map(|(address, satomis)| RpcAccountBalance {
                     address: address.to_string(),
                     satomis,
+                    lamports: satomis,
                 })
                 .collect::<Vec<RpcAccountBalance>>();
 
@@ -2915,7 +2916,7 @@ pub mod rpc_bank {
                     }
                 }
 
-                let mut entry = block_production.entry(identity).or_default();
+                let entry = block_production.entry(identity).or_default();
                 if slot_history.check(slot) == domichain_sdk::slot_history::Check::Found {
                     entry.1 += 1; // Increment blocks_produced
                 }

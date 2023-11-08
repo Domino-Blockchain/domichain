@@ -1303,6 +1303,7 @@ pub(crate) mod tests {
                        "data": account_result.data,
                        "executable": false,
                        "satomis": account_result.satomis,
+                       "lamports": account_result.satomis,
                        "owner": "11111111111111111111111111111111",
                        "rentEpoch": if non_default_account {u64::MAX} else {0},
                        "space": account_result.space,

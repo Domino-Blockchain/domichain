@@ -147,6 +147,7 @@ impl TransactionStatusService {
                                 .map(|(pubkey, reward_info)| Reward {
                                     pubkey: pubkey.to_string(),
                                     satomis: reward_info.satomis,
+                                    lamports: reward_info.satomis,
                                     post_balance: reward_info.post_balance,
                                     reward_type: Some(reward_info.reward_type),
                                     commission: reward_info.commission,

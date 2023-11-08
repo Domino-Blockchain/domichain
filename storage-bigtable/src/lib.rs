@@ -293,6 +293,7 @@ impl From<StoredConfirmedBlockReward> for Reward {
         Self {
             pubkey,
             satomis,
+            lamports: satomis,
             post_balance: 0,
             reward_type: None,
             commission: None,

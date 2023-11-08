@@ -87,6 +87,7 @@ impl BlockMetadataNotifierImpl {
             .map(|(pubkey, reward)| Reward {
                 pubkey: pubkey.to_string(),
                 satomis: reward.satomis,
+                lamports: reward.satomis,
                 post_balance: reward.post_balance,
                 reward_type: Some(reward.reward_type),
                 commission: reward.commission,

@@ -942,6 +942,7 @@ mod tests {
                    "value": {
                        "owner": stake_program_id.to_string(),
                        "satomis": balance,
+                       "lamports": balance,
                        "data": [BASE64_STANDARD.encode(expected_data), encoding],
                        "executable": false,
                        "rentEpoch": u64::MAX,
@@ -1065,6 +1066,7 @@ mod tests {
                    "value": {
                        "owner": system_program::id().to_string(),
                        "satomis": 100,
+                       "lamports": 100,
                        "data": expected_data,
                        "executable": false,
                        "rentEpoch": u64::MAX,
@@ -1251,6 +1253,7 @@ mod tests {
                    "value": {
                        "owner": system_program::id().to_string(),
                        "satomis": 100,
+                       "lamports": 100,
                        "data": "",
                        "executable": false,
                        "rentEpoch": u64::MAX,

@@ -105,6 +105,7 @@ impl From<generated::Reward> for Reward {
         Self {
             pubkey: reward.pubkey,
             satomis: reward.satomis,
+            lamports: reward.satomis,
             post_balance: reward.post_balance,
             reward_type: match reward.reward_type {
                 0 => None,

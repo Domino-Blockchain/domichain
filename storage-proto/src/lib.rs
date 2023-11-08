@@ -42,6 +42,7 @@ impl From<StoredExtendedReward> for Reward {
         Self {
             pubkey,
             satomis,
+            lamports: satomis,
             post_balance,
             reward_type,
             commission,
@@ -54,6 +55,7 @@ impl From<Reward> for StoredExtendedReward {
         let Reward {
             pubkey,
             satomis,
+            lamports: _,
             post_balance,
             reward_type,
             commission,
