@@ -41,7 +41,7 @@ pub const DEFAULT_EXEMPTION_THRESHOLD: f64 = 2.0;
 ///
 /// Valid values are in the range [0, 100]. The remaining percentage is
 /// distributed to validators.
-pub const DEFAULT_BURN_PERCENT: u8 = 50;
+pub const DEFAULT_BURN_PERCENT: u8 = 0; // JD set to 0 as default burn percent
 
 /// Account storage overhead for calculation of base rent.
 ///

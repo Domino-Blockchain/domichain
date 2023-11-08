@@ -75,7 +75,7 @@ pub const DEFAULT_TARGET_SATOMIS_PER_SIGNATURE: u64 = 2_000_000;
 pub const DEFAULT_TARGET_SIGNATURES_PER_SLOT: u64 = 50 * DEFAULT_MS_PER_SLOT;
 
 // Percentage of tx fees to burn
-pub const DEFAULT_BURN_PERCENT: u8 = 50;
+pub const DEFAULT_BURN_PERCENT: u8 = 0; // JD change default fee burn to 0
 
 impl Default for FeeRateGovernor {
     fn default() -> Self {

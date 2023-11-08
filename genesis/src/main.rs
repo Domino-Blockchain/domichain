@@ -111,6 +111,7 @@ pub fn load_genesis_accounts(file: &str, genesis_config: &mut GenesisConfig) -> 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let default_faucet_pubkey = domichain_cli_config::Config::default().keypair_path;
     let fee_rate_governor = FeeRateGovernor::default();
+    let fee_rate_governor.burn_percent = 0; // JD set burn percent to 0
     let (
         default_target_satomis_per_signature,
         default_target_signatures_per_slot,
@@ -124,6 +125,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     };
 
     let rent = Rent::default();
+    let rent.burn_percent = 0; //     // JD set burn to 0
     let (
         default_satomis_per_byte_year,
         default_rent_exemption_threshold,
@@ -459,7 +461,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         value_t_or_exit!(matches, "target_satomis_per_signature", u64),
         value_t_or_exit!(matches, "target_signatures_per_slot", u64),
     );
-    fee_rate_governor.burn_percent = value_t_or_exit!(matches, "fee_burn_percentage", u8);
+    // fee_rate_governor.burn_percent = value_t_or_exit!(matches, "fee_burn_percentage", u8);
+    fee_rate_governor.burn_percent = 0; // JD force fee burn = 0% to encourage small validators
 
     let mut poh_config = PohConfig {
         target_tick_duration: if matches.is_present("target_tick_duration") {
