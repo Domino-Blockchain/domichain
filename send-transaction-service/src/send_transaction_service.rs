@@ -598,7 +598,7 @@ impl SendTransactionService {
         let mut batched_transactions = HashSet::new();
         let retry_rate = Duration::from_millis(config.retry_rate_ms);
 
-        transactions.retain(|signature, mut transaction_info| {
+        transactions.retain(|signature, transaction_info| {
             if transaction_info.durable_nonce_info.is_some() {
                 stats.nonced_transactions.fetch_add(1, Ordering::Relaxed);
             }

@@ -1,5 +1,3 @@
-use std::mem::size_of_val;
-
 pub use self::{
     cpi::{SyscallInvokeSignedC, SyscallInvokeSignedRust},
     logging::{
@@ -342,7 +340,7 @@ fn translate_type_inner<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a mut T, Error> {
-    let vm_addr_ = vm_addr as *mut T;
+    // let vm_addr_ = vm_addr as *mut T;
     // println!("\t[{file}:{line}] translate_type_inner access_type={access_type:?}", file=file!(), line=line!());
     // println!("\t[{file}:{line}] translate_type_inner vm_addr_={vm_addr_:?}", file=file!(), line=line!());
     // println!("\t[{file}:{line}] translate_type_inner size_of::<T>() as u64={:?}", size_of::<T>() as u64, file=file!(), line=line!());
@@ -374,7 +372,7 @@ fn translate_type<'a, T>(
     vm_addr: u64,
     check_aligned: bool,
 ) -> Result<&'a T, Error> {
-    let vm_addr_ = vm_addr as *mut T;
+    // let vm_addr_ = vm_addr as *mut T;
     // println!("\t[{file}:{line}] translate_type vm_addr_={vm_addr_:?}", file=file!(), line=line!());
     translate_type_inner::<T>(memory_mapping, AccessType::Load, vm_addr, check_aligned)
         .map(|value| &*value)

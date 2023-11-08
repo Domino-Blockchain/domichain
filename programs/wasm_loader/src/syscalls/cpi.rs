@@ -369,7 +369,7 @@ impl<'a> CallerAccount<'a> {
         let bpf_account_data_direct_mapping = invoke_context
             .feature_set
             .is_active(&feature_set::bpf_account_data_direct_mapping::id());
-        let serialized_data = translate_slice_mut::<u8>(
+        let _serialized_data = translate_slice_mut::<u8>(
             memory_mapping,
             if bpf_account_data_direct_mapping {
                 vm_data_addr.saturating_add(original_data_len as u64)
@@ -396,7 +396,7 @@ impl<'a> CallerAccount<'a> {
         let data_len_vm_addr = vm_addr
             .saturating_add(&account_info.data_len as *const u64 as u64)
             .saturating_sub(account_info as *const _ as *const u64 as u64);
-        let data_len_addr = translate(
+        let _data_len_addr = translate(
             memory_mapping,
             AccessType::Store,
             data_len_vm_addr,
@@ -426,7 +426,7 @@ impl<'a> CallerAccount<'a> {
             satomis,
             owner,
             original_data_len,
-            serialized_data,
+            serialized_data: _serialized_data,
             vm_data_addr,
             ref_to_len_in_vm,
             serialized_len_ptr,
