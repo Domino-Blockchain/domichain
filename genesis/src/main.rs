@@ -111,7 +111,6 @@ pub fn load_genesis_accounts(file: &str, genesis_config: &mut GenesisConfig) -> 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let default_faucet_pubkey = domichain_cli_config::Config::default().keypair_path;
     let fee_rate_governor = FeeRateGovernor::default();
-    let fee_rate_governor.burn_percent = 0; // JD set burn percent to 0
     let (
         default_target_satomis_per_signature,
         default_target_signatures_per_slot,
@@ -125,7 +124,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     };
 
     let rent = Rent::default();
-    let rent.burn_percent = 0; //     // JD set burn to 0
     let (
         default_satomis_per_byte_year,
         default_rent_exemption_threshold,
