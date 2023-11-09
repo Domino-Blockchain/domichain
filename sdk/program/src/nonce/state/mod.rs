@@ -134,6 +134,7 @@ mod tests {
             durable_nonce,
             fee_calculator: FeeCalculator {
                 satomis_per_signature: 2718,
+                lamports_per_signature: 2718,
             },
         };
         let versions = Versions::Legacy(Box::new(State::Initialized(data.clone())));
@@ -176,6 +177,7 @@ mod tests {
             durable_nonce,
             fee_calculator: FeeCalculator {
                 satomis_per_signature: 2718,
+                lamports_per_signature: 2718,
             },
         };
         let versions = Versions::Legacy(Box::new(State::Initialized(data.clone())));
@@ -215,6 +217,7 @@ mod tests {
             durable_nonce,
             fee_calculator: FeeCalculator {
                 satomis_per_signature: 2718,
+                lamports_per_signature: 2718,
             },
         };
         let account_authority = data.authority;

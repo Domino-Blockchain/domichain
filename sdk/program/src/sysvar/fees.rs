@@ -62,6 +62,7 @@ mod tests {
         let fees = Fees {
             fee_calculator: FeeCalculator {
                 satomis_per_signature: 1,
+                lamports_per_signature: 1,
             },
         };
         let cloned_fees = fees.clone();
