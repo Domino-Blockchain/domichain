@@ -14,12 +14,14 @@ pub struct FeeCalculator {
     /// This amount may increase/decrease over time based on cluster processing
     /// load.
     pub satomis_per_signature: u64,
+    pub lamports_per_signature: u64,
 }
 
 impl FeeCalculator {
     pub fn new(satomis_per_signature: u64) -> Self {
         Self {
             satomis_per_signature,
+            lamports_per_signature: satomis_per_signature,
         }
     }
 
@@ -67,6 +69,15 @@ pub struct FeeRateGovernor {
     pub min_satomis_per_signature: u64,
     pub max_satomis_per_signature: u64,
 
+    // RPC only:
+    // The target cost of a signature when the cluster is operating around target_signatures_per_slot
+    // signatures
+    pub target_lamports_per_signature: u64,
+
+    pub min_lamports_per_signature: u64,
+    pub max_lamports_per_signature: u64,
+
+
     // What portion of collected fees are to be destroyed, as a fraction of std::u8::MAX
     pub burn_percent: u8,
 }
@@ -85,6 +96,9 @@ impl Default for FeeRateGovernor {
             target_signatures_per_slot: DEFAULT_TARGET_SIGNATURES_PER_SLOT,
             min_satomis_per_signature: 0,
             max_satomis_per_signature: 0,
+            target_lamports_per_signature: DEFAULT_TARGET_SATOMIS_PER_SIGNATURE,
+            min_lamports_per_signature: 0,
+            max_lamports_per_signature: 0,
             burn_percent: DEFAULT_BURN_PERCENT,
         }
     }
@@ -95,6 +109,7 @@ impl FeeRateGovernor {
         let base_fee_rate_governor = Self {
             target_satomis_per_signature,
             satomis_per_signature: target_satomis_per_signature,
+            target_lamports_per_signature: target_satomis_per_signature,
             target_signatures_per_slot,
             ..FeeRateGovernor::default()
         };

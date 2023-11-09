@@ -41,6 +41,7 @@ pub const MAX_BASE58_BYTES: usize = 128;
 #[serde(rename_all = "camelCase")]
 pub struct UiAccount {
     pub satomis: u64,
+    pub lamports: u64,
     pub data: UiAccountData,
     pub owner: String,
     pub executable: bool,
@@ -130,6 +131,7 @@ impl UiAccount {
         };
         UiAccount {
             satomis: account.satomis(),
+            lamports: account.satomis(),
             data,
             owner: account.owner().to_string(),
             executable: account.executable(),
