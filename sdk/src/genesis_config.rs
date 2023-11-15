@@ -2,6 +2,8 @@
 
 #![cfg(all(not(target_os = "wasi"), feature = "full"))]
 
+use domichain_program::fee_calculator::FeeRateGovernorCompat;
+
 use {
     crate::{
         account::{Account, AccountSharedData},
@@ -97,6 +99,70 @@ pub struct GenesisConfig {
     pub cluster_type: ClusterType,
 }
 
+#[frozen_abi(digest = "3V3ZVRyzNhRfe8RJwDeGpeTP8xBWGGFBEbwTkvKKVjEa")]
+#[derive(Serialize, Deserialize, Debug, Clone, AbiExample, PartialEq)]
+pub struct GenesisConfigCompat {
+    /// when the network (bootstrap validator) was started relative to the UNIX Epoch
+    pub creation_time: UnixTimestamp,
+    /// initial accounts
+    pub accounts: BTreeMap<Pubkey, Account>,
+    /// built-in programs
+    pub native_instruction_processors: Vec<(String, Pubkey)>,
+    /// accounts for network rewards, these do not count towards capitalization
+    pub rewards_pools: BTreeMap<Pubkey, Account>,
+    pub ticks_per_slot: u64,
+    pub unused: u64,
+    /// network speed configuration
+    pub poh_config: PohConfig,
+    /// this field exists only to ensure that the binary layout of GenesisConfig remains compatible
+    /// with the Domichain v0.23 release line
+    pub __backwards_compat_with_v0_23: u64,
+    /// transaction fee config
+    pub fee_rate_governor: FeeRateGovernorCompat,
+    /// rent config
+    pub rent: Rent,
+    /// inflation config
+    pub inflation: Inflation,
+    /// how slots map to epochs
+    pub epoch_schedule: EpochSchedule,
+    /// network runlevel
+    pub cluster_type: ClusterType,
+}
+
+impl From<GenesisConfigCompat> for GenesisConfig {
+    fn from(value: GenesisConfigCompat) -> Self {
+        let GenesisConfigCompat {
+            creation_time,
+            accounts,
+            native_instruction_processors,
+            rewards_pools,
+            ticks_per_slot,
+            unused,
+            poh_config,
+            __backwards_compat_with_v0_23,
+            fee_rate_governor,
+            rent,
+            inflation,
+            epoch_schedule,
+            cluster_type,
+        } = value;
+        GenesisConfig { creation_time,
+            accounts,
+            native_instruction_processors,
+            rewards_pools,
+            ticks_per_slot,
+            unused,
+            poh_config,
+            __backwards_compat_with_v0_23,
+            fee_rate_governor: fee_rate_governor.into(),
+            rent,
+            inflation,
+            epoch_schedule,
+            cluster_type,
+        }
+    }
+}
+
 // useful for basic tests
 pub fn create_genesis_config(satomis: u64) -> (GenesisConfig, Keypair) {
     let faucet_keypair = Keypair::new();
@@ -180,13 +246,13 @@ impl GenesisConfig {
             )
         })?;
 
-        let genesis_config = deserialize(&mem).map_err(|err| {
+        let genesis_config: GenesisConfigCompat = deserialize(&mem).map_err(|err| {
             std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Unable to deserialize {filename:?}: {err:?}"),
             )
         })?;
-        Ok(genesis_config)
+        Ok(genesis_config.into())
     }
 
     pub fn write(&self, ledger_path: &Path) -> Result<(), std::io::Error> {

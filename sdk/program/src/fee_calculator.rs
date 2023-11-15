@@ -82,6 +82,54 @@ pub struct FeeRateGovernor {
     pub burn_percent: u8,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug, AbiExample)]
+#[serde(rename_all = "camelCase")]
+pub struct FeeRateGovernorCompat {
+    // The current cost of a signature  This amount may increase/decrease over time based on
+    // cluster processing load.
+    #[serde(skip)]
+    pub satomis_per_signature: u64,
+
+    // The target cost of a signature when the cluster is operating around target_signatures_per_slot
+    // signatures
+    pub target_satomis_per_signature: u64,
+
+    // Used to estimate the desired processing capacity of the cluster.  As the signatures for
+    // recent slots are fewer/greater than this value, satomis_per_signature will decrease/increase
+    // for the next slot.  A value of 0 disables satomis_per_signature fee adjustments
+    pub target_signatures_per_slot: u64,
+
+    pub min_satomis_per_signature: u64,
+    pub max_satomis_per_signature: u64,
+
+    // What portion of collected fees are to be destroyed, as a fraction of std::u8::MAX
+    pub burn_percent: u8,
+}
+
+impl From<FeeRateGovernorCompat> for FeeRateGovernor {
+    fn from(value: FeeRateGovernorCompat) -> Self {
+        let FeeRateGovernorCompat {
+            satomis_per_signature,
+            target_satomis_per_signature,
+            target_signatures_per_slot,
+            min_satomis_per_signature,
+            max_satomis_per_signature,
+            burn_percent,
+        } = value;
+        FeeRateGovernor {
+            satomis_per_signature,
+            target_satomis_per_signature,
+            target_signatures_per_slot,
+            min_satomis_per_signature,
+            max_satomis_per_signature,
+            burn_percent,
+            target_lamports_per_signature: target_satomis_per_signature,
+            min_lamports_per_signature: min_satomis_per_signature,
+            max_lamports_per_signature: max_satomis_per_signature,
+        }
+    }
+}
+
 pub const DEFAULT_TARGET_SATOMIS_PER_SIGNATURE: u64 = 2_000_000;
 pub const DEFAULT_TARGET_SIGNATURES_PER_SLOT: u64 = 50 * DEFAULT_MS_PER_SLOT;
 
