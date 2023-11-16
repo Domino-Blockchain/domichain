@@ -40,6 +40,7 @@ pub const MAX_BASE58_BYTES: usize = 128;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UiAccount {
+    #[serde(rename = "lamports")]
     pub satomis: u64,
     pub data: UiAccountData,
     pub owner: String,

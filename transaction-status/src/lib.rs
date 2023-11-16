@@ -599,6 +599,7 @@ pub struct ConfirmedTransactionStatusWithSignature {
 #[serde(rename_all = "camelCase")]
 pub struct Reward {
     pub pubkey: String,
+    #[serde(rename = "lamports")]
     pub satomis: i64,
     pub post_balance: u64, // Account balance in satomis after `satomis` was applied
     pub reward_type: Option<RewardType>,
