@@ -118,6 +118,7 @@ impl TransactionStatusService {
                         let fee = bank.get_fee_for_message_with_satomis_per_signature(
                             transaction.message(),
                             satomis_per_signature,
+                            transaction.is_simple_vote_transaction(),
                         );
                         let tx_account_locks = transaction.get_account_locks_unchecked();
 

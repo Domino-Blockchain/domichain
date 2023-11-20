@@ -42,6 +42,8 @@ impl FeeCalculator {
             }
         }
 
+        // FIXME: fix fee for vote TXs
+        error!("TX fee for votes is not fixed for FeeCalculator::calculate_fee()");
         self.satomis_per_signature
             * (u64::from(message.header.num_required_signatures) + num_signatures)
     }

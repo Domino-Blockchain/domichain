@@ -3570,7 +3570,7 @@ impl Bank {
                     NoncePartial::new(address, account).satomis_per_signature()
                 })
         })?;
-        Some(Self::calculate_fee(
+        Some(Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
             &self.fee_structure,
@@ -3586,6 +3586,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+                todo!(),
         ))
     }
 
@@ -3620,8 +3621,9 @@ impl Bank {
         &self,
         message: &SanitizedMessage,
         satomis_per_signature: u64,
+        is_vote: bool,
     ) -> u64 {
-        Self::calculate_fee(
+        Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
             &self.fee_structure,
@@ -3637,6 +3639,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+            is_vote,
         )
     }
 
@@ -4952,6 +4955,33 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
     ) -> u64 {
+        Self::calculate_fee_with_vote(
+            message,
+            satomis_per_signature,
+            fee_structure,
+            use_default_units_per_instruction,
+            support_request_units_deprecated,
+            remove_congestion_multiplier,
+            enable_request_heap_frame_ix,
+            support_set_accounts_data_size_limit_ix,
+            include_loaded_account_data_size_in_fee,
+            false,
+        )
+    }
+    
+    /// Calculate fee for `SanitizedMessage`
+    pub fn calculate_fee_with_vote(
+        message: &SanitizedMessage,
+        satomis_per_signature: u64,
+        fee_structure: &FeeStructure,
+        use_default_units_per_instruction: bool,
+        support_request_units_deprecated: bool,
+        remove_congestion_multiplier: bool,
+        enable_request_heap_frame_ix: bool,
+        support_set_accounts_data_size_limit_ix: bool,
+        include_loaded_account_data_size_in_fee: bool,
+        is_vote: bool,
+    ) -> u64 {
         // Fee based on compute units and signatures
         let congestion_multiplier = if satomis_per_signature == 0 {
             0.0 // test only
@@ -4974,8 +5004,15 @@ impl Bank {
             )
             .unwrap_or_default();
         let prioritization_fee = prioritization_fee_details.get_fee();
+
+        let satomis_per_signature = if is_vote {
+            let vote_signature_multiplier: f64 = 0.01; // TODO: set actual value
+            (fee_structure.satomis_per_signature as f64 * vote_signature_multiplier) as u64
+        } else {
+            fee_structure.satomis_per_signature
+        };
         let signature_fee = Self::get_num_signatures_in_message(message)
-            .saturating_mul(fee_structure.satomis_per_signature);
+            .saturating_mul(satomis_per_signature);
         let write_lock_fee = Self::get_num_write_locks_in_message(message)
             .saturating_mul(fee_structure.satomis_per_write_lock);
 
@@ -5057,7 +5094,8 @@ impl Bank {
 
                 let satomis_per_signature =
                     satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                let fee = Self::calculate_fee(
+                    
+                let fee = Self::calculate_fee_with_vote(
                     tx.message(),
                     satomis_per_signature,
                     &self.fee_structure,
@@ -5073,6 +5111,7 @@ impl Bank {
                         .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
                     self.feature_set
                         .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+                    tx.is_simple_vote_transaction()
                 );
 
                 // In case of instruction error, even though no accounts
