@@ -116,6 +116,7 @@ impl SanitizedTransaction {
             }
         };
 
+        // TODO: move to function
         let is_simple_vote_tx = is_simple_vote_tx.unwrap_or_else(|| {
             if signatures.len() < 3
                 && message.instructions().len() == 1

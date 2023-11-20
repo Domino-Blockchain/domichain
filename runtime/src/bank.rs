@@ -263,6 +263,7 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
+use domichain_sdk::vote;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -3570,6 +3571,18 @@ impl Bank {
                     NoncePartial::new(address, account).satomis_per_signature()
                 })
         })?;
+
+        // TODO: move to function
+        let is_simple_vote_tx = if message.instructions().len() == 1
+            && matches!(message, SanitizedMessage::Legacy(_))
+        {
+            let mut ix_iter = message.program_instructions_iter();
+            ix_iter.next().map(|(program_id, _ix)| program_id)
+                == Some(&vote::program::id())
+        } else {
+            false
+        };
+
         Some(Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
@@ -3586,7 +3599,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
-                todo!(),
+            is_simple_vote_tx,
         ))
     }
 
