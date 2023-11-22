@@ -3571,7 +3571,6 @@ impl Bank {
                     NoncePartial::new(address, account).satomis_per_signature()
                 })
         })?;
-
         Some(Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
@@ -5006,7 +5005,6 @@ impl Bank {
             )
             .unwrap_or_default();
         let prioritization_fee = prioritization_fee_details.get_fee();
-
         let satomis_per_signature = if is_vote {
             (fee_structure.satomis_per_signature as f64 * VOTE_SIGNATURE_MULTIPLIER) as u64
         } else {
@@ -5095,7 +5093,6 @@ impl Bank {
 
                 let satomis_per_signature =
                     satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                    
                 let fee = Self::calculate_fee_with_vote(
                     tx.message(),
                     satomis_per_signature,
