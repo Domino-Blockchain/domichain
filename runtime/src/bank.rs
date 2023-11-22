@@ -133,7 +133,7 @@ use {
             use_default_units_in_fee_calculation, FeatureSet,
         },
         fee::FeeStructure,
-        fee_calculator::{FeeCalculator, FeeRateGovernor},
+        fee_calculator::{FeeCalculator, FeeRateGovernor, VOTE_SIGNATURE_MULTIPLIER},
         genesis_config::{ClusterType, GenesisConfig},
         hard_forks::HardForks,
         hash::{extend_and_hash, hash, hashv, Hash},
@@ -165,6 +165,7 @@ use {
         transaction_context::{
             ExecutionRecord, TransactionAccount, TransactionContext, TransactionReturnData,
         },
+        vote,
     },
     domichain_stake_program::stake_state::{
         self, InflationPointCalculationEvent, PointValue, StakeState,
@@ -263,7 +264,6 @@ pub struct BankRc {
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use domichain_frozen_abi::abi_example::AbiExample;
-use domichain_sdk::vote;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 impl AbiExample for BankRc {
@@ -3572,17 +3572,6 @@ impl Bank {
                 })
         })?;
 
-        // TODO: move to function
-        let is_simple_vote_tx = if message.instructions().len() == 1
-            && matches!(message, SanitizedMessage::Legacy(_))
-        {
-            let mut ix_iter = message.program_instructions_iter();
-            ix_iter.next().map(|(program_id, _ix)| program_id)
-                == Some(&vote::program::id())
-        } else {
-            false
-        };
-
         Some(Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
@@ -3599,7 +3588,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
-            is_simple_vote_tx,
+            message.is_simple_vote(),
         ))
     }
 
@@ -5019,8 +5008,7 @@ impl Bank {
         let prioritization_fee = prioritization_fee_details.get_fee();
 
         let satomis_per_signature = if is_vote {
-            let vote_signature_multiplier: f64 = 0.01; // TODO: set actual value
-            (fee_structure.satomis_per_signature as f64 * vote_signature_multiplier) as u64
+            (fee_structure.satomis_per_signature as f64 * VOTE_SIGNATURE_MULTIPLIER) as u64
         } else {
             fee_structure.satomis_per_signature
         };

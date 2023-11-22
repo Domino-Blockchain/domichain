@@ -116,19 +116,8 @@ impl SanitizedTransaction {
             }
         };
 
-        // TODO: move to function
-        let is_simple_vote_tx = is_simple_vote_tx.unwrap_or_else(|| {
-            if signatures.len() < 3
-                && message.instructions().len() == 1
-                && matches!(message, SanitizedMessage::Legacy(_))
-            {
-                let mut ix_iter = message.program_instructions_iter();
-                ix_iter.next().map(|(program_id, _ix)| program_id)
-                    == Some(&crate::vote::program::id())
-            } else {
-                false
-            }
-        });
+        let is_simple_vote_tx = is_simple_vote_tx
+            .unwrap_or_else(|| signatures.len() < 3 && message.is_simple_vote());
 
         Ok(Self {
             message,
