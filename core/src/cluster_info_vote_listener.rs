@@ -1,3 +1,5 @@
+use domichain_sdk::native_token::SATOMIS_PER_DOMI;
+
 use {
     crate::{
         banking_trace::{BankingPacketBatch, BankingPacketSender},
@@ -401,8 +403,8 @@ impl ClusterInfoVoteListener {
                         ]);
 
                         let weight = sortition::select(
-                            stake,
-                            total_stake,                // Maybe use circulation across net?
+                            stake/1000,
+                            total_stake/1000,                // Maybe use circulation across net?
                             total_weight as f64,  // Consensus params
                             h,
                         );
@@ -764,8 +766,8 @@ impl ClusterInfoVoteListener {
                         ]);
 
                         let weight = sortition::select(
-                            stake,
-                            total_stake,
+                            stake/1000,
+                            total_stake/1000,
                             total_weight as f64,
                             h,
                         );
