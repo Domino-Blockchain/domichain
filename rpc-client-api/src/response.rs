@@ -436,6 +436,7 @@ pub struct RpcStorageTurn {
 #[serde(rename_all = "camelCase")]
 pub struct RpcAccountBalance {
     pub address: String,
+    #[serde(rename = "lamports")]
     pub satomis: u64,
 }
 

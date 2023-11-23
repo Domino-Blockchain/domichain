@@ -15,6 +15,7 @@ pub struct FeeCalculator {
     ///
     /// This amount may increase/decrease over time based on cluster processing
     /// load.
+    #[serde(rename = "lamportsPerSignature")]
     pub satomis_per_signature: u64,
 }
 
@@ -74,6 +75,7 @@ pub struct FeeRateGovernor {
 
     // The target cost of a signature when the cluster is operating around target_signatures_per_slot
     // signatures
+    #[serde(rename = "targetLamportsPerSignature")]
     pub target_satomis_per_signature: u64,
 
     // Used to estimate the desired processing capacity of the cluster.  As the signatures for
@@ -81,7 +83,9 @@ pub struct FeeRateGovernor {
     // for the next slot.  A value of 0 disables satomis_per_signature fee adjustments
     pub target_signatures_per_slot: u64,
 
+    #[serde(rename = "minLamportsPerSignature")]
     pub min_satomis_per_signature: u64,
+    #[serde(rename = "maxLamportsPerSignature")]
     pub max_satomis_per_signature: u64,
 
     // What portion of collected fees are to be destroyed, as a fraction of std::u8::MAX
