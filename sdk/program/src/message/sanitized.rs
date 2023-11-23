@@ -343,6 +343,18 @@ impl SanitizedMessage {
                 })
             })
     }
+
+    pub fn is_simple_vote(&self) -> bool {
+        if self.instructions().len() == 1
+            && matches!(self, SanitizedMessage::Legacy(_))
+        {
+            let mut ix_iter = self.program_instructions_iter();
+            ix_iter.next().map(|(program_id, _ix)| program_id)
+                == Some(&crate::vote::program::id())
+        } else {
+            false
+        }
+    }
 }
 
 #[cfg(test)]

@@ -133,7 +133,7 @@ use {
             use_default_units_in_fee_calculation, FeatureSet,
         },
         fee::FeeStructure,
-        fee_calculator::{FeeCalculator, FeeRateGovernor},
+        fee_calculator::{FeeCalculator, FeeRateGovernor, VOTE_SIGNATURE_MULTIPLIER},
         genesis_config::{ClusterType, GenesisConfig},
         hard_forks::HardForks,
         hash::{extend_and_hash, hash, hashv, Hash},
@@ -165,6 +165,7 @@ use {
         transaction_context::{
             ExecutionRecord, TransactionAccount, TransactionContext, TransactionReturnData,
         },
+        vote,
     },
     domichain_stake_program::stake_state::{
         self, InflationPointCalculationEvent, PointValue, StakeState,
@@ -3570,7 +3571,7 @@ impl Bank {
                     NoncePartial::new(address, account).satomis_per_signature()
                 })
         })?;
-        Some(Self::calculate_fee(
+        Some(Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
             &self.fee_structure,
@@ -3586,6 +3587,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+            message.is_simple_vote(),
         ))
     }
 
@@ -3620,8 +3622,9 @@ impl Bank {
         &self,
         message: &SanitizedMessage,
         satomis_per_signature: u64,
+        is_vote: bool,
     ) -> u64 {
-        Self::calculate_fee(
+        Self::calculate_fee_with_vote(
             message,
             satomis_per_signature,
             &self.fee_structure,
@@ -3637,6 +3640,7 @@ impl Bank {
                 .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
             self.feature_set
                 .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+            is_vote,
         )
     }
 
@@ -4952,6 +4956,33 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
     ) -> u64 {
+        Self::calculate_fee_with_vote(
+            message,
+            satomis_per_signature,
+            fee_structure,
+            use_default_units_per_instruction,
+            support_request_units_deprecated,
+            remove_congestion_multiplier,
+            enable_request_heap_frame_ix,
+            support_set_accounts_data_size_limit_ix,
+            include_loaded_account_data_size_in_fee,
+            false,
+        )
+    }
+    
+    /// Calculate fee for `SanitizedMessage`
+    pub fn calculate_fee_with_vote(
+        message: &SanitizedMessage,
+        satomis_per_signature: u64,
+        fee_structure: &FeeStructure,
+        use_default_units_per_instruction: bool,
+        support_request_units_deprecated: bool,
+        remove_congestion_multiplier: bool,
+        enable_request_heap_frame_ix: bool,
+        support_set_accounts_data_size_limit_ix: bool,
+        include_loaded_account_data_size_in_fee: bool,
+        is_vote: bool,
+    ) -> u64 {
         // Fee based on compute units and signatures
         let congestion_multiplier = if satomis_per_signature == 0 {
             0.0 // test only
@@ -4974,8 +5005,13 @@ impl Bank {
             )
             .unwrap_or_default();
         let prioritization_fee = prioritization_fee_details.get_fee();
+        let satomis_per_signature = if is_vote {
+            (fee_structure.satomis_per_signature as f64 * VOTE_SIGNATURE_MULTIPLIER) as u64
+        } else {
+            fee_structure.satomis_per_signature
+        };
         let signature_fee = Self::get_num_signatures_in_message(message)
-            .saturating_mul(fee_structure.satomis_per_signature);
+            .saturating_mul(satomis_per_signature);
         let write_lock_fee = Self::get_num_write_locks_in_message(message)
             .saturating_mul(fee_structure.satomis_per_write_lock);
 
@@ -5057,7 +5093,7 @@ impl Bank {
 
                 let satomis_per_signature =
                     satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                let fee = Self::calculate_fee(
+                let fee = Self::calculate_fee_with_vote(
                     tx.message(),
                     satomis_per_signature,
                     &self.fee_structure,
@@ -5073,6 +5109,7 @@ impl Bank {
                         .is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
                     self.feature_set
                         .is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
+                    tx.is_simple_vote_transaction()
                 );
 
                 // In case of instruction error, even though no accounts

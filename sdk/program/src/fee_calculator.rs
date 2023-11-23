@@ -2,9 +2,11 @@
 
 #![allow(clippy::integer_arithmetic)]
 use {
-    crate::{clock::DEFAULT_MS_PER_SLOT, ed25519_program, message::Message, secp256k1_program},
+    crate::{clock::DEFAULT_MS_PER_SLOT, ed25519_program, message::Message, secp256k1_program, vote},
     log::*,
 };
+
+pub const VOTE_SIGNATURE_MULTIPLIER: f64 = 0.01;
 
 #[derive(Serialize, Deserialize, Default, PartialEq, Eq, Clone, Copy, Debug, AbiExample)]
 #[serde(rename_all = "camelCase")]
@@ -42,7 +44,22 @@ impl FeeCalculator {
             }
         }
 
-        self.satomis_per_signature
+        let is_simple_vote_tx = if message.instructions.len() == 1 {
+            let program_index = message.instructions[0].program_id_index as usize;
+            message.account_keys
+                .get(program_index)
+                .map(|id| id == &vote::program::id())
+                .unwrap_or_default()
+        } else {
+            false
+        };
+
+        let satomis_per_signature = if is_simple_vote_tx {
+            (self.satomis_per_signature as f64 * VOTE_SIGNATURE_MULTIPLIER) as u64
+        } else {
+            self.satomis_per_signature
+        };
+        satomis_per_signature
             * (u64::from(message.header.num_required_signatures) + num_signatures)
     }
 }
