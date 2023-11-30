@@ -38,7 +38,38 @@ fetch_program() {
 
 }
 
-fetch_program token 3.3.0 TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA BPFLoader2111111111111111111111111111111111
+fetch_program_wasm() {
+  declare name=$1
+  declare version=$2
+  declare address=$3
+  declare loader=$4
+
+  declare wasm=spl_$name-$version.wasm
+
+  genesis_args+=(--wasm-program "$address" "$loader" "$wasm")
+
+  if [[ -r $wasm ]]; then
+    return
+  fi
+
+  if [[ -r ~/.cache/domichain-spl/$wasm ]]; then
+    cp ~/.cache/domichain-spl/"$wasm" "$wasm"
+  else
+    echo "Downloading $name $version"
+    (
+      set -x
+      curl -L --retry 5 --retry-delay 2 --retry-connrefused \
+        -o "$wasm" \
+        "https://github.com/Domino-Blockchain/domichain-program-library/releases/download/v1.16.1-alpha/$wasm"
+    )
+
+    mkdir -p ~/.cache/domichain-spl
+    cp "$wasm" ~/.cache/domichain-spl/"$wasm"
+  fi
+
+}
+
+fetch_program_wasm token 4.0.0 TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA WASMLoader211111111111111111111111111111111
 fetch_program memo  1.0.0 Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo BPFLoader1111111111111111111111111111111111
 fetch_program memo  3.0.0 MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr BPFLoader2111111111111111111111111111111111
 fetch_program associated-token-account 1.0.5 ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL BPFLoader2111111111111111111111111111111111
@@ -49,6 +80,7 @@ echo "${genesis_args[@]}" > spl-genesis-args.sh
 echo
 echo "Available SPL programs:"
 ls -l spl_*.so
+ls -l spl_*.wasm
 
 echo
 echo "domichain-genesis command-line arguments (spl-genesis-args.sh):"
