@@ -517,12 +517,17 @@ impl Pubkey {
         // Call via a system call to perform the calculation
         #[cfg(target_os = "wasi")]
         {
+            if !seeds.iter().all(|seed| seed.len() == 32) {
+                return None;
+            }
+            let seeds_flatten: Vec<u8> = seeds.iter().flat_map(|seed| seed.iter().copied()).collect();
+
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
             let result = unsafe {
                 crate::syscalls::sol_try_find_program_address(
-                    seeds as *const _ as *const u8,
-                    seeds.len() as u64,
+                    seeds_flatten.as_ptr(),
+                    seeds_flatten.len() as u64,
                     program_id as *const _ as *const u8,
                     &mut bytes as *mut _ as *mut u8,
                     &mut bump_seed as *mut _ as *mut u8,
