@@ -476,7 +476,10 @@ impl Pubkey {
     /// ```
     pub fn find_program_address(seeds: &[&[u8]], program_id: &Pubkey) -> (Pubkey, u8) {
         Self::try_find_program_address(seeds, program_id)
-            .unwrap_or_else(|| panic!("Unable to find a viable program address bump seed"))
+            .unwrap_or_else(|| {
+                crate::msg!("find_program_address error");
+                panic!("Unable to find a viable program address bump seed");
+            })
     }
 
     /// Find a valid [program derived address][pda] and its corresponding bump seed.
@@ -517,17 +520,14 @@ impl Pubkey {
         // Call via a system call to perform the calculation
         #[cfg(target_os = "wasi")]
         {
-            if !seeds.iter().all(|seed| seed.len() == 32) {
-                return None;
-            }
-            let seeds_flatten: Vec<u8> = seeds.iter().flat_map(|seed| seed.iter().copied()).collect();
+            let seeds_serialized = bincode::serialize(seeds).unwrap();
 
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
             let result = unsafe {
                 crate::syscalls::sol_try_find_program_address(
-                    seeds_flatten.as_ptr(),
-                    seeds_flatten.len() as u64,
+                    seeds_serialized.as_ptr(),
+                    seeds_serialized.len() as u64,
                     program_id as *const _ as *const u8,
                     &mut bytes as *mut _ as *mut u8,
                     &mut bump_seed as *mut _ as *mut u8,

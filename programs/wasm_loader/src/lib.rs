@@ -1800,7 +1800,10 @@ fn map_wasmi_to_bpf_syscalls<'a, 'b>(
 
     match result {
         StableResult::Ok(i) => Ok(i as _),
-        StableResult::Err(e) => Err(Trap::new(format!("{:?}", e))),
+        StableResult::Err(e) => {
+            eprintln!("syscall error: {e:?}, trace: {:#?}", std::backtrace::Backtrace::force_capture());
+            Err(Trap::new(format!("{e:?}")))
+        },
     }
 }
 
