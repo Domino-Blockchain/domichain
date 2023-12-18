@@ -57,6 +57,7 @@ domichain-metrics = { workspace = true }
 domichain-perf = { workspace = true }
 domichain-program-runtime = { workspace = true }
 domichain-rayon-threadlimit = { workspace = true }
+domichain_risk_score = { workspace = true }
 domichain-sdk = { workspace = true }
 domichain-stake-program = { workspace = true }
 domichain-system-program = { workspace = true }
@@ -71,6 +72,9 @@ tar = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 zstd = { workspace = true }
+ed25519-dalek = "1.0.0"
+chrono = "0.4"
+
 
 [lib]
 crate-type = ["lib"]

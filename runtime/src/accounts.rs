@@ -729,8 +729,8 @@ impl Accounts {
                         .unwrap_or_else(|| {
                             hash_queue.get_satomis_per_signature(tx.message().recent_blockhash())
                         });
-                    let fee = if let Some(satomis_per_signature) = satomis_per_signature {
-                        Bank::calculate_fee_with_vote(
+                    let (fee, _, _) = if let Some(satomis_per_signature) = satomis_per_signature {
+                        Bank::calculate_fee(
                             tx.message(),
                             satomis_per_signature,
                             fee_structure,
@@ -740,7 +740,6 @@ impl Accounts {
                             feature_set.is_active(&enable_request_heap_frame_ix::id()) || self.accounts_db.expected_cluster_type() != ClusterType::MainnetBeta,
                             feature_set.is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
                             feature_set.is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
-                            tx.is_simple_vote_transaction(),
                         )
                     } else {
                         return (Err(TransactionError::BlockhashNotFound), None);
