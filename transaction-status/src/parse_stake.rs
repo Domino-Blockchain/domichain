@@ -90,7 +90,7 @@ pub fn parse_stake(
                     "stakeAccount": account_keys[instruction.accounts[0] as usize].to_string(),
                     "newSplitAccount": account_keys[instruction.accounts[1] as usize].to_string(),
                     "stakeAuthority": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             })
         }
@@ -102,7 +102,7 @@ pub fn parse_stake(
                 "clockSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
                 "stakeHistorySysvar": account_keys[instruction.accounts[3] as usize].to_string(),
                 "withdrawAuthority": account_keys[instruction.accounts[4] as usize].to_string(),
-                "satomis": satomis,
+                "lamports": satomis,
             });
             let map = value.as_object_mut().unwrap();
             if instruction.accounts.len() >= 6 {
@@ -516,7 +516,7 @@ mod test {
                     "stakeAccount": stake_pubkey.to_string(),
                     "newSplitAccount": split_stake_pubkey.to_string(),
                     "stakeAuthority": authorized_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             }
         );
@@ -559,7 +559,7 @@ mod test {
                     "clockSysvar": sysvar::clock::ID.to_string(),
                     "stakeHistorySysvar": sysvar::stake_history::ID.to_string(),
                     "withdrawAuthority": withdrawer_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             }
         );
@@ -586,7 +586,7 @@ mod test {
                     "stakeHistorySysvar": sysvar::stake_history::ID.to_string(),
                     "withdrawAuthority": withdrawer_pubkey.to_string(),
                     "custodian": custodian_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             }
         );

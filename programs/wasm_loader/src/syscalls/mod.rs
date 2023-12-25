@@ -590,31 +590,21 @@ fn translate_and_check_program_address_inputs<'a>(
     check_aligned: bool,
     check_size: bool,
 ) -> Result<(Vec<&'a [u8]>, &'a Pubkey), Error> {
-    let untranslated_seeds = translate_slice::<&[&u8]>(
+    let flat_seeds = translate_slice::<u8>(
         memory_mapping,
         seeds_addr,
         seeds_len,
         check_aligned,
         check_size,
     )?;
-    if untranslated_seeds.len() > MAX_SEEDS {
-        return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
+    if flat_seeds.len() % 32 != 0 {
+        return Err(SyscallError::BadSeeds(PubkeyError::InvalidSeeds).into());
     }
-    let seeds = untranslated_seeds
-        .iter()
-        .map(|untranslated_seed| {
-            if untranslated_seed.len() > MAX_SEED_LEN {
+    let seeds_len = flat_seeds.len() / 32;
+    if seeds_len > MAX_SEEDS {
                 return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
             }
-            translate_slice::<u8>(
-                memory_mapping,
-                untranslated_seed.as_ptr() as *const _ as u64,
-                untranslated_seed.len() as u64,
-                check_aligned,
-                check_size,
-            )
-        })
-        .collect::<Result<Vec<_>, Error>>()?;
+    let seeds = flat_seeds.chunks_exact(32).map(|seed| seed).collect();
     let program_id = translate_type::<Pubkey>(memory_mapping, program_id_addr, check_aligned)?;
     Ok((seeds, program_id))
 }

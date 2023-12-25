@@ -181,7 +181,7 @@ pub fn parse_vote(
                     "voteAccount": account_keys[instruction.accounts[0] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[1] as usize].to_string(),
                     "withdrawAuthority": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             })
         }
@@ -476,6 +476,7 @@ mod test {
                         "slots": [1, 2, 4],
                         "hash": hash.to_string(),
                         "timestamp": 1_234_567_890,
+                        "vrf_proof": null,
                     },
                 }),
             }
@@ -515,7 +516,7 @@ mod test {
                     "voteAccount": vote_pubkey.to_string(),
                     "destination": to_pubkey.to_string(),
                     "withdrawAuthority": authorized_withdrawer_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             }
         );
@@ -634,6 +635,7 @@ mod test {
                         "slots": [1, 2, 4],
                         "hash": hash.to_string(),
                         "timestamp": 1_234_567_890,
+                        "vrf_proof": null,
                     },
                     "hash": proof_hash.to_string(),
                 }),
@@ -717,6 +719,7 @@ mod test {
                         "root": None::<u64>,
                         "hash": Hash::default().to_string(),
                         "timestamp": None::<u64>,
+                        "vrf_proof": null,
                     },
                 }),
             }

@@ -384,6 +384,15 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 .help("Install a SBF program at the given address"),
         )
         .arg(
+            Arg::with_name("wasm_program")
+                .long("wasm-program")
+                .value_name("ADDRESS LOADER WASM_PROGRAM.WASM")
+                .takes_value(true)
+                .number_of_values(3)
+                .multiple(true)
+                .help("Install a WASM program at the given address"),
+        )
+        .arg(
             Arg::with_name("upgradeable_program")
                 .long("upgradeable-program")
                 .value_name("ADDRESS UPGRADEABLE_LOADER SBF_PROGRAM.SO UPGRADE_AUTHORITY")
@@ -644,6 +653,25 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
     }
 
+    if let Some(values) = matches.values_of("wasm_program") {
+        for (address, loader, program) in values.tuples() {
+            let address = parse_address(address, "address");
+            let loader = parse_address(loader, "loader");
+            let program_data = parse_program_data(program);
+            genesis_config.add_account(
+                address,
+                AccountSharedData::from(Account {
+                    satomis: genesis_config.rent.minimum_balance(program_data.len()),
+                    data: program_data,
+                    executable: true,
+                    owner: loader,
+                    rent_epoch: 0,
+                }),
+            );
+        }
+    }
+
+    // TODO: check WASM path here
     if let Some(values) = matches.values_of("upgradeable_program") {
         for (address, loader, program, upgrade_authority) in values.tuples() {
             let address = parse_address(address, "address");

@@ -37,7 +37,7 @@ pub fn parse_system(
                 info: json!({
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "newAccount": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "space": space,
                     "owner": owner.to_string(),
                 }),
@@ -60,7 +60,7 @@ pub fn parse_system(
                 info: json!({
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[1] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             })
         }
@@ -79,7 +79,7 @@ pub fn parse_system(
                     "newAccount": account_keys[instruction.accounts[1] as usize].to_string(),
                     "base": base.to_string(),
                     "seed": seed,
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "space": space,
                     "owner": owner.to_string(),
                 }),
@@ -106,7 +106,7 @@ pub fn parse_system(
                     "recentBlockhashesSysvar": account_keys[instruction.accounts[2] as usize].to_string(),
                     "rentSysvar": account_keys[instruction.accounts[3] as usize].to_string(),
                     "nonceAuthority": account_keys[instruction.accounts[4] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             })
         }
@@ -194,7 +194,7 @@ pub fn parse_system(
                     "source": account_keys[instruction.accounts[0] as usize].to_string(),
                     "sourceBase": account_keys[instruction.accounts[1] as usize].to_string(),
                     "destination": account_keys[instruction.accounts[2] as usize].to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "sourceSeed": from_seed,
                     "sourceOwner": from_owner.to_string(),
                 }),
@@ -241,7 +241,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "newAccount": to_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "owner": owner_pubkey.to_string(),
                     "space": space,
                 }),
@@ -301,7 +301,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "destination": to_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                 }),
             }
         );
@@ -345,7 +345,7 @@ mod test {
                 info: json!({
                     "source": from_pubkey.to_string(),
                     "newAccount": to_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "base": base_pubkey.to_string(),
                     "seed": seed,
                     "owner": owner_pubkey.to_string(),
@@ -502,7 +502,7 @@ mod test {
                     "sourceBase": from_base_pubkey.to_string(),
                     "sourceSeed": seed,
                     "sourceOwner": from_owner_pubkey.to_string(),
-                    "satomis": satomis,
+                    "lamports": satomis,
                     "destination": to_pubkey.to_string()
                 }),
             }
@@ -578,7 +578,7 @@ mod test {
                     "recentBlockhashesSysvar": sysvar::recent_blockhashes::ID.to_string(),
                     "rentSysvar": sysvar::rent::ID.to_string(),
                     "nonceAuthority": authorized_pubkey.to_string(),
-                    "satomis": satomis
+                    "lamports": satomis
                 }),
             }
         );
