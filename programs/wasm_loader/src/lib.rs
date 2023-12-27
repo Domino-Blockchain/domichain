@@ -4,7 +4,7 @@
 use domichain_program_runtime::loaded_programs::WasmExecutable;
 use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar};
 use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
-use wasmi::{core::Trap, Caller, Func};
+use wasmi::{core::{Trap, Pages}, Caller, Func};
 use wasmi_wasi::WasiCtx;
 
 use crate::syscalls::{
@@ -2331,6 +2331,22 @@ fn execute<'a, 'b: 'a>(
         // }
         // let orig_params = parameter_bytes_slice.clone().to_vec();
 
+        let memory_size_before = memory.data(&store).len();
+        if memory_size_before < parameter_bytes_slice_len {
+            // We need to allocate more memory to WASM
+            let pages = memory.current_pages(&store);
+            let bytes_per_page = memory_size_before.checked_div(u32::from(pages) as usize).unwrap();
+            let need_more_bytes = parameter_bytes_slice_len - memory_size_before;
+            // Round up pages count
+            let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
+
+            let pages_before = memory.grow(
+                &mut store,
+                need_more_pages.into(),
+            ).unwrap();
+            let memory_size_after = memory.data(&store).len();
+            assert!(memory_size_after >= parameter_bytes_slice_len, "{memory_size_after} < {parameter_bytes_slice_len}");
+        }
         memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
             .copy_from_slice(parameter_bytes_slice);
 
