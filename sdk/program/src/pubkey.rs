@@ -479,7 +479,7 @@ impl Pubkey {
     pub fn find_program_address(seeds: &[&[u8]], program_id: &Pubkey) -> (Pubkey, u8) {
         Self::try_find_program_address(seeds, program_id)
             .unwrap_or_else(|| {
-                crate::msg!("HERE");
+                crate::msg!("[{file}:{line}] Unable to find a viable program address bump seed", file=file!(), line=line!());
                 panic!("Unable to find a viable program address bump seed");
             })
     }
@@ -522,19 +522,26 @@ impl Pubkey {
         // Call via a system call to perform the calculation
         #[cfg(target_os = "wasi")]
         {
+            crate::msg!("[{file}:{line}] {seeds:?}", file=file!(), line=line!());
+
             let seeds = convert_nested_slice(seeds);
+            let seeds_ptr = seeds.as_ptr() as *const _ as *const u8;
+            let seeds_len = seeds.len() as u64;
+            crate::msg!("[{file}:{line}] seeds_ptr={seeds_ptr:?}", file=file!(), line=line!());
+            crate::msg!("[{file}:{line}] seeds_len={seeds_len}", file=file!(), line=line!());
 
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
             let result = unsafe {
                 crate::syscalls::sol_try_find_program_address(
-                    seeds.as_ptr() as *const _ as *const u8,
-                    seeds.len() as u64,
+                    seeds_ptr,
+                    seeds_len,
                     program_id as *const _ as *const u8,
                     &mut bytes as *mut _ as *mut u8,
                     &mut bump_seed as *mut _ as *mut u8,
                 )
             };
+            crate::msg!("[{file}:{line}] sol_try_find_program_address result={result:?}", file=file!(), line=line!());
             match result {
                 crate::entrypoint::SUCCESS => Some((Pubkey::from(bytes), bump_seed)),
                 _ => None,

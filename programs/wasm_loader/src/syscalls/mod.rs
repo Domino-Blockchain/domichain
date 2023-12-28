@@ -590,22 +590,36 @@ fn translate_and_check_program_address_inputs<'a>(
     check_aligned: bool,
     check_size: bool,
 ) -> Result<(Vec<&'a [u8]>, &'a Pubkey), Error> {
-    let flat_seeds = translate_slice::<u8>(
+    let untranslated_seeds = translate_slice::<&[&u8]>(
         memory_mapping,
         seeds_addr,
         seeds_len,
         check_aligned,
         check_size,
-    )?;
-    if flat_seeds.len() % 32 != 0 {
-        return Err(SyscallError::BadSeeds(PubkeyError::InvalidSeeds).into());
+    ).map_err(|e| dbg!(e))?;
+    if untranslated_seeds.len() > MAX_SEEDS {
+        dbg!(seeds_addr as *const (), seeds_len);
+        dbg!(untranslated_seeds.len(), MAX_SEEDS, SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded));
+        return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
     }
-    let seeds_len = flat_seeds.len() / 32;
-    if seeds_len > MAX_SEEDS {
+    let seeds = untranslated_seeds
+        .iter()
+        .map(|untranslated_seed| {
+            if untranslated_seed.len() > MAX_SEED_LEN {
+                dbg!(untranslated_seed.len(), MAX_SEED_LEN, SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded));
                 return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
             }
-    let seeds = flat_seeds.chunks_exact(32).map(|seed| seed).collect();
-    let program_id = translate_type::<Pubkey>(memory_mapping, program_id_addr, check_aligned)?;
+            translate_slice::<u8>(
+                memory_mapping,
+                untranslated_seed.as_ptr() as *const _ as u64,
+                untranslated_seed.len() as u64,
+                check_aligned,
+                check_size,
+            )
+        })
+        .collect::<Result<Vec<_>, Error>>().map_err(|e| dbg!(e))?;
+    dbg!(format_args!("{seeds:?}"));
+    let program_id = translate_type::<Pubkey>(memory_mapping, program_id_addr, check_aligned).map_err(|e| dbg!(e))?;
     Ok((seeds, program_id))
 }
 

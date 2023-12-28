@@ -1800,7 +1800,11 @@ fn map_wasmi_to_bpf_syscalls<'a, 'b>(
 
     match result {
         StableResult::Ok(i) => Ok(i as _),
-        StableResult::Err(e) => Err(Trap::new(format!("{:?}", e))),
+        StableResult::Err(e) => {
+            let _ = dbg!(std::backtrace::Backtrace::force_capture());
+            dbg!(&e);
+            Err(Trap::new(format!("{:?}", e)))
+        },
     }
 }
 
@@ -1808,6 +1812,8 @@ fn execute<'a, 'b: 'a>(
     executable: &'a WasmExecutable,
     invoke_context: &'a mut InvokeContext<'b>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Starting WASM smart contract");
+
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -2331,22 +2337,28 @@ fn execute<'a, 'b: 'a>(
         // }
         // let orig_params = parameter_bytes_slice.clone().to_vec();
 
-        let memory_size_before = memory.data(&store).len();
-        if memory_size_before < parameter_bytes_slice_len {
-            // We need to allocate more memory to WASM
-            let pages = memory.current_pages(&store);
-            let bytes_per_page = memory_size_before.checked_div(u32::from(pages) as usize).unwrap();
-            let need_more_bytes = parameter_bytes_slice_len - memory_size_before;
-            // Round up pages count
-            let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
 
-            let pages_before = memory.grow(
-                &mut store,
-                need_more_pages.into(),
-            ).unwrap();
-            let memory_size_after = memory.data(&store).len();
-            assert!(memory_size_after >= parameter_bytes_slice_len, "{memory_size_after} < {parameter_bytes_slice_len}");
+        let grow_memory = true;
+        if grow_memory {
+            let memory_size_before = memory.data(&store).len();
+            if memory_size_before < parameter_bytes_slice_len {
+                // We need to allocate more memory to WASM
+                let pages = memory.current_pages(&store);
+                let bytes_per_page = memory_size_before.checked_div(u32::from(pages) as usize).unwrap();
+                let need_more_bytes = memory_size_before * 0 + 65536 * 30 + parameter_bytes_slice_len;
+                // Round up pages count
+                let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
+
+                let pages_before = memory.grow(
+                    &mut store,
+                    need_more_pages.into(),
+                ).unwrap();
+                let memory_size_after = memory.data(&store).len();
+                assert!(memory_size_after >= parameter_bytes_slice_len, "{memory_size_after} < {parameter_bytes_slice_len}");
+                dbg!(memory_size_before, memory_size_after, parameter_bytes_slice_len, need_more_pages);
+            }
         }
+
         memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
             .copy_from_slice(parameter_bytes_slice);
 
@@ -2420,7 +2432,7 @@ fn execute<'a, 'b: 'a>(
         if !return_data.is_empty() {
             stable_log::program_return(&log_collector, &program_id, return_data);
         }
-        match result {
+        match dbg!(result) {
             ProgramResult::Ok(status) if status != SUCCESS => {
                 let error: InstructionError = if (status == MAX_ACCOUNTS_DATA_ALLOCATIONS_EXCEEDED
                     && !invoke_context_ref
