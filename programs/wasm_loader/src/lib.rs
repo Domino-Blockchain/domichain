@@ -1801,9 +1801,30 @@ fn map_wasmi_to_bpf_syscalls<'a, 'b>(
     match result {
         StableResult::Ok(i) => Ok(i as _),
         StableResult::Err(e) => {
-            let _ = dbg!(std::backtrace::Backtrace::force_capture());
+            let get_field = |line: &str, field: &'static str, end: char| -> String {
+                let start = line.find(field).unwrap() + field.len();
+                let line = &line[start..];
+                let end = line.find(end).unwrap();
+                line[..end].to_string()
+            };
+            let bt = format!("{:#?}", std::backtrace::Backtrace::force_capture());
+            let bt_lines: Vec<_> = bt
+                .lines()
+                .skip(1)
+                .filter(|line| line.trim_start().starts_with("{ fn: "))
+                .take(10)
+                .map(|line| {
+                    format!(
+                        "{file}:{line} {func}",
+                        file=get_field(line, "file: \"", '"'),
+                        line=get_field(line, "line: ", ' '),
+                        func=get_field(line, "fn: \"", '"'),
+                    )
+                })
+                .collect();
+            dbg!(bt_lines);
             dbg!(&e);
-            Err(Trap::new(format!("{:?}", e)))
+            Err(Trap::new(format!("{e:?}")))
         },
     }
 }
@@ -2345,7 +2366,7 @@ fn execute<'a, 'b: 'a>(
                 // We need to allocate more memory to WASM
                 let pages = memory.current_pages(&store);
                 let bytes_per_page = memory_size_before.checked_div(u32::from(pages) as usize).unwrap();
-                let need_more_bytes = memory_size_before * 0 + 65536 * 30 + parameter_bytes_slice_len;
+                let need_more_bytes = parameter_bytes_slice_len;
                 // Round up pages count
                 let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
 

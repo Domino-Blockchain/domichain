@@ -66,7 +66,9 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        mem_op_consume(invoke_context, n)?;
+        dbg!(s1_addr as *const (), s2_addr as *const (), n);
+
+        mem_op_consume(invoke_context, n).map_err(|e| dbg!(e))?;
 
         if invoke_context
             .feature_set
@@ -76,8 +78,8 @@ declare_syscall!(
                 memory_mapping,
                 cmp_result_addr,
                 invoke_context.get_check_aligned(),
-            )?;
-            *cmp_result = memcmp_non_contiguous(s1_addr, s2_addr, n, memory_mapping)?;
+            ).map_err(|e| dbg!(e))?;
+            *cmp_result = memcmp_non_contiguous(s1_addr, s2_addr, n, memory_mapping).map_err(|e| dbg!(e))?;
         } else {
             let s1 = translate_slice::<u8>(
                 memory_mapping,
@@ -85,19 +87,19 @@ declare_syscall!(
                 n,
                 invoke_context.get_check_aligned(),
                 invoke_context.get_check_size(),
-            )?;
+            ).map_err(|e| dbg!(e))?;
             let s2 = translate_slice::<u8>(
                 memory_mapping,
                 s2_addr,
                 n,
                 invoke_context.get_check_aligned(),
                 invoke_context.get_check_size(),
-            )?;
+            ).map_err(|e| dbg!(e))?;
             let cmp_result = translate_type_mut::<i32>(
                 memory_mapping,
                 cmp_result_addr,
                 invoke_context.get_check_aligned(),
-            )?;
+            ).map_err(|e| dbg!(e))?;
 
             debug_assert_eq!(s1.len(), n as usize);
             debug_assert_eq!(s2.len(), n as usize);
@@ -227,6 +229,7 @@ fn memcmp_non_contiguous(
     n: u64,
     memory_mapping: &MemoryMapping,
 ) -> Result<i32, Error> {
+    dbg!(src_addr as *const (), dst_addr as *const (), n, memory_mapping);
     match iter_memory_pair_chunks(
         AccessType::Load,
         src_addr,
@@ -310,6 +313,9 @@ where
     T: Default,
     F: FnMut(*const u8, *const u8, usize) -> Result<T, Error>,
 {
+    let src_addr = src_addr + solana_rbpf::ebpf::MM_HEAP_START;
+    let mut dst_addr = dst_addr + solana_rbpf::ebpf::MM_HEAP_START;
+    dbg!(src_addr as *const (), dst_addr as *const ());
     let mut src_chunk_iter = MemoryChunkIterator::new(memory_mapping, src_access, src_addr, n)
         .map_err(EbpfError::from)?;
     loop {

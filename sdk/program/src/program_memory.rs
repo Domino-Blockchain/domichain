@@ -100,7 +100,10 @@ pub fn sol_memcmp(s1: &[u8], s2: &[u8], n: usize) -> i32 {
 
     #[cfg(target_os = "wasi")]
     unsafe {
-        crate::syscalls::sol_memcmp_(s1.as_ptr(), s2.as_ptr(), n as u64, &mut result as *mut i32);
+        let s1 = s1.as_ptr();
+        let s2 = s2.as_ptr();
+        crate::msg!("[{file}:{line}] s1={s1:?} s2={s2:?} n={n}", file=file!(), line=line!());
+        crate::syscalls::sol_memcmp_(s1, s2, n as u64, &mut result as *mut i32);
     }
 
     #[cfg(not(target_os = "wasi"))]
