@@ -596,17 +596,14 @@ fn translate_and_check_program_address_inputs<'a>(
         seeds_len,
         check_aligned,
         check_size,
-    ).map_err(|e| dbg!(e))?;
+    )?;
     if untranslated_seeds.len() > MAX_SEEDS {
-        dbg!(seeds_addr as *const (), seeds_len);
-        dbg!(untranslated_seeds.len(), MAX_SEEDS, SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded));
         return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
     }
     let seeds = untranslated_seeds
         .iter()
         .map(|untranslated_seed| {
             if untranslated_seed.len() > MAX_SEED_LEN {
-                dbg!(untranslated_seed.len(), MAX_SEED_LEN, SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded));
                 return Err(SyscallError::BadSeeds(PubkeyError::MaxSeedLengthExceeded).into());
             }
             translate_slice::<u8>(
@@ -617,9 +614,8 @@ fn translate_and_check_program_address_inputs<'a>(
                 check_size,
             )
         })
-        .collect::<Result<Vec<_>, Error>>().map_err(|e| dbg!(e))?;
-    dbg!(format_args!("{seeds:?}"));
-    let program_id = translate_type::<Pubkey>(memory_mapping, program_id_addr, check_aligned).map_err(|e| dbg!(e))?;
+        .collect::<Result<Vec<_>, Error>>()?;
+    let program_id = translate_type::<Pubkey>(memory_mapping, program_id_addr, check_aligned)?;
     Ok((seeds, program_id))
 }
 

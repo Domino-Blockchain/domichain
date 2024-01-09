@@ -1,8 +1,6 @@
 //! Domichain account addresses.
 
 #![allow(clippy::integer_arithmetic)]
-
-use crate::ptr64::convert_nested_slice;
 use {
     crate::{decode_error::DecodeError, hash::hashv, wasm_bindgen},
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
@@ -522,13 +520,9 @@ impl Pubkey {
         // Call via a system call to perform the calculation
         #[cfg(target_os = "wasi")]
         {
-            crate::msg!("[{file}:{line}] {seeds:?}", file=file!(), line=line!());
-
-            let seeds = convert_nested_slice(seeds);
+            let seeds = crate::ptr64::convert_nested_slice(seeds);
             let seeds_ptr = seeds.as_ptr() as *const _ as *const u8;
             let seeds_len = seeds.len() as u64;
-            crate::msg!("[{file}:{line}] seeds_ptr={seeds_ptr:?}", file=file!(), line=line!());
-            crate::msg!("[{file}:{line}] seeds_len={seeds_len}", file=file!(), line=line!());
 
             let mut bytes = [0; 32];
             let mut bump_seed = std::u8::MAX;
@@ -541,7 +535,6 @@ impl Pubkey {
                     &mut bump_seed as *mut _ as *mut u8,
                 )
             };
-            crate::msg!("[{file}:{line}] sol_try_find_program_address result={result:?}", file=file!(), line=line!());
             match result {
                 crate::entrypoint::SUCCESS => Some((Pubkey::from(bytes), bump_seed)),
                 _ => None,

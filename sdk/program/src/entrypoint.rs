@@ -276,21 +276,14 @@ pub const BPF_ALIGN_OF_U128: usize = 8;
 #[allow(clippy::integer_arithmetic)]
 #[allow(clippy::type_complexity)]
 pub unsafe fn deserialize<'a>(input: *mut u8) -> (&'a Pubkey, Vec<AccountInfo<'a>>, &'a [u8]) {
-    crate::msg!("deserialize");
-    crate::msg!("deserialize");
-    crate::msg!("[{file}:{line}] deserialize input={input:?}", file=file!(), line=line!());
     let mut offset: usize = 0;
-    crate::msg!("deserialize");
 
     // Number of accounts present
-
     #[allow(clippy::cast_ptr_alignment)]
     let num_accounts = *(input.add(offset) as *const u64) as usize;
     offset += size_of::<u64>();
-    crate::msg!("deserialize");
 
     // Account Infos
-
     let mut accounts = Vec::with_capacity(num_accounts);
     for _ in 0..num_accounts {
         let dup_info = *(input.add(offset) as *const u8);

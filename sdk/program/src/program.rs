@@ -323,6 +323,8 @@ pub fn invoke_signed_unchecked(
         unsafe { &transmute::<&T, &[u8; 1024]>(t)[..size_of::<T>()] }
     }
 
+    // TODO: uncomment and debug invoke_signed syscall
+
     // as_bytes(&instruction.program_id);
     // as_bytes(&instruction.accounts);
     // as_bytes(&instruction.data);
