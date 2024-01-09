@@ -279,11 +279,13 @@ pub unsafe fn deserialize<'a>(input: *mut u8) -> (&'a Pubkey, Vec<AccountInfo<'a
     let mut offset: usize = 0;
 
     // Number of accounts present
+
     #[allow(clippy::cast_ptr_alignment)]
     let num_accounts = *(input.add(offset) as *const u64) as usize;
     offset += size_of::<u64>();
 
     // Account Infos
+
     let mut accounts = Vec::with_capacity(num_accounts);
     for _ in 0..num_accounts {
         let dup_info = *(input.add(offset) as *const u8);
