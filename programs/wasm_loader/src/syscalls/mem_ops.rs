@@ -310,6 +310,8 @@ where
     T: Default,
     F: FnMut(*const u8, *const u8, usize) -> Result<T, Error>,
 {
+    let src_addr = src_addr + solana_rbpf::ebpf::MM_HEAP_START;
+    let mut dst_addr = dst_addr + solana_rbpf::ebpf::MM_HEAP_START;
     let mut src_chunk_iter = MemoryChunkIterator::new(memory_mapping, src_access, src_addr, n)
         .map_err(EbpfError::from)?;
     loop {

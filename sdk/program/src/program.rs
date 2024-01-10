@@ -323,13 +323,15 @@ pub fn invoke_signed_unchecked(
         unsafe { &transmute::<&T, &[u8; 1024]>(t)[..size_of::<T>()] }
     }
 
+    // TODO: uncomment and debug invoke_signed syscall
+
     // as_bytes(&instruction.program_id);
     // as_bytes(&instruction.accounts);
     // as_bytes(&instruction.data);
 
-    for i in 0..account_infos.len() {
-        dbg_syscall!(&account_infos[i]);
-    }
+    // for i in 0..account_infos.len() {
+    //     dbg_syscall!(&account_infos[i]);
+    // }
 
     #[cfg(target_os = "wasi")]
     {
@@ -382,17 +384,18 @@ pub fn invoke_signed_unchecked(
         // dbg_syscall!(size_of::<StableVecFixed<AccountMeta>>());
         // dbg_syscall!(size_of::<StableVecFixed<u8>>());
         // dbg_syscall!(size_of::<AccountMeta>());
-        dbg_syscall!(size_of::<AccountInfo>());
-        dbg_syscall!(size_of::<AccountInfoRaw>());
+
+        // dbg_syscall!(size_of::<AccountInfo>());
+        // dbg_syscall!(size_of::<AccountInfoRaw>());
 
         let account_infos: Vec<_> = account_infos
             .into_iter()
             .map(|i| i.into_raw())
             .collect();
-        for i in 0..account_infos.len() {
-            dbg_syscall!(&account_infos[i]);
-        }
-        dbg_syscall!(account_infos.len());
+        // for i in 0..account_infos.len() {
+        //     dbg_syscall!(&account_infos[i]);
+        // }
+        // dbg_syscall!(account_infos.len());
 
         let result = unsafe {
             crate::syscalls::sol_invoke_signed_rust(
