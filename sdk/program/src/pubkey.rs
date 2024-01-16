@@ -619,11 +619,15 @@ impl Pubkey {
         // Call via a system call to perform the calculation
         #[cfg(target_os = "wasi")]
         {
+            let seeds = crate::ptr64::convert_nested_slice(seeds);
+            let seeds_ptr = seeds.as_ptr() as *const _ as *const u8;
+            let seeds_len = seeds.len() as u64;
+
             let mut bytes = [0; 32];
             let result = unsafe {
                 crate::syscalls::sol_create_program_address(
-                    seeds as *const _ as *const u8,
-                    seeds.len() as u64,
+                    seeds_ptr,
+                    seeds_len,
                     program_id as *const _ as *const u8,
                     &mut bytes as *mut _ as *mut u8,
                 )
