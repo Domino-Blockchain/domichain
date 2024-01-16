@@ -22,7 +22,10 @@ use {
         bpf_loader_upgradeable::UpgradeableLoaderState,
         clock,
         epoch_schedule::EpochSchedule,
-        feature_set::remove_congestion_multiplier_from_fee_calculation,
+        feature_set::{
+            bpf_account_data_direct_mapping,
+            remove_congestion_multiplier_from_fee_calculation,
+        },
         fee_calculator::FeeRateGovernor,
         genesis_config::{ClusterType, GenesisConfig},
         inflation::Inflation,
@@ -591,7 +594,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     domichain_stake_program::add_genesis_accounts(&mut genesis_config);
     if genesis_config.cluster_type == ClusterType::Development {
-        domichain_runtime::genesis_utils::activate_all_features(&mut genesis_config);
+        domichain_runtime::genesis_utils::activate_all_features_except(
+            &mut genesis_config,
+            &[bpf_account_data_direct_mapping::id()],
+        );
     } else {
         // Activate feature for correct DOMI TX fee increase
         domichain_runtime::genesis_utils::activate_feature(

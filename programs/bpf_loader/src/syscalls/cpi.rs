@@ -785,7 +785,7 @@ where
                     ),
                     account_infos
                         .get(caller_account_index)
-                        .ok_or(SyscallError::InvalidLength)?,
+                        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?,
                     original_data_len,
                 )?;
 
@@ -1044,12 +1044,12 @@ fn update_callee_account(
                     callee_account
                         .get_data_mut()?
                         .get_mut(caller_account.original_data_len..post_len)
-                        .ok_or(SyscallError::InvalidLength)?
+                        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?
                         .copy_from_slice(
                             caller_account
                                 .serialized_data
                                 .get(0..realloc_bytes_used)
-                                .ok_or(SyscallError::InvalidLength)?,
+                                .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?,
                         );
                 }
             }
@@ -1239,7 +1239,7 @@ fn update_caller_account(
         let from_slice = callee_account
             .get_data()
             .get(0..post_len)
-            .ok_or(SyscallError::InvalidLength)?;
+            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
         if to_slice.len() != from_slice.len() {
             return Err(Box::new(InstructionError::AccountDataTooSmall));
         }
@@ -1248,11 +1248,11 @@ fn update_caller_account(
         let to_slice = caller_account
             .serialized_data
             .get_mut(0..realloc_bytes_used)
-            .ok_or(SyscallError::InvalidLength)?;
+            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
         let from_slice = callee_account
             .get_data()
             .get(caller_account.original_data_len..post_len)
-            .ok_or(SyscallError::InvalidLength)?;
+            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
         to_slice.copy_from_slice(from_slice);
     }
 

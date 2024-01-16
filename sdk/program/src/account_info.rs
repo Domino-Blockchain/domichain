@@ -2,6 +2,8 @@
 
 use std::{marker::PhantomData, mem::transmute};
 
+use crate::ptr64::WidePtr64;
+
 use {
     crate::{
         clock::Epoch, debug_account_data::*, entrypoint::MAX_PERMITTED_DATA_INCREASE,
@@ -49,12 +51,13 @@ impl<'a> AccountInfo<'a> {
 
         let ptr_to_slice = self.data.as_ptr() as *const &mut [u8];
         let slice = unsafe { *transmute::<_, *const &[u8]>(ptr_to_slice) };
+        let data_wide_ptr = crate::ptr64::WidePtr64::from(slice);
 
         AccountInfoRaw {
             key: (self.key as *const _ as u64).try_into().unwrap(),
             satomis: (satomis as *const _ as u64).try_into().unwrap(),
             ptr_to_slice: (ptr_to_slice as usize as u64).try_into().unwrap(),
-            data: (slice as *const [u8] as *const () as usize as u64).try_into().unwrap(),
+            data: data_wide_ptr,
             data_len: slice.len().try_into().unwrap(),
             owner: (self.owner as *const _ as u64).try_into().unwrap(),
             rent_epoch: self.rent_epoch,
@@ -68,7 +71,6 @@ impl<'a> AccountInfo<'a> {
 
 
 /// Account information with raw mut pointers
-#[derive(Clone)]
 #[repr(C)]
 pub struct AccountInfoRaw<'a> {
     /// Public key of the account
@@ -77,7 +79,7 @@ pub struct AccountInfoRaw<'a> {
     pub satomis: u32, // *mut u64,
     /// The data held in this account.  Modifiable by programs.
     pub ptr_to_slice: u32, // *const *mut [u8],
-    pub data: u32, // *mut [u8],
+    pub data: WidePtr64<u8>, // *mut [u8],
     pub data_len: u32, // *mut usize
     /// Program that owns this account
     pub owner: u32, // &'a Pubkey,
@@ -105,7 +107,7 @@ impl<'a> fmt::Debug for AccountInfoRaw<'a> {
             .field("rent_epoch", &self.rent_epoch)
             .field("satomis", &format_args!("{:p}", self.satomis as *const ()))
             .field("data.len", &self.data_len)
-            .field("data", &format_args!("{:p}", self.data as *const ()))
+            .field("data", &format_args!("{:?}", self.data))
             .field("ptr_to_slice", &format_args!("{:p}", self.ptr_to_slice as *const ()));
 
         f.finish_non_exhaustive()

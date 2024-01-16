@@ -40,7 +40,7 @@ use crate::syscalls::{
     // SyscallAllocFree,
     SyscallAltBn128,
     SyscallBigModExp,
-    SyscallLogData,
+    SyscallLogData, MemoryRegionDbgWrapper, get_regions_dbg,
 };
 
 pub mod serialization;
@@ -1819,6 +1819,10 @@ fn execute<'a, 'b: 'a>(
     let bpf_account_data_direct_mapping = invoke_context
         .feature_set
         .is_active(&bpf_account_data_direct_mapping::id());
+    let actual_direct_mapping = false;
+
+    dbg!(bpf_account_data_direct_mapping);
+    dbg!(actual_direct_mapping);
 
     let mut serialize_time = Measure::start("serialize");
     let (mut parameter_bytes, regions, account_lengths) = serialization::serialize_parameters(
@@ -1827,7 +1831,7 @@ fn execute<'a, 'b: 'a>(
         invoke_context
             .feature_set
             .is_active(&cap_bpf_program_instruction_accounts::ID),
-        true, // !bpf_account_data_direct_mapping,
+        !actual_direct_mapping, // !bpf_account_data_direct_mapping,
     )?;
     serialize_time.stop();
 
@@ -1862,6 +1866,9 @@ fn execute<'a, 'b: 'a>(
         //     account_lengths,
         //     invoke_context,
         // );
+        dbg!(parameter_bytes.len());
+        dbg!(regions.iter().map(MemoryRegionDbgWrapper).collect::<Vec<_>>());
+        dbg!(&account_lengths);
         let ro_region = MemoryRegion::new_readonly(&[], MM_PROGRAM_START);
         create_vm_wasm!(
             vm_result,
@@ -1878,6 +1885,7 @@ fn execute<'a, 'b: 'a>(
                 return Err(Box::new(InstructionError::ProgramEnvironmentSetupFailure));
             }
         };
+        dbg!(get_regions_dbg(&memory_mapping));
 
         // ($vm:ident, $program:expr, $regions:expr, $orig_account_lengths:expr, $invoke_context:expr $(,)?) => {
         //     let invoke_context = &*$invoke_context;
@@ -2351,8 +2359,11 @@ fn execute<'a, 'b: 'a>(
             }
         }
 
+        // Copy data to WASM memory
         memory.data_mut(&mut store)[0..parameter_bytes_slice_len]
             .copy_from_slice(parameter_bytes_slice);
+
+        let data_before = memory.data(&store)[0..parameter_bytes_slice_len].to_vec();
 
         assert_eq!(is_memory_aligned(memory.data_mut(&mut store).as_ptr() as _, solana_rbpf::ebpf::HOST_ALIGN), true);
 
@@ -2407,9 +2418,13 @@ fn execute<'a, 'b: 'a>(
         );
 
         // TODO
+        // Copy data back from WASM memory
         parameter_bytes.as_slice_mut().copy_from_slice(
             &memory.data(&store)[0..parameter_bytes_slice_len]
         );
+
+        let data_after = memory.data(&store)[0..parameter_bytes_slice_len].to_vec();
+        dbg!(data_before == data_after);
 
         // if parameter_bytes_slice_len < 1024 * 1024 {
         //     let to_print = parameter_bytes.as_slice();
@@ -2493,8 +2508,7 @@ fn execute<'a, 'b: 'a>(
         deserialize_parameters(
             invoke_context,
             parameter_bytes.as_slice(),
-            true, // !bpf_account_data_direct_mapping,
-            // !bpf_account_data_direct_mapping,
+            !actual_direct_mapping, // !bpf_account_data_direct_mapping,
         )
         .map_err(|error| Box::new(error) as Box<dyn std::error::Error>)
     });

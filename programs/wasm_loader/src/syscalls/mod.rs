@@ -74,6 +74,29 @@ mod logging;
 mod mem_ops;
 mod sysvar;
 
+pub struct MemoryRegionDbgWrapper<'a>(pub &'a solana_rbpf::memory_region::MemoryRegion);
+
+impl std::fmt::Debug for MemoryRegionDbgWrapper<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "host_addr: {:#x?}-{:#x?}, vm_addr: {:#x?}-{:#x?}, len: {}",
+            self.0.host_addr.get(),
+            self.0.host_addr.get().saturating_add(self.0.len),
+            self.0.vm_addr,
+            self.0.vm_addr.saturating_add(self.0.len),
+            self.0.len
+        )
+    }
+}
+
+pub fn get_regions_dbg<'a>(memory_mapping: &'a MemoryMapping) -> Vec<MemoryRegionDbgWrapper<'a>> {
+    memory_mapping.get_regions()
+        .iter()
+        .map(MemoryRegionDbgWrapper)
+        .collect()
+}
+
 /// Maximum signers
 pub const MAX_SIGNERS: usize = 16;
 
@@ -459,7 +482,7 @@ fn translate_string_and_do(
             Some(i) => i,
             None => len as usize,
         };
-        buf.get(..i).ok_or(SyscallError::InvalidLength)?
+        buf.get(..i).ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?
     };
     match from_utf8(msg) {
         Ok(message) => work(message),
@@ -1751,7 +1774,7 @@ declare_syscall!(
             invoke_context.get_check_size(),
         )?
         .get(0)
-        .ok_or(SyscallError::InvalidLength)?;
+        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
 
         let input_len: u64 = std::cmp::max(params.base_len, params.exponent_len);
         let input_len: u64 = std::cmp::max(input_len, params.modulus_len);

@@ -7865,6 +7865,20 @@ dependencies = [
  "num_enum 0.5.11",
  "spl-memo",
  "spl-token",
+ "spl-token-btci",
+ "thiserror",
+]
+
+[[package]]
+name = "spl-token-btci"
+version = "3.5.0"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "domichain-program",
+ "num-derive",
+ "num-traits",
+ "num_enum 0.5.11",
  "thiserror",
 ]
 

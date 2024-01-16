@@ -431,7 +431,7 @@ fn translate_string_and_do(
             Some(i) => i,
             None => len as usize,
         };
-        buf.get(..i).ok_or(SyscallError::InvalidLength)?
+        buf.get(..i).ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?
     };
     match from_utf8(msg) {
         Ok(message) => work(message),
@@ -1720,7 +1720,7 @@ declare_syscall!(
             invoke_context.get_check_size(),
         )?
         .get(0)
-        .ok_or(SyscallError::InvalidLength)?;
+        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
 
         let input_len: u64 = std::cmp::max(params.base_len, params.exponent_len);
         let input_len: u64 = std::cmp::max(input_len, params.modulus_len);

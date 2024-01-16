@@ -1,7 +1,8 @@
 use std::marker::PhantomData;
 
+#[derive(Debug)]
 pub struct Ptr64<T: ?Sized> {
-    address: u64,
+    pub address: u64,
     phantom_data: PhantomData<*mut T>,
 }
 
@@ -17,6 +18,7 @@ impl<T: ?Sized> From<*const T> for Ptr64<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct Usize64(u64);
 
 impl From<usize> for Usize64 {
@@ -25,9 +27,10 @@ impl From<usize> for Usize64 {
     }
 }
 
+#[derive(Debug)]
 pub struct WidePtr64<T> {
-    ptr: Ptr64<[T]>,
-    len: Usize64,
+    pub ptr: Ptr64<[T]>,
+    pub len: Usize64,
 }
 
 impl<'a, T> From<&'a mut [T]> for WidePtr64<T> {
