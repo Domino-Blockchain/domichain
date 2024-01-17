@@ -1,17 +1,15 @@
 //! Account information.
 
-use std::{marker::PhantomData, mem::transmute};
-
-use crate::ptr64::WidePtr64;
-
 use {
     crate::{
         clock::Epoch, debug_account_data::*, entrypoint::MAX_PERMITTED_DATA_INCREASE,
-        program_error::ProgramError, program_memory::sol_memset, pubkey::Pubkey,
+        program_error::ProgramError, program_memory::sol_memset, ptr64::WidePtr64, pubkey::Pubkey,
     },
     std::{
         cell::{Ref, RefCell, RefMut},
         fmt,
+        marker::PhantomData,
+        mem::transmute,
         rc::Rc,
         slice::from_raw_parts_mut,
     },
@@ -51,7 +49,7 @@ impl<'a> AccountInfo<'a> {
 
         let ptr_to_slice = self.data.as_ptr() as *const &mut [u8];
         let slice = unsafe { *transmute::<_, *const &[u8]>(ptr_to_slice) };
-        let data_wide_ptr = crate::ptr64::WidePtr64::from(slice);
+        let data_wide_ptr = WidePtr64::from(slice);
 
         AccountInfoRaw {
             key: (self.key as *const _ as u64).try_into().unwrap(),

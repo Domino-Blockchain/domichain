@@ -392,10 +392,6 @@ pub fn invoke_signed_unchecked(
             .into_iter()
             .map(|i| i.into_raw())
             .collect();
-        for i in 0..account_infos.len() {
-            dbg_syscall!(&account_infos[i]);
-        }
-        dbg_syscall!(account_infos.len());
 
         let result = unsafe {
             crate::syscalls::sol_invoke_signed_rust(

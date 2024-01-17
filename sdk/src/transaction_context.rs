@@ -736,20 +736,6 @@ impl InstructionContext {
         }
         Ok(result)
     }
-
-    pub fn get_instruction_pubkeys(
-        &self,
-        transaction_context: &TransactionContext,
-    ) -> Result<Vec<Pubkey>, InstructionError> {
-        let mut result = Vec::new();
-        for instruction_account in self.instruction_accounts.iter() {
-            result.push(
-                *transaction_context
-                    .get_key_of_account_at_index(instruction_account.index_in_transaction)?,
-            );
-        }
-        Ok(result)
-    }
 }
 
 /// Shared account borrowed from the TransactionContext and an InstructionContext.

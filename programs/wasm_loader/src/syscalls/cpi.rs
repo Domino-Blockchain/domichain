@@ -194,7 +194,6 @@ impl<'a> CallerAccount<'a> {
         account_info: &AccountInfoRaw,
         original_data_len: usize,
     ) -> Result<CallerAccount<'a>, Error> {
-        dbg!();
         // account_info points to host memory. The addresses used internally are
         // in vm space so they need to be translated.
 
@@ -253,7 +252,6 @@ impl<'a> CallerAccount<'a> {
                     .saturating_add(size_of::<u32>() as u64),
                 4,
             )? as *mut u32;
-            dbg!();
             let ref_to_len_in_vm = unsafe { &mut *translated };
             
             // FIXME: get ref from VM
@@ -275,7 +273,6 @@ impl<'a> CallerAccount<'a> {
             let vm_data_addr = account_info.data.ptr.address;
 
             let serialized_data = if is_bpf_account_data_direct_mapping_active {
-                dbg!();
                 let vm_addr = vm_data_addr.saturating_add(original_data_len as u64);
                 let len = if is_loader_deprecated { 0 } else { MAX_PERMITTED_DATA_INCREASE } as u64;
                 translate_slice_mut::<u8>(
@@ -288,7 +285,6 @@ impl<'a> CallerAccount<'a> {
             } else {
                 // Removed todo, but we has to check if this broke something
                 // todo!()
-                dbg!();
                 translate_slice_mut::<u8>(
                     memory_mapping,
                     vm_data_addr,
@@ -297,7 +293,6 @@ impl<'a> CallerAccount<'a> {
                     invoke_context.get_check_size(),
                 )
             }?;
-            dbg!();
 
             // pub(crate) struct Hex<'a>(pub(crate) &'a [u8]);
             // impl fmt::Debug for Hex<'_> {
@@ -481,13 +476,6 @@ declare_syscall!(
         signers_seeds_len: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        // dbg!("cpi_common",
-        //     instruction_addr as *mut Self,
-        //     account_infos_addr as *mut Self,
-        //     account_infos_len,
-        //     signers_seeds_addr as *mut Self,
-        //     signers_seeds_len,
-        // );
         cpi_common::<Self>(
             invoke_context,
             instruction_addr,
@@ -570,8 +558,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
         memory_mapping: &mut MemoryMapping,
         invoke_context: &mut InvokeContext,
     ) -> Result<TranslatedAccounts<'a>, Error> {
-        dbg!();
-
         let (account_infos, account_info_keys) = translate_account_infos(
             account_infos_addr,
             account_infos_len,
@@ -579,7 +565,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             invoke_context,
         )?;
-        dbg!();
         let res = translate_and_update_accounts(
             instruction_accounts,
             program_indices,
@@ -591,7 +576,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             memory_mapping,
             CallerAccount::from_wasm_account_info,
         );
-        dbg!(&res);
         res
     }
 
@@ -611,14 +595,11 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             invoke_context.get_check_aligned(),
             invoke_context.get_check_size(),
         )?;
-        // dbg!(format_args!("{signers_seeds_serialized:?}"));
-        // dbg!(signers_seeds_serialized.len());
 
         #[derive(Debug, BorshDeserialize)]
         struct SignersSeedsOwned(pub Vec<Vec<Vec<u8>>>);
 
         let signers_seeds_owned = SignersSeedsOwned::try_from_slice(signers_seeds_serialized).unwrap().0;
-        // dbg!(format_args!("{:?}", &signers_seeds_owned));
 
         fn vecs_to_slices<T>(vecs: &[Vec<T>]) -> Vec<&[T]> {
             vecs.iter().map(Vec::as_slice).collect()
@@ -629,9 +610,6 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
         let t3: Vec<&[&[u8]]> = t2.iter().map(|v| v.as_slice()).collect();
         let signers_seeds: &[&[&[u8]]] = t3.as_slice();
         let signers_seeds_len = signers_seeds.len();
-        // dbg!(format_args!("{signers_seeds:?}"));
-
-        // todo!();
 
         let mut signers = Vec::new();
         if signers_seeds_len > 0 {
@@ -967,7 +945,6 @@ fn translate_and_update_accounts<'a, T, F>(
 where
     F: Fn(&InvokeContext, &MemoryMapping, bool, u64, &T, usize) -> Result<CallerAccount<'a>, Error>,
 {
-    // dbg!();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let mut accounts = Vec::with_capacity(instruction_accounts.len().saturating_add(1));
@@ -1036,7 +1013,7 @@ where
                     ),
                     account_infos
                         .get(caller_account_index)
-                        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?,
+                        .ok_or(SyscallError::InvalidLength)?,
                     original_data_len,
                 )?;
 
@@ -1182,9 +1159,6 @@ fn cpi_common<S: SyscallInvokeSigned>(
     signers_seeds_len: u64,
     memory_mapping: &mut MemoryMapping,
 ) -> Result<u64, Error> {
-    let memory_mapping_before_cpi = get_regions_dbg(&memory_mapping);
-    dbg!(&memory_mapping_before_cpi);
-
     // CPI entry.
     //
     // Translate the inputs to the syscall and synchronize the caller's account
@@ -1194,16 +1168,10 @@ fn cpi_common<S: SyscallInvokeSigned>(
         invoke_context.get_compute_budget().invoke_units,
     )?;
 
-    // FIXED
-    // programs/wasm_loader/src/syscalls/cpi.rs:320
     let instruction = S::translate_instruction(instruction_addr, memory_mapping, invoke_context)?;
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let caller_program_id = instruction_context.get_last_program_key(transaction_context)?;
-    dbg!(caller_program_id);
-    dbg!(instruction_context.get_instruction_pubkeys(transaction_context).unwrap());
-    // FIXED
-    // programs/wasm_loader/src/syscalls/cpi.rs:428
     let signers = S::translate_signers(
         caller_program_id,
         signers_seeds_addr,
@@ -1211,23 +1179,14 @@ fn cpi_common<S: SyscallInvokeSigned>(
         memory_mapping,
         invoke_context,
     )?;
-    dbg!();
     let is_loader_deprecated = *instruction_context
         .try_borrow_last_program_account(transaction_context)?
         .get_owner()
         == wasm_loader_deprecated::id();
-    // FIXED
     let (instruction_accounts, program_indices) =
         invoke_context.prepare_instruction(&instruction, &signers)?;
-    dbg!();
-    // dbg!(&instruction);
-    // dbg!(&instruction_accounts);
     check_authorized_program(&instruction.program_id, &instruction.data, invoke_context)?;
-    dbg!();
 
-    
-    // TODO
-    // programs/wasm_loader/src/syscalls/cpi.rs:527
     let mut accounts = S::translate_accounts(
         &instruction_accounts,
         &program_indices,
@@ -1237,24 +1196,9 @@ fn cpi_common<S: SyscallInvokeSigned>(
         memory_mapping,
         invoke_context,
     )?;
-    dbg!();
-
-    // re-bind to please the borrow checker
-    let transaction_context = &invoke_context.transaction_context;
-    let instruction_context = transaction_context.get_current_instruction_context()?;
-    
-    for (index_in_caller, caller_account) in accounts.iter_mut() {
-        if let Some(caller_account) = caller_account {
-            let mut callee_account = instruction_context
-                .try_borrow_instruction_account(transaction_context, *index_in_caller)?;
-            let callee_ptr_before = callee_account.get_data().as_ptr() as *const ();
-            dbg!(callee_ptr_before);
-        }
-    }
 
     // Process the callee instruction
     let mut compute_units_consumed = 0;
-    dbg!("STARTING CPI");
     invoke_context.process_instruction(
         &instruction.data,
         &instruction_accounts,
@@ -1262,7 +1206,6 @@ fn cpi_common<S: SyscallInvokeSigned>(
         &mut compute_units_consumed,
         &mut ExecuteTimings::default(),
     )?;
-    dbg!("FINISHING CPI");
 
     // re-bind to please the borrow checker
     let transaction_context = &invoke_context.transaction_context;
@@ -1274,29 +1217,19 @@ fn cpi_common<S: SyscallInvokeSigned>(
     let direct_mapping = invoke_context
         .feature_set
         .is_active(&feature_set::bpf_account_data_direct_mapping::id());
-    dbg!(direct_mapping);
-    let actual_direct_mapping = false;
 
-
-    let memory_mapping_after_cpi = get_regions_dbg(&memory_mapping);
-    dbg!(&memory_mapping_after_cpi);
-    
-    for (i, (index_in_caller, caller_account)) in accounts.iter_mut().enumerate() {
-        dbg!(i);
+    for (index_in_caller, caller_account) in accounts.iter_mut() {
         if let Some(caller_account) = caller_account {
-            // dbg!();
             let mut callee_account = instruction_context
                 .try_borrow_instruction_account(transaction_context, *index_in_caller)?;
-            // dbg!();
             update_caller_account(
                 invoke_context,
                 memory_mapping,
                 is_loader_deprecated,
                 caller_account,
                 &mut callee_account,
-                actual_direct_mapping, // direct_mapping,
+                direct_mapping,
             )?;
-            eprintln!();
         }
     }
 
@@ -1339,12 +1272,12 @@ fn update_callee_account(
                     callee_account
                         .get_data_mut()?
                         .get_mut(caller_account.original_data_len..post_len)
-                        .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?
+                        .ok_or(SyscallError::InvalidLength)?
                         .copy_from_slice(
                             caller_account
                                 .serialized_data
                                 .get(0..realloc_bytes_used)
-                                .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?,
+                                .ok_or(SyscallError::InvalidLength)?,
                         );
                 }
             }
@@ -1437,32 +1370,18 @@ fn update_caller_account(
         // of using AccountSharedData directly (deprecated) - we must update the
         // corresponding MemoryRegion in the caller's address space. Address
         // spaces are fixed so we don't need to update the MemoryRegion's length.
-        // dbg!(&memory_mapping);
-        
         let offset = solana_rbpf::ebpf::MM_HEAP_START as *const ();
-        // let offset = 0;
 
         let caller_vm_data_addr = caller_account.vm_data_addr as *const ();
-        
         let new_vm_data_addr = (caller_vm_data_addr as u64 + offset as u64) as *const ();
 
-        dbg!(caller_vm_data_addr); // 0x0000000000071508
-        dbg!(offset);
-        dbg!(new_vm_data_addr);
         let region = memory_mapping.region(AccessType::Load, new_vm_data_addr as _)?;
-        
-        dbg!([MemoryRegionDbgWrapper(region)]);
 
         let callee_ptr = callee_account.get_data().as_ptr() as *const ();
         let region_host_addr = region.host_addr.get() as *const ();
-        let abs_diff = (callee_ptr as i128 - region_host_addr as i128).abs() as u64 as *const ();
 
-        dbg!(callee_ptr);
-        dbg!(region_host_addr);
-        dbg!(abs_diff);
-
-        if dbg!(region_host_addr != callee_ptr) {
-            // FIXME: check how this works with WASM
+        if region_host_addr != callee_ptr {
+            // FIXME: this code doesn't works with `direct_mapping` enabled
             region.host_addr.set(callee_ptr as _);
         }
     }
@@ -1557,7 +1476,7 @@ fn update_caller_account(
         let from_slice = callee_account
             .get_data()
             .get(0..post_len)
-            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
+            .ok_or(SyscallError::InvalidLength)?;
         if to_slice.len() != from_slice.len() {
             return Err(Box::new(InstructionError::AccountDataTooSmall));
         }
@@ -1566,11 +1485,11 @@ fn update_caller_account(
         let to_slice = caller_account
             .serialized_data
             .get_mut(0..realloc_bytes_used)
-            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
+            .ok_or(SyscallError::InvalidLength)?;
         let from_slice = callee_account
             .get_data()
             .get(caller_account.original_data_len..post_len)
-            .ok_or(SyscallError::InvalidLength).map_err(|e| dbg!(e))?;
+            .ok_or(SyscallError::InvalidLength)?;
         to_slice.copy_from_slice(from_slice);
     }
 
