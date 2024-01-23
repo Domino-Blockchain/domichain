@@ -594,10 +594,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     domichain_stake_program::add_genesis_accounts(&mut genesis_config);
     if genesis_config.cluster_type == ClusterType::Development {
-        domichain_runtime::genesis_utils::activate_all_features_except(
-            &mut genesis_config,
-            &[bpf_account_data_direct_mapping::id()],
-        );
+        domichain_runtime::genesis_utils::activate_all_features(&mut genesis_config);
     } else {
         // Activate feature for correct DOMI TX fee increase
         domichain_runtime::genesis_utils::activate_feature(

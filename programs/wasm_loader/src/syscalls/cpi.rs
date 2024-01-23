@@ -139,6 +139,9 @@ impl<'a> CallerAccount<'a> {
             let bpf_account_data_direct_mapping = invoke_context
                 .feature_set
                 .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+            let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+                .feature_set
+                .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
             let serialized_data = translate_slice_mut::<u8>(
                 memory_mapping,
                 if bpf_account_data_direct_mapping {
@@ -227,6 +230,9 @@ impl<'a> CallerAccount<'a> {
         let is_bpf_account_data_direct_mapping_active = invoke_context
             .feature_set
             .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+        let is_bpf_account_data_direct_mapping_active = is_bpf_account_data_direct_mapping_active && !invoke_context
+            .feature_set
+            .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
         let is_move_serialized_len_ptr_in_cpi_active = invoke_context
             .feature_set
             .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
@@ -370,6 +376,9 @@ impl<'a> CallerAccount<'a> {
         let bpf_account_data_direct_mapping = invoke_context
             .feature_set
             .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+        let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+            .feature_set
+            .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
         let serialized_data = translate_slice_mut::<u8>(
             memory_mapping,
             if bpf_account_data_direct_mapping {
@@ -964,6 +973,9 @@ where
     let direct_mapping = invoke_context
         .feature_set
         .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+    let direct_mapping = direct_mapping && !invoke_context
+        .feature_set
+        .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
 
     for (instruction_account_index, instruction_account) in instruction_accounts.iter().enumerate()
     {
@@ -1217,6 +1229,9 @@ fn cpi_common<S: SyscallInvokeSigned>(
     let direct_mapping = invoke_context
         .feature_set
         .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+    let direct_mapping = direct_mapping && !invoke_context
+        .feature_set
+        .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
 
     for (index_in_caller, caller_account) in accounts.iter_mut() {
         if let Some(caller_account) = caller_account {

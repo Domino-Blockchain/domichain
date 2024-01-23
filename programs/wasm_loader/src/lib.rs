@@ -2,7 +2,7 @@
 #![deny(clippy::indexing_slicing)]
 
 use domichain_program_runtime::loaded_programs::WasmExecutable;
-use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar};
+use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_bpf_account_data_direct_mapping};
 use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
 use wasmi::{core::{Trap, Pages}, Caller, Func};
 use wasmi_wasi::WasiCtx;
@@ -1819,6 +1819,9 @@ fn execute<'a, 'b: 'a>(
     let bpf_account_data_direct_mapping = invoke_context
         .feature_set
         .is_active(&bpf_account_data_direct_mapping::id());
+    let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+        .feature_set
+        .is_active(&disable_bpf_account_data_direct_mapping::id());
 
     let mut serialize_time = Measure::start("serialize");
     let (mut parameter_bytes, regions, account_lengths) = serialization::serialize_parameters(

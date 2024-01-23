@@ -1,5 +1,7 @@
 use std::mem::size_of_val;
 
+use domichain_sdk::feature_set::disable_bpf_account_data_direct_mapping;
+
 pub use self::{
     cpi::{SyscallInvokeSignedC, SyscallInvokeSignedRust},
     logging::{
@@ -150,6 +152,8 @@ pub fn create_program_runtime_environment<'a>(
     debugging_features: bool,
 ) -> Result<BuiltinProgram<InvokeContext<'a>>, Error> {
     use rand::Rng;
+    let bpf_account_data_direct_mapping = feature_set.is_active(&bpf_account_data_direct_mapping::id());
+    let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !feature_set.is_active(&disable_bpf_account_data_direct_mapping::id());
     // When adding new features for RBPF,
     // also add them to `Bank::apply_builtin_program_feature_transitions()`.
     let config = Config {
@@ -178,7 +182,7 @@ pub fn create_program_runtime_environment<'a>(
         enable_elf_vaddr: false,
         reject_rodata_stack_overlap: false,
         new_elf_parser: feature_set.is_active(&switch_to_new_elf_parser::id()),
-        aligned_memory_mapping: !feature_set.is_active(&bpf_account_data_direct_mapping::id()),
+        aligned_memory_mapping: !bpf_account_data_direct_mapping,
         // Warning, do not use `Config::default()` so that configuration here is explicit.
     };
 

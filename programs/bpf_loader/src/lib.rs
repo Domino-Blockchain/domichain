@@ -1,6 +1,8 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
 
+use domichain_sdk::feature_set::disable_bpf_account_data_direct_mapping;
+
 pub mod serialization;
 pub mod syscalls;
 
@@ -1559,6 +1561,9 @@ fn execute<'a, 'b: 'a>(
     let bpf_account_data_direct_mapping = invoke_context
         .feature_set
         .is_active(&bpf_account_data_direct_mapping::id());
+    let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+        .feature_set
+        .is_active(&disable_bpf_account_data_direct_mapping::id());
 
     let mut serialize_time = Measure::start("serialize");
     let (parameter_bytes, regions, account_lengths) = serialization::serialize_parameters(

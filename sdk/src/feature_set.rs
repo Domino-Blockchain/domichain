@@ -665,6 +665,10 @@ pub mod checked_arithmetic_in_fee_validation {
     domichain_sdk::declare_id!("5Pecy6ie6XGm22pc9d4P9W5c31BugcFBuy6hsP2zkETv");
 }
 
+pub mod disable_bpf_account_data_direct_mapping {
+    domichain_sdk::declare_id!("FowgrcnHpTNLwPTuoWu6ZcJi37Z7T3S4wRiqN1STwynd");
+}
+
 lazy_static! {
     /// Map of feature identifiers to user-visible description
     pub static ref FEATURE_NAMES: HashMap<Pubkey, &'static str> = [
@@ -826,6 +830,7 @@ lazy_static! {
         (vote_state_add_vote_latency::id(), "replace Lockout with LandedVote (including vote latency) in vote state #31264"),
         (checked_arithmetic_in_fee_validation::id(), "checked arithmetic in fee validation #31273"),
         (bpf_account_data_direct_mapping::id(), "use memory regions to map account data into the rbpf vm instead of copying the data"),
+        (disable_bpf_account_data_direct_mapping::id(), "disable bpf_account_data_direct_mapping feature"),
         /*************** ADD NEW FEATURES HERE ***************/
     ]
     .iter()

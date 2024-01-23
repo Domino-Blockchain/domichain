@@ -68,10 +68,14 @@ declare_syscall!(
     ) -> Result<u64, Error> {
         mem_op_consume(invoke_context, n)?;
 
-        if invoke_context
+        let bpf_account_data_direct_mapping = invoke_context
             .feature_set
-            .is_active(&feature_set::bpf_account_data_direct_mapping::id())
-        {
+            .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+        let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+            .feature_set
+            .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
+
+        if bpf_account_data_direct_mapping {
             let cmp_result = translate_type_mut::<i32>(
                 memory_mapping,
                 cmp_result_addr,
@@ -126,10 +130,14 @@ declare_syscall!(
     ) -> Result<u64, Error> {
         mem_op_consume(invoke_context, n)?;
 
-        if invoke_context
+        let bpf_account_data_direct_mapping = invoke_context
             .feature_set
-            .is_active(&feature_set::bpf_account_data_direct_mapping::id())
-        {
+            .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+        let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+            .feature_set
+            .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
+
+        if bpf_account_data_direct_mapping {
             memset_non_contiguous(dst_addr, c as u8, n, memory_mapping)
         } else {
             let s = translate_slice_mut::<u8>(
@@ -152,10 +160,13 @@ fn memmove(
     n: u64,
     memory_mapping: &MemoryMapping,
 ) -> Result<u64, Error> {
-    if invoke_context
+    let bpf_account_data_direct_mapping = invoke_context
         .feature_set
-        .is_active(&feature_set::bpf_account_data_direct_mapping::id())
-    {
+        .is_active(&feature_set::bpf_account_data_direct_mapping::id());
+    let bpf_account_data_direct_mapping = bpf_account_data_direct_mapping && !invoke_context
+        .feature_set
+        .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
+    if bpf_account_data_direct_mapping {
         memmove_non_contiguous(dst_addr, src_addr, n, memory_mapping)
     } else {
         let dst_ptr = translate_slice_mut::<u8>(

@@ -201,15 +201,6 @@ pub fn activate_all_features(genesis_config: &mut GenesisConfig) {
     }
 }
 
-pub fn activate_all_features_except(genesis_config: &mut GenesisConfig, exception: &[Pubkey]) {
-    // Activate all features except the list at genesis in development mode
-    for feature_id in FeatureSet::default().inactive {
-        if !exception.contains(&feature_id) {
-            activate_feature(genesis_config, feature_id);
-        }
-    }
-}
-
 pub fn activate_feature(genesis_config: &mut GenesisConfig, feature_id: Pubkey) {
     genesis_config.accounts.insert(
         feature_id,
