@@ -113,8 +113,29 @@ macro_rules! dbg_syscall {
     };
 }
 
+/// Helper macro to debug without heap allocations
 #[macro_export]
 macro_rules! msg_static {
+    ($msg:expr) => {
+        $crate::log::sol_log($msg)
+    };
+    ($($arg:tt)*) => {
+        let mut s: [u8; 256] = [0; 256];
+        {
+            use std::io::Write;
+            // String is truncated by 256 bytes
+            if let Err(err) = write!(s.as_mut(), $($arg)*) {
+                // Log warning in case of strings larger than 256 bytes
+                $crate::msg_static_fallback!("{:?}", err);
+            }
+        }
+        $crate::log::sol_log(std::str::from_utf8(&s).unwrap())
+    };
+}
+
+/// Separate macro to prevent infinite recursion in `msg_static!()`
+#[macro_export]
+macro_rules! msg_static_fallback {
     ($msg:expr) => {
         $crate::log::sol_log($msg)
     };
