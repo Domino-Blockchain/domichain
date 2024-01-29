@@ -78,6 +78,7 @@ fetch_program_wasm associated-token-account 1.0.5 ATokenGPvbdGVxr1b2hvZbsiqW5xWH
 fetch_program feature-proposal 1.0.0 Feat1YXHhH6t1juaWF74WLcfv4XoNocjXA6sPWHNgAse BPFLoader2111111111111111111111111111111111
 fetch_program_wasm token-metadata 1.13.3 meta3c863KN6CX6HXzfmDHbURDkfJ5HMCwUT5SEqu5C WASMLoader211111111111111111111111111111111
 fetch_program_wasm serum-dex 0.5.6 dex62P6skhCTUV1TcVW2bwjTYzjEmudqv7oRs2bniSD WASMLoader211111111111111111111111111111111
+fetch_program_wasm token-swap 3.0.0 SwapsVeCiPHMUAtzQWZw7RjsKjgCjhwU55QGu4U1Szw WASMLoader211111111111111111111111111111111
 
 echo "${genesis_args[@]}" > spl-genesis-args.sh
 
