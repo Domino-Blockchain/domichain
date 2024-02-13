@@ -2292,6 +2292,13 @@ impl ReplayStage {
         info!("Replay_stage: bank seed: {block_parent_seed:?}");
         let vrf_proof = vrf_prove(&block_parent_seed.to_string(), authorized_voter_keypair).unwrap();
         info!("Replay_stage: vrf_proof: {vrf_proof:?}");
+
+        dbg!("vote.set_vrf_proof",
+            format_args!("{:?}", &block_parent_seed.to_string()),
+            format_args!("{:?}", &block_parent_seed.to_bytes()),
+            format_args!("{:?}", authorized_voter_keypair.pubkey().to_bytes()),
+            format_args!("{:?}", &vrf_proof),
+        );
         vote.set_vrf_proof(Some(vrf_proof));
 
         // Send our last few votes along with the new one
