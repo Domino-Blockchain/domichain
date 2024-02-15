@@ -3279,7 +3279,9 @@ impl Bank {
 
             // freeze is a one-way trip, idempotent
             self.freeze_started.store(true, Relaxed);
-            *hash = self.hash_internal_state();
+            let result_hash = self.hash_internal_state();
+            dbg!(self.slot(), result_hash);
+            *hash = result_hash;
             self.rc.accounts.accounts_db.mark_slot_frozen(self.slot());
             self.bank_frozen_or_destroyed();
         }

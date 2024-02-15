@@ -364,6 +364,8 @@ fn check_duplicate_confirmed_hash_against_frozen_hash(
             // The duplicate confirmed slot hash does not match our frozen hash.
             // Modify fork choice rule to exclude our version from being voted
             // on and also repair the correct version
+            
+            // FIXME: warning
             warn!(
                 "Cluster duplicate confirmed slot {} with hash {}, but our version has hash {}",
                 slot, duplicate_confirmed_hash, bank_frozen_hash
