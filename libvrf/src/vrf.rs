@@ -27,10 +27,10 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
     let skpk_vec = keypair.to_bytes();
     let skpk_vec_ptr = skpk_vec.as_ptr();
 
-    dbg!(format_args!("{:?}", keypair.pubkey()));
-    dbg!(format_args!("{:?}", keypair.pubkey().to_bytes()));
-    dbg!(format_args!("{:?}", &c_message_bytes));
-    dbg!(format_args!("{:?}", c_message_len));
+    // dbg!(format_args!("{:?}", keypair.pubkey()));
+    // dbg!(format_args!("{:?}", keypair.pubkey().to_bytes()));
+    // dbg!(format_args!("{:?}", &c_message_bytes));
+    // dbg!(format_args!("{:?}", c_message_len));
 
     let res = unsafe {
         // int vrf_prove(
@@ -48,9 +48,9 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
     };
     debug!("vrf_prove result code: {}", res);
 
-    dbg!(format_args!("{:?}", skpk_vec));
-    dbg!(format_args!("{:?}", &proof_vec));
-    dbg!(res);
+    // dbg!(format_args!("{:?}", skpk_vec));
+    // dbg!(format_args!("{:?}", &proof_vec));
+    // dbg!(res);
 
     eprintln!("[{file}:{line}] vrf.rs END vrf_prove", file=file!(), line=line!());
     eprintln!();
@@ -77,12 +77,12 @@ pub fn vrf_verify(message: &str, pubkey: &Pubkey, proof: &[u8; PROOF_LEN]) -> Re
     let pk_vec_ptr = pk_vec.as_ptr();
     let proof_vec_ptr = proof.as_ptr();
 
-    // dbg!(format_args!("{:?}", &hash_vec));
-    dbg!(format_args!("{:?}", &pubkey));
-    dbg!(format_args!("{:?}", &pubkey.to_bytes()));
-    dbg!(format_args!("{:?}", &proof));
-    dbg!(format_args!("{:?}", &c_message_bytes));
-    dbg!(format_args!("{:?}", c_message_len));
+    dbg!(format_args!("{:?}", &hash_vec));
+    // dbg!(format_args!("{:?}", &pubkey));
+    // dbg!(format_args!("{:?}", &pubkey.to_bytes()));
+    // dbg!(format_args!("{:?}", &proof));
+    // dbg!(format_args!("{:?}", &c_message_bytes));
+    // dbg!(format_args!("{:?}", c_message_len));
 
     let res = unsafe {
         // int vrf_verify(
@@ -102,8 +102,8 @@ pub fn vrf_verify(message: &str, pubkey: &Pubkey, proof: &[u8; PROOF_LEN]) -> Re
     };
     debug!("vrf_verify result code: {}", res);
 
-    dbg!(res);
-    dbg!(format_args!("{:?}", pk_vec));
+    // dbg!(res);
+    // dbg!(format_args!("{:?}", pk_vec));
 
     eprintln!("[{file}:{line}] vrf.rs END vrf_verify", file=file!(), line=line!());
     eprintln!();

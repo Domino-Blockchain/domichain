@@ -190,50 +190,50 @@ static int prove_helper(unsigned char pi[80], const unsigned char Y_point[32], c
 }
 
 int vrf_prove(unsigned char proof[80], const unsigned char skpk[64], const unsigned char *msg, unsigned long long msglen) {
-	fprintf(stderr, "\n");
-	fprintf(stderr, "[%s:%d] vrf.c START vrf_prove\n", __FILE__, __LINE__);
+	// fprintf(stderr, "\n");
+	// fprintf(stderr, "[%s:%d] vrf.c START vrf_prove\n", __FILE__, __LINE__);
 
-	fprintf(stderr, "[%s:%d] skpk = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] skpk = [", __FILE__, __LINE__);
 	for (int i = 0; i < 64; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", skpk[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", skpk[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
 	for (int i = 0; i < msglen; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", msg[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", msg[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
 	unsigned char Y_point[32], x_scalar[32], truncated_hashed_sk_string[32];
 	if (vrf_expand_sk(Y_point, x_scalar, truncated_hashed_sk_string, skpk) != 0) {
 		sodium_memzero(x_scalar, 32);
 		sodium_memzero(truncated_hashed_sk_string, 32);
 		sodium_memzero(Y_point, 32); /* for good measure */
-		fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
-		fprintf(stderr, "\n");
+		// fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
+		// fprintf(stderr, "\n");
 		return -1;
 	}
 	if (prove_helper(proof, Y_point, x_scalar, truncated_hashed_sk_string, msg, msglen) != 0) {
-		fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
-		fprintf(stderr, "\n");
+		// fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
+		// fprintf(stderr, "\n");
 		return -1;
 	}
 	sodium_memzero(x_scalar, 32);
 	sodium_memzero(truncated_hashed_sk_string, 32);
 	sodium_memzero(Y_point, 32); /* for good measure */
 
-	fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
 	for (int i = 0; i < 80; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", proof[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", proof[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
-	fprintf(stderr, "\n");
+	// fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
+	// fprintf(stderr, "\n");
 
 	return 0;
 }
@@ -367,21 +367,21 @@ verify_helper(const unsigned char Y_point[32], const unsigned char pi[80],
 	crypto_core_ed25519_sub(V_point, tmp2_point, tmp_point); /* V = tmp2_point - tmp_point = s*H - c*Gamma */
 
 	hash_points(cprime, H_point, Gamma_point, U_point, V_point);
-	fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
 
-	fprintf(stderr, "[%s:%d] c_scalar = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] c_scalar = [", __FILE__, __LINE__);
 	for (int i = 0; i < 16; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", c_scalar[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", c_scalar[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] cprime = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] cprime = [", __FILE__, __LINE__);
 	for (int i = 0; i < 16; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", cprime[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", cprime[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
 	return sodium_memcmp(c_scalar, cprime, 16);
 }
@@ -404,44 +404,44 @@ vrf_verify(unsigned char output[64],
 	   const unsigned char proof[80],
 	   const unsigned char *msg, const unsigned long long msglen)
 {
-	fprintf(stderr, "\n");
-	fprintf(stderr, "[%s:%d] vrf.c START vrf_verify\n", __FILE__, __LINE__);
+	// fprintf(stderr, "\n");
+	// fprintf(stderr, "[%s:%d] vrf.c START vrf_verify\n", __FILE__, __LINE__);
 
-	fprintf(stderr, "[%s:%d] pk = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] pk = [", __FILE__, __LINE__);
 	for (int i = 0; i < 32; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", pk[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", pk[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
 	for (int i = 0; i < 80; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", proof[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", proof[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
+	// fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
 	for (int i = 0; i < msglen; i++) {
-		if (i > 0) {fprintf(stderr, ", ");}
-		fprintf(stderr, "%d", msg[i]);
+		// if (i > 0) {fprintf(stderr, ", ");}
+		// fprintf(stderr, "%d", msg[i]);
 	}
-	fprintf(stderr, "]\n");
+	// fprintf(stderr, "]\n");
 
-	fprintf(stderr, "[%s:%d] msglen = %d\n", __FILE__, __LINE__, msglen);
+	// fprintf(stderr, "[%s:%d] msglen = %d\n", __FILE__, __LINE__, msglen);
 
 	int vrf_validate_key_result = vrf_validate_key(pk); // Error
 	int verify_helper_result = verify_helper(pk, proof, msg, msglen);
-	fprintf(stderr, "[%s:%d] vrf_validate_key_result=%d verify_helper_result=%d\n", __FILE__, __LINE__, vrf_validate_key_result, verify_helper_result);
+	// fprintf(stderr, "[%s:%d] vrf_validate_key_result=%d verify_helper_result=%d\n", __FILE__, __LINE__, vrf_validate_key_result, verify_helper_result);
 	if ((vrf_validate_key_result == 0) && (verify_helper_result == 0)) {
-		fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
-		fprintf(stderr, "[%s:%d] vrf.c END vrf_verify\n", __FILE__, __LINE__);
-		fprintf(stderr, "\n");
+		// fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
+		// fprintf(stderr, "[%s:%d] vrf.c END vrf_verify\n", __FILE__, __LINE__);
+		// fprintf(stderr, "\n");
 		return vrf_proof_to_hash(output, proof);
 	} else {
-		fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
-		fprintf(stderr, "[%s:%d] vrf.c END vrf_verify\n", __FILE__, __LINE__);
-		fprintf(stderr, "\n");
+		// fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
+		// fprintf(stderr, "[%s:%d] vrf.c END vrf_verify\n", __FILE__, __LINE__);
+		// fprintf(stderr, "\n");
 		return -1;
 	}
 }

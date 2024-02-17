@@ -6648,25 +6648,39 @@ impl Bank {
     ///  of the delta of the ledger since the last vote and up to now
     fn hash_internal_state(&self) -> Hash {
         let slot = self.slot();
+        warn!(target: "bank_dbg", "{}", slot);
         let accounts_delta_hash = self
             .rc
             .accounts
             .accounts_db
             .calculate_accounts_delta_hash(slot);
+        // Too long
+        // dbg!(
+        //     &self
+        //         .rc
+        //         .accounts
+        //         .accounts_db
+        // );
 
         let mut signature_count_buf = [0u8; 8];
         LittleEndian::write_u64(&mut signature_count_buf[..], self.signature_count());
 
+        // dbg!(&self.parent_hash);
+        // dbg!(&accounts_delta_hash.0);
+        // dbg!(format_args!("{:?}", &signature_count_buf));
+        // dbg!(&self.last_blockhash());
         let mut hash = hashv(&[
             self.parent_hash.as_ref(),
             accounts_delta_hash.0.as_ref(),
             &signature_count_buf,
             self.last_blockhash().as_ref(),
         ]);
+        // dbg!(hash);
 
         let epoch_accounts_hash = self.should_include_epoch_accounts_hash().then(|| {
             let epoch_accounts_hash = self.wait_get_epoch_accounts_hash();
             hash = hashv(&[hash.as_ref(), epoch_accounts_hash.as_ref().as_ref()]);
+            // dbg!(hash);
             epoch_accounts_hash
         });
 
@@ -6675,10 +6689,12 @@ impl Bank {
             .read()
             .unwrap()
             .get_hash_data(slot, self.parent_slot());
+        // dbg!(&buf);
         if let Some(buf) = buf {
             let hard_forked_hash = extend_and_hash(&hash, &buf);
             warn!("hard fork at slot {slot} by hashing {buf:?}: {hash} => {hard_forked_hash}");
             hash = hard_forked_hash;
+            // dbg!(hash);
         }
 
         let bank_hash_stats = self
@@ -6687,6 +6703,7 @@ impl Bank {
             .accounts_db
             .get_bank_hash_stats(slot)
             .expect("No bank hash stats were found for this bank, that should not be possible");
+        // dbg!(&bank_hash_stats);
         info!(
             "bank frozen: {slot} hash: {hash} accounts_delta: {} signature_count: {} last_blockhash: {} capitalization: {}{}, stats: {bank_hash_stats:?}",
             accounts_delta_hash.0,
@@ -6699,6 +6716,7 @@ impl Bank {
                 "".to_string()
             }
         );
+        // dbg!(hash)
         hash
     }
 
