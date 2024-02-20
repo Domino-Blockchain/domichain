@@ -77,3 +77,9 @@ signal-hook = { workspace = true }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
+[profile.release]
+opt-level = 2
+debug = true
+incremental = true
+codegen-units = 256
