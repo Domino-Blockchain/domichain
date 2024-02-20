@@ -1,6 +1,8 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
 
+use std::backtrace::Backtrace;
+
 use domichain_program_runtime::loaded_programs::WasmExecutable;
 use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_bpf_account_data_direct_mapping};
 use log::{debug, info};
@@ -1812,6 +1814,8 @@ fn execute<'a, 'b: 'a>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let blockhash = invoke_context.blockhash;
     debug!(target: "wasm_debug", "wasm_start, blockhash={blockhash}");
+    let bt = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
+    debug!(target: "wasm_traceback", "wasm_start, traceback={bt}");
 
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
