@@ -1811,7 +1811,7 @@ fn execute<'a, 'b: 'a>(
     invoke_context: &'a mut InvokeContext<'b>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let blockhash = invoke_context.blockhash;
-    debug!(target: "wasm_debug", "WASM smart contract start blockhash={blockhash}");
+    debug!(target: "wasm_debug", "wasm_start, blockhash={blockhash}");
 
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
@@ -2428,7 +2428,7 @@ fn execute<'a, 'b: 'a>(
         // read hash digest and consume hasher
         let hasher_result = &hasher.finalize()[..];
         
-        debug!(target: "wasm_debug", "WASM smart contract result: {}, blockhash={blockhash}", hex::encode(hasher_result));
+        debug!(target: "wasm_debug", "wasm_result, result_hash={}, blockhash={blockhash}", hex::encode(hasher_result));
 
         // if parameter_bytes_slice_len < 1024 * 1024 {
         //     let to_print = parameter_bytes.as_slice();

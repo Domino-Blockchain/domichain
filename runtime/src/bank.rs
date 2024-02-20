@@ -6670,6 +6670,7 @@ impl Bank {
             epoch_accounts_hash
         });
 
+        let mut hard_forked_hash_dbg = Hash::default();
         let buf = self
             .hard_forks
             .read()
@@ -6677,6 +6678,7 @@ impl Bank {
             .get_hash_data(slot, self.parent_slot());
         if let Some(buf) = buf {
             let hard_forked_hash = extend_and_hash(&hash, &buf);
+            hard_forked_hash_dbg = hard_forked_hash;
             warn!("hard fork at slot {slot} by hashing {buf:?}: {hash} => {hard_forked_hash}");
             hash = hard_forked_hash;
         }
@@ -6698,6 +6700,25 @@ impl Bank {
             } else {
                 "".to_string()
             }
+        );
+        debug!(
+            target: "bank_debug",
+            "hash_internal_state, slot={:?}, \
+            parent_hash={:?}, \
+            accounts_delta_hash={:?}, \
+            signature_count={:?}, \
+            last_blockhash={:?}, \
+            epoch_accounts_hash={:?}, \
+            hard_forked_hash_dbg={:?}, \
+            hash={:?}",
+            slot,
+            self.parent_hash,
+            accounts_delta_hash.0,
+            self.signature_count(),
+            self.last_blockhash(),
+            epoch_accounts_hash,
+            hard_forked_hash_dbg,
+            hash,
         );
         hash
     }

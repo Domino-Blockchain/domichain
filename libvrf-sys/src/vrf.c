@@ -194,17 +194,17 @@ int vrf_prove(unsigned char proof[80], const unsigned char skpk[64], const unsig
 	// fprintf(stderr, "[%s:%d] vrf.c START vrf_prove\n", __FILE__, __LINE__);
 
 	// fprintf(stderr, "[%s:%d] skpk = [", __FILE__, __LINE__);
-	for (int i = 0; i < 64; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", skpk[i]);
-	}
+	// for (int i = 0; i < 64; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", skpk[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
-	for (int i = 0; i < msglen; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", msg[i]);
-	}
+	// for (int i = 0; i < msglen; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", msg[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	unsigned char Y_point[32], x_scalar[32], truncated_hashed_sk_string[32];
@@ -226,10 +226,10 @@ int vrf_prove(unsigned char proof[80], const unsigned char skpk[64], const unsig
 	sodium_memzero(Y_point, 32); /* for good measure */
 
 	// fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
-	for (int i = 0; i < 80; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", proof[i]);
-	}
+	// for (int i = 0; i < 80; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", proof[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] vrf.c END vrf_prove\n", __FILE__, __LINE__);
@@ -370,17 +370,17 @@ verify_helper(const unsigned char Y_point[32], const unsigned char pi[80],
 	// fprintf(stderr, "[%s:%d]\n", __FILE__, __LINE__);
 
 	// fprintf(stderr, "[%s:%d] c_scalar = [", __FILE__, __LINE__);
-	for (int i = 0; i < 16; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", c_scalar[i]);
-	}
+	// for (int i = 0; i < 16; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", c_scalar[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] cprime = [", __FILE__, __LINE__);
-	for (int i = 0; i < 16; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", cprime[i]);
-	}
+	// for (int i = 0; i < 16; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", cprime[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	return sodium_memcmp(c_scalar, cprime, 16);
@@ -408,24 +408,24 @@ vrf_verify(unsigned char output[64],
 	// fprintf(stderr, "[%s:%d] vrf.c START vrf_verify\n", __FILE__, __LINE__);
 
 	// fprintf(stderr, "[%s:%d] pk = [", __FILE__, __LINE__);
-	for (int i = 0; i < 32; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", pk[i]);
-	}
+	// for (int i = 0; i < 32; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", pk[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] proof = [", __FILE__, __LINE__);
-	for (int i = 0; i < 80; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", proof[i]);
-	}
+	// for (int i = 0; i < 80; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", proof[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] msg = [", __FILE__, __LINE__);
-	for (int i = 0; i < msglen; i++) {
-		// if (i > 0) {fprintf(stderr, ", ");}
-		// fprintf(stderr, "%d", msg[i]);
-	}
+	// for (int i = 0; i < msglen; i++) {
+	// 	if (i > 0) {fprintf(stderr, ", ");}
+	// 	fprintf(stderr, "%d", msg[i]);
+	// }
 	// fprintf(stderr, "]\n");
 
 	// fprintf(stderr, "[%s:%d] msglen = %d\n", __FILE__, __LINE__, msglen);

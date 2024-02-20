@@ -46,7 +46,7 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
             c_message_len,
         )
     };
-    debug!("vrf_prove result code: {}", res);
+    // debug!("vrf_prove result code: {}", res);
 
     // dbg!(format_args!("{:?}", skpk_vec));
     // dbg!(format_args!("{:?}", &proof_vec));
@@ -54,6 +54,16 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
 
     // eprintln!("[{file}:{line}] vrf.rs END vrf_prove", file=file!(), line=line!());
     // eprintln!();
+
+    debug!(target: "vrf_debug",
+        "vrf_prove, pubkey={}, pubkey_bytes={:?}, c_message_bytes={:?}, c_message_len={}, proof_vec={:?}, res={}",
+        keypair.pubkey(),
+        keypair.pubkey().to_bytes(),
+        &c_message_bytes,
+        c_message_len,
+        &proof_vec,
+        res,
+    );
 
     match res {
         0 => Ok(proof_vec),
@@ -100,13 +110,24 @@ pub fn vrf_verify(message: &str, pubkey: &Pubkey, proof: &[u8; PROOF_LEN]) -> Re
             c_message_len,
         )
     };
-    debug!("vrf_verify result code: {}", res);
+    // debug!("vrf_verify result code: {}", res);
 
     // dbg!(res);
     // dbg!(format_args!("{:?}", pk_vec));
 
     // eprintln!("[{file}:{line}] vrf.rs END vrf_verify", file=file!(), line=line!());
     // eprintln!();
+
+    debug!(target: "vrf_debug",
+        "vrf_verify, hash_vec={:?}, pubkey={:?}, pubkey_bytes={:?}, proof={:?}, c_message_bytes={:?}, c_message_len={:?}, res={:?}",
+        &hash_vec,
+        &pubkey,
+        &pubkey.to_bytes(),
+        &proof,
+        &c_message_bytes,
+        c_message_len,
+        res,
+    );
 
     match res {
         0 => Ok(hash_vec),
