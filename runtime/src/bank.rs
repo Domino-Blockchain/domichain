@@ -33,6 +33,8 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
+use std::backtrace::Backtrace;
+
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
 pub use domichain_sdk::reward_type::RewardType;
@@ -6937,6 +6939,25 @@ impl Bank {
     }
 
     pub fn verify_transaction(
+        &self,
+        tx: VersionedTransaction,
+        verification_mode: TransactionVerificationMode,
+    ) -> Result<SanitizedTransaction> {
+        let tx_debug = format!("{:?}", &tx);
+        let res = self.verify_transaction_inner(tx, verification_mode);
+        let tb = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
+        debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
+        debug!(
+            target: "bank_verify_transaction",
+            "verify_transaction, tx={}, verification_mode={:?}, res={:?}",
+            tx_debug,
+            verification_mode,
+            &res,
+        );
+        res
+    }
+
+    fn verify_transaction_inner(
         &self,
         tx: VersionedTransaction,
         verification_mode: TransactionVerificationMode,
