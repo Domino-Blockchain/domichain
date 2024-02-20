@@ -6943,13 +6943,14 @@ impl Bank {
         tx: VersionedTransaction,
         verification_mode: TransactionVerificationMode,
     ) -> Result<SanitizedTransaction> {
-        let tx_debug = format!("{:?}", &tx);
+        let tx_debug = tx.clone();
         let res = self.verify_transaction_inner(tx, verification_mode);
         let tb = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
         debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
         debug!(
             target: "bank_verify_transaction",
-            "verify_transaction, tx={}, verification_mode={:?}, res={:?}",
+            "verify_transaction; slot={:?}; tx={:?}; verification_mode={:?}; res={:?}",
+            self.slot(),
             tx_debug,
             verification_mode,
             &res,
