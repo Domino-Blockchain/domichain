@@ -3,6 +3,8 @@
 
 use domichain_program_runtime::loaded_programs::WasmExecutable;
 use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_bpf_account_data_direct_mapping};
+use log::{debug, info};
+use rand::seq::IteratorRandom;
 use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
 use wasmi::{core::{Trap, Pages}, Caller, Func};
 use wasmi_wasi::WasiCtx;
@@ -1808,6 +1810,9 @@ fn execute<'a, 'b: 'a>(
     executable: &'a WasmExecutable,
     invoke_context: &'a mut InvokeContext<'b>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let blockhash = invoke_context.blockhash;
+    debug!(target: "wasm_debug", "WASM smart contract start blockhash={blockhash}");
+
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -2414,6 +2419,16 @@ fn execute<'a, 'b: 'a>(
         parameter_bytes.as_slice_mut().copy_from_slice(
             &memory.data(&store)[0..parameter_bytes_slice_len]
         );
+
+        use sha2::{Sha256, Sha512, Digest};
+        // create a Sha256 object
+        let mut hasher = Sha256::new();
+        // write input message
+        hasher.update(parameter_bytes.as_slice());
+        // read hash digest and consume hasher
+        let hasher_result = &hasher.finalize()[..];
+        
+        debug!(target: "wasm_debug", "WASM smart contract result: {}, blockhash={blockhash}", hex::encode(hasher_result));
 
         // if parameter_bytes_slice_len < 1024 * 1024 {
         //     let to_print = parameter_bytes.as_slice();
