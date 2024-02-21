@@ -6949,9 +6949,10 @@ impl Bank {
         if !is_vote {
             let tb = format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>");
             debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
+            let tx_debug = format!("{tx_debug:#?}").replace("\n", "<nvl>");
             debug!(
                 target: "bank_verify_transaction",
-                "verify_transaction; slot={:?}; tx={:?}; verification_mode={:?}; res={:?}",
+                "verify_transaction; slot={:?}; tx={}; verification_mode={:?}; res={:?}",
                 self.slot(),
                 tx_debug,
                 verification_mode,
