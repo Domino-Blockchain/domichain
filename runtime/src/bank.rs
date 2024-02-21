@@ -6945,16 +6945,19 @@ impl Bank {
     ) -> Result<SanitizedTransaction> {
         let tx_debug = tx.clone();
         let res = self.verify_transaction_inner(tx, verification_mode);
-        let tb = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
-        debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
-        debug!(
-            target: "bank_verify_transaction",
-            "verify_transaction; slot={:?}; tx={:?}; verification_mode={:?}; res={:?}",
-            self.slot(),
-            tx_debug,
-            verification_mode,
-            &res,
-        );
+        let is_vote = res.as_ref().map(|tx| tx.is_simple_vote_transaction()).unwrap_or_default();
+        if !is_vote {
+            let tb = format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>");
+            debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
+            debug!(
+                target: "bank_verify_transaction",
+                "verify_transaction; slot={:?}; tx={:?}; verification_mode={:?}; res={:?}",
+                self.slot(),
+                tx_debug,
+                verification_mode,
+                &res,
+            );
+        }
         res
     }
 
