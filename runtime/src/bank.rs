@@ -4631,9 +4631,15 @@ impl Bank {
         let execution_results: Vec<TransactionExecutionResult> = loaded_transactions
             .iter_mut()
             .zip(sanitized_txs.iter())
+            .map(|data| {
+                debug!(target: "wasm_debug", "loaded_transactions_iter_data; data={}", format!("{data:#?}").replace("\n", "<nvl>"));
+                data
+            })
             .map(|(accs, tx)| match accs {
                 (Err(e), _nonce) => TransactionExecutionResult::NotExecuted(e.clone()),
                 (Ok(loaded_transaction), nonce) => {
+                    debug!(target: "wasm_debug", "loaded_transactions_iter");
+
                     let compute_budget = if let Some(compute_budget) =
                         self.runtime_config.compute_budget
                     {
@@ -4680,6 +4686,7 @@ impl Bank {
                         log_messages_bytes_limit,
                         &programs_loaded_for_tx_batch.borrow(),
                     );
+                    debug!(target: "wasm_debug", "execute_loaded_transaction; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
 
                     if let TransactionExecutionResult::Executed {
                         details,
