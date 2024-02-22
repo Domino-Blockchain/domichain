@@ -754,6 +754,8 @@ fn process_instruction_inner(
     let executor = find_program_in_cache(invoke_context, program_account.get_key())
         .ok_or_else(|| InstructionError::InvalidAccountData)?;
 
+    debug!(target: "wasm_debug", "process_instruction_inner_15a");
+
     if executor.is_tombstone() {
         return Err(Box::new(InstructionError::InvalidAccountData));
     }
