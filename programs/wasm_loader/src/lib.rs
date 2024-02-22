@@ -599,6 +599,8 @@ pub fn process_instruction(
 fn process_instruction_inner(
     invoke_context: &mut InvokeContext,
 ) -> Result<u64, Box<dyn std::error::Error>> {
+    debug!(target: "wasm_debug", "process_instruction_inner_1");
+
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -607,6 +609,8 @@ fn process_instruction_inner(
         .feature_set
         .is_active(&remove_bpf_loader_incorrect_program_id::id())
     {
+        debug!(target: "wasm_debug", "process_instruction_inner_2");
+
         fn get_index_in_transaction(
             instruction_context: &InstructionContext,
             index_in_instruction: IndexOfAccount,
@@ -621,6 +625,7 @@ fn process_instruction_inner(
                 )
             }
         }
+        debug!(target: "wasm_debug", "process_instruction_inner_3");
 
         fn try_borrow_account<'a>(
             transaction_context: &'a TransactionContext,
@@ -638,6 +643,7 @@ fn process_instruction_inner(
                 )
             }
         }
+        debug!(target: "wasm_debug", "process_instruction_inner_4");
 
         let first_instruction_account = {
             let borrowed_root_account =
@@ -649,6 +655,9 @@ fn process_instruction_inner(
                 0
             }
         };
+
+        debug!(target: "wasm_debug", "process_instruction_inner_5");
+
         let first_account_key = transaction_context.get_key_of_account_at_index(
             get_index_in_transaction(instruction_context, first_instruction_account)?,
         )?;
@@ -659,6 +668,9 @@ fn process_instruction_inner(
         .and_then(|index_in_transaction| {
             transaction_context.get_key_of_account_at_index(index_in_transaction)
         });
+
+        debug!(target: "wasm_debug", "process_instruction_inner_6");
+
         let program_id = instruction_context.get_last_program_key(transaction_context)?;
         if first_account_key == program_id
             || second_account_key
@@ -678,13 +690,19 @@ fn process_instruction_inner(
         }
     }
 
+    debug!(target: "wasm_debug", "process_instruction_inner_7");
+
     let program_account =
         instruction_context.try_borrow_last_program_account(transaction_context)?;
+
+    debug!(target: "wasm_debug", "process_instruction_inner_8");
 
     // Consume compute units if feature `native_programs_consume_cu` is activated
     let native_programs_consume_cu = invoke_context
         .feature_set
         .is_active(&native_programs_consume_cu::id());
+
+    debug!(target: "wasm_debug", "process_instruction_inner_9");
 
     // Program Management Instruction
     if native_loader::check_id(program_account.get_owner()) {
@@ -694,31 +712,43 @@ fn process_instruction_inner(
             if native_programs_consume_cu {
                 invoke_context.consume_checked(2_370)?;
             }
+            debug!(target: "wasm_debug", "process_instruction_inner_10");
+
             process_loader_upgradeable_instruction(invoke_context)
         } else if wasm_loader::check_id(program_id) {
             if native_programs_consume_cu {
                 invoke_context.consume_checked(570)?;
             }
+            debug!(target: "wasm_debug", "process_instruction_inner_11");
+
             process_loader_instruction(invoke_context)
         } else if wasm_loader_deprecated::check_id(program_id) {
             if native_programs_consume_cu {
                 invoke_context.consume_checked(1_140)?;
             }
+            debug!(target: "wasm_debug", "process_instruction_inner_12");
+
             ic_logger_msg!(log_collector, "Deprecated loader is no longer supported");
             Err(InstructionError::UnsupportedProgramId)
         } else {
             ic_logger_msg!(log_collector, "Invalid WASM loader id");
+            debug!(target: "wasm_debug", "process_instruction_inner_13");
+
             Err(InstructionError::IncorrectProgramId)
         }
         .map(|_| 0)
         .map_err(|error| Box::new(error) as Box<dyn std::error::Error>);
     }
 
+    debug!(target: "wasm_debug", "process_instruction_inner_14");
+
     // Program Invocation
     if !program_account.is_executable() {
         ic_logger_msg!(log_collector, "Program is not executable");
         return Err(Box::new(InstructionError::IncorrectProgramId));
     }
+
+    debug!(target: "wasm_debug", "process_instruction_inner_15");
 
     let mut get_or_create_executor_time = Measure::start("get_or_create_executor_time");
     let executor = find_program_in_cache(invoke_context, program_account.get_key())
@@ -728,14 +758,21 @@ fn process_instruction_inner(
         return Err(Box::new(InstructionError::InvalidAccountData));
     }
 
+    debug!(target: "wasm_debug", "process_instruction_inner_16");
+
     drop(program_account);
     get_or_create_executor_time.stop();
     saturating_add_assign!(
         invoke_context.timings.get_or_create_executor_us,
         get_or_create_executor_time.as_us()
     );
+    
+    debug!(target: "wasm_debug", "process_instruction_inner_17");
 
     executor.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
+
+    debug!(target: "wasm_debug", "process_instruction_inner_18");
+
     match &executor.program {
         LoadedProgramType::FailedVerification(_)
         | LoadedProgramType::Closed
