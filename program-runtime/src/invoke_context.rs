@@ -1,5 +1,7 @@
 use std::process::exit;
 
+use log::debug;
+
 use {
     crate::{
         accounts_data_meter::AccountsDataMeter,
@@ -665,6 +667,7 @@ impl<'a> InvokeContext<'a> {
                     .verify_caller_us,
                 verify_caller_time.as_us()
             );
+            debug!(target: "wasm_debug", "process_instruction; verify_caller_result={}", format!("{verify_caller_result:#?}").replace("\n", "<nvl>"));
             verify_caller_result?;
         }
 
@@ -672,7 +675,7 @@ impl<'a> InvokeContext<'a> {
             .get_next_instruction_context()?
             .configure(program_indices, instruction_accounts, instruction_data);
         self.push()?;
-        self.process_executable_chain(compute_units_consumed, timings)
+        let res = self.process_executable_chain(compute_units_consumed, timings)
             .and_then(|_| {
                 if self
                     .feature_set
@@ -700,7 +703,9 @@ impl<'a> InvokeContext<'a> {
             })
             // MUST pop if and only if `push` succeeded, independent of `result`.
             // Thus, the `.and()` instead of an `.and_then()`.
-            .and(self.pop())
+            .and(self.pop());
+        debug!(target: "wasm_debug", "process_instruction; res={}", format!("{res:#?}").replace("\n", "<nvl>"));
+        res
     }
 
     /// Calls the instruction's program entrypoint method
@@ -762,6 +767,7 @@ impl<'a> InvokeContext<'a> {
             &mut mock_memory_mapping,
             &mut result,
         );
+        debug!(target: "wasm_debug", "process_executable_chain; builtin_id={builtin_id:?} result={}", format!("{result:#?}").replace("\n", "<nvl>"));
         let result = match result {
             ProgramResult::Ok(_) => {
                 stable_log::program_success(&logger, &program_id);

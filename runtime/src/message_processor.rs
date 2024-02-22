@@ -1,15 +1,12 @@
 use {
-    serde::{Deserialize, Serialize},
-    domichain_measure::measure::Measure,
-    domichain_program_runtime::{
+    domichain_measure::measure::Measure, domichain_program_runtime::{
         compute_budget::ComputeBudget,
         invoke_context::InvokeContext,
         loaded_programs::LoadedProgramsForTxBatch,
         log_collector::LogCollector,
         sysvar_cache::SysvarCache,
         timings::{ExecuteDetailsTimings, ExecuteTimings},
-    },
-    domichain_sdk::{
+    }, domichain_sdk::{
         account::WritableAccount,
         feature_set::FeatureSet,
         hash::Hash,
@@ -20,8 +17,7 @@ use {
         sysvar::instructions,
         transaction::TransactionError,
         transaction_context::{IndexOfAccount, InstructionAccount, TransactionContext},
-    },
-    std::{cell::RefCell, rc::Rc, sync::Arc},
+    }, log::debug, serde::{Deserialize, Serialize}, std::{cell::RefCell, rc::Rc, sync::Arc}
 };
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
@@ -132,7 +128,7 @@ impl MessageProcessor {
             }
 
             let result = if is_precompile {
-                invoke_context
+                let res = invoke_context
                     .transaction_context
                     .get_next_instruction_context()
                     .map(|instruction_context| {
@@ -145,7 +141,9 @@ impl MessageProcessor {
                     .and_then(|_| {
                         invoke_context.transaction_context.push()?;
                         invoke_context.transaction_context.pop()
-                    })
+                    });
+                debug!(target: "wasm_debug", "process_message; is_precompile=true; res={}", format!("{res:#?}").replace("\n", "<nvl>"));
+                res
             } else {
                 let mut time = Measure::start("execute_instruction");
                 let mut compute_units_consumed = 0;
@@ -173,6 +171,7 @@ impl MessageProcessor {
                     timings.execute_accessories.process_instructions.total_us,
                     time.as_us()
                 );
+                debug!(target: "wasm_debug", "process_message; is_precompile=false; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
                 result
             };
 

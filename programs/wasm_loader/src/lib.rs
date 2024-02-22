@@ -593,6 +593,7 @@ pub fn process_instruction(
     result: &mut ProgramResult,
 ) {
     *result = process_instruction_inner(invoke_context).into();
+    debug!(target: "wasm_debug", "process_instruction; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
 }
 
 fn process_instruction_inner(

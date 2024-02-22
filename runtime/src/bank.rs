@@ -4354,6 +4354,8 @@ impl Bank {
         );
         process_message_time.stop();
 
+        debug!(target: "wasm_debug", "execute_loaded_transaction; process_result={}", format!("{process_result:#?}").replace("\n", "<nvl>"));
+
         saturating_add_assign!(
             timings.execute_accessories.process_message_us,
             process_message_time.as_us()
@@ -4389,6 +4391,8 @@ impl Bank {
             .as_ref()
             .map_or(0, |info| info.accounts_data_len_delta);
         let status = status.map(|_| ());
+
+        debug!(target: "wasm_debug", "execute_loaded_transaction; status={}", format!("{status:#?}").replace("\n", "<nvl>"));
 
         let log_messages: Option<TransactionLogMessages> =
             log_collector.and_then(|log_collector| {
