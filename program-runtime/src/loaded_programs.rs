@@ -249,7 +249,10 @@ impl LoadedProgram {
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
-        ).map_err(|err| format!("Binary should be valid WASM: {err}"))?;
+        ).map_err(|err| {
+            debug!(target: "wasm_debug", "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}");
+            format!("Binary should be valid WASM: {err}")
+        })?;
 
         let executable = WasmExecutable {
             engine,
