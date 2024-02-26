@@ -250,6 +250,22 @@ impl LoadedProgram {
         // let executable = Executable::load(elf_bytes, program_runtime_environment.clone())?;
 
         debug!(target: "wasm_debug", "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}", bytes_len=elf_bytes.len(), bytes_start=&elf_bytes.get(..20), bytes_end=&elf_bytes.get(elf_bytes.len() - 20..));
+
+        pub const fn trim_ascii_end(s: &[u8]) -> &[u8] {
+            let mut bytes = s;
+            // Note: A pattern matching based approach (instead of indexing) allows
+            // making the function const.
+            while let [rest @ .., last] = bytes {
+                if last.is_ascii_whitespace() {
+                    bytes = rest;
+                } else {
+                    break;
+                }
+            }
+            bytes
+        }
+
+        let elf_bytes = trim_ascii_end(elf_bytes);
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
@@ -257,6 +273,8 @@ impl LoadedProgram {
             debug!(target: "wasm_debug", "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}; bytes={bytes:?}", bytes=&elf_bytes.get(..20));
             let bt = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
             debug!(target: "wasm_debug", "LoadedProgram::new; bt={bt}");
+            use base64::{prelude::BASE64_STANDARD, Engine};
+            debug!(target: "wasm_debug", "LoadedProgram::new; bytes_b64={}", BASE64_STANDARD.encode(elf_bytes));
             warn!("Binary should be valid WASM: {err}; loader_key={loader_key:?}");
             format!("Binary should be valid WASM: {err}")
         })?;
