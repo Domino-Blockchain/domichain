@@ -249,6 +249,7 @@ impl LoadedProgram {
 
         // let executable = Executable::load(elf_bytes, program_runtime_environment.clone())?;
 
+        debug!(target: "wasm_debug", "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}", bytes_len=elf_bytes.len(), bytes_start=&elf_bytes.get(..20), bytes_end=&elf_bytes.get(elf_bytes.len() - 20..));
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
