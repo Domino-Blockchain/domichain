@@ -251,12 +251,12 @@ impl LoadedProgram {
 
         debug!(target: "wasm_debug", "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}", bytes_len=elf_bytes.len(), bytes_start=&elf_bytes.get(..20), bytes_end=&elf_bytes.get(elf_bytes.len() - 20..));
 
-        pub const fn trim_ascii_end(s: &[u8]) -> &[u8] {
+        pub const fn trim_zeros_end(s: &[u8]) -> &[u8] {
             let mut bytes = s;
             // Note: A pattern matching based approach (instead of indexing) allows
             // making the function const.
             while let [rest @ .., last] = bytes {
-                if last.is_ascii_whitespace() {
+                if *last == 0 {
                     bytes = rest;
                 } else {
                     break;
@@ -265,7 +265,7 @@ impl LoadedProgram {
             bytes
         }
 
-        let elf_bytes = trim_ascii_end(elf_bytes);
+        let elf_bytes = trim_zeros_end(elf_bytes);
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
