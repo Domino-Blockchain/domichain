@@ -1,3 +1,6 @@
+use std::backtrace::Backtrace;
+
+use log::warn;
 use solana_rbpf::vm::Config;
 
 // #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
@@ -250,7 +253,10 @@ impl LoadedProgram {
             &engine,
             elf_bytes,
         ).map_err(|err| {
-            debug!(target: "wasm_debug", "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}");
+            debug!(target: "wasm_debug", "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}; bytes={bytes:?}", bytes=&elf_bytes.get(..20));
+            let bt = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
+            debug!(target: "wasm_debug", "LoadedProgram::new; bt={bt}");
+            warn!("Binary should be valid WASM: {err}; loader_key={loader_key:?}");
             format!("Binary should be valid WASM: {err}")
         })?;
 
