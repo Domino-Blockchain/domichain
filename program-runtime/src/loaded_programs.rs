@@ -265,7 +265,7 @@ impl LoadedProgram {
             bytes
         }
 
-        let elf_bytes = trim_zeros_end(elf_bytes);
+        let elf_bytes = &elf_bytes[..95583];
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
