@@ -251,21 +251,22 @@ impl LoadedProgram {
 
         debug!(target: "wasm_debug", "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}", bytes_len=elf_bytes.len(), bytes_start=&elf_bytes.get(..20), bytes_end=&elf_bytes.get(elf_bytes.len() - 20..));
 
-        pub const fn trim_zeros_end(s: &[u8]) -> &[u8] {
-            let mut bytes = s;
-            // Note: A pattern matching based approach (instead of indexing) allows
-            // making the function const.
-            while let [rest @ .., last] = bytes {
-                if *last == 0 {
-                    bytes = rest;
-                } else {
-                    break;
-                }
-            }
-            bytes
-        }
+        // [len][bytes][zeros]
+        // redeploy with info about size
+        // cut by the original size
+        let data_offset = std::mem::size_of::<u64>();
+        let data_len = u64::from_le_bytes(elf_bytes[..data_offset].try_into().unwrap()) as usize;
 
-        let elf_bytes = &elf_bytes[..95583];
+        let elf_bytes = &elf_bytes[data_offset..data_offset + data_len];
+
+        debug!(
+            target: "wasm_debug",
+            "LoadedProgram::new; data_offset={data_offset}; data_len={data_len}; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}",
+            bytes_len=elf_bytes.len(),
+            bytes_start=&elf_bytes.get(..20),
+            bytes_end=&elf_bytes.get(elf_bytes.len() - 20..),
+        );
+
         let verified_executable = wasmi::Module::new(
             &engine,
             elf_bytes,
