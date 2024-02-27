@@ -239,7 +239,7 @@ impl LoadedProgram {
         deployment_slot: Slot,
         effective_slot: Slot,
         maybe_expiration_slot: Option<Slot>,
-        elf_bytes: &[u8],
+        mut elf_bytes: &[u8],
         account_size: usize,
         metrics: &mut LoadProgramMetrics,
     ) -> Result<Self, Box<dyn std::error::Error>> {
@@ -254,18 +254,27 @@ impl LoadedProgram {
         // [len][bytes][zeros]
         // redeploy with info about size
         // cut by the original size
-        let data_offset = std::mem::size_of::<u64>();
-        let data_len = u64::from_le_bytes(elf_bytes[..data_offset].try_into().unwrap()) as usize;
+        
+        // Do the migration, check WASM magic number
+        // magic ::= 0x00 0x61 0x73 0x6d (https://github.com/WebAssembly/design/issues/1328)
+        let wasm_magic_header: [u8; 4] = [0x00, 0x61, 0x73, 0x6d];
+        if elf_bytes.starts_with(&wasm_magic_header) {
+            // We need to trim old WASM deployments here
+            warn!("LoadedProgram::new; old WASM smart contract format (without len)");
+        } else {
+            let data_offset = std::mem::size_of::<u64>();
+            let data_len = u64::from_le_bytes(elf_bytes[..data_offset].try_into().unwrap()) as usize;
 
-        let elf_bytes = &elf_bytes[data_offset..data_offset + data_len];
+            elf_bytes = &elf_bytes[data_offset..data_offset + data_len];
 
-        debug!(
-            target: "wasm_debug",
-            "LoadedProgram::new; data_offset={data_offset}; data_len={data_len}; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}",
-            bytes_len=elf_bytes.len(),
-            bytes_start=&elf_bytes.get(..20),
-            bytes_end=&elf_bytes.get(elf_bytes.len() - 20..),
-        );
+            debug!(
+                target: "wasm_debug",
+                "LoadedProgram::new; data_offset={data_offset}; data_len={data_len}; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}",
+                bytes_len=elf_bytes.len(),
+                bytes_start=&elf_bytes.get(..20),
+                bytes_end=&elf_bytes.get(elf_bytes.len() - 20..),
+            );
+        }
 
         let verified_executable = wasmi::Module::new(
             &engine,
