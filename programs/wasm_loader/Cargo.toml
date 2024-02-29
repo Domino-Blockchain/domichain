@@ -15,6 +15,7 @@ bincode = { workspace = true }
 borsh = { workspace = true }
 bytemuck = { workspace = true, features = ["derive"] }
 byteorder = { workspace = true }
+hex = { workspace = true }
 libsecp256k1 = { workspace = true }
 log = { workspace = true }
 rand = { workspace = true }
@@ -22,12 +23,11 @@ domichain-measure = { workspace = true }
 domichain-program-runtime = { workspace = true }
 domichain-sdk = { workspace = true }
 domichain-zk-token-sdk = { workspace = true }
+sha2 = { workspace = true }
 solana_rbpf = { workspace = true }
 thiserror = { workspace = true }
 wasmi = { workspace = true }
 wasmi_wasi = { workspace = true }
-sha2 = "0.10"
-hex = "0.4.3"
 
 [dev-dependencies]
 memoffset = { workspace = true }

@@ -33,8 +33,6 @@
 //! It offers a high-level API that signs transactions
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
-use std::backtrace::Backtrace;
-
 #[allow(deprecated)]
 use domichain_sdk::recent_blockhashes_account;
 pub use domichain_sdk::reward_type::RewardType;
@@ -175,6 +173,7 @@ use {
     domichain_system_program::{get_system_account_kind, SystemAccountKind},
     domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
     std::{
+        backtrace::Backtrace,
         borrow::Cow,
         cell::RefCell,
         collections::{HashMap, HashSet},
@@ -3281,9 +3280,7 @@ impl Bank {
 
             // freeze is a one-way trip, idempotent
             self.freeze_started.store(true, Relaxed);
-            let result_hash = self.hash_internal_state();
-            // dbg!(self.slot(), result_hash);
-            *hash = result_hash;
+            *hash = self.hash_internal_state();
             self.rc.accounts.accounts_db.mark_slot_frozen(self.slot());
             self.bank_frozen_or_destroyed();
         }
@@ -4359,7 +4356,11 @@ impl Bank {
         );
         process_message_time.stop();
 
-        debug!(target: "wasm_debug", "execute_loaded_transaction; process_result={}", format!("{process_result:#?}").replace("\n", "<nvl>"));
+        debug!(
+            target: "wasm_debug",
+            "execute_loaded_transaction; process_result={}",
+            format!("{process_result:#?}").replace("\n", "<nvl>",
+        ));
 
         saturating_add_assign!(
             timings.execute_accessories.process_message_us,
@@ -4397,7 +4398,11 @@ impl Bank {
             .map_or(0, |info| info.accounts_data_len_delta);
         let status = status.map(|_| ());
 
-        debug!(target: "wasm_debug", "execute_loaded_transaction; status={}", format!("{status:#?}").replace("\n", "<nvl>"));
+        debug!(
+            target: "wasm_debug",
+            "execute_loaded_transaction; status={}",
+            format!("{status:#?}").replace("\n", "<nvl>",
+        ));
 
         let log_messages: Option<TransactionLogMessages> =
             log_collector.and_then(|log_collector| {
@@ -4641,7 +4646,11 @@ impl Bank {
             .iter_mut()
             .zip(sanitized_txs.iter())
             .map(|data| {
-                debug!(target: "wasm_debug", "loaded_transactions_iter_data; data={}", format!("{data:#?}").replace("\n", "<nvl>"));
+                debug!(
+                    target: "wasm_debug",
+                    "loaded_transactions_iter_data; data={}",
+                    format!("{data:#?}").replace("\n", "<nvl>",
+                ));
                 data
             })
             .map(|(accs, tx)| match accs {
@@ -4695,7 +4704,11 @@ impl Bank {
                         log_messages_bytes_limit,
                         &programs_loaded_for_tx_batch.borrow(),
                     );
-                    debug!(target: "wasm_debug", "execute_loaded_transaction; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
+                    debug!(
+                        target: "wasm_debug",
+                        "execute_loaded_transaction; result={}",
+                        format!("{result:#?}").replace("\n", "<nvl>",
+                    ));
 
                     if let TransactionExecutionResult::Executed {
                         details,
@@ -6963,14 +6976,16 @@ impl Bank {
         let res = self.verify_transaction_inner(tx, verification_mode);
         let is_vote = res.as_ref().map(|tx| tx.is_simple_vote_transaction()).unwrap_or_default();
         if !is_vote {
-            let tb = format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>");
-            debug!(target: "bank_verify_transaction_tb", "verify_transaction, traceback={tb}");
-            let tx_debug = format!("{tx_debug:#?}").replace("\n", "<nvl>");
+            debug!(
+                target: "bank_verify_transaction_tb",
+                "verify_transaction, traceback={}",
+                format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>"),
+            );
             debug!(
                 target: "bank_verify_transaction",
                 "verify_transaction; slot={:?}; tx={}; verification_mode={:?}; res={:?}",
                 self.slot(),
-                tx_debug,
+                format!("{tx_debug:#?}").replace("\n", "<nvl>"),
                 verification_mode,
                 &res,
             );

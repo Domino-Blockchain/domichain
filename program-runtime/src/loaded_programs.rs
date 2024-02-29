@@ -1,22 +1,18 @@
-use std::backtrace::Backtrace;
-
-use log::warn;
-use solana_rbpf::vm::Config;
-
 // #[cfg(all(not(target_os = "windows"), target_arch = "x86_64"))]
 // use solana_rbpf::error::EbpfError;
 use {
+    base64::{prelude::BASE64_STANDARD, Engine},
     crate::{
         invoke_context::{InvokeContext, ProcessInstructionWithContext},
         timings::ExecuteDetailsTimings,
     },
     itertools::Itertools,
-    log::{debug, log_enabled, trace},
+    log::{debug, log_enabled, trace, warn},
     percentage::PercentageInteger,
     domichain_measure::measure::Measure,
     solana_rbpf::{
         // elf::Executable, verifier::RequisiteVerifier,
-        vm::BuiltinProgram,
+        vm::{Config, BuiltinProgram},
     },
     domichain_sdk::{
         // bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable,
@@ -25,6 +21,7 @@ use {
         pubkey::Pubkey, saturating_add_assign,
     },
     std::{
+        backtrace::Backtrace,
         collections::HashMap,
         fmt::{Debug, Formatter},
         sync::{
@@ -249,17 +246,23 @@ impl LoadedProgram {
 
         // let executable = Executable::load(elf_bytes, program_runtime_environment.clone())?;
 
-        debug!(target: "wasm_debug", "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}", bytes_len=elf_bytes.len(), bytes_start=&elf_bytes.get(..20), bytes_end=&elf_bytes.get(elf_bytes.len() - 20..));
+        debug!(
+            target: "wasm_debug",
+            "LoadedProgram::new; bytes.len()={bytes_len}; account_size={account_size} bytes_start={bytes_start:?}; bytes_end={bytes_end:?}",
+            bytes_len=elf_bytes.len(),
+            bytes_start=&elf_bytes.get(..20),
+            bytes_end=&elf_bytes.get(elf_bytes.len() - 20..),
+        );
 
         // [len][bytes][zeros]
         // redeploy with info about size
         // cut by the original size
         
-        // Do the migration, check WASM magic number
+        // Do the migration to the new format, check WASM magic number
         // magic ::= 0x00 0x61 0x73 0x6d (https://github.com/WebAssembly/design/issues/1328)
         let wasm_magic_header: [u8; 4] = [0x00, 0x61, 0x73, 0x6d];
         if elf_bytes.starts_with(&wasm_magic_header) {
-            // We need to trim old WASM deployments here
+            // Old WASM deployments
             warn!("LoadedProgram::new; old WASM smart contract format (without len)");
         } else {
             let data_offset = std::mem::size_of::<u64>();
@@ -280,11 +283,21 @@ impl LoadedProgram {
             &engine,
             elf_bytes,
         ).map_err(|err| {
-            debug!(target: "wasm_debug", "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}; bytes={bytes:?}", bytes=&elf_bytes.get(..20));
-            let bt = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
-            debug!(target: "wasm_debug", "LoadedProgram::new; bt={bt}");
-            use base64::{prelude::BASE64_STANDARD, Engine};
-            debug!(target: "wasm_debug", "LoadedProgram::new; bytes_b64={}", BASE64_STANDARD.encode(elf_bytes));
+            debug!(
+                target: "wasm_debug",
+                "LoadedProgram::new; Binary should be valid WASM: {err}; loader_key={loader_key:?}; bytes={bytes:?}",
+                bytes=&elf_bytes.get(..20),
+            );
+            debug!(
+                target: "wasm_debug",
+                "LoadedProgram::new; bt={}",
+                format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>"),
+            );
+            debug!(
+                target: "wasm_debug_base64",
+                "LoadedProgram::new; bytes_b64={}",
+                BASE64_STANDARD.encode(elf_bytes),
+            );
             warn!("Binary should be valid WASM: {err}; loader_key={loader_key:?}");
             format!("Binary should be valid WASM: {err}")
         })?;

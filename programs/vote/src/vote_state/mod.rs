@@ -530,8 +530,6 @@ fn check_slots_are_valid(
         // This means the newest slot in the `vote_slots` has a match that
         // doesn't match the expected hash for that slot on this
         // fork
-
-        // FIXME: warning
         warn!(
             "{} dropped vote slots {:?} failed to match hash {} {}",
             vote_state.node_pubkey, vote_slots, vote_hash, slot_hashes[j].1

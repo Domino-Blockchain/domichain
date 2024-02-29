@@ -1,14 +1,11 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::indexing_slicing)]
 
-use std::backtrace::Backtrace;
-
 use domichain_program_runtime::loaded_programs::WasmExecutable;
 use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_bpf_account_data_direct_mapping};
-use log::{debug, info};
-use rand::seq::IteratorRandom;
+use log::debug;
 use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
-use wasmi::{core::{Trap, Pages}, Caller, Func};
+use wasmi::{core::Trap, Caller, Func};
 use wasmi_wasi::WasiCtx;
 
 use crate::syscalls::{
@@ -62,6 +59,7 @@ use {
         stable_log,
         sysvar_cache::get_sysvar_with_account_check,
     },
+    sha2::{Sha256, Digest},
     solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{self, HOST_ALIGN, MM_HEAP_START},
@@ -100,6 +98,7 @@ use {
         },
     },
     std::{
+        backtrace::Backtrace,
         cell::RefCell,
         rc::Rc,
         sync::{atomic::Ordering, Arc},
@@ -599,8 +598,6 @@ pub fn process_instruction(
 fn process_instruction_inner(
     invoke_context: &mut InvokeContext,
 ) -> Result<u64, Box<dyn std::error::Error>> {
-    debug!(target: "wasm_debug", "process_instruction_inner_1");
-
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -609,8 +606,6 @@ fn process_instruction_inner(
         .feature_set
         .is_active(&remove_bpf_loader_incorrect_program_id::id())
     {
-        debug!(target: "wasm_debug", "process_instruction_inner_2");
-
         fn get_index_in_transaction(
             instruction_context: &InstructionContext,
             index_in_instruction: IndexOfAccount,
@@ -625,8 +620,6 @@ fn process_instruction_inner(
                 )
             }
         }
-        debug!(target: "wasm_debug", "process_instruction_inner_3");
-
         fn try_borrow_account<'a>(
             transaction_context: &'a TransactionContext,
             instruction_context: &'a InstructionContext,
@@ -643,8 +636,6 @@ fn process_instruction_inner(
                 )
             }
         }
-        debug!(target: "wasm_debug", "process_instruction_inner_4");
-
         let first_instruction_account = {
             let borrowed_root_account =
                 instruction_context.try_borrow_program_account(transaction_context, 0)?;
@@ -655,9 +646,6 @@ fn process_instruction_inner(
                 0
             }
         };
-
-        debug!(target: "wasm_debug", "process_instruction_inner_5");
-
         let first_account_key = transaction_context.get_key_of_account_at_index(
             get_index_in_transaction(instruction_context, first_instruction_account)?,
         )?;
@@ -668,9 +656,6 @@ fn process_instruction_inner(
         .and_then(|index_in_transaction| {
             transaction_context.get_key_of_account_at_index(index_in_transaction)
         });
-
-        debug!(target: "wasm_debug", "process_instruction_inner_6");
-
         let program_id = instruction_context.get_last_program_key(transaction_context)?;
         if first_account_key == program_id
             || second_account_key
@@ -690,19 +675,13 @@ fn process_instruction_inner(
         }
     }
 
-    debug!(target: "wasm_debug", "process_instruction_inner_7");
-
     let program_account =
         instruction_context.try_borrow_last_program_account(transaction_context)?;
-
-    debug!(target: "wasm_debug", "process_instruction_inner_8");
 
     // Consume compute units if feature `native_programs_consume_cu` is activated
     let native_programs_consume_cu = invoke_context
         .feature_set
         .is_active(&native_programs_consume_cu::id());
-
-    debug!(target: "wasm_debug", "process_instruction_inner_9");
 
     // Program Management Instruction
     if native_loader::check_id(program_account.get_owner()) {
@@ -712,35 +691,25 @@ fn process_instruction_inner(
             if native_programs_consume_cu {
                 invoke_context.consume_checked(2_370)?;
             }
-            debug!(target: "wasm_debug", "process_instruction_inner_10");
-
             process_loader_upgradeable_instruction(invoke_context)
         } else if wasm_loader::check_id(program_id) {
             if native_programs_consume_cu {
                 invoke_context.consume_checked(570)?;
             }
-            debug!(target: "wasm_debug", "process_instruction_inner_11");
-
             process_loader_instruction(invoke_context)
         } else if wasm_loader_deprecated::check_id(program_id) {
             if native_programs_consume_cu {
                 invoke_context.consume_checked(1_140)?;
             }
-            debug!(target: "wasm_debug", "process_instruction_inner_12");
-
             ic_logger_msg!(log_collector, "Deprecated loader is no longer supported");
             Err(InstructionError::UnsupportedProgramId)
         } else {
             ic_logger_msg!(log_collector, "Invalid WASM loader id");
-            debug!(target: "wasm_debug", "process_instruction_inner_13");
-
             Err(InstructionError::IncorrectProgramId)
         }
         .map(|_| 0)
         .map_err(|error| Box::new(error) as Box<dyn std::error::Error>);
     }
-
-    debug!(target: "wasm_debug", "process_instruction_inner_14");
 
     // Program Invocation
     if !program_account.is_executable() {
@@ -748,19 +717,13 @@ fn process_instruction_inner(
         return Err(Box::new(InstructionError::IncorrectProgramId));
     }
 
-    debug!(target: "wasm_debug", "process_instruction_inner_15");
-
     let mut get_or_create_executor_time = Measure::start("get_or_create_executor_time");
     let executor = find_program_in_cache(invoke_context, program_account.get_key())
         .ok_or_else(|| InstructionError::InvalidAccountData)?;
 
-    debug!(target: "wasm_debug", "process_instruction_inner_15a");
-
     if executor.is_tombstone() {
         return Err(Box::new(InstructionError::InvalidAccountData));
     }
-
-    debug!(target: "wasm_debug", "process_instruction_inner_16");
 
     drop(program_account);
     get_or_create_executor_time.stop();
@@ -769,11 +732,7 @@ fn process_instruction_inner(
         get_or_create_executor_time.as_us()
     );
     
-    debug!(target: "wasm_debug", "process_instruction_inner_17");
-
     executor.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
-
-    debug!(target: "wasm_debug", "process_instruction_inner_18");
 
     match &executor.program {
         LoadedProgramType::FailedVerification(_)
@@ -1854,8 +1813,7 @@ fn execute<'a, 'b: 'a>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let blockhash = invoke_context.blockhash;
     debug!(target: "wasm_debug", "wasm_start, blockhash={blockhash}");
-    let bt = format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>");
-    debug!(target: "wasm_traceback", "wasm_start, traceback={bt}");
+    debug!(target: "wasm_traceback", "wasm_start, traceback={}", format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>"));
 
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
@@ -2394,7 +2352,7 @@ fn execute<'a, 'b: 'a>(
                 // Round up pages count
                 let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
 
-                let pages_before = memory.grow(
+                let _pages_before = memory.grow(
                     &mut store,
                     need_more_pages.into(),
                 ).unwrap();
@@ -2464,15 +2422,20 @@ fn execute<'a, 'b: 'a>(
             &memory.data(&store)[0..parameter_bytes_slice_len]
         );
 
-        use sha2::{Sha256, Sha512, Digest};
-        // create a Sha256 object
-        let mut hasher = Sha256::new();
-        // write input message
-        hasher.update(parameter_bytes.as_slice());
-        // read hash digest and consume hasher
-        let hasher_result = &hasher.finalize()[..];
-        
-        debug!(target: "wasm_debug", "wasm_result, result_hash={}, blockhash={blockhash}", hex::encode(hasher_result));
+        // Execute hasher only if debug is enabled
+        debug!(
+            target: "wasm_debug",
+            "wasm_result, result_hash={result_hash}, blockhash={blockhash}", 
+            result_hash={
+                // create a Sha256 object
+                let mut hasher = Sha256::new();
+                // write input message
+                hasher.update(parameter_bytes.as_slice());
+                // read hash digest and consume hasher
+                let hasher_result = &hasher.finalize()[..];
+                hex::encode(hasher_result)
+            },
+        );
 
         // if parameter_bytes_slice_len < 1024 * 1024 {
         //     let to_print = parameter_bytes.as_slice();
