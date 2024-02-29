@@ -4171,7 +4171,6 @@ impl Bank {
 
     pub fn load_program(&self, pubkey: &Pubkey) -> Arc<LoadedProgram> {
         debug!(target: "wasm_debug", "load_program; pubkey={pubkey:?}");
-
         let program = if let Some(program) = self.get_account_with_fixed_root(pubkey) {
             program
         } else {
@@ -4250,7 +4249,6 @@ impl Bank {
         })
         .unwrap_or_else(|_| {
             debug!(target: "wasm_debug", "load_program new_tombstone; pubkey={pubkey:?}");
-
             Arc::new(LoadedProgram::new_tombstone(
                 self.slot,
                 LoadedProgramType::FailedVerification(program_runtime_environment_v1),
@@ -4649,8 +4647,8 @@ impl Bank {
                 debug!(
                     target: "wasm_debug",
                     "loaded_transactions_iter_data; data={}",
-                    format!("{data:#?}").replace("\n", "<nvl>",
-                ));
+                    format!("{data:#?}").replace("\n", "<nvl>"),
+                );
                 data
             })
             .map(|(accs, tx)| match accs {

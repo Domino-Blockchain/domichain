@@ -335,7 +335,6 @@ verify_helper(const unsigned char Y_point[32], const unsigned char pi[80],
 	crypto_core_ed25519_sub(V_point, tmp2_point, tmp_point); /* V = tmp2_point - tmp_point = s*H - c*Gamma */
 
 	hash_points(cprime, H_point, Gamma_point, U_point, V_point);
-
 	return sodium_memcmp(c_scalar, cprime, 16);
 }
 

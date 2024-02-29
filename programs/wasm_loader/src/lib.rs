@@ -620,6 +620,7 @@ fn process_instruction_inner(
                 )
             }
         }
+
         fn try_borrow_account<'a>(
             transaction_context: &'a TransactionContext,
             instruction_context: &'a InstructionContext,
@@ -636,6 +637,7 @@ fn process_instruction_inner(
                 )
             }
         }
+
         let first_instruction_account = {
             let borrowed_root_account =
                 instruction_context.try_borrow_program_account(transaction_context, 0)?;
@@ -731,9 +733,8 @@ fn process_instruction_inner(
         invoke_context.timings.get_or_create_executor_us,
         get_or_create_executor_time.as_us()
     );
-    
-    executor.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
 
+    executor.ix_usage_counter.fetch_add(1, Ordering::Relaxed);
     match &executor.program {
         LoadedProgramType::FailedVerification(_)
         | LoadedProgramType::Closed
@@ -2427,13 +2428,9 @@ fn execute<'a, 'b: 'a>(
             target: "wasm_debug",
             "wasm_result, result_hash={result_hash}, blockhash={blockhash}", 
             result_hash={
-                // create a Sha256 object
                 let mut hasher = Sha256::new();
-                // write input message
                 hasher.update(parameter_bytes.as_slice());
-                // read hash digest and consume hasher
-                let hasher_result = &hasher.finalize()[..];
-                hex::encode(hasher_result)
+                hex::encode(&hasher.finalize()[..])
             },
         );
 

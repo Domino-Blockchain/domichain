@@ -128,7 +128,7 @@ impl MessageProcessor {
             }
 
             let result = if is_precompile {
-                let res = invoke_context
+                let result = invoke_context
                     .transaction_context
                     .get_next_instruction_context()
                     .map(|instruction_context| {
@@ -142,8 +142,8 @@ impl MessageProcessor {
                         invoke_context.transaction_context.push()?;
                         invoke_context.transaction_context.pop()
                     });
-                debug!(target: "wasm_debug", "process_message; is_precompile=true; res={}", format!("{res:#?}").replace("\n", "<nvl>"));
-                res
+                debug!(target: "wasm_debug", "process_message; is_precompile=true; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
+                result
             } else {
                 let mut time = Measure::start("execute_instruction");
                 let mut compute_units_consumed = 0;

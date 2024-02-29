@@ -1353,7 +1353,6 @@ impl ReplayStage {
                                 We froze slot {duplicate_slot} with hash {frozen_hash:?} while the cluster hash is {correct_hash}");
                     }
 
-                    // FIXME: panic
                     let attempt_no = purge_repair_slot_counter
                         .entry(*duplicate_slot)
                         .and_modify(|x| *x += 1)
