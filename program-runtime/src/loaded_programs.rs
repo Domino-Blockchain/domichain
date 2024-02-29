@@ -254,10 +254,6 @@ impl LoadedProgram {
             bytes_end=&elf_bytes.get(elf_bytes.len() - 20..),
         );
 
-        // [len][bytes][zeros]
-        // redeploy with info about size
-        // cut by the original size
-        
         // Do the migration to the new format, check WASM magic number
         // magic ::= 0x00 0x61 0x73 0x6d (https://github.com/WebAssembly/design/issues/1328)
         let wasm_magic_header: [u8; 4] = [0x00, 0x61, 0x73, 0x6d];
