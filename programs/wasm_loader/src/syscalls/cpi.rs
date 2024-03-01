@@ -121,9 +121,6 @@ impl<'a> CallerAccount<'a> {
             )? as *mut u64;
             let ref_to_len_in_vm = unsafe { &mut *translated };
             // Hardcode feature activation for WASM loader
-            // let is_move_serialized_len_ptr_in_cpi_active = invoke_context
-            //     .feature_set
-            //     .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
             let is_move_serialized_len_ptr_in_cpi_active = true;
             let serialized_len_ptr = if is_move_serialized_len_ptr_in_cpi_active {
                 std::ptr::null_mut()
@@ -236,9 +233,6 @@ impl<'a> CallerAccount<'a> {
             .feature_set
             .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
         // Hardcode feature activation for WASM loader
-        // let is_move_serialized_len_ptr_in_cpi_active = invoke_context
-        //     .feature_set
-        //     .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
         let is_move_serialized_len_ptr_in_cpi_active = true;
 
         let (serialized_data, vm_data_addr, ref_to_len_in_vm, serialized_len_ptr) = {
@@ -420,9 +414,6 @@ impl<'a> CallerAccount<'a> {
         let ref_of_len_in_input_buffer =
             (account_info.data_addr as *mut u8 as u64).saturating_sub(8);
         // Hardcode feature activation for WASM loader
-        // let is_move_serialized_len_ptr_in_cpi_active = invoke_context
-        //     .feature_set
-        //     .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
         let is_move_serialized_len_ptr_in_cpi_active = true;
         let serialized_len_ptr = if is_move_serialized_len_ptr_in_cpi_active {
             std::ptr::null_mut()
@@ -1473,9 +1464,6 @@ fn update_caller_account(
         *caller_account.ref_to_len_in_vm = post_len.try_into().unwrap();
 
         // Hardcode feature activation for WASM loader
-        // let is_move_serialized_len_ptr_in_cpi_active = invoke_context
-        //     .feature_set
-        //     .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
         let is_move_serialized_len_ptr_in_cpi_active = true;
         // this is the len field in the serialized parameters
         if is_move_serialized_len_ptr_in_cpi_active {
