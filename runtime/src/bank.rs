@@ -6970,32 +6970,6 @@ impl Bank {
         tx: VersionedTransaction,
         verification_mode: TransactionVerificationMode,
     ) -> Result<SanitizedTransaction> {
-        let tx_debug = tx.clone();
-        let res = self.verify_transaction_inner(tx, verification_mode);
-        let is_vote = res.as_ref().map(|tx| tx.is_simple_vote_transaction()).unwrap_or_default();
-        if !is_vote {
-            debug!(
-                target: "bank_verify_transaction_tb",
-                "verify_transaction, traceback={}",
-                format!("{:#?}", Backtrace::force_capture()).replace("\n", "<nvl>"),
-            );
-            debug!(
-                target: "bank_verify_transaction",
-                "verify_transaction; slot={:?}; tx={}; verification_mode={:?}; res={:?}",
-                self.slot(),
-                format!("{tx_debug:#?}").replace("\n", "<nvl>"),
-                verification_mode,
-                &res,
-            );
-        }
-        res
-    }
-
-    fn verify_transaction_inner(
-        &self,
-        tx: VersionedTransaction,
-        verification_mode: TransactionVerificationMode,
-    ) -> Result<SanitizedTransaction> {
         let sanitized_tx = {
             let size =
                 bincode::serialized_size(&tx).map_err(|_| TransactionError::SanitizeFailure)?;
