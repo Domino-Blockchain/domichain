@@ -2010,14 +2010,22 @@ fn do_process_program_upgrade(
 }
 
 fn read_and_verify_wasm(program_location: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut program_data = 0u64.to_le_bytes().to_vec();
     let mut file = File::open(program_location)
         .map_err(|err| format!("Unable to open program file: {err}"))?;
-    let mut program_data = Vec::new();
-    file.read_to_end(&mut program_data)
+    let bytes_read = file.read_to_end(&mut program_data)
         .map_err(|err| format!("Unable to read program file: {err}"))?;
 
+    let data_offset = size_of::<u64>();
+    assert_eq!(data_offset + bytes_read, program_data.len());
+
+    // Save original size of WASM file
+    program_data[..data_offset].copy_from_slice(&(bytes_read as u64).to_le_bytes());
+
+    // Checking that WASM can be loaded correctly
     let engine = wasmi::Engine::default();
-    let _module = wasmi::Module::new(&engine, &mut &program_data[..]).map_err(|err| format!("WASM error: {err}"))?;
+    let _module = wasmi::Module::new(&engine, &mut &program_data[data_offset..])
+        .map_err(|err| format!("WASM VM error: {err}"))?;
 
     Ok(program_data)
 }

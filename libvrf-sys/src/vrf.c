@@ -353,7 +353,7 @@ verify_helper(const unsigned char Y_point[32], const unsigned char pi[80],
 int
 vrf_verify(unsigned char output[64],
 	   const unsigned char pk[32],
-	   const unsigned char proof[32],
+	   const unsigned char proof[80],
 	   const unsigned char *msg, const unsigned long long msglen)
 {
 	if ((vrf_validate_key(pk) == 0) && (verify_helper(pk, proof, msg, msglen) == 0)) {

@@ -3,8 +3,9 @@
 
 use domichain_program_runtime::loaded_programs::WasmExecutable;
 use domichain_sdk::feature_set::{enable_alt_bn128_syscall, enable_big_mod_exp_syscall, blake3_syscall_enabled, curve25519_syscall_enabled, disable_fees_sysvar, disable_bpf_account_data_direct_mapping};
+use log::debug;
 use solana_rbpf::{vm::{StableResult, Config}, aligned_memory::is_memory_aligned, ebpf::MM_PROGRAM_START};
-use wasmi::{core::{Trap, Pages}, Caller, Func};
+use wasmi::{core::Trap, Caller, Func};
 use wasmi_wasi::WasiCtx;
 
 use crate::syscalls::{
@@ -58,6 +59,7 @@ use {
         stable_log,
         sysvar_cache::get_sysvar_with_account_check,
     },
+    sha2::{Sha256, Digest},
     solana_rbpf::{
         aligned_memory::AlignedMemory,
         ebpf::{self, HOST_ALIGN, MM_HEAP_START},
@@ -96,6 +98,7 @@ use {
         },
     },
     std::{
+        backtrace::Backtrace,
         cell::RefCell,
         rc::Rc,
         sync::{atomic::Ordering, Arc},
@@ -589,6 +592,7 @@ pub fn process_instruction(
     result: &mut ProgramResult,
 ) {
     *result = process_instruction_inner(invoke_context).into();
+    debug!(target: "wasm_debug", "process_instruction; result={}", format!("{result:#?}").replace("\n", "<nvl>"));
 }
 
 fn process_instruction_inner(
@@ -1808,6 +1812,10 @@ fn execute<'a, 'b: 'a>(
     executable: &'a WasmExecutable,
     invoke_context: &'a mut InvokeContext<'b>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let blockhash = invoke_context.blockhash;
+    debug!(target: "wasm_debug", "wasm_start, blockhash={blockhash}");
+    debug!(target: "wasm_traceback", "wasm_start, traceback={}", format!("{:?}", Backtrace::force_capture()).replace("\n", "<nvl>"));
+
     let log_collector = invoke_context.get_log_collector();
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
@@ -2345,7 +2353,7 @@ fn execute<'a, 'b: 'a>(
                 // Round up pages count
                 let need_more_pages = (need_more_bytes as f64 / bytes_per_page as f64).ceil() as u16;
 
-                let pages_before = memory.grow(
+                let _pages_before = memory.grow(
                     &mut store,
                     need_more_pages.into(),
                 ).unwrap();
@@ -2413,6 +2421,17 @@ fn execute<'a, 'b: 'a>(
         // Copy data back from WASM memory
         parameter_bytes.as_slice_mut().copy_from_slice(
             &memory.data(&store)[0..parameter_bytes_slice_len]
+        );
+
+        // Execute hasher only if debug is enabled
+        debug!(
+            target: "wasm_debug",
+            "wasm_result, result_hash={result_hash}, blockhash={blockhash}", 
+            result_hash={
+                let mut hasher = Sha256::new();
+                hasher.update(parameter_bytes.as_slice());
+                hex::encode(&hasher.finalize()[..])
+            },
         );
 
         // if parameter_bytes_slice_len < 1024 * 1024 {

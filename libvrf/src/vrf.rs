@@ -1,7 +1,7 @@
 use {
     domichain_sdk::{
         pubkey::Pubkey,
-        signature::{Keypair},
+        signature::Keypair, signer::Signer,
     },
     log::*,
     std::{
@@ -21,7 +21,8 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
 
     let mut proof_vec : Vec<c_uchar> = vec![0; PROOF_LEN];
     let proof_vec_ptr = proof_vec.as_mut_ptr();
-    let skpk_vec_ptr = keypair.to_bytes().as_ptr();
+    let skpk_vec = keypair.to_bytes();
+    let skpk_vec_ptr = skpk_vec.as_ptr();
 
     let res = unsafe {
         // int vrf_prove(
@@ -37,7 +38,16 @@ pub fn vrf_prove(message: &str, keypair: &Keypair) -> Result<Vec<u8>, i32> {
             c_message_len,
         )
     };
-    debug!("vrf_prove result code: {}", res);
+
+    debug!(target: "vrf_debug",
+        "vrf_prove, pubkey={}, pubkey_bytes={:?}, c_message_bytes={:?}, c_message_len={}, proof_vec={:?}, res={}",
+        keypair.pubkey(),
+        keypair.pubkey().to_bytes(),
+        &c_message_bytes,
+        c_message_len,
+        &proof_vec,
+        res,
+    );
 
     match res {
         0 => Ok(proof_vec),
@@ -54,7 +64,8 @@ pub fn vrf_verify(message: &str, pubkey: &Pubkey, proof: &[u8; PROOF_LEN]) -> Re
     let mut hash_vec : Vec<c_uchar> = vec![0; HASH_LEN];
     let hash_vec_ptr = hash_vec.as_mut_ptr();
 
-    let pk_vec_ptr = pubkey.to_bytes().as_ptr();
+    let pk_vec = pubkey.to_bytes();
+    let pk_vec_ptr = pk_vec.as_ptr();
     let proof_vec_ptr = proof.as_ptr();
 
     let res = unsafe {
@@ -73,7 +84,17 @@ pub fn vrf_verify(message: &str, pubkey: &Pubkey, proof: &[u8; PROOF_LEN]) -> Re
             c_message_len,
         )
     };
-    debug!("vrf_verify result code: {}", res);
+
+    debug!(target: "vrf_debug",
+        "vrf_verify, hash_vec={:?}, pubkey={:?}, pubkey_bytes={:?}, proof={:?}, c_message_bytes={:?}, c_message_len={:?}, res={:?}",
+        &hash_vec,
+        &pubkey,
+        &pubkey.to_bytes(),
+        &proof,
+        &c_message_bytes,
+        c_message_len,
+        res,
+    );
 
     match res {
         0 => Ok(hash_vec),

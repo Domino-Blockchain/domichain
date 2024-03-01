@@ -1,4 +1,4 @@
-use {super::*, crate::declare_syscall, solana_rbpf::vm::ContextObject};
+use {super::*, crate::declare_syscall, log::debug, solana_rbpf::vm::ContextObject};
 
 declare_syscall!(
     /// Log a user's info message
@@ -28,7 +28,7 @@ declare_syscall!(
                 .feature_set
                 .is_active(&stop_truncating_strings_in_syscalls::id()),
             &mut |string: &str| {
-                println!("[syscall] {string}");
+                debug!(target: "syscall", "[syscall] {string}");
                 stable_log::program_log(&invoke_context.get_log_collector(), string);
                 Ok(0)
             },

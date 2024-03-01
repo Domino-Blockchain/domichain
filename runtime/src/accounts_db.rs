@@ -7807,6 +7807,11 @@ impl AccountsDb {
         ignore: Option<Pubkey>,
     ) -> AccountsDeltaHash {
         let (mut hashes, scan_us, mut accumulate) = self.get_pubkey_hash_for_slot(slot);
+        debug!(
+            target: "bank_debug_accounts",
+            "calculate_accounts_delta_hash_internal, hashes={:?}",
+            &hashes,
+        );
         let dirty_keys = hashes.iter().map(|(pubkey, _hash)| *pubkey).collect();
         if let Some(ignore) = ignore {
             hashes.retain(|k| k.0 != ignore);

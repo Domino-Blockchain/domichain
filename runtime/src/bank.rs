@@ -173,6 +173,7 @@ use {
     domichain_system_program::{get_system_account_kind, SystemAccountKind},
     domichain_vote_program::vote_state::{VoteState, VoteStateVersions},
     std::{
+        backtrace::Backtrace,
         borrow::Cow,
         cell::RefCell,
         collections::{HashMap, HashSet},
@@ -4169,6 +4170,7 @@ impl Bank {
     }
 
     pub fn load_program(&self, pubkey: &Pubkey) -> Arc<LoadedProgram> {
+        debug!(target: "wasm_debug", "load_program; pubkey={pubkey:?}");
         let program = if let Some(program) = self.get_account_with_fixed_root(pubkey) {
             program
         } else {
@@ -4224,6 +4226,7 @@ impl Bank {
                     .unwrap(),
             )
         } else {
+            debug!(target: "wasm_debug", "load_program programdata is None; pubkey={pubkey:?}");
             None
         };
         let program_runtime_environment_v1 = self
@@ -4245,6 +4248,7 @@ impl Bank {
             loaded_program
         })
         .unwrap_or_else(|_| {
+            debug!(target: "wasm_debug", "load_program new_tombstone; pubkey={pubkey:?}");
             Arc::new(LoadedProgram::new_tombstone(
                 self.slot,
                 LoadedProgramType::FailedVerification(program_runtime_environment_v1),
@@ -4350,6 +4354,12 @@ impl Bank {
         );
         process_message_time.stop();
 
+        debug!(
+            target: "wasm_debug",
+            "execute_loaded_transaction; process_result={}",
+            format!("{process_result:#?}").replace("\n", "<nvl>",
+        ));
+
         saturating_add_assign!(
             timings.execute_accessories.process_message_us,
             process_message_time.as_us()
@@ -4385,6 +4395,12 @@ impl Bank {
             .as_ref()
             .map_or(0, |info| info.accounts_data_len_delta);
         let status = status.map(|_| ());
+
+        debug!(
+            target: "wasm_debug",
+            "execute_loaded_transaction; status={}",
+            format!("{status:#?}").replace("\n", "<nvl>",
+        ));
 
         let log_messages: Option<TransactionLogMessages> =
             log_collector.and_then(|log_collector| {
@@ -4627,9 +4643,19 @@ impl Bank {
         let execution_results: Vec<TransactionExecutionResult> = loaded_transactions
             .iter_mut()
             .zip(sanitized_txs.iter())
+            .map(|data| {
+                debug!(
+                    target: "wasm_debug",
+                    "loaded_transactions_iter_data; data={}",
+                    format!("{data:#?}").replace("\n", "<nvl>"),
+                );
+                data
+            })
             .map(|(accs, tx)| match accs {
                 (Err(e), _nonce) => TransactionExecutionResult::NotExecuted(e.clone()),
                 (Ok(loaded_transaction), nonce) => {
+                    debug!(target: "wasm_debug", "loaded_transactions_iter");
+
                     let compute_budget = if let Some(compute_budget) =
                         self.runtime_config.compute_budget
                     {
@@ -4676,6 +4702,11 @@ impl Bank {
                         log_messages_bytes_limit,
                         &programs_loaded_for_tx_batch.borrow(),
                     );
+                    debug!(
+                        target: "wasm_debug",
+                        "execute_loaded_transaction; result={}",
+                        format!("{result:#?}").replace("\n", "<nvl>",
+                    ));
 
                     if let TransactionExecutionResult::Executed {
                         details,
@@ -6668,6 +6699,7 @@ impl Bank {
             epoch_accounts_hash
         });
 
+        let mut hard_forked_hash_dbg = Hash::default();
         let buf = self
             .hard_forks
             .read()
@@ -6675,6 +6707,7 @@ impl Bank {
             .get_hash_data(slot, self.parent_slot());
         if let Some(buf) = buf {
             let hard_forked_hash = extend_and_hash(&hash, &buf);
+            hard_forked_hash_dbg = hard_forked_hash;
             warn!("hard fork at slot {slot} by hashing {buf:?}: {hash} => {hard_forked_hash}");
             hash = hard_forked_hash;
         }
@@ -6696,6 +6729,25 @@ impl Bank {
             } else {
                 "".to_string()
             }
+        );
+        debug!(
+            target: "bank_debug",
+            "hash_internal_state, slot={:?}, \
+            parent_hash={:?}, \
+            accounts_delta_hash={:?}, \
+            signature_count={:?}, \
+            last_blockhash={:?}, \
+            epoch_accounts_hash={:?}, \
+            hard_forked_hash_dbg={:?}, \
+            hash={:?}",
+            slot,
+            self.parent_hash,
+            accounts_delta_hash.0,
+            self.signature_count(),
+            self.last_blockhash(),
+            epoch_accounts_hash,
+            hard_forked_hash_dbg,
+            hash,
         );
         hash
     }

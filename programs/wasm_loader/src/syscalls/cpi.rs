@@ -120,10 +120,9 @@ impl<'a> CallerAccount<'a> {
                 8,
             )? as *mut u64;
             let ref_to_len_in_vm = unsafe { &mut *translated };
-            let serialized_len_ptr = if invoke_context
-                .feature_set
-                .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id())
-            {
+            // Hardcode feature activation for WASM loader
+            let is_move_serialized_len_ptr_in_cpi_active = true;
+            let serialized_len_ptr = if is_move_serialized_len_ptr_in_cpi_active {
                 std::ptr::null_mut()
             } else {
                 let ref_of_len_in_input_buffer =
@@ -233,9 +232,8 @@ impl<'a> CallerAccount<'a> {
         let is_bpf_account_data_direct_mapping_active = is_bpf_account_data_direct_mapping_active && !invoke_context
             .feature_set
             .is_active(&feature_set::disable_bpf_account_data_direct_mapping::id());
-        let is_move_serialized_len_ptr_in_cpi_active = invoke_context
-            .feature_set
-            .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id());
+        // Hardcode feature activation for WASM loader
+        let is_move_serialized_len_ptr_in_cpi_active = true;
 
         let (serialized_data, vm_data_addr, ref_to_len_in_vm, serialized_len_ptr) = {
             // // Double translate data out of RefCell
@@ -415,10 +413,9 @@ impl<'a> CallerAccount<'a> {
 
         let ref_of_len_in_input_buffer =
             (account_info.data_addr as *mut u8 as u64).saturating_sub(8);
-        let serialized_len_ptr = if invoke_context
-            .feature_set
-            .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id())
-        {
+        // Hardcode feature activation for WASM loader
+        let is_move_serialized_len_ptr_in_cpi_active = true;
+        let serialized_len_ptr = if is_move_serialized_len_ptr_in_cpi_active {
             std::ptr::null_mut()
         } else {
             translate_type_mut::<u64>(
@@ -1466,11 +1463,10 @@ fn update_caller_account(
         // this is the len field in the AccountInfo::data slice
         *caller_account.ref_to_len_in_vm = post_len.try_into().unwrap();
 
+        // Hardcode feature activation for WASM loader
+        let is_move_serialized_len_ptr_in_cpi_active = true;
         // this is the len field in the serialized parameters
-        if invoke_context
-            .feature_set
-            .is_active(&feature_set::move_serialized_len_ptr_in_cpi::id())
-        {
+        if is_move_serialized_len_ptr_in_cpi_active {
             let serialized_len_ptr = translate_type_mut::<u64>(
                 memory_mapping,
                 caller_account
