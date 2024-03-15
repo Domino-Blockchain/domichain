@@ -240,7 +240,11 @@ impl LoadedProgram {
         account_size: usize,
         metrics: &mut LoadProgramMetrics,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let engine = wasmi::Engine::default();
+
+        let mut wasmi_config = wasmi::Config::default();
+        wasmi_config.consume_fuel(true);
+
+        let engine = wasmi::Engine::new(&wasmi_config);
 
         let mut load_elf_time = Measure::start("load_elf_time");
 

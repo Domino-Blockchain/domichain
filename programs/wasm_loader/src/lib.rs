@@ -106,6 +106,9 @@ use {
     syscalls::create_program_runtime_environment,
 };
 
+/// Set 1 compute meter unit = 100 WASM fuel units
+const WASM_FUEL_COEFFICIENT: u64 = 100;
+
 #[allow(clippy::too_many_arguments)]
 pub fn load_program_from_bytes(
     feature_set: &FeatureSet,
@@ -2388,11 +2391,17 @@ fn execute<'a, 'b: 'a>(
         //         return Err(Box::new(InstructionError::ProgramEnvironmentSetupFailure));
         //     }
         // };
+
+        let before = invoke_context.borrow().get_remaining();
+        store.add_fuel(before * WASM_FUEL_COEFFICIENT).unwrap();
+
         create_vm_time.stop();
 
         execute_time = Measure::start("execute");
 
         // TODO: handle errors of wasmi library
+
+        // sending NULL pointer to params
         let result: StableResult<u64, Box<dyn std::error::Error>> = match vm.call(&mut store, 0) {
             Ok(code) => Ok(code as u64),
             Err(trap) => {
@@ -2404,8 +2413,18 @@ fn execute<'a, 'b: 'a>(
             }
         }.into();
 
+        let consumed_fuel = store.fuel_consumed().unwrap().div_ceil(WASM_FUEL_COEFFICIENT);
+        let after_syscalls = invoke_context.borrow().get_remaining();
+        // Consume fuel is not checks for overflow
+        invoke_context.borrow_mut().consume(consumed_fuel);
+
+        let compute_meter_result = after_syscalls
+            .checked_sub(consumed_fuel)
+            .map(|_| ())
+            .ok_or_else(|| Box::new(InstructionError::ComputationalBudgetExceeded) as Box<dyn std::error::Error>);
+
         // let (compute_units_consumed, result) = vm.execute_program(!use_jit);
-        let compute_units_consumed = 0;
+        let compute_units_consumed = compute_meter_prev - invoke_context.borrow().get_remaining();
 
         // drop(vm);
 
@@ -2486,7 +2505,7 @@ fn execute<'a, 'b: 'a>(
                 };
                 Err(error)
             }
-            _ => Ok(()),
+            _ => compute_meter_result, // Success, but we should check compute meter
         }
     };
 
