@@ -2033,10 +2033,10 @@ fn read_and_verify_elf(program_location: &str) -> Result<Vec<u8>, Box<dyn std::e
         &program_data,
         Arc::new(program_runtime_environment),
     )
-    .map_err(|err| format!("ELF error: {err}"))?;
+    .map_err(|err| format!("ELF error (FOR WASM DEPLOYMENT USE domichain-wasm): {err}"))?;
 
     let _ = Executable::<RequisiteVerifier, InvokeContext>::verified(executable)
-        .map_err(|err| format!("ELF error: {err}"))?;
+        .map_err(|err| format!("ELF error (FOR WASM DEPLOYMENT USE domichain-wasm): {err}"))?;
 
     Ok(program_data)
 }
