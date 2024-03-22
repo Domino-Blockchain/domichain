@@ -37,3 +37,9 @@ Makefile
 setup_and_bootstrap.sh
 
 *-keypair.json
+/BTCi*.json
+/domi*.json
+/meta*.json
+/test*.json
+/Token*.json
+/token_metadata.wasm
