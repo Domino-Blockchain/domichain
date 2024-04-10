@@ -18,12 +18,18 @@ use {
 
 // Returns all known SPL Token program ids
 pub fn spl_token_ids() -> Vec<Pubkey> {
-    vec![spl_token::id().into(), spl_token_2022::id().into()]
+    vec![
+        spl_token::id().into(),
+        spl_token_btci::id().into(),
+        spl_token_2022::id().into(),
+    ]
 }
 
 // Check if the provided program id as a known SPL Token program id
 pub fn is_known_spl_token_id(program_id: &Pubkey) -> bool {
-    *program_id == spl_token::id().into() || *program_id == spl_token_2022::id().into()
+    *program_id == spl_token::id().into()
+        || *program_id == spl_token_btci::id().into()
+        || *program_id == spl_token_2022::id().into()
 }
 
 // A helper function to convert spl_token::native_mint::id() as spl_sdk::pubkey::Pubkey to
