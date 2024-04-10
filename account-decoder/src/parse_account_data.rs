@@ -1,11 +1,10 @@
 use {
     crate::{
         parse_address_lookup_table::parse_address_lookup_table,
-        parse_bpf_loader::parse_bpf_upgradeable_loader,
-        parse_wasm_loader::parse_wasm_upgradeable_loader,
-        parse_config::parse_config,
+        parse_bpf_loader::parse_bpf_upgradeable_loader, parse_config::parse_config,
         parse_nonce::parse_nonce, parse_stake::parse_stake, parse_sysvar::parse_sysvar,
         parse_token::parse_token, parse_vote::parse_vote,
+        parse_wasm_loader::parse_wasm_upgradeable_loader,
     },
     inflector::Inflector,
     serde_json::Value,
@@ -18,8 +17,10 @@ use {
 
 lazy_static! {
     static ref ADDRESS_LOOKUP_PROGRAM_ID: Pubkey = domichain_address_lookup_table_program::id();
-    static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::bpf_loader_upgradeable::id();
-    static ref WASM_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey = domichain_sdk::wasm_loader_upgradeable::id();
+    static ref BPF_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey =
+        domichain_sdk::bpf_loader_upgradeable::id();
+    static ref WASM_UPGRADEABLE_LOADER_PROGRAM_ID: Pubkey =
+        domichain_sdk::wasm_loader_upgradeable::id();
     static ref CONFIG_PROGRAM_ID: Pubkey = domichain_config_program::id();
     static ref STAKE_PROGRAM_ID: Pubkey = stake::program::id();
     static ref SYSTEM_PROGRAM_ID: Pubkey = system_program::id();
@@ -41,8 +42,18 @@ lazy_static! {
         );
         m.insert(*CONFIG_PROGRAM_ID, ParsableAccount::Config);
         m.insert(*SYSTEM_PROGRAM_ID, ParsableAccount::Nonce);
-        m.insert(Pubkey::try_from(spl_token::id().as_ref()).unwrap(), ParsableAccount::SplToken);
-        m.insert(Pubkey::try_from(spl_token_2022::id().as_ref()).unwrap(), ParsableAccount::SplToken2022);
+        m.insert(
+            Pubkey::try_from(spl_token::id().as_ref()).unwrap(),
+            ParsableAccount::SplToken,
+        );
+        m.insert(
+            Pubkey::try_from(spl_token_btci::id().as_ref()).unwrap(),
+            ParsableAccount::SplTokenBtci,
+        );
+        m.insert(
+            Pubkey::try_from(spl_token_2022::id().as_ref()).unwrap(),
+            ParsableAccount::SplToken2022,
+        );
         m.insert(*STAKE_PROGRAM_ID, ParsableAccount::Stake);
         m.insert(*SYSVAR_PROGRAM_ID, ParsableAccount::Sysvar);
         m.insert(*VOTE_PROGRAM_ID, ParsableAccount::Vote);
@@ -85,6 +96,7 @@ pub enum ParsableAccount {
     Config,
     Nonce,
     SplToken,
+    SplTokenBtci,
     SplToken2022,
     Stake,
     Sysvar,
@@ -118,7 +130,9 @@ pub fn parse_account_data(
         }
         ParsableAccount::Config => serde_json::to_value(parse_config(data, pubkey)?)?,
         ParsableAccount::Nonce => serde_json::to_value(parse_nonce(data)?)?,
-        ParsableAccount::SplToken | ParsableAccount::SplToken2022 => {
+        ParsableAccount::SplToken
+        | ParsableAccount::SplTokenBtci
+        | ParsableAccount::SplToken2022 => {
             serde_json::to_value(parse_token(data, additional_data.spl_token_decimals)?)?
         }
         ParsableAccount::Stake => serde_json::to_value(parse_stake(data)?)?,

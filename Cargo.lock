@@ -1666,6 +1666,7 @@ dependencies = [
  "serde_json",
  "spl-token",
  "spl-token-2022",
+ "spl-token-btci",
  "thiserror",
  "zstd",
 ]

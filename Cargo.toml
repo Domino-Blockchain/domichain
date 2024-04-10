@@ -373,6 +373,7 @@ spl-associated-token-account = { path = "../domichain-program-library/associated
 spl-instruction-padding = { path = "../domichain-program-library/instruction-padding/program", version = "0.1" }
 spl-memo = { path = "../domichain-program-library/memo/program", version = "=3.0.1" }
 spl-token = { path = "../domichain-program-library/token/program", version = "=3.5.0" }
+spl-token-btci = { path = "../domichain-program-library/token/program-btci", version = "=3.5.0" }
 spl-token-2022 = { path = "../domichain-program-library/token/program-2022", version = "=0.6.1" }
 static_assertions = "1.1.0"
 stream-cancel = "0.8.1"
