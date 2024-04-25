@@ -6,10 +6,13 @@ use domichain_sdk::{
 };
 
 mod spl_token {
-    domichain_sdk::declare_id!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    domichain_sdk::declare_id!("TokenAAGbeQq5tGW2r5RoR3oauzN2EkNFiHNPw9q34s");
+}
+mod spl_token_btci {
+    domichain_sdk::declare_id!("BTCi9FUjBVY3BSaqjzfhEPKVExuvarj8Gtfn4rJ5soLC");
 }
 mod spl_token_2022 {
-    domichain_sdk::declare_id!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+    domichain_sdk::declare_id!("BvVePGKKwuGb6QVJHG6LvCrULB7QBgjocqnYxYHUkNEd");
 }
 mod spl_memo_1_0 {
     domichain_sdk::declare_id!("Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo");
@@ -18,7 +21,7 @@ mod spl_memo_3_0 {
     domichain_sdk::declare_id!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 }
 mod spl_associated_token_account {
-    domichain_sdk::declare_id!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+    domichain_sdk::declare_id!("Dt8fRCpjeV6JDemhPmtcTKijgKdPxXHn9Wo9cXY5agtG");
 }
 
 static SPL_PROGRAMS: &[(Pubkey, Pubkey, &[u8])] = &[
@@ -26,6 +29,11 @@ static SPL_PROGRAMS: &[(Pubkey, Pubkey, &[u8])] = &[
         spl_token::ID,
         domichain_sdk::wasm_loader::ID,
         include_bytes!("programs/spl_token-4.0.0.wasm"),
+    ),
+    (
+        spl_token_btci::ID,
+        domichain_sdk::wasm_loader::ID,
+        include_bytes!("programs/spl_token-btci-4.0.0.wasm"),
     ),
     (
         spl_token_2022::ID,
