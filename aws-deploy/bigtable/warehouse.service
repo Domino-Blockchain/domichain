@@ -1,0 +1,18 @@
+[Unit]
+Description=Domichain Warehouse Node
+After=network.target
+Wants=domichain-sys-tuner.service
+Wants=domichain-warehouse-upload.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=domi
+LimitNOFILE=1000000
+LogRateLimitIntervalSec=0
+ExecStart=<path_to_warehouse.sh>
+
+[Install]
+WantedBy=multi-user.target
