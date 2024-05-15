@@ -4992,7 +4992,7 @@ impl Bank {
         let mut rewards_distribution = HashMap::new();
 
         for account in reward_accounts {
-            println!("Account: {} Reward: {}", account, reward_per_account);
+            //println!("Account: {} Reward: {}", account, reward_per_account);
             rewards_distribution.insert(*account, reward_per_account);
         }
 
@@ -5041,6 +5041,7 @@ impl Bank {
        let mut valid_risk_scores: Vec<f64> =
            if let Some(wallet_entry) = risk_score_map.get(&send_account) {
                wallet_entry.iter().filter_map(|(reward_account, reward_data)| {
+                    println!("Reward data: {:?}", reward_data.risk_score);
                    let expiration_time = reward_data.timestamp + chrono::Duration::seconds(reward_data.timeout as i64);
 
                    if current_time <= expiration_time {

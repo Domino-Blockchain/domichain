@@ -109,6 +109,7 @@ use {
         },
         time::Duration,
     },
+    domichain_risk_score::ai_risk_score::update_risk_scores,
 };
 
 type RpcCustomResult<T> = std::result::Result<T, RpcCustomError>;
@@ -3627,6 +3628,35 @@ pub mod rpc_full {
 
             let transaction = sanitize_transaction(unsanitized_tx, preflight_bank)?;
             let signature = *transaction.signature();
+
+            //println!("RPC Tran check");
+            //println!("{:?}", transaction);
+            
+            // AI Score Detection
+            let tag_expected = "AI_SCORE".as_bytes();
+            
+            for instruction in transaction.message().instructions().iter() {
+                if instruction.data.starts_with(tag_expected) && instruction.data.len() > tag_expected.len() + 1 {
+                    let version = instruction.data[tag_expected.len()];
+                    let offset = tag_expected.len() + 1;
+                    let ai_score_data = &instruction.data[offset..offset+4]; 
+                    let ai_score = f32::from_le_bytes(ai_score_data.try_into().expect("Failed to convert bytes to f32"));
+                    let wallet_data_start = offset + 4;
+                    let wallet_address = std::str::from_utf8(&instruction.data[wallet_data_start..]).unwrap().to_string();
+            
+                    if let Some(payer_account_info) = transaction.message().account_keys().get(0) {
+                        let wallet = payer_account_info.to_string();
+                        let reward_account = wallet.clone(); 
+                        let risk_score = 5.0; 
+                        let timeout = 6000;
+            
+                        // Update the risk scores 
+                        //println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
+
+                        update_risk_scores(wallet_address, reward_account, risk_score, timeout);
+                    }
+                }
+            }
 
             let mut last_valid_block_height = preflight_bank
                 .get_blockhash_last_valid_block_height(transaction.message().recent_blockhash())

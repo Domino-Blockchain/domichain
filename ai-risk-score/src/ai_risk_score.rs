@@ -62,16 +62,43 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
     public_key.verify(&data_bytes, &signature).is_ok()
 }
 
+pub fn update_risk_scores(wallet: String, reward_account: String, risk_score: f64, timeout: usize) {
+    let timestamp = chrono::Utc::now();
+    let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
+
+    let wallet_entry = risk_score_map.entry(wallet.clone()).or_insert_with(HashMap::new);
+
+    let reward_data = RewardData {
+        risk_score,
+        timeout,
+        timestamp,
+    };
+
+    // Update the entry only if it is newer or does not exist.
+    match wallet_entry.get(&reward_account) {
+        Some(existing_reward_data) => {
+            if reward_data.timestamp > existing_reward_data.timestamp {
+                wallet_entry.insert(reward_account, reward_data);
+                //println!("Updated existing entry for wallet: {} with new reward data.", wallet);
+            } else {
+                //println!("Existing entry for wallet: {} is more recent or same; no update performed.", wallet);
+            }
+        },
+        None => {
+            wallet_entry.insert(reward_account, reward_data);
+            //println!("Inserted new entry for wallet: {}.", wallet);
+        },
+    }
+}
 pub async fn get_risk_score(url: String, ai_reward_rate: f64) {
     AI_REWARDS_RATE
         .set(ai_reward_rate)
         .expect("Failed to set AI rewards rate");
     loop {
-        // Use the tokio runtime to run the asynchronous function and get the JSON response.
         let json_response = match send_http_request(&url).await {
             Ok(json) => json,
             Err(err) => {
-                println!("Error sending the request: {:?}", err);
+                //println!("Error sending the request: {:?}", err);
                 time::sleep(Duration::from_secs(QUERY_TIME_PERIOD)).await;
                 continue;
             }

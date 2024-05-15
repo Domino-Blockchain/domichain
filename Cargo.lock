@@ -3237,6 +3237,7 @@ dependencies = [
  "domichain-transaction-status",
  "domichain-version",
  "domichain-vote-program",
+ "domichain_risk_score",
  "itertools 0.10.5",
  "jsonrpc-core",
  "jsonrpc-core-client",
