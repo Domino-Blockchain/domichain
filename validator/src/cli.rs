@@ -232,6 +232,13 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
                 .help("Upload new confirmed blocks into a BigTable instance"),
         )
         .arg(
+            Arg::with_name("rpc_bigtable_skip_blockstore")
+                .long("rpc-bigtable-skip-blockstore")
+                .requires("enable_rpc_bigtable_ledger_storage")
+                .takes_value(false)
+                .help("Skip blockstore checks before checking BigTable instance for blocks"),
+        )
+        .arg(
             Arg::with_name("enable_extended_tx_metadata_storage")
                 .long("enable-extended-tx-metadata-storage")
                 .requires("enable_rpc_transaction_history")
