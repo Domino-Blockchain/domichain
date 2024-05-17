@@ -408,6 +408,7 @@ impl JsonRpcService {
                 ref bigtable_instance_name,
                 ref bigtable_app_profile_id,
                 timeout,
+                skip_blockstore_root_check: _,
             }) = config.rpc_bigtable_config
             {
                 let bigtable_config = domichain_storage_bigtable::LedgerStorageConfig {

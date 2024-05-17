@@ -165,6 +165,7 @@ pub struct RpcBigtableConfig {
     pub bigtable_instance_name: String,
     pub bigtable_app_profile_id: String,
     pub timeout: Option<Duration>,
+    pub skip_blockstore_root_check: bool,
 }
 
 impl Default for RpcBigtableConfig {
@@ -176,6 +177,7 @@ impl Default for RpcBigtableConfig {
             bigtable_instance_name,
             bigtable_app_profile_id,
             timeout: None,
+            skip_blockstore_root_check: false,
         }
     }
 }
@@ -1095,7 +1097,16 @@ impl JsonRpcRequestProcessor {
             {
                 self.check_blockstore_writes_complete(slot)?;
                 let result = self.blockstore.get_rooted_block(slot, true);
-                self.check_blockstore_root(&result, slot)?;
+
+                let do_check_blockstore_root: bool = if let Some(rpc_bigtable_config) = &self.config.rpc_bigtable_config {
+                    !rpc_bigtable_config.skip_blockstore_root_check
+                } else {
+                    false
+                };
+                if do_check_blockstore_root {
+                    self.check_blockstore_root(&result, slot)?;
+                }
+
                 let encode_block = |confirmed_block: ConfirmedBlock| -> Result<UiConfirmedBlock> {
                     let mut encoded_block = confirmed_block
                         .encode_with_options(encoding, encoding_options)

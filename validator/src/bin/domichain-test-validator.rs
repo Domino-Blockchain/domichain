@@ -427,6 +427,7 @@ fn main() {
                 String
             ),
             timeout: None,
+            skip_blockstore_root_check: false,
         })
     } else {
         None
