@@ -3633,30 +3633,35 @@ pub mod rpc_full {
             //println!("{:?}", transaction);
             
             // AI Score Detection
-            let tag_expected = "AI_SCORE".as_bytes();
+            let tag_expected = "AI_SCORE";
             
             for instruction in transaction.message().instructions().iter() {
-                if instruction.data.starts_with(tag_expected) && instruction.data.len() > tag_expected.len() + 1 {
-                    let version = instruction.data[tag_expected.len()];
-                    let offset = tag_expected.len() + 1;
-                    let ai_score_data = &instruction.data[offset..offset+4]; 
-                    let ai_score = f32::from_le_bytes(ai_score_data.try_into().expect("Failed to convert bytes to f32"));
-                    let wallet_data_start = offset + 4;
-                    let wallet_address = std::str::from_utf8(&instruction.data[wallet_data_start..]).unwrap().to_string();
-            
-                    if let Some(payer_account_info) = transaction.message().account_keys().get(0) {
-                        let wallet = payer_account_info.to_string();
-                        let reward_account = wallet.clone(); 
-                        let risk_score = 5.0; 
-                        let timeout = 6000;
-            
-                        // Update the risk scores 
-                        //println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
-
-                        update_risk_scores(wallet_address, reward_account, risk_score, timeout);
-                    }
-                }
-            }
+                let program_id = transaction.message().account_keys()[instruction.program_id_index as usize];
+        
+                // Check if the instruction is from the memo program
+                if program_id == Pubkey::from_str("B5u8Bygu57V8AYzBFjcBsoSC5z486KjbG8GaG8b8WzU7").unwrap() {
+                    if let Ok(memo_str) = std::str::from_utf8(&instruction.data) {
+                        // Parse the string as JSON
+                        if let Ok(memo_json) = serde_json::from_str::<serde_json::Value>(memo_str) {
+                            if memo_json["tag"].as_str() == Some(tag_expected) {
+                                let version = memo_json["version"].as_u64().unwrap_or(0);
+                                let ai_score = memo_json["ai_score"].as_f64().unwrap_or(0.0) as f32;
+                                let wallet_address = memo_json["wallet_address"].as_str().unwrap_or("").to_string();
+        
+                                if let Some(payer_account_info) = transaction.message().account_keys().get(0) {
+                                    let wallet = payer_account_info.to_string();
+                                    let reward_account = wallet.clone();
+                                    let risk_score = 5.0;
+                                    let timeout = 6000;
+        
+                                    // Update the risk scores
+                                    // println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
+        
+                                    update_risk_scores(wallet_address, reward_account, risk_score, timeout);
+                                }
+                            }
+                        }
+                    }}}
 
             let mut last_valid_block_height = preflight_bank
                 .get_blockhash_last_valid_block_height(transaction.message().recent_blockhash())
