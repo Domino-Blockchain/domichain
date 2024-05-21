@@ -2899,7 +2899,7 @@ dependencies = [
  "crossbeam-channel",
  "domichain-sdk",
  "env_logger",
- "gethostname",
+ "gethostname 0.2.3",
  "lazy_static",
  "log",
  "rand 0.7.3",
@@ -3421,6 +3421,7 @@ dependencies = [
  "rustc_version 0.4.0",
  "serde",
  "serde_derive",
+ "serde_json",
  "static_assertions",
  "strum",
  "strum_macros",
@@ -4567,6 +4568,16 @@ checksum = "c1ebd34e35c46e00bb73e81363248d627782724609fe1b6396f553f68fe3862e"
 dependencies = [
  "libc",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "gethostname"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0176e0459c2e4a1fe232f984bca6890e681076abb9934f6cea7c326f3fc47818"
+dependencies = [
+ "libc",
+ "windows-targets 0.48.1",
 ]
 
 [[package]]
@@ -7861,6 +7872,7 @@ name = "spl-memo"
 version = "3.0.1"
 dependencies = [
  "domichain-program",
+ "gethostname 0.4.3",
 ]
 
 [[package]]
@@ -7889,6 +7901,20 @@ dependencies = [
  "num_enum 0.5.11",
  "spl-memo",
  "spl-token",
+ "spl-token-btci",
+ "thiserror",
+]
+
+[[package]]
+name = "spl-token-btci"
+version = "3.5.0"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "domichain-program",
+ "num-derive",
+ "num-traits",
+ "num_enum 0.5.11",
  "thiserror",
 ]
 
