@@ -196,7 +196,8 @@ use {
         time::{Duration, Instant},
     },
 };
-use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE};
+use serde_json::Value;
+use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores};
 
 
 
@@ -4128,6 +4129,41 @@ impl Bank {
         max_age: usize,
         error_counters: &mut TransactionErrorMetrics,
     ) -> Vec<TransactionCheckResult> {
+        // println!("transaction check");
+
+        // AI Detection
+
+        let tag_expected = "AI_SCORE";
+
+        for sanitized_tx in sanitized_txs {
+            for instruction in sanitized_tx.message().instructions().iter() {
+                let program_id = sanitized_tx.message().account_keys()[instruction.program_id_index as usize];
+
+                // Check if the instruction is from the memo program
+                if program_id == Pubkey::from_str("meB2UQZBLPvWz3xmahLzWh6E3fLoPRKVwGztEHd933X").unwrap() {
+                    if let Ok(memo_str) = std::str::from_utf8(&instruction.data) {
+                        // Parse the string as JSON
+                        if let Ok(memo_json) = serde_json::from_str::<serde_json::Value>(memo_str) {
+                            if memo_json["tag"].as_str() == Some(tag_expected) {
+                                let version = memo_json["version"].as_u64().unwrap_or(0);
+                                let ai_score = memo_json["ai_score"].as_f64().unwrap_or(0.0) as f32;
+                                let wallet_address = memo_json["wallet_address"].as_str().unwrap_or("").to_string();
+
+                                if let Some(payer_account_info) = sanitized_tx.message().account_keys().get(0) {
+                                    let wallet = payer_account_info.to_string();
+                                    let reward_account = wallet.clone();
+                                    let risk_score = 5.0;
+                                    let timeout = 6000;
+
+                                    // Update the risk scores
+                                    println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
+
+                                    update_risk_scores(wallet_address, reward_account, risk_score, timeout);
+                                }
+                            }
+                        }
+                    }}}
+                }
         let age_results =
             self.check_age(sanitized_txs.iter(), lock_results, max_age, error_counters);
         self.check_status_cache(sanitized_txs, age_results, error_counters)
@@ -7123,6 +7159,7 @@ impl Bank {
         tx: VersionedTransaction,
         verification_mode: TransactionVerificationMode,
     ) -> Result<SanitizedTransaction> {
+        println!("Verify");
         let sanitized_tx = {
             let size =
                 bincode::serialized_size(&tx).map_err(|_| TransactionError::SanitizeFailure)?;
@@ -7152,6 +7189,38 @@ impl Bank {
             sanitized_tx.verify_precompiles(&self.feature_set)?;
         }
 
+        // AI Detection
+
+        /*let tag_expected = "AI_SCORE";
+            
+        for instruction in sanitized_tx.message().instructions().iter() {
+            let program_id = sanitized_tx.message().account_keys()[instruction.program_id_index as usize];
+    
+            // Check if the instruction is from the memo program
+            if program_id == Pubkey::from_str("meB2UQZBLPvWz3xmahLzWh6E3fLoPRKVwGztEHd933X").unwrap() {
+                if let Ok(memo_str) = std::str::from_utf8(&instruction.data) {
+                    // Parse the string as JSON
+                    if let Ok(memo_json) = serde_json::from_str::<serde_json::Value>(memo_str) {
+                        if memo_json["tag"].as_str() == Some(tag_expected) {
+                            let version = memo_json["version"].as_u64().unwrap_or(0);
+                            let ai_score = memo_json["ai_score"].as_f64().unwrap_or(0.0) as f32;
+                            let wallet_address = memo_json["wallet_address"].as_str().unwrap_or("").to_string();
+    
+                            if let Some(payer_account_info) = sanitized_tx.message().account_keys().get(0) {
+                                let wallet = payer_account_info.to_string();
+                                let reward_account = wallet.clone();
+                                let risk_score = 5.0;
+                                let timeout = 6000;
+    
+                                // Update the risk scores
+                                println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
+    
+                                update_risk_scores(wallet_address, reward_account, risk_score, timeout);
+                            }
+                        }
+                    }
+                }}}
+                */
         Ok(sanitized_tx)
     }
 

@@ -3631,37 +3631,6 @@ pub mod rpc_full {
 
             //println!("RPC Tran check");
             //println!("{:?}", transaction);
-            
-            // AI Score Detection
-            let tag_expected = "AI_SCORE";
-            
-            for instruction in transaction.message().instructions().iter() {
-                let program_id = transaction.message().account_keys()[instruction.program_id_index as usize];
-        
-                // Check if the instruction is from the memo program
-                if program_id == Pubkey::from_str("B5u8Bygu57V8AYzBFjcBsoSC5z486KjbG8GaG8b8WzU7").unwrap() {
-                    if let Ok(memo_str) = std::str::from_utf8(&instruction.data) {
-                        // Parse the string as JSON
-                        if let Ok(memo_json) = serde_json::from_str::<serde_json::Value>(memo_str) {
-                            if memo_json["tag"].as_str() == Some(tag_expected) {
-                                let version = memo_json["version"].as_u64().unwrap_or(0);
-                                let ai_score = memo_json["ai_score"].as_f64().unwrap_or(0.0) as f32;
-                                let wallet_address = memo_json["wallet_address"].as_str().unwrap_or("").to_string();
-        
-                                if let Some(payer_account_info) = transaction.message().account_keys().get(0) {
-                                    let wallet = payer_account_info.to_string();
-                                    let reward_account = wallet.clone();
-                                    let risk_score = 5.0;
-                                    let timeout = 6000;
-        
-                                    // Update the risk scores
-                                    // println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
-        
-                                    update_risk_scores(wallet_address, reward_account, risk_score, timeout);
-                                }
-                            }
-                        }
-                    }}}
 
             let mut last_valid_block_height = preflight_bank
                 .get_blockhash_last_valid_block_height(transaction.message().recent_blockhash())
