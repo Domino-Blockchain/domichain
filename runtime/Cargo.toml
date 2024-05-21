@@ -43,6 +43,7 @@ rayon = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
+base58 = "0.2.0" 
 serde_derive = { workspace = true }
 domichain-address-lookup-table-program = { workspace = true }
 domichain-bpf-loader-program = { workspace = true }
