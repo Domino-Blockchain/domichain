@@ -1,0 +1,15 @@
+[Unit]
+Description=Domichain Warehouse Uploader
+After=network.target
+Before=domi.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=domi
+ExecStart=<path_to_warehouse-upload-to-storage-bucket.sh>
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=domi.service
