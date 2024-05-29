@@ -11,6 +11,9 @@ mod spl_token {
 mod spl_token_btci {
     domichain_sdk::declare_id!("BTCi9FUjBVY3BSaqjzfhEPKVExuvarj8Gtfn4rJ5soLC");
 }
+mod spl_token_usdt {
+    domichain_sdk::declare_id!("USDTx3HDeSKemTNpycea2xxqJHQbo9veLvgWPTK1Vh1");
+}
 mod spl_token_2022 {
     domichain_sdk::declare_id!("BvVePGKKwuGb6QVJHG6LvCrULB7QBgjocqnYxYHUkNEd");
 }
@@ -34,6 +37,11 @@ static SPL_PROGRAMS: &[(Pubkey, Pubkey, &[u8])] = &[
         spl_token_btci::ID,
         domichain_sdk::wasm_loader::ID,
         include_bytes!("programs/spl_token-btci-4.0.0.wasm"),
+    ),
+    (
+        spl_token_usdt::ID,
+        domichain_sdk::wasm_loader::ID,
+        include_bytes!("programs/spl_token-usdt-4.0.0.wasm"),
     ),
     (
         spl_token_2022::ID,

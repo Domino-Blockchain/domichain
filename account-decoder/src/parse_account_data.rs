@@ -51,6 +51,10 @@ lazy_static! {
             ParsableAccount::SplTokenBtci,
         );
         m.insert(
+            Pubkey::try_from(spl_token_usdt::id().as_ref()).unwrap(),
+            ParsableAccount::SplTokenUsdt,
+        );
+        m.insert(
             Pubkey::try_from(spl_token_2022::id().as_ref()).unwrap(),
             ParsableAccount::SplToken2022,
         );
@@ -97,6 +101,7 @@ pub enum ParsableAccount {
     Nonce,
     SplToken,
     SplTokenBtci,
+    SplTokenUsdt,
     SplToken2022,
     Stake,
     Sysvar,
@@ -132,6 +137,7 @@ pub fn parse_account_data(
         ParsableAccount::Nonce => serde_json::to_value(parse_nonce(data)?)?,
         ParsableAccount::SplToken
         | ParsableAccount::SplTokenBtci
+        | ParsableAccount::SplTokenUsdt
         | ParsableAccount::SplToken2022 => {
             serde_json::to_value(parse_token(data, additional_data.spl_token_decimals)?)?
         }
