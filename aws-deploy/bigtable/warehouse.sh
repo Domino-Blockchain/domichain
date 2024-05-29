@@ -62,6 +62,11 @@ if [[ -z $RPC_URL ]]; then
   exit 1
 fi
 
+if [[ -z $LOCAL_RPC_PORT ]]; then
+  echo LOCAL_RPC_PORT environment variable not defined
+  exit 1
+fi
+
 # MINIMUM_MINUTES_BETWEEN_ARCHIVE=720 is useful to define in devnet's service-env.sh
 # since the devnet epochs are so short
 if [[ -z $MINIMUM_MINUTES_BETWEEN_ARCHIVE ]]; then
@@ -105,7 +110,7 @@ args=(
   --dynamic-port-range 9000-9020
   --entrypoint "$ENTRYPOINT"
   --expected-genesis-hash "$EXPECTED_GENESIS_HASH"
-  --rpc-port 8899
+  --rpc-port $LOCAL_RPC_PORT
   --private-rpc
   --identity "$identity_keypair"
   --ledger "$ledger_dir"
@@ -124,7 +129,7 @@ args=(
 #  --only-known-rpc
   --full-rpc-api
   --rpc-bind-address 0.0.0.0
-  --accounts ~/bigtable-node/accounts
+  --accounts "$ACCOUNTS_PATH"
 )
 
 if ! [[ $(domichain --version) =~ \ 1\.4\.[0-9]+ ]]; then
@@ -289,7 +294,7 @@ while true; do
     fi
 
     if ! $caught_up; then
-      if ! timeout 15m domichain catchup --url "$RPC_URL" "$identity_pubkey" http://127.0.0.1:8899; then
+      if ! timeout 15m domichain catchup --url "$RPC_URL" "$identity_pubkey" http://127.0.0.1:$LOCAL_RPC_PORT; then
         echo "catchup failed..."
         if [[ $SECONDS -gt 600 ]]; then
           datapoint_error validator-not-caught-up
