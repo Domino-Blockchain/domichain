@@ -1667,6 +1667,7 @@ dependencies = [
  "spl-token",
  "spl-token-2022",
  "spl-token-btci",
+ "spl-token-usdt",
  "thiserror",
  "zstd",
 ]
@@ -7903,11 +7904,25 @@ dependencies = [
  "spl-memo",
  "spl-token",
  "spl-token-btci",
+ "spl-token-usdt",
  "thiserror",
 ]
 
 [[package]]
 name = "spl-token-btci"
+version = "3.5.0"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "domichain-program",
+ "num-derive",
+ "num-traits",
+ "num_enum 0.5.11",
+ "thiserror",
+]
+
+[[package]]
+name = "spl-token-usdt"
 version = "3.5.0"
 dependencies = [
  "arrayref",

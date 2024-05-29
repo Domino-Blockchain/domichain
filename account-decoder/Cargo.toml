@@ -24,6 +24,7 @@ domichain-config-program = { workspace = true }
 domichain-sdk = { workspace = true }
 spl-token = { workspace = true, features = ["no-entrypoint"] }
 spl-token-btci = { workspace = true, features = ["no-entrypoint"] }
+spl-token-usdt = { workspace = true, features = ["no-entrypoint"] }
 spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
 thiserror = { workspace = true }
 zstd = { workspace = true }

@@ -21,6 +21,7 @@ pub fn spl_token_ids() -> Vec<Pubkey> {
     vec![
         spl_token::id().into(),
         spl_token_btci::id().into(),
+        spl_token_usdt::id().into(),
         spl_token_2022::id().into(),
     ]
 }
@@ -29,6 +30,7 @@ pub fn spl_token_ids() -> Vec<Pubkey> {
 pub fn is_known_spl_token_id(program_id: &Pubkey) -> bool {
     *program_id == spl_token::id().into()
         || *program_id == spl_token_btci::id().into()
+        || *program_id == spl_token_usdt::id().into()
         || *program_id == spl_token_2022::id().into()
 }
 
