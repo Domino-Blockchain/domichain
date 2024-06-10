@@ -1101,7 +1101,7 @@ impl JsonRpcRequestProcessor {
                 let do_check_blockstore_root: bool = if let Some(rpc_bigtable_config) = &self.config.rpc_bigtable_config {
                     !rpc_bigtable_config.skip_blockstore_root_check
                 } else {
-                    false
+                    true
                 };
                 if do_check_blockstore_root {
                     self.check_blockstore_root(&result, slot)?;
