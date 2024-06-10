@@ -1212,6 +1212,7 @@ pub fn main() {
             timeout: value_t!(matches, "rpc_bigtable_timeout", u64)
                 .ok()
                 .map(Duration::from_secs),
+            skip_blockstore_root_check: matches.is_present("rpc_bigtable_skip_blockstore"),
         })
     } else {
         None
