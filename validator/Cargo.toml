@@ -49,6 +49,7 @@ domichain-metrics = { workspace = true }
 domichain-net-utils = { workspace = true }
 domichain-perf = { workspace = true }
 domichain-poh = { workspace = true }
+domichain_risk_score = { workspace = true }
 domichain-rpc = { workspace = true }
 domichain-rpc-client = { workspace = true }
 domichain-rpc-client-api = { workspace = true }
@@ -63,6 +64,7 @@ domichain-version = { workspace = true }
 domichain-vote-program = { workspace = true }
 symlink = { workspace = true }
 thiserror = { workspace = true }
+tokio = { version = "1", features = ["full"] }
 
 [dev-dependencies]
 domichain-account-decoder = { workspace = true }

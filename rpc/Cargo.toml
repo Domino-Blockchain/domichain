@@ -40,6 +40,7 @@ domichain-metrics = { workspace = true }
 domichain-perf = { workspace = true }
 domichain-poh = { workspace = true }
 domichain-rayon-threadlimit = { workspace = true }
+domichain_risk_score = { workspace = true }
 domichain-rpc-client-api = { workspace = true }
 domichain-runtime = { workspace = true }
 domichain-sdk = { workspace = true }

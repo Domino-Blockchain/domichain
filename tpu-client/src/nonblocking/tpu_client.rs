@@ -309,6 +309,8 @@ where
     /// Serialize and send transaction to the current and upcoming leader TPUs according to fanout
     /// size
     pub async fn send_transaction(&self, transaction: &Transaction) -> bool {
+        // println!("Wire Tran check");
+        // println!("{:?}", transaction);
         let wire_transaction = serialize(transaction).expect("serialization should succeed");
         self.send_wire_transaction(wire_transaction).await
     }
@@ -324,6 +326,8 @@ where
     /// size
     /// Returns the last error if all sends fail
     pub async fn try_send_transaction(&self, transaction: &Transaction) -> TransportResult<()> {
+        // println!("Try Wire Tran check");
+        // println!("{:?}", transaction);
         let wire_transaction = serialize(transaction).expect("serialization should succeed");
         self.try_send_wire_transaction(wire_transaction).await
     }
