@@ -5301,13 +5301,32 @@ impl Bank {
                 // post-load, fee deducted, pre-execute account state
                 // stored
                 if ai_fee > 0 {
-                    self.withdraw(tx.message().fee_payer(), ai_fee)?;
-                    // Update each reward account balance
-                    for (reward_account, reward_amount) in ai_account_map {
-                        self.deposit(&reward_account, reward_amount);
+                    let fee_payer = tx.message().fee_payer();
+                    let current_balance = self.get_balance(fee_payer);
+                    
+                    // 1000 satomis as a reserve
+                    if current_balance > 1000 {  
+                        let withdrawable_amount = current_balance - 1000; 
+                        let actual_withdrawal = std::cmp::min(ai_fee, withdrawable_amount);  
+                        self.withdraw(fee_payer, actual_withdrawal)?;  
+                
+                        // Calculate the total amount available for distribution for reward accounts
+                        let total_rewards = ai_account_map.iter().map(|(_, amount)| *amount).sum::<u64>();
+                        let funds_available_for_rewards = std::cmp::min(total_rewards, actual_withdrawal); 
+                
+                        if funds_available_for_rewards > 0 {
+                            let num_rewards = ai_account_map.len() as u64;
+                            let equal_share = funds_available_for_rewards / num_rewards; 
+                
+                            for (reward_account, _) in ai_account_map.iter() {
+                                self.deposit(reward_account, equal_share);
+                            }
+                        }
+                    } else {
+                        println!("Insufficient balance to maintain the minimum reserve of 1000 satomis.");
                     }
                 }
-                
+
                 if execution_status.is_err() && !is_nonce {
                     self.withdraw(tx.message().fee_payer(), fee)?;
                 }
