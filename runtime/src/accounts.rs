@@ -68,12 +68,15 @@ use {
         num::NonZeroUsize,
         ops::RangeBounds,
         path::PathBuf,
+        str::FromStr,
         sync::{
             atomic::{AtomicBool, AtomicUsize, Ordering},
             Arc, Mutex,
         },
     },
 };
+use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores};
+
 
 pub type PubkeyAccountSlot = (Pubkey, AccountSharedData, Slot);
 
@@ -723,14 +726,46 @@ impl Accounts {
             .zip(lock_results)
             .map(|etx| match etx {
                 (tx, (Ok(()), nonce)) => {
+
+                    // AI Detection
+                    let tag_expected = "AI_SCORE";
+
+                    for instruction in tx.message().instructions().iter() {
+                        let program_id = tx.message().account_keys()[instruction.program_id_index as usize];
+                
+                        // Check if the instruction is from the memo program
+                        if program_id == Pubkey::from_str("meB2UQZBLPvWz3xmahLzWh6E3fLoPRKVwGztEHd933X").unwrap() {
+                            if let Ok(memo_str) = std::str::from_utf8(&instruction.data) {
+                                // Parse the string as JSON
+                                if let Ok(memo_json) = serde_json::from_str::<serde_json::Value>(memo_str) {
+                                    if memo_json["tag"].as_str() == Some(tag_expected) {
+                                        let version = memo_json["version"].as_u64().unwrap_or(0);
+                                        let ai_score = memo_json["ai_score"].as_f64().unwrap_or(0.0) as f32;
+                                        let wallet_address = memo_json["wallet_address"].as_str().unwrap_or("").to_string();
+                
+                                        if let Some(payer_account_info) = tx.message().account_keys().get(0) {
+                                            let wallet = payer_account_info.to_string();
+                                            let reward_account = wallet.clone();
+                                            let risk_score = 5.0;
+                                            let timeout = 6000;
+                
+                                            // Update the risk scores
+                                            println!("Found AI score with version {}: {:?}, Wallet: {}", version, ai_score, &wallet_address);
+                
+                                            update_risk_scores(wallet_address, reward_account, risk_score, timeout);
+                                        }
+                                    }
+                                }
+                            }}}
+
                     let satomis_per_signature = nonce
                         .as_ref()
                         .map(|nonce| nonce.satomis_per_signature())
                         .unwrap_or_else(|| {
                             hash_queue.get_satomis_per_signature(tx.message().recent_blockhash())
                         });
-                    let fee = if let Some(satomis_per_signature) = satomis_per_signature {
-                        Bank::calculate_fee_with_vote(
+                        let (fee, _, _) = if let Some(satomis_per_signature) = satomis_per_signature {
+                            Bank::calculate_fee(
                             tx.message(),
                             satomis_per_signature,
                             fee_structure,
@@ -740,7 +775,6 @@ impl Accounts {
                             feature_set.is_active(&enable_request_heap_frame_ix::id()) || self.accounts_db.expected_cluster_type() != ClusterType::MainnetBeta,
                             feature_set.is_active(&add_set_tx_loaded_accounts_data_size_instruction::id()),
                             feature_set.is_active(&include_loaded_accounts_data_size_in_fee_calculation::id()),
-                            tx.is_simple_vote_transaction(),
                         )
                     } else {
                         return (Err(TransactionError::BlockhashNotFound), None);

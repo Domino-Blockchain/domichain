@@ -109,6 +109,7 @@ use {
         },
         time::Duration,
     },
+    domichain_risk_score::ai_risk_score::update_risk_scores,
 };
 
 type RpcCustomResult<T> = std::result::Result<T, RpcCustomError>;
@@ -3638,6 +3639,10 @@ pub mod rpc_full {
 
             let transaction = sanitize_transaction(unsanitized_tx, preflight_bank)?;
             let signature = *transaction.signature();
+
+            //println!("RPC Tran check");
+            //println!("{:?}", transaction);
+            
 
             let mut last_valid_block_height = preflight_bank
                 .get_blockhash_last_valid_block_height(transaction.message().recent_blockhash())
