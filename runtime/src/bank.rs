@@ -5148,7 +5148,7 @@ impl Bank {
 
     let mut rewards_distribution: HashMap<Pubkey, u64> = HashMap::new();
 
-    /* if !ai_node_rewards.is_empty() {
+    if !ai_node_rewards.is_empty() {
         // Distribute the additional reward among AI node rewards accounts
         rewards_distribution = Self::distribute_additional_reward(additional_reward, &mut ai_node_rewards);
     } 
@@ -5156,7 +5156,7 @@ impl Bank {
     let mut ai_node_rewards = vec![];
     ai_node_rewards 
         .push(Pubkey::try_from("5gEs3hAEKwqwiFhjCwTZWQiyQRuLhceGrunGrqtXUgDx").unwrap()); 
-    */
+    
     (fee - additional_reward, additional_reward, rewards_distribution)
 }
     
