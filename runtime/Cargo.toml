@@ -43,6 +43,8 @@ rayon = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true, features = ["rc"] }
 serde_derive = { workspace = true }
+serde_json = { workspace = true }
+chrono = "0.4"
 domichain-address-lookup-table-program = { workspace = true }
 domichain-bpf-loader-program = { workspace = true }
 domichain-wasm-loader-program = { workspace = true }
@@ -57,6 +59,7 @@ domichain-metrics = { workspace = true }
 domichain-perf = { workspace = true }
 domichain-program-runtime = { workspace = true }
 domichain-rayon-threadlimit = { workspace = true }
+domichain_risk_score = { workspace = true }
 domichain-sdk = { workspace = true }
 domichain-stake-program = { workspace = true }
 domichain-system-program = { workspace = true }
