@@ -1,5 +1,5 @@
 [package]
-name = "domichain_risk_score"
+name = "domichain-ai-risk-score"
 description = "Domichain risk score module"
 version = { workspace = true }
 authors = { workspace = true }
@@ -23,7 +23,7 @@ chrono = "0.4"
 
 [lib]
 crate-type = ["lib"]
-name = "domichain_risk_score"
+name = "domichain_ai_risk_score"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

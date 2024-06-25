@@ -345,7 +345,7 @@ domichain-pubsub-client = { path = "pubsub-client", version = "=1.0.0" }
 domichain-quic-client = { path = "quic-client", version = "=1.0.0" }
 domichain-rayon-threadlimit = { path = "rayon-threadlimit", version = "=1.0.0" }
 domichain-remote-wallet = { path = "remote-wallet", version = "=1.0.0", default-features = false }
-domichain_risk_score = { path = "ai-risk-score", version = "=1.0.0"}
+domichain-ai-risk-score = { path = "ai-risk-score", version = "=1.0.0"}
 domichain-rpc = { path = "rpc", version = "=1.0.0" }
 domichain-rpc-client = { path = "rpc-client", version = "=1.0.0", default-features = false }
 domichain-rpc-client-api = { path = "rpc-client-api", version = "=1.0.0" }

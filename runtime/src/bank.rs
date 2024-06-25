@@ -34,12 +34,9 @@
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
 #[allow(deprecated)]
-use domichain_sdk::recent_blockhashes_account;
-use chrono::DateTime;
-use chrono::Utc;
-use serde_json::Value;
 use std::str::FromStr;
-use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores, RISK_SCORE_MAP};
+use domichain_sdk::recent_blockhashes_account;
+use domichain_ai_risk_score::ai_risk_score::{self, RISK_SCORE_MAP};
 pub use domichain_sdk::reward_type::RewardType;
 use {
     crate::{
@@ -5135,10 +5132,6 @@ impl Bank {
         // Distribute the additional reward among AI node rewards accounts
         rewards_distribution = Self::distribute_additional_reward(additional_reward, &mut ai_node_rewards);
     } 
-
-    let mut ai_node_rewards = vec![];
-    ai_node_rewards 
-        .push(Pubkey::try_from("5gEs3hAEKwqwiFhjCwTZWQiyQRuLhceGrunGrqtXUgDx").unwrap()); 
     
     (fee - additional_reward, additional_reward, rewards_distribution)
 }
@@ -5266,7 +5259,6 @@ impl Bank {
 
                 let satomis_per_signature =
                     satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                //let fee = Self::calculate_fee(
                 let (fee, ai_fee, ai_account_map)= Self::calculate_fee(
                     tx.message(),
                     satomis_per_signature,
@@ -5297,10 +5289,13 @@ impl Bank {
                 if ai_fee > 0 {
                     let fee_payer = tx.message().fee_payer();
                     let current_balance = self.get_balance(fee_payer);
-                    
-                    // 1000 satomis as a reserve
-                    if current_balance > 1000 {  
-                        let withdrawable_amount = current_balance - 1000; 
+
+                    let minimum_rent_exempt = self.get_account_with_fixed_root(fee_payer)
+                    .map_or(10_000, |account| self.get_minimum_balance_for_rent_exemption(account.data().len()));
+
+                    // min satomis as a reserve
+                    if current_balance > minimum_rent_exempt {  
+                        let withdrawable_amount = current_balance - minimum_rent_exempt; 
                         let actual_withdrawal = std::cmp::min(ai_fee, withdrawable_amount);  
                         self.withdraw(fee_payer, actual_withdrawal)?;  
                 
@@ -5321,17 +5316,16 @@ impl Bank {
                                 for (reward_account, _) in ai_account_map.iter().take(num_rewards as usize - 1) {
                                     self.deposit(reward_account, equal_share);
                                     total_distributed += equal_share;
-                                }
+                                } 
                 
                                 if let Some((last_account, _)) = ai_account_map.iter().last() {
                                     let remaining = funds_available_for_rewards - total_distributed; 
                                     self.deposit(last_account, remaining);
                                 }
                             }
-                            assert_eq!(funds_available_for_rewards, actual_withdrawal, "Mismatch in Satomi distribution");
                         }
                     } else {
-                        println!("Insufficient balance to maintain the minimum reserve of 1000 satomis.");
+                        info!("Insufficient balance to maintain the minimum reserve of satomis.");
                     }
                 }
                 

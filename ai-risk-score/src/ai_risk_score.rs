@@ -1,6 +1,4 @@
 use bs58;
-use chrono::DateTime;
-use chrono::Utc;
 use ed25519_dalek::ed25519::signature::Signature;
 use ed25519_dalek::PublicKey;
 use ed25519_dalek::Verifier;
@@ -19,22 +17,7 @@ lazy_static! {
         Arc::new(RwLock::new(HashMap::new()));
 }
 
-pub static AI_REWARDS_RATE: OnceCell<f64> = OnceCell::const_new();
-
-const QUERY_TIME_PERIOD: u64 = 60;
-
-#[derive(Debug, Deserialize)]
-struct ParsedResponse {
-    risk_score: String,
-    wallet: String,
-    data: String,
-    public_key: String,
-    signature: String,
-    timeout: String,
-    timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct RewardData {
     pub risk_score: f64
@@ -60,11 +43,14 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
     public_key.verify(&data_bytes, &signature).is_ok()
 }
 
-pub fn update_risk_scores(wallet: String, reward_account: String, risk_score: f64) {
+pub fn update_risk_scores(wallet: String, reward_account: String, mut risk_score: f64) {
+    
+    if risk_score < 0.0 {
+        risk_score = 0.0;
+    }
 
-    if risk_score > 5.0 {
-        // Max score accepted is 5
-        return;
+    if risk_score > 4.0 {
+        risk_score = 4.0;
     }
 
     let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
@@ -75,8 +61,8 @@ pub fn update_risk_scores(wallet: String, reward_account: String, risk_score: f6
         risk_score,
     };
 
-    // Update the entry only if there is no existing entry for the reward account
-    if !wallet_entry.contains_key(&reward_account) {
-        wallet_entry.insert(reward_account, reward_data);
-    }
+    wallet_entry
+    .entry(reward_account)
+    .and_modify(|prev_reward_data| *prev_reward_data = reward_data.clone())
+    .or_insert_with(|| reward_data);
 }

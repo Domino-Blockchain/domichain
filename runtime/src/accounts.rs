@@ -74,7 +74,7 @@ use {
         },
     },
 };
-use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores};
+use domichain_ai_risk_score::ai_risk_score::{self, update_risk_scores};
 use std::str::FromStr;
  
 

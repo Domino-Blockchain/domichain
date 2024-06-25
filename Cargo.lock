@@ -1746,6 +1746,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "domichain-ai-risk-score"
+version = "1.0.0"
+dependencies = [
+ "bs58 0.5.1",
+ "chrono",
+ "domichain-sdk",
+ "ed25519-dalek",
+ "hex",
+ "lazy_static",
+ "log",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "domichain-banking-bench"
 version = "1.0.0"
 dependencies = [
@@ -3373,6 +3390,7 @@ dependencies = [
  "dashmap 4.0.2",
  "dir-diff",
  "domichain-address-lookup-table-program",
+ "domichain-ai-risk-score",
  "domichain-bpf-loader-program",
  "domichain-bucket-map",
  "domichain-compute-budget-program",
@@ -3393,7 +3411,6 @@ dependencies = [
  "domichain-wasm-loader-program",
  "domichain-zk-token-proof-program",
  "domichain-zk-token-sdk",
- "domichain_risk_score",
  "ed25519-dalek",
  "flate2",
  "fnv",
@@ -4039,23 +4056,6 @@ dependencies = [
  "thiserror",
  "tiny-bip39",
  "zeroize",
-]
-
-[[package]]
-name = "domichain_risk_score"
-version = "1.0.0"
-dependencies = [
- "bs58 0.5.1",
- "chrono",
- "domichain-sdk",
- "ed25519-dalek",
- "hex",
- "lazy_static",
- "log",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
 ]
 
 [[package]]
