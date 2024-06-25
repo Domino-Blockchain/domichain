@@ -5066,26 +5066,7 @@ impl Bank {
     // Drop map 
     drop(risk_score_map);
 
-<<<<<<< HEAD
     //println!("Valid Risk Scores: {:?}", valid_risk_scores);
-=======
-    // Write 
-    if !valid_risk_scores.is_empty() {
-        if let Ok(mut risk_score_map_write) = ai_risk_score::RISK_SCORE_MAP.try_write() {
-            if let Some(wallet_entry_write) = risk_score_map_write.get_mut(&send_account) {
-                for (reward_account, reward_data) in wallet_entry_write.iter_mut() {
-                    if reward_data.count > 0 {
-                        reward_data.count -= 1;
-                    }
-                }
-            }
-        } else {
-            // Failed to acquire write lock, will retry later or handle accordingly
-        }
-    } else {
-        // No valid risk scores found, no write operation needed.
-    }
->>>>>>> ac38333bac54cec766fa0f47abcb09d86bb47289
 
     valid_risk_scores
         .sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
