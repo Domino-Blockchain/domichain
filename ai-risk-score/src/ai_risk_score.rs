@@ -37,8 +37,7 @@ struct ParsedResponse {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct RewardData {
-    pub risk_score: f64,
-    pub count: u64
+    pub risk_score: f64
 }
 
 fn from_base58_str(s: &str) -> Vec<u8> {
@@ -64,29 +63,14 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
 pub fn update_risk_scores(wallet: String, reward_account: String, risk_score: f64) {
     let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
 
-    let wallet_entry = risk_score_map.entry(wallet.clone()).or_insert_with(HashMap::new);
+    let wallet_entry = risk_score_map.entry(wallet).or_insert_with(HashMap::new);
 
     let reward_data = RewardData {
         risk_score,
-        count: 30, 
     };
 
-    // Update the entry only if there is no present count
-    match wallet_entry.get(&reward_account) {
-        Some(existing_reward_data) => {
-            if existing_reward_data.count > 0 {
-                // If count is over 0, do not update.
-                //println!("Count is greater than 0 for wallet: {}, no update performed.", wallet);
-            } else {
-                // If count is 0, update the entry.
-                wallet_entry.insert(reward_account, reward_data);
-                //println!("Count is 0 for wallet: {}, entry updated.", wallet);
-            }
-        },
-        None => {
-            // If the reward account is not in the map, insert new entry.
-            wallet_entry.insert(reward_account, reward_data);
-            //println!("Inserted new entry for wallet: {}.", wallet);
-        },
+    // Update the entry only if there is no existing entry for the reward account
+    if !wallet_entry.contains_key(&reward_account) {
+        wallet_entry.insert(reward_account, reward_data);
     }
 }

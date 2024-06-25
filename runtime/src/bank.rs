@@ -39,7 +39,7 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde_json::Value;
 use std::str::FromStr;
-use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores};
+use domichain_risk_score::ai_risk_score::{self, AI_REWARDS_RATE, update_risk_scores, RISK_SCORE_MAP};
 pub use domichain_sdk::reward_type::RewardType;
 use {
     crate::{
@@ -1726,6 +1726,11 @@ impl Bank {
             ThreadPoolBuilder::new().build().unwrap(),
             "thread_pool_creation",
         );
+
+        // Clear Hashmap for AI scores
+        let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
+        risk_score_map.clear();
+        drop(risk_score_map);
 
         let (_, apply_feature_activations_time) = measure!(
             self.apply_feature_activations(ApplyFeatureActivationsCaller::NewFromParent, false),
@@ -5052,35 +5057,14 @@ impl Bank {
     if let Some(wallet_entry) = risk_score_map.get(&send_account) {
 
         for (reward_account, reward_data) in wallet_entry.iter() {
-            if reward_data.count > 0 {
-                // Push rewards
-                ai_node_rewards.push(Pubkey::from_str(reward_account).unwrap());
-                valid_risk_scores.push(reward_data.risk_score);
-            }
+            // Push rewards
+            ai_node_rewards.push(Pubkey::from_str(reward_account).unwrap());
+            valid_risk_scores.push(reward_data.risk_score);
         }
         }
     }
-
-    // Drop map to then write
+    // Drop map 
     drop(risk_score_map);
-
-    // Write 
-    if !valid_risk_scores.is_empty() {
-        // Use try_lock if your environment supports it to avoid deadlock
-        if let Ok(mut risk_score_map_write) = ai_risk_score::RISK_SCORE_MAP.try_write() {
-            if let Some(wallet_entry_write) = risk_score_map_write.get_mut(&send_account) {
-                for (reward_account, reward_data) in wallet_entry_write.iter_mut() {
-                    if reward_data.count > 0 {
-                        reward_data.count -= 1;
-                    }
-                }
-            }
-        } else {
-            // println!("Failed to acquire write lock, will retry later or handle accordingly.");
-        }
-    } else {
-        //println!("No valid risk scores found, no write operation needed.");
-    }
 
     //println!("Valid Risk Scores: {:?}", valid_risk_scores);
 
@@ -5324,14 +5308,28 @@ impl Bank {
                         // Calculate the total amount available for distribution for reward accounts
                         let total_rewards = ai_account_map.iter().map(|(_, amount)| *amount).sum::<u64>();
                         let funds_available_for_rewards = std::cmp::min(total_rewards, actual_withdrawal); 
-                
+                    
                         if funds_available_for_rewards > 0 {
                             let num_rewards = ai_account_map.len() as u64;
-                            let equal_share = funds_available_for_rewards / num_rewards; 
+                            if num_rewards == 1 {
+                                if let Some((reward_account, _)) = ai_account_map.iter().last() {
+                                    self.deposit(reward_account, funds_available_for_rewards);
+                                }
+                            } else {
+                                let equal_share = funds_available_for_rewards / num_rewards; 
+                                let mut total_distributed = 0;
+                        
+                                for (reward_account, _) in ai_account_map.iter().take(num_rewards as usize - 1) {
+                                    self.deposit(reward_account, equal_share);
+                                    total_distributed += equal_share;
+                                }
                 
-                            for (reward_account, _) in ai_account_map.iter() {
-                                self.deposit(reward_account, equal_share);
+                                if let Some((last_account, _)) = ai_account_map.iter().last() {
+                                    let remaining = funds_available_for_rewards - total_distributed; 
+                                    self.deposit(last_account, remaining);
+                                }
                             }
+                            assert_eq!(funds_available_for_rewards, actual_withdrawal, "Mismatch in Satomi distribution");
                         }
                     } else {
                         println!("Insufficient balance to maintain the minimum reserve of 1000 satomis.");
