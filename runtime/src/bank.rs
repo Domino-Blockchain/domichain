@@ -5009,7 +5009,7 @@ impl Bank {
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
         is_vote: bool,
-    ) -> (u64, u64, HashMap<Pubkey, u64>) {
+    ) -> (u64, u64, Vec<Pubkey>) {
 
         if is_vote {
 
@@ -5027,7 +5027,7 @@ impl Bank {
                 include_loaded_account_data_size_in_fee,
                 is_vote,
             );
-            return (fee, 0, HashMap::new());
+            return (fee, 0, Vec::new());
         }
 
     // Fee based on compute units and signatures
@@ -5127,13 +5127,8 @@ impl Bank {
     };
 
     let mut rewards_distribution: HashMap<Pubkey, u64> = HashMap::new();
-
-    if !ai_node_rewards.is_empty() {
-        // Distribute the additional reward among AI node rewards accounts
-        rewards_distribution = Self::distribute_additional_reward(additional_reward, &mut ai_node_rewards);
-    } 
     
-    (fee - additional_reward, additional_reward, rewards_distribution)
+    (fee - additional_reward, additional_reward, ai_node_rewards)
 }
     
     /// Calculate fee for `SanitizedMessage`
@@ -5296,29 +5291,28 @@ impl Bank {
                     // min satomis as a reserve
                     if current_balance > minimum_rent_exempt {  
                         let withdrawable_amount = current_balance - minimum_rent_exempt; 
-                        let actual_withdrawal = std::cmp::min(ai_fee, withdrawable_amount);  
+                        let actual_withdrawal = std::cmp::min(ai_fee.clone(), withdrawable_amount);  
                         self.withdraw(fee_payer, actual_withdrawal)?;  
                 
                         // Calculate the total amount available for distribution for reward accounts
-                        let total_rewards = ai_account_map.iter().map(|(_, amount)| *amount).sum::<u64>();
-                        let funds_available_for_rewards = std::cmp::min(total_rewards, actual_withdrawal); 
+                        let funds_available_for_rewards = std::cmp::min(ai_fee, actual_withdrawal); 
                     
                         if funds_available_for_rewards > 0 {
                             let num_rewards = ai_account_map.len() as u64;
                             if num_rewards == 1 {
-                                if let Some((reward_account, _)) = ai_account_map.iter().last() {
+                                if let Some(reward_account) = ai_account_map.iter().last() {
                                     self.deposit(reward_account, funds_available_for_rewards);
                                 }
                             } else {
                                 let equal_share = funds_available_for_rewards / num_rewards; 
                                 let mut total_distributed = 0;
                         
-                                for (reward_account, _) in ai_account_map.iter().take(num_rewards as usize - 1) {
+                                for (reward_account) in ai_account_map.iter().take(num_rewards as usize - 1) {
                                     self.deposit(reward_account, equal_share);
                                     total_distributed += equal_share;
                                 } 
                 
-                                if let Some((last_account, _)) = ai_account_map.iter().last() {
+                                if let Some(last_account) = ai_account_map.iter().last() {
                                     let remaining = funds_available_for_rewards - total_distributed; 
                                     self.deposit(last_account, remaining);
                                 }
