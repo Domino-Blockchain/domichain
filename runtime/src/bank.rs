@@ -4982,22 +4982,6 @@ impl Bank {
             .saturating_sub(message.num_readonly_accounts()) as u64
     }
 
-    fn distribute_additional_reward(
-        additional_reward: u64, 
-        reward_accounts: &mut Vec<Pubkey>
-    ) -> HashMap<Pubkey, u64> {
-        let num_accounts = reward_accounts.len() as u64;
-        let reward_per_account = additional_reward / num_accounts;
-        let mut rewards_distribution = HashMap::new();
-
-        for account in reward_accounts {
-            //println!("Account: {} Reward: {}", account, reward_per_account);
-            rewards_distribution.insert(*account, reward_per_account);
-        }
-
-        rewards_distribution
-    }
-
     pub fn calculate_fee(
         message: &SanitizedMessage,
         satomis_per_signature: u64,
