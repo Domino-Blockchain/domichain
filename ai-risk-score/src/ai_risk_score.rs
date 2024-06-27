@@ -62,6 +62,12 @@ fn verify_signature(data_hex: &str, signature_hex: &str, public_key_hex: &str) -
 }
 
 pub fn update_risk_scores(wallet: String, reward_account: String, risk_score: f64) {
+
+    if risk_score > 5.0 {
+        // Max score accepted is 5
+        return;
+    }
+
     let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
 
     let wallet_entry = risk_score_map.entry(wallet.clone()).or_insert_with(HashMap::new);
