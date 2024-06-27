@@ -5066,7 +5066,6 @@ impl Bank {
 
     // Write 
     if !valid_risk_scores.is_empty() {
-        // Use try_lock if your environment supports it to avoid deadlock
         if let Ok(mut risk_score_map_write) = ai_risk_score::RISK_SCORE_MAP.try_write() {
             if let Some(wallet_entry_write) = risk_score_map_write.get_mut(&send_account) {
                 for (reward_account, reward_data) in wallet_entry_write.iter_mut() {
@@ -5076,13 +5075,11 @@ impl Bank {
                 }
             }
         } else {
-            // println!("Failed to acquire write lock, will retry later or handle accordingly.");
+            // Failed to acquire write lock, will retry later or handle accordingly
         }
     } else {
-        //println!("No valid risk scores found, no write operation needed.");
+        // No valid risk scores found, no write operation needed.
     }
-
-    //println!("Valid Risk Scores: {:?}", valid_risk_scores);
 
     valid_risk_scores
         .sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -5093,7 +5090,6 @@ impl Bank {
         len => (valid_risk_scores[len / 2 - 1] + valid_risk_scores[len / 2]) / 2.0,
     };
     
-    // println!("---AI Test calculate fee account: {:?}, risk-score: {:?}", &format!("{}", message.account_keys()[0]), risk_score);
     let mut compute_budget = ComputeBudget::default();
     let prioritization_fee_details = compute_budget
         .process_instructions(
