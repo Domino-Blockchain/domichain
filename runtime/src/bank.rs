@@ -34,7 +34,9 @@
 //! on behalf of the caller, and a low-level API for when they have
 //! already been signed and verified.
 #[allow(deprecated)]
+use std::str::FromStr;
 use domichain_sdk::recent_blockhashes_account;
+use domichain_ai_risk_score::ai_risk_score::{self, RISK_SCORE_MAP};
 pub use domichain_sdk::reward_type::RewardType;
 use {
     crate::{
@@ -1721,6 +1723,11 @@ impl Bank {
             ThreadPoolBuilder::new().build().unwrap(),
             "thread_pool_creation",
         );
+
+        // Clear Hashmap for AI scores
+        let mut risk_score_map = RISK_SCORE_MAP.write().unwrap();
+        risk_score_map.clear();
+        drop(risk_score_map);
 
         let (_, apply_feature_activations_time) = measure!(
             self.apply_feature_activations(ApplyFeatureActivationsCaller::NewFromParent, false),
@@ -4975,7 +4982,6 @@ impl Bank {
             .saturating_sub(message.num_readonly_accounts()) as u64
     }
 
-    /// Calculate fee for `SanitizedMessage`
     pub fn calculate_fee(
         message: &SanitizedMessage,
         satomis_per_signature: u64,
@@ -4986,20 +4992,128 @@ impl Bank {
         enable_request_heap_frame_ix: bool,
         support_set_accounts_data_size_limit_ix: bool,
         include_loaded_account_data_size_in_fee: bool,
-    ) -> u64 {
-        Self::calculate_fee_with_vote(
-            message,
-            satomis_per_signature,
-            fee_structure,
+        is_vote: bool,
+    ) -> (u64, u64, Vec<Pubkey>) {
+
+        if is_vote {
+
+            // Use the vote-specific fee calculation
+
+            let fee = Self::calculate_fee_with_vote(
+                message,
+                satomis_per_signature,
+                fee_structure,
+                use_default_units_per_instruction,
+                support_request_units_deprecated,
+                remove_congestion_multiplier,
+                enable_request_heap_frame_ix,
+                support_set_accounts_data_size_limit_ix,
+                include_loaded_account_data_size_in_fee,
+                is_vote,
+            );
+            return (fee, 0, Vec::new());
+        }
+
+    // Fee based on compute units and signatures
+    let congestion_multiplier = if satomis_per_signature == 0 {
+        0.0 // test only
+    } else if remove_congestion_multiplier {
+        1.0 // multiplier that has no effect
+    } else {
+        const BASE_CONGESTION: f64 = 5_000.0;
+        let current_congestion = BASE_CONGESTION.max(satomis_per_signature as f64);
+        BASE_CONGESTION / current_congestion
+    };
+
+    // Fetch risk scores once and filter/map in a single iteration
+    let risk_score_map = ai_risk_score::RISK_SCORE_MAP.read().unwrap();
+    let send_account = format!("{}", message.account_keys()[0]);
+
+   let mut ai_node_rewards = Vec::new();
+
+   let mut valid_risk_scores = Vec::new();
+
+   // Check if the account entry exists and gather valid risk scores
+   {
+    if let Some(wallet_entry) = risk_score_map.get(&send_account) {
+
+        for (reward_account, reward_data) in wallet_entry.iter() {
+            // Push rewards
+            ai_node_rewards.push(Pubkey::from_str(reward_account).unwrap());
+            valid_risk_scores.push(reward_data.risk_score);
+        }
+        }
+    }
+    // Drop map 
+    drop(risk_score_map);
+
+    //println!("Valid Risk Scores: {:?}", valid_risk_scores);
+
+    valid_risk_scores
+        .sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+    let median_risk_score = match valid_risk_scores.len() {
+        0 => 0.0,
+        len if len % 2 == 1 => valid_risk_scores[len / 2],
+        len => (valid_risk_scores[len / 2 - 1] + valid_risk_scores[len / 2]) / 2.0,
+    };
+    
+    let mut compute_budget = ComputeBudget::default();
+    let prioritization_fee_details = compute_budget
+        .process_instructions(
+            message.program_instructions_iter(),
             use_default_units_per_instruction,
             support_request_units_deprecated,
-            remove_congestion_multiplier,
             enable_request_heap_frame_ix,
             support_set_accounts_data_size_limit_ix,
-            include_loaded_account_data_size_in_fee,
-            false,
         )
-    }
+        .unwrap_or_default();
+    let prioritization_fee = prioritization_fee_details.get_fee();
+    let signature_fee = Self::get_num_signatures_in_message(message)
+        .saturating_mul(fee_structure.satomis_per_signature);
+    let write_lock_fee = Self::get_num_write_locks_in_message(message)
+        .saturating_mul(fee_structure.satomis_per_write_lock);
+
+    // `compute_fee` covers costs for both requested_compute_units and
+    // requested_loaded_account_data_size
+    let loaded_accounts_data_size_cost = if include_loaded_account_data_size_in_fee {
+        Self::calculate_loaded_accounts_data_size_cost(&compute_budget)
+    } else {
+        0_u64
+    };
+    let total_compute_units =
+        loaded_accounts_data_size_cost.saturating_add(compute_budget.compute_unit_limit);
+    let compute_fee = fee_structure
+        .compute_fee_bins
+        .iter()
+        .find(|bin| total_compute_units <= bin.limit)
+        .map(|bin| bin.fee)
+        .unwrap_or_else(|| {
+            fee_structure
+                .compute_fee_bins
+                .last()
+                .map(|bin| bin.fee)
+                .unwrap_or_default()
+        });
+
+    let base_fee = prioritization_fee
+    .saturating_add(signature_fee)
+    .saturating_add(write_lock_fee)
+    .saturating_add(compute_fee) as f64;
+
+    let fee = (base_fee * congestion_multiplier * (10.0_f64).powf(median_risk_score))
+        .round() as u64;
+
+    let additional_reward = if median_risk_score > 0.0 {
+        fee.saturating_sub(base_fee as u64)
+    } else {
+        0
+    };
+
+    let mut rewards_distribution: HashMap<Pubkey, u64> = HashMap::new();
+    
+    (fee - additional_reward, additional_reward, ai_node_rewards)
+}
     
     /// Calculate fee for `SanitizedMessage`
     pub fn calculate_fee_with_vote(
@@ -5124,7 +5238,7 @@ impl Bank {
 
                 let satomis_per_signature =
                     satomis_per_signature.ok_or(TransactionError::BlockhashNotFound)?;
-                let fee = Self::calculate_fee_with_vote(
+                let (fee, ai_fee, ai_account_map)= Self::calculate_fee(
                     tx.message(),
                     satomis_per_signature,
                     &self.fee_structure,
@@ -5150,6 +5264,49 @@ impl Bank {
                 //...except nonce accounts, which already have their
                 // post-load, fee deducted, pre-execute account state
                 // stored
+
+                if ai_fee > 0 {
+                    let fee_payer = tx.message().fee_payer();
+                    let current_balance = self.get_balance(fee_payer);
+
+                    let minimum_rent_exempt = self.get_account_with_fixed_root(fee_payer)
+                    .map_or(10_000, |account| self.get_minimum_balance_for_rent_exemption(account.data().len()));
+
+                    // min satomis as a reserve
+                    if current_balance > minimum_rent_exempt {  
+                        let withdrawable_amount = current_balance - minimum_rent_exempt; 
+                        let actual_withdrawal = std::cmp::min(ai_fee.clone(), withdrawable_amount);  
+                        self.withdraw(fee_payer, actual_withdrawal)?;  
+                
+                        // Calculate the total amount available for distribution for reward accounts
+                        let funds_available_for_rewards = std::cmp::min(ai_fee, actual_withdrawal); 
+                    
+                        if funds_available_for_rewards > 0 {
+                            let num_rewards = ai_account_map.len() as u64;
+                            if num_rewards == 1 {
+                                if let Some(reward_account) = ai_account_map.iter().last() {
+                                    self.deposit(reward_account, funds_available_for_rewards);
+                                }
+                            } else {
+                                let equal_share = funds_available_for_rewards / num_rewards; 
+                                let mut total_distributed = 0;
+                        
+                                for (reward_account) in ai_account_map.iter().take(num_rewards as usize - 1) {
+                                    self.deposit(reward_account, equal_share);
+                                    total_distributed += equal_share;
+                                } 
+                
+                                if let Some(last_account) = ai_account_map.iter().last() {
+                                    let remaining = funds_available_for_rewards - total_distributed; 
+                                    self.deposit(last_account, remaining);
+                                }
+                            }
+                        }
+                    } else {
+                        info!("Insufficient balance to maintain the minimum reserve of satomis.");
+                    }
+                }
+                
                 if execution_status.is_err() && !is_nonce {
                     self.withdraw(tx.message().fee_payer(), fee)?;
                 }
